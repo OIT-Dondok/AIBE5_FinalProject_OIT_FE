@@ -38,3 +38,21 @@ build/
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
+
+# ==========================================
+# 🔥 프론트엔드(Next.js / Node.js) 설정 추가
+# ==========================================
+
+# 의존성 패키지 폴더
+node_modules/
+/npm-debug.log*
+
+# Next.js 빌드 및 캐시 출력물
+.next/
+out/
+
+# 로컬 환경 변수 파일 (보안 민감 정보)
+.env*.local
+
+# macOS 시스템 찌꺼기 파일
+.DS_Store
