@@ -1,0 +1,47 @@
+language: ko
+
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
+
+  path_instructions:
+    - path: "src/lib/api/**"
+      instructions: |
+        - ApiResponse<T> 래퍼 타입 사용 여부 확인
+        - 401 응답 시 토큰 재발급 인터셉터 로직 확인
+        - 환경변수 NEXT_PUBLIC_API_URL 사용 여부 확인 (하드코딩 금지)
+
+    - path: "src/store/**"
+      instructions: |
+        - 서버 상태(API 데이터)를 Zustand에 저장하고 있으면 지적
+        - 클라이언트 상태(UI 상태, 인증 정보)만 Zustand 사용이 원칙
+        - persist 미들웨어 사용 시 민감 정보(accessToken 등) 포함 여부 확인
+
+    - path: "src/app/**"
+      instructions: |
+        - 모바일 퍼스트(375px) 기준 Tailwind 클래스 사용 여부 확인
+        - 불필요한 useEffect 사용 지적 (서버 컴포넌트로 대체 가능한 경우)
+        - 인라인 스타일 사용 금지 (Tailwind 클래스로 대체)
+
+    - path: "src/components/**"
+      instructions: |
+        - 컴포넌트 파일명 PascalCase 확인 (CrewCard.tsx)
+        - props 타입 정의 누락 여부 확인
+        - 재사용 가능한 공통 컴포넌트는 src/components/common/ 위치 확인
+
+  review_rules:
+    - "any 타입 사용 금지 — 명시적 타입 또는 제네릭 사용"
+    - "모든 API 호출은 src/lib/api/ 내 함수로 분리 (컴포넌트 내 axios 직접 호출 금지)"
+    - "훅 파일명 camelCase + use prefix 필수 (useCrewList.ts)"
+    - "인라인 스타일 사용 금지"
+    - "console.log 프로덕션 코드에 잔존 시 지적"
+    - "메서드 길이가 30줄을 초과하면 분리 권장"
+    - "매직 넘버 사용 금지 — 상수로 추출"
+    - "불필요한 주석 잔존 시 지적"
