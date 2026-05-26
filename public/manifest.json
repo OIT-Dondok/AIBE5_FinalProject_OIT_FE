@@ -1,0 +1,17 @@
+{
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/",
+  "name": "돈독 (Dondok)",
+  "short_name": "돈독",
+  "description": "습관 형성 및 정산 플랫폼, 돈독",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}
