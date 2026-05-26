@@ -20,9 +20,9 @@ reviews:
 
     - path: "src/store/**"
       instructions: |
-        - 서버 상태(API 데이터)를 Zustand에 저장하고 있으면 지적
-        - 클라이언트 상태(UI 상태, 인증 정보)만 Zustand 사용이 원칙
-        - persist 미들웨어 사용 시 민감 정보(accessToken 등) 포함 여부 확인
+        - 클라이언트 상태(UI 상태, 인증 상태 플래그/표시용 사용자 정보)만 Zustand 사용이 원칙
++       - accessToken/refreshToken/세션 식별자 등 비밀값은 Zustand(메모리/ persist 모두) 저장 금지
++       - persist 미들웨어 사용 시 민감 정보 포함 여부를 반드시 차단하도록 확인
 
     - path: "src/app/**"
       instructions: |
