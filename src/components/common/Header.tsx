@@ -39,7 +39,7 @@ export const Header = ({
                         <div className="flex items-center">
                             {/* 로고 높이를 h-16 래퍼에 맞춘 h-10(40px)으로 유지 */}
                             <img
-                                src="/images/text_logo.png"
+                                src="/images/logo/dondok-logo.png"
                                 alt="Dondok Logo"
                                 className="h-20 w-auto object-contain select-none"
                             />
