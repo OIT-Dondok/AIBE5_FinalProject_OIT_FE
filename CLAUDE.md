@@ -7,7 +7,7 @@
 
 ## 프로젝트 한 줄 요약
 
-Next.js 14 (App Router) + TypeScript + Tailwind CSS + Zustand로 구성된  
+Next.js 16 (App Router) + TypeScript + Tailwind CSS + Zustand로 구성된  
 **모바일 퍼스트 습관 형성 플랫폼** 프론트엔드입니다.
 
 ---
@@ -72,14 +72,27 @@ const useCrewStore = create((set) => ({
 
 ### 4. Tailwind CSS
 
+> ⚠️ **이 프로젝트는 Tailwind v4**를 사용합니다. `tailwind.config.ts` 파일이 없으며, 설정 방식이 v3와 다릅니다.
+
 - 모바일 퍼스트: 기본 클래스는 모바일 기준, `md:` `lg:` 순으로 확장.
-- 색상·여백 등 디자인 토큰은 `tailwind.config.ts`의 `extend`에 정의해서 쓴다.
+- 색상·여백 등 디자인 토큰은 **`src/app/globals.css`의 `@theme {}` 블록**에 CSS 변수로 정의한다. (`tailwind.config.ts` 에 `extend` 쓰는 방식은 v3 스타일 — 사용 금지.)
 - 인라인 스타일 (`style={{...}}`) 금지. Tailwind 클래스로 해결할 것.
-- 클래스가 너무 많아지면 `cn()` 유틸 (clsx + tailwind-merge) 사용.
+- 클래스가 너무 많아지면 `cn()` 유틸 (clsx + tailwind-merge) 사용 _(미설치 시 `npm install clsx tailwind-merge` 먼저 실행)_.
+
+```css
+/* globals.css — 디자인 토큰 추가 예시 */
+@theme {
+  --color-brand-500: #5E9B73;
+  --radius-card: 16px;
+}
+```
 
 ```tsx
-// ✅
-<button className={cn('rounded-xl px-4 py-2 text-sm font-semibold', variant === 'primary' && 'bg-brand-500 text-white')}>
+// ✅ CSS 변수를 Tailwind 유틸로 참조
+<button className="rounded-[var(--radius-button)] px-4 py-2 text-sm font-semibold bg-[var(--color-brand-500)] text-white">
+
+// ✅ 또는 클래스 조합이 복잡할 때 cn() 사용
+<button className={cn('rounded-xl px-4 py-2 text-sm font-semibold', variant === 'primary' && 'bg-[var(--color-primary-green)] text-white')}>
 
 // ❌
 <button style={{ borderRadius: 12, padding: '8px 16px' }}>
@@ -146,14 +159,3 @@ constants/         UPPER_SNAKE_CASE 변수명 (API_ENDPOINTS.ts)
 | `console.log` 커밋 | 노이즈 |
 | 인라인 스타일 | Tailwind 일관성 파괴 |
 | 상대 경로 `../../` 3단계 이상 | `@/` alias 사용 |
-
----
-
-## 담당자 참고 (김한비)
-
-FE 공통 구조 셋업 담당으로, 이 파일 내용이 곧 팀 FE 개발 표준입니다.  
-김세희/서일현/문창현/전성 팀원이 각자 도메인 작업 시 이 가이드를 기준으로 합니다.
-
-- **입장 신청 / 신청자 관리 UI**: `app/crews/[crewId]/participants/`
-- **검증 내역 탭 UI**: `app/crews/[crewId]/verification/`
-- 공통 컴포넌트 추가 시 `components/common/` 에 넣고 팀에 공유할 것.

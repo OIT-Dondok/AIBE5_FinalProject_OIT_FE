@@ -3,10 +3,10 @@
 > **함께 채우는 성실함의 가치, 지분 기반 습관 형성 플랫폼**  
 > "당신의 성실함을 지분으로 증명하세요."
 
-[![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.x-38bdf8?logo=tailwindcss)](https://tailwindcss.com/)
-[![Zustand](https://img.shields.io/badge/Zustand-4.x-brown)](https://zustand-demo.pmnd.rs/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.x-38bdf8?logo=tailwindcss)](https://tailwindcss.com/)
+[![Zustand](https://img.shields.io/badge/Zustand-5.x-brown)](https://zustand-demo.pmnd.rs/)
 
 ---
 
@@ -30,18 +30,20 @@ Dondok은 크루원이 함께 보증금을 예치하고, 미션 인증 성실도
 
 | 분류 | 기술 |
 |------|------|
-| Framework | Next.js 14 (App Router) |
+| Framework | Next.js 16 (App Router) |
 | Language | TypeScript |
 | Styling | Tailwind CSS |
 | State | Zustand |
 | HTTP | Axios + 인터셉터 (JWT 자동 갱신) |
-| Chart | Recharts / Chart.js |
-| Notification | FCM (Firebase Cloud Messaging) |
-| PWA | next-pwa |
+| Chart | Recharts |
+| Notification | FCM (Firebase Cloud Messaging) _(예정)_ |
+| PWA | next-pwa _(예정)_ |
 
 ---
 
 ## 폴더 구조
+
+> 목표 구조 (현재 구현 진행 중)
 
 ```
 src/
@@ -54,7 +56,7 @@ src/
 │   ├── my/                 # 마이페이지 · 도딘 잔액/내역
 │   └── notifications/      # 알림 목록
 ├── components/
-│   ├── ui/                 # 공통 UI (Button, Input, Modal …)
+│   ├── common/             # 공통 UI (Button, Input, Modal …)
 │   └── [domain]/           # 도메인별 컴포넌트
 ├── lib/
 │   ├── axios.ts            # Axios 인스턴스 + JWT 인터셉터
@@ -92,20 +94,20 @@ src/
 
 ### 요구사항
 - Node.js 20+
-- pnpm 9+
+- npm 10+ (Node.js 내장)
 
 ### 설치 및 실행
 
 ```bash
 # 의존성 설치
-pnpm install
+npm install
 
 # 환경 변수 설정
-cp .env.example .env.local
+cp .env.example .env.local  # 또는 .env.local 직접 생성
 # .env.local 에 NEXT_PUBLIC_API_BASE_URL 등 입력
 
 # 개발 서버 실행
-pnpm dev
+npm run dev
 ```
 
 ### 환경 변수
@@ -157,6 +159,6 @@ NEXT_PUBLIC_VAPID_KEY=...
 ## 관련 문서
 
 - [API 명세서](#) _(작성 중)_
-- [ERD](./docs/erd.md)
+- [ERD](./docs/erd.md) _(작성 예정)_
 - [기술 스택 선택 배경](./docs/tech-stack.md)
 - [Swagger UI](http://localhost:8080/swagger-ui.html)
