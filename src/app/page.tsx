@@ -2,10 +2,7 @@ import { CheckCircle2, TrendingUp, Wallet, ArrowRight } from 'lucide-react';
 
 export default function Home() {
   return (
-      /**
-       * 1. 배경색: 기획서의 Soft Cream 배경톤 적용 (--color-background)
-       * 모바일 퍼스트 레이아웃을 위해 중앙 정렬 및 여백 설정
-       */
+
       <main className="min-h-screen bg-background flex flex-col items-center justify-start px-4 py-8">
 
         {/* 최대 너비 430px 대응 wrapper (모바일 최적화 규격) */}
