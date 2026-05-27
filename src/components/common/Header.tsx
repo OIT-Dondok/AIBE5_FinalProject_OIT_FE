@@ -20,18 +20,24 @@ export const Header = ({
 
     return (
         <header className="sticky top-0 z-40 w-full flex justify-center bg-background/80 backdrop-blur-md">
-            {/* 📌 h-16(64px) 규격을 유지하여 상단 바의 안정감을 확보 */}
+            {/* h-16(64px) 규격을 유지하여 상단 바의 안정감을 확보합니다. */}
             <div className="w-full max-w-[430px] h-16 px-5 flex items-center justify-between border-b border-text-secondary/5">
 
                 {/* 1. 좌측 구역: 로고 혹은 뒤로가기 */}
                 <div className="flex-[1.5] flex items-center">
                     {showBackButton ? (
-                        <button onClick={() => router.back()} className="p-1 -ml-1 hover:opacity-75 active:scale-95 transition-all">
+                        /* 📌 피드백 반영: type="button"과 aria-label 추가로 폼 제출 버그 방어 및 접근성 확보 */
+                        <button
+                            type="button"
+                            aria-label="뒤로가기"
+                            onClick={() => router.back()}
+                            className="p-1 -ml-1 hover:opacity-75 active:scale-95 transition-all"
+                        >
                             <ChevronLeft size={24} className="text-text-primary" />
                         </button>
                     ) : showLogo ? (
                         <div className="flex items-center">
-                            {/* 📌 버그 수정: h-20에서 h-16 래퍼 내부에 쏙 들어가는 h-10(40px)으로 밸런싱 튜닝 */}
+                            {/* 로고 높이를 h-16 래퍼에 맞춘 h-10(40px)으로 유지 */}
                             <img
                                 src="/images/text_logo.png"
                                 alt="Dondok Logo"
@@ -44,7 +50,6 @@ export const Header = ({
                 {/* 2. 중앙 구역: 페이지 타이틀 */}
                 <div className="flex-[2] flex justify-center">
                     {title && (
-                        /* 헤더 높이가 커진 만큼 텍스트도 밀착 */
                         <h1 className="text-base font-bold text-text-primary tracking-tight truncate">
                             {title}
                         </h1>
@@ -56,8 +61,12 @@ export const Header = ({
                     {rightElement ? (
                         rightElement
                     ) : (
-                        /* 로고 체급에 맞춰 알림 종 크기도 size 20에서 24로 밸런스 튜닝 */
-                        <button className="p-1 -mr-1 hover:opacity-75 active:scale-95 transition-all">
+                        /* 📌 피드백 반영: 기본 알림 버튼에도 동일하게 type과 aria-label 확정 주입 */
+                        <button
+                            type="button"
+                            aria-label="알림 열기"
+                            className="p-1 -mr-1 hover:opacity-75 active:scale-95 transition-all"
+                        >
                             <Bell size={24} className="text-text-primary" />
                         </button>
                     )}
