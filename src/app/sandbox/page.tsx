@@ -9,6 +9,10 @@ import { Header } from "@/components/common/Header";
 import { Modal } from "@/components/common/Modal";
 import { Toast } from "@/components/common/Toast";
 import { Input } from "@/components/common/Input";
+import { Chip } from "@/components/common/Chip";
+import { StepProgressBar } from "@/components/common/StepProgressBar";
+import { EmptyState } from "@/components/common/EmptyState";
+import { Skeleton } from "@/components/common/Skeleton";
 
 import { X } from "lucide-react";
 
@@ -17,6 +21,16 @@ export default function SandboxPage() {
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [isInputOpen, setIsInputOpen] = useState(false);
     const [isToastOpen, setIsToastOpen] = useState(false); // 👈 토스트 스위치 상태 선언
+    const [activeChips, setActiveChips] = useState<Set<string>>(new Set(["status-모집 중", "cat-운동"]));
+    const [demoStep, setDemoStep] = useState(2);
+
+    const toggleChip = (label: string) =>
+        setActiveChips((prev) => {
+            const next = new Set(prev);
+            if (next.has(label)) next.delete(label);
+            else next.add(label);
+            return next;
+        });
 
     return (
         <main className="min-h-screen bg-transparent flex flex-col items-center justify-start">
@@ -230,6 +244,158 @@ export default function SandboxPage() {
                                     errorMessage="이미 사용 중인 닉네임입니다."
                                     required
                                 />
+                        </div>
+                    </section>
+
+                    {/* 9. Chip */}
+                    <section className="bg-card rounded-card shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex flex-col gap-5 overflow-hidden">
+                        <div className="px-6 pt-6 flex flex-col gap-1">
+                            <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider">
+                                9. Chip
+                            </h2>
+                            <p className="text-[10px] text-text-secondary">
+                                클릭하면 active 상태가 토글됩니다
+                            </p>
+                        </div>
+
+                        {/* status 타입: 상태 필터 탭 느낌 */}
+                        <div className="flex flex-col gap-2 px-6">
+                            <p className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">
+                                Status — 상태 필터
+                            </p>
+                            <p className="text-[10px] text-text-secondary">
+                                큰 사이즈 · 사각형 라운딩 · Active = 흰 카드 + 그림자
+                            </p>
+                        </div>
+                        <div className="bg-background px-4 py-3 flex flex-wrap gap-1">
+                            {["전체", "모집 중", "진행 중", "완료"].map((label) => (
+                                <Chip
+                                    key={`status-${label}`}
+                                    label={label}
+                                    chipType="status"
+                                    isActive={activeChips.has(`status-${label}`)}
+                                    onClick={() => toggleChip(`status-${label}`)}
+                                />
+                            ))}
+                        </div>
+
+                        {/* category 타입: 카테고리 태그 느낌 */}
+                        <div className="flex flex-col gap-2 px-6">
+                            <p className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider">
+                                Category — 카테고리 태그
+                            </p>
+                            <p className="text-[10px] text-text-secondary">
+                                작은 사이즈 · 알약형 · Active = 초록 배경 · Inactive = 테두리 없음
+                            </p>
+                        </div>
+                        <div className="px-6 pb-6 flex flex-wrap gap-2">
+                            {["기상", "독서", "운동", "식단", "명상", "러닝"].map((label) => (
+                                <Chip
+                                    key={`cat-${label}`}
+                                    label={label}
+                                    chipType="category"
+                                    isActive={activeChips.has(`cat-${label}`)}
+                                    onClick={() => toggleChip(`cat-${label}`)}
+                                />
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* 10. StepProgressBar */}
+                    <section className="bg-card p-6 rounded-card shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex flex-col gap-4">
+                        <div className="flex flex-col gap-1">
+                            <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider">
+                                10. StepProgressBar
+                            </h2>
+                            <p className="text-[10px] text-text-secondary">
+                                현재 {demoStep}/4 단계
+                            </p>
+                        </div>
+
+                        <StepProgressBar
+                            currentStep={demoStep}
+                            totalSteps={4}
+                            stepLabels={["정보 입력", "크루 설정", "규칙 설정", "완료"]}
+                        />
+
+                        <div className="flex gap-2 mt-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setDemoStep((s) => Math.max(1, s - 1))}
+                                disabled={demoStep === 1}
+                            >
+                                이전
+                            </Button>
+                            <Button
+                                variant="primary-blue"
+                                size="sm"
+                                onClick={() => setDemoStep((s) => Math.min(4, s + 1))}
+                                disabled={demoStep === 4}
+                            >
+                                다음
+                            </Button>
+                        </div>
+                    </section>
+
+                    {/* 11. EmptyState */}
+                    <section className="bg-card rounded-card shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex flex-col gap-4 overflow-hidden">
+                        <div className="px-6 pt-6 flex flex-col gap-1">
+                            <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider">
+                                11. EmptyState
+                            </h2>
+                        </div>
+
+                        <div className="border-b border-text-secondary/10">
+                            <EmptyState
+                                icon="🔍"
+                                title="참여 중인 크루가 없어요"
+                                description="아직 크루에 가입하지 않으셨군요. 관심 있는 습관 크루를 찾아보세요!"
+                                actionButtonText="크루 탐색하기"
+                                onActionClick={() => alert("크루 탐색 페이지로 이동")}
+                            />
+                        </div>
+
+                        <EmptyState
+                            icon="📭"
+                            title="알림이 없습니다"
+                        />
+                    </section>
+
+                    {/* 12. Skeleton */}
+                    <section className="bg-card p-6 rounded-card shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex flex-col gap-5">
+                        <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider">
+                            12. Skeleton
+                        </h2>
+
+                        <div className="flex flex-col gap-2">
+                            <p className="text-[11px] font-semibold text-text-secondary">text</p>
+                            <Skeleton variant="text" width="60%" height={14} />
+                            <Skeleton variant="text" width="80%" height={14} />
+                            <Skeleton variant="text" width="45%" height={14} />
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <p className="text-[11px] font-semibold text-text-secondary">circle</p>
+                            <div className="flex gap-3">
+                                <Skeleton variant="circle" width={40} height={40} />
+                                <Skeleton variant="circle" width={48} height={48} />
+                                <Skeleton variant="circle" width={56} height={56} />
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <p className="text-[11px] font-semibold text-text-secondary">rect — 카드 스켈레톤 예시</p>
+                            <div className="flex gap-3">
+                                <Skeleton variant="rect" width="100%" height={100} />
+                            </div>
+                            <div className="flex gap-3">
+                                <Skeleton variant="rect" width={80} height={80} />
+                                <div className="flex flex-col gap-2 flex-1 justify-center">
+                                    <Skeleton variant="text" width="70%" height={14} />
+                                    <Skeleton variant="text" width="50%" height={12} />
+                                </div>
+                            </div>
                         </div>
                     </section>
 
