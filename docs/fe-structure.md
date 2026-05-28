@@ -150,14 +150,14 @@ dondok-fe/
 ## 페이지 ↔ 담당자 매핑
 
 | 경로 | 페이지 | 담당 |
-|------|--------|------|
+|------|--------|-----|
 | `/login`, `/signup` | 인증 | 김세희 |
 | `/crews` | 크루 탐색/목록 | 김세희 |
 | `/crews/new` | 크루 생성 (5단계 + AI 도우미) | 전성 |
 | `/crews/[id]/feed` | 인증 피드 | 서일현 |
 | `/crews/[id]/dashboard` | 현황 (지분율 차트) | 김세희 |
-| `/crews/[id]/participants` | 신청자 관리 (방장) | **김한비** |
-| `/crews/[id]/verification` | 검증 내역 탭 | **김한비** |
+| `/crews/[id]/participants` | 신청자 관리 (방장) | 김한비 |
+| `/crews/[id]/verification` | 검증 내역 탭 | 김한비 |
 | `/my` | 프로필 조회/수정 | 문창현 |
 | `/my/dodin` | 도딘 잔액/내역 | 전성 |
 | `/notifications` | 알림 목록 | 문창현 |

@@ -9,7 +9,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { configureTokenManager } from '@/lib/api/instance';
+import { configureTokenManager } from '@/lib/axios';
 import type { Member } from '@/types/domain';
 
 interface AuthState {
