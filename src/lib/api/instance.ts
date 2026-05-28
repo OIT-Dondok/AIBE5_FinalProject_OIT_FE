@@ -17,6 +17,8 @@ import axios, {
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8080';
 
+const REFRESH_ENDPOINT = '/api/auth/refresh';
+
 // ─── Access Token 관리 ────────────────────────────────────────────────────────
 // Refresh Token은 HttpOnly 쿠키로 관리 → JS에서 접근 불가, 서버가 쿠키로 읽음
 // Access Token만 메모리(authStore)에서 관리
@@ -83,6 +85,11 @@ function processQueue(error: unknown, token: string | null) {
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
+    if (!error.config) return Promise.reject(error);
+
+    // SSR 환경에서는 module-level 상태가 모든 유저 요청에 공유됨 → 큐 패턴 사용 금지
+    if (typeof window === 'undefined') return Promise.reject(error);
+
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
     };
@@ -108,12 +115,13 @@ api.interceptors.response.use(
     try {
       // body 없음 - refreshToken 쿠키가 withCredentials로 자동 전송됨
       const { data } = await axios.post<{ access_token: string }>(
-        `${BASE_URL}/api/auth/refresh`,
+        `${BASE_URL}${REFRESH_ENDPOINT}`,
         undefined,
-        { withCredentials: true },
+        { withCredentials: true, timeout: 10_000 },
       );
 
       const { access_token } = data;
+      isRefreshing = false;
       _setAccessToken(access_token);
       processQueue(null, access_token);
 
@@ -122,12 +130,11 @@ api.interceptors.response.use(
       }
       return api(originalRequest);
     } catch (refreshError) {
+      isRefreshing = false;
       processQueue(refreshError, null);
       _clearAccessToken();
       if (typeof window !== 'undefined') window.location.href = '/login';
       return Promise.reject(refreshError);
-    } finally {
-      isRefreshing = false;
     }
   },
 );

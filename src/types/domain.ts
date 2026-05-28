@@ -1,4 +1,5 @@
 // src/types/domain.ts
+import type { CursorPageResponse } from './common';
 // 전체 도메인 타입 정의
 // [기준] API-spec-dondok.md
 // - 응답 필드: snake_case (명세와 동일)
@@ -9,6 +10,13 @@
 // ════════════════════════════════════════════════════════════
 // § 3. Enum
 // ════════════════════════════════════════════════════════════
+
+// § 3.0 MemberStatus
+export const MEMBER_STATUS = {
+  ACTIVE: 'ACTIVE',
+  DEACTIVATED: 'DEACTIVATED',
+} as const;
+export type MemberStatus = (typeof MEMBER_STATUS)[keyof typeof MEMBER_STATUS];
 
 // § 3.1 CrewStatus
 export const CREW_STATUS = {
@@ -153,14 +161,6 @@ export const CERTIFICATION_STATUS = {
 export type CertificationStatus = (typeof CERTIFICATION_STATUS)[keyof typeof CERTIFICATION_STATUS];
 
 
-// ─── authStore 저장용 ────────────────────────────────────────────────────────
-// [명세] Refresh Token은 HttpOnly 쿠키 → JS 접근 불가 → store에 저장 안 함
-// Access Token만 메모리(authStore)에서 관리
-export interface AuthTokens {
-  access_token: string;
-  // refresh_token: 쿠키로만 관리, 여기서 저장하지 않음
-}
-
 // ════════════════════════════════════════════════════════════
 // § 5.1 인증 / 회원
 // ════════════════════════════════════════════════════════════
@@ -170,7 +170,7 @@ export interface SignupResponse {
   member_uuid: string;
   email: string;
   nickname: string;
-  status: string;
+  status: MemberStatus;
   created_at: string;
 }
 
@@ -204,7 +204,7 @@ export interface Member {
   status_message: string | null;
   is_host_ever: boolean;
   hosted_crew_count: number;
-  status: string;
+  status: MemberStatus;
   created_at: string;
   updated_at?: string;
 }
@@ -354,10 +354,7 @@ export interface ApplicationListItem {
   decided_at: string | null;
 }
 
-export interface ApplicationListResponse {
-  items: ApplicationListItem[];
-  next_cursor: string | null;
-}
+export type ApplicationListResponse = CursorPageResponse<ApplicationListItem>;
 
 // POST /api/crews/{crewId}/applications/{crewParticipantId}/approve → 200 [김한비 담당]
 export interface ApproveApplicationResponse {
@@ -387,10 +384,7 @@ export interface CrewMember {
   joined_at: string;
 }
 
-export interface CrewMembersResponse {
-  items: CrewMember[];
-  next_cursor: string | null;
-}
+export type CrewMembersResponse = CursorPageResponse<CrewMember>;
 
 
 // ════════════════════════════════════════════════════════════
@@ -455,10 +449,7 @@ export interface ModerationHistoryItem {
   changed_at: string;
 }
 
-export interface ModerationHistoryResponse {
-  items: ModerationHistoryItem[];
-  next_cursor: string | null;
-}
+export type ModerationHistoryResponse = CursorPageResponse<ModerationHistoryItem>;
 
 // POST /api/mission-logs/{missionLogId}/moderation/approve → 200 [서일현 담당]
 export interface ModerationApproveResponse {
@@ -510,10 +501,7 @@ export interface VerificationHistoryItem {
   };
 }
 
-export interface VerificationHistoryResponse {
-  items: VerificationHistoryItem[];
-  next_cursor?: string | null;
-}
+export type VerificationHistoryResponse = CursorPageResponse<VerificationHistoryItem>;
 
 
 // ════════════════════════════════════════════════════════════
@@ -756,7 +744,4 @@ export interface PointHistoryItem {
 }
 
 // GET /api/points/history → 200
-export interface PointHistoryResponse {
-  items: PointHistoryItem[];
-  next_cursor: string | null;
-}
+export type PointHistoryResponse = CursorPageResponse<PointHistoryItem>;
