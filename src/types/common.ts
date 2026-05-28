@@ -19,7 +19,6 @@ export interface CursorPageResponse<T> {
 export interface ErrorResponse {
   code: string;
   message: string;
-  timestamp: string; // ISO-8601 with offset. 예: "2026-05-07T00:05:00+09:00"
 }
 
 // ─── 공통 에러 코드 ───────────────────────────────────────────────────────────
