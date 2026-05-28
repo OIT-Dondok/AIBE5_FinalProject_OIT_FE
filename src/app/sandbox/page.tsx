@@ -8,6 +8,7 @@ import { BottomNav } from "@/components/common/BottomNav";
 import { Header } from "@/components/common/Header";
 import { Modal } from "@/components/common/Modal";
 import { Toast } from "@/components/common/Toast";
+import { Input } from "@/components/common/Input";
 
 import { X } from "lucide-react";
 
@@ -172,7 +173,7 @@ export default function SandboxPage() {
                         </div>
                     </section>
 
-                    {/* 📌 7. MVP Toast Feedback */}
+                    {/*  7. MVP Toast Feedback */}
                     <section className="bg-card p-6 rounded-card shadow-sm flex flex-col gap-4">
                         <div className="flex flex-col gap-1">
                             <h2 className="text-sm font-bold text-text-secondary uppercase">
@@ -192,6 +193,46 @@ export default function SandboxPage() {
                             🚀 미션 인증 완료 시뮬레이션
                         </Button>
                     </section>
+
+                    {/* 8. Input Component */}
+                    <section className="bg-card p-6 rounded-card shadow-sm flex flex-col gap-4">
+                        <div className="flex flex-col gap-1">
+                            <h2 className="text-sm font-bold text-text-secondary uppercase">
+                                8. Input Component
+                            </h2>
+                            <p className="text-[10px] text-text-secondary">
+                                라벨, 에러 핸들링, 비밀번호 토글이 내장된 공통 인풋
+                            </p>
+                        </div>
+
+                        <div className="flex flex-col gap-4">
+                            {/* 기본 인풋 */}
+                            <Input
+                                label="이메일"
+                                type="email"
+                                placeholder="example@dondok.com"
+                                required
+                            />
+
+                            {/* 비밀번호 인풋 (눈 모양 아이콘 확인) */}
+                            <Input
+                                label="비밀번호"
+                                type="password"
+                                placeholder="8자 이상 입력해주세요"
+                                required
+                            />
+
+                            {/* 에러 상태 인풋 */}
+                                <Input
+                                    label="닉네임"
+                                    type="text"
+                                    placeholder="사용하실 닉네임을 입력하세요"
+                                    errorMessage="이미 사용 중인 닉네임입니다."
+                                    required
+                                />
+                        </div>
+                    </section>
+
                 </div>
             </div>
 
