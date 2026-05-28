@@ -73,11 +73,8 @@ src/
 │   ├── crewStore.ts
 │   └── notificationStore.ts
 ├── types/                  # 공통 TypeScript 타입
-│   ├── api.ts              # API 공통 응답 타입
-│   ├── auth.ts
-│   ├── crew.ts
-│   ├── mission.ts
-│   └── settlement.ts
+│   ├── common.ts           # API 공통 응답 타입, 에러 코드
+│   └── domain.ts           # 전체 도메인 타입 (Enum + Request/Response)
 ├── hooks/                  # 커스텀 훅
 └── constants/              # 상수 (API 엔드포인트, 에러코드 등)
 ```
