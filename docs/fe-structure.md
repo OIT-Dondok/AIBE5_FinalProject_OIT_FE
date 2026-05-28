@@ -112,8 +112,7 @@ dondok-fe/
 │   │   └── upload.ts                 # S3 Presigned URL 업로드
 │   │
 │   ├── lib/                          # 통신 및 라이브러리 설정
-│   │   ├── api/
-│   │   │   └── instance.ts           # Axios 인스턴스 + JWT 인터셉터 [문창현 담당 → 김한비 초안]
+│   │   ├── axios.ts                  # Axios 인스턴스 + JWT 인터셉터 [문창현 담당 → 김한비 초안]
 │   │   ├── fcm.ts                    # FCM 초기화 [문창현 담당]
 │   │   └── utils.ts                  # cn(), formatDate() 등 공통 유틸
 │   │
