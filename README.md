@@ -3,6 +3,13 @@
 > **함께 채우는 성실함의 가치, 지분 기반 습관 형성 플랫폼**  
 > "당신의 성실함을 지분으로 증명하세요."
 
+<p align="center">
+  <img src="https://github.com/lei-3m/AIBE5/blob/main/img/dondok/%EC%95%B1.png?raw=true" width="180"/>
+<br/>
+  <strong>Dondok</strong>
+<br/>
+</p>
+
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.x-38bdf8?logo=tailwindcss)](https://tailwindcss.com/)
@@ -137,7 +144,7 @@ NEXT_PUBLIC_VAPID_KEY=...
 3. 작업 후 commit / push
 4. PR 생성 → Vercel Preview URL 자동 생성
 5. Preview URL 직접 테스트
-6. 리뷰 완료 후 Squash Merge
+6. 리뷰 완료 후 Merge
 7. main 자동 배포
 
 - 커밋 컨벤션: `feat` / `fix` / `refactor` / `docs` / `test` / `chore`
@@ -151,7 +158,7 @@ NEXT_PUBLIC_VAPID_KEY=...
 | 김세희 (A) | 회원가입/로그인 UI · 크루 탐색 · 이모지 리액션 · 대시보드 |
 | 서일현 (B) | 크루 상세 (탭) · 피드 탭 · 도딘 충전 · 미션 결과 카드 |
 | 문창현 (C) | JWT axios 인터셉터 · 프로필 · 방장 검증 · FCM · html2canvas |
-| **김한비 (D)** | **FE 공통 구조 셋업 · 문서 · 입장신청/신청자 관리 · 검증내역** |
+| 김한비 (D) | FE 공통 구조 셋업 · 문서 · 입장신청/신청자 관리 · 검증내역 |
 | 전성 (E) | Next.js 초기화 · 크루 생성 5단계 · AI 도우미 · 인증 업로드 · 도딘 잔액/내역 |
 
 ---
@@ -162,3 +169,5 @@ NEXT_PUBLIC_VAPID_KEY=...
 - [ERD](./docs/erd.md) _(작성 예정)_
 - [기술 스택 선택 배경](./docs/tech-stack.md)
 - [Swagger UI](http://localhost:8080/swagger-ui.html)
+
+<img src="https://github.com/lei-3m/AIBE5/blob/main/img/dondok/%EB%8F%88%EB%8F%85%20%EB%A1%9C%EA%B3%A0%20v2.2_%ED%88%AC%EB%AA%85.png?raw=true" width="180"/>
