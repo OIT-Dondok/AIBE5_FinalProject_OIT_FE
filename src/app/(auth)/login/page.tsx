@@ -58,14 +58,12 @@ export default function LoginPage() {
           {/* 슬로건 애니메이션 */}
           <div className="flex flex-col items-center gap-1 text-center">
             <p
-              className="text-xl font-bold text-text-primary transition-all duration-700"
-              style={{ opacity: slogan1Visible ? 1 : 0, transform: slogan1Visible ? "translateY(0)" : "translateY(8px)" }}
+              className={`text-xl font-bold text-text-primary transition-all duration-700 ${slogan1Visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}
             >
               사이는 돈독하게
             </p>
             <p
-              className="text-xl font-bold text-primary-green transition-all duration-700"
-              style={{ opacity: slogan2Visible ? 1 : 0, transform: slogan2Visible ? "translateY(0)" : "translateY(8px)" }}
+              className={`text-xl font-bold text-primary-green transition-all duration-700 ${slogan2Visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}
             >
               지갑은 두둑하게
             </p>
