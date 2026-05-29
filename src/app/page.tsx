@@ -1,12 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/common/Button";
 import { ShieldCheck, ArrowRight } from "lucide-react";
 
 export default function InitialPage() {
-    const router = useRouter();
 
     return (
         <div className="flex-1 flex flex-col items-center justify-between px-5 py-8 w-full">
@@ -24,6 +23,7 @@ export default function InitialPage() {
                             alt="Dondok App Icon"
                             fill
                             priority
+                            sizes="48px"
                             className="object-contain"
                         />
                     </div>
@@ -52,18 +52,14 @@ export default function InitialPage() {
 
                     {/* UI 컴포넌트 샌드박스 이동 버튼 (임시) */}
                     <div className="pt-4 mt-2 border-t border-text-secondary/5 w-full">
-                        <Button
-                            variant="primary-green"
-                            fullWidth
-                            size="sm"
-                            onClick={() => router.push("/sandbox")}
+                        <Link
+                            href="/sandbox"
+                            className="w-full flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-primary-green text-white text-sm font-semibold"
                         >
-                <span className="flex items-center justify-center gap-1.5 w-full">
-                    <ShieldCheck size={16} />
-                    UI 컴포넌트 샌드박스 보러가기
-                    <ArrowRight size={14} className="ml-1" />
-                </span>
-                        </Button>
+                            <ShieldCheck size={16} />
+                            UI 컴포넌트 샌드박스 보러가기
+                            <ArrowRight size={14} className="ml-1" />
+                        </Link>
                         <p className="text-[10px] text-text-secondary text-center mt-1.5 italic">
                             * 본 버튼은 백엔드 인프라 연동 전 공통 컴포넌트 검수용 관문입니다.
                         </p>
