@@ -38,7 +38,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                             placeholder:text-text-secondary/50
                             ${errorMessage
                             ? "border-red-500 focus:border-red-600"
-                            : "border-text-secondary/20 focus:border-brand-blue"
+                            : "border-text-secondary/20 focus:border-primary-green"
                         }
                             ${isPasswordType ? "pr-10" : ""} // 눈 아이콘이 들어갈 우측 여백 확보
                             ${className}

@@ -11,6 +11,8 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const router = useRouter();
 
   const [slogan1Visible, setSlogan1Visible] = useState(false);
@@ -25,8 +27,29 @@ export default function LoginPage() {
     };
   }, []);
 
+  const validate = () => {
+    let valid = true;
+    if (!email) {
+      setEmailError("이메일을 입력해주세요");
+      valid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailError("올바른 이메일 형식을 입력해주세요");
+      valid = false;
+    } else {
+      setEmailError("");
+    }
+    if (!password) {
+      setPasswordError("비밀번호를 입력해주세요");
+      valid = false;
+    } else {
+      setPasswordError("");
+    }
+    return valid;
+  };
+
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!validate()) return;
     setIsLoading(true);
     // TODO: 백엔드 연동 시 실제 로그인 로직으로 교체
     await new Promise((res) => setTimeout(res, 1000));
@@ -71,13 +94,14 @@ export default function LoginPage() {
         </div>
 
         {/* 로그인 폼 */}
-        <form onSubmit={handleLogin} className="flex flex-col gap-3 mt-10">
+        <form onSubmit={handleLogin} className="flex flex-col gap-3 mt-10" noValidate>
           <Input
             label="이메일"
             type="email"
             placeholder="이메일을 입력하세요"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => { setEmail(e.target.value); setEmailError(""); }}
+            errorMessage={emailError}
             required
             autoComplete="email"
           />
@@ -86,7 +110,8 @@ export default function LoginPage() {
             type="password"
             placeholder="비밀번호를 입력하세요"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => { setPassword(e.target.value); setPasswordError(""); }}
+            errorMessage={passwordError}
             required
             autoComplete="current-password"
           />
