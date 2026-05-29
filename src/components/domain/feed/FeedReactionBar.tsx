@@ -17,6 +17,11 @@ export function FeedReactionBar({ initialReactions }: FeedReactionBarProps) {
   const pickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setReactions(initialReactions);
+    setActivated(new Set());
+  }, [initialReactions]);
+
+  useEffect(() => {
     if (!showPicker) return;
     const handler = (e: MouseEvent) => {
       if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {

@@ -49,6 +49,7 @@ const STATUS_CONFIG: Record<CertificationStatus, { label: string; className: str
 
 function formatCertifiedAt(isoStr: string): string {
   const d = new Date(isoStr);
+  if (isNaN(d.getTime())) return '-';
   const kstHours = (d.getUTCHours() + 9) % 24;
   const ampm = kstHours < 12 ? '오전' : '오후';
   const displayHours = kstHours % 12 || 12;
