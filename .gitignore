@@ -56,3 +56,7 @@ out/
 
 # macOS 시스템 찌꺼기 파일
 .DS_Store
+
+# Next.js 자동 생성 타입 파일
+next-env.d.ts
+tsconfig.tsbuildinfo
