@@ -52,14 +52,13 @@ export default function InitialPage() {
 
                     {/* UI 컴포넌트 샌드박스 이동 버튼 (임시) */}
                     <div className="pt-4 mt-2 border-t border-text-secondary/5 w-full">
-                        <Link href="/sandbox" className="w-full block">
-                            <Button variant="primary-green" fullWidth size="sm">
-                                <span className="flex items-center justify-center gap-1.5 w-full">
-                                    <ShieldCheck size={16} />
-                                    UI 컴포넌트 샌드박스 보러가기
-                                    <ArrowRight size={14} className="ml-1" />
-                                </span>
-                            </Button>
+                        <Link
+                            href="/sandbox"
+                            className="w-full flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-primary-green text-white text-sm font-semibold"
+                        >
+                            <ShieldCheck size={16} />
+                            UI 컴포넌트 샌드박스 보러가기
+                            <ArrowRight size={14} className="ml-1" />
                         </Link>
                         <p className="text-[10px] text-text-secondary text-center mt-1.5 italic">
                             * 본 버튼은 백엔드 인프라 연동 전 공통 컴포넌트 검수용 관문입니다.
