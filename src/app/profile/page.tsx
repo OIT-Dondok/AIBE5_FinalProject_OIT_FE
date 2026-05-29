@@ -118,9 +118,6 @@ function ProfileCard({
   const avatarInitials = isInlineEditing
     ? normalizeInitials(inlineDraft.initials, profile.initials)
     : profile.initials;
-  const avatarStyle = avatarImageUrl
-    ? { backgroundImage: `url(${avatarImageUrl})` }
-    : undefined;
 
   const handleAvatarFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -161,13 +158,19 @@ function ProfileCard({
               />
               <label
                 htmlFor="profile-avatar-upload"
-                className={`flex h-20 w-20 cursor-pointer items-center justify-center rounded-full border border-primary-green/20 bg-success-green bg-cover bg-center text-2xl font-black text-primary-green shadow-inner transition hover:brightness-95 active:scale-95 ${
+                className={`relative flex h-20 w-20 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-primary-green/20 bg-success-green bg-cover bg-center text-2xl font-black text-primary-green shadow-inner transition hover:brightness-95 active:scale-95 ${
                   avatarImageUrl ? "text-transparent" : ""
                 }`}
-                style={avatarStyle}
                 aria-label="프로필 이미지 수정"
               >
-                {avatarImageUrl ? null : avatarInitials}
+                {avatarImageUrl ? (
+                  <AvatarImage
+                    src={avatarImageUrl}
+                    alt={`${profile.nickname} 프로필 이미지`}
+                  />
+                ) : (
+                  avatarInitials
+                )}
               </label>
               <label
                 htmlFor="profile-avatar-upload"
@@ -179,12 +182,18 @@ function ProfileCard({
             </>
           ) : (
             <div
-              className={`h-20 w-20 rounded-full bg-success-green border border-primary-green/20 flex items-center justify-center bg-cover bg-center text-2xl font-black text-primary-green shadow-inner ${
+              className={`relative h-20 w-20 overflow-hidden rounded-full bg-success-green border border-primary-green/20 flex items-center justify-center bg-cover bg-center text-2xl font-black text-primary-green shadow-inner ${
                 avatarImageUrl ? "text-transparent" : ""
               }`}
-              style={avatarStyle}
             >
-              {avatarImageUrl ? null : avatarInitials}
+              {avatarImageUrl ? (
+                <AvatarImage
+                  src={avatarImageUrl}
+                  alt={`${profile.nickname} 프로필 이미지`}
+                />
+              ) : (
+                avatarInitials
+              )}
             </div>
           )}
         </div>
@@ -273,6 +282,17 @@ function ProfileCard({
         )}
       </div>
     </form>
+  );
+}
+
+function AvatarImage({ src, alt }: { src: string; alt: string }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- 로컬 파일 미리보기 data URL을 즉시 표시합니다.
+    <img
+      src={src}
+      alt={alt}
+      className="absolute inset-0 h-full w-full rounded-full object-cover"
+    />
   );
 }
 
