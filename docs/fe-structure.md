@@ -18,22 +18,19 @@
 
 ```
 ────────────────────────────────
-  pages 층     (app/)           ← 페이지 조립. URL 담당. 제일 위
+  pages 층     (app/)               ← 페이지 조립. URL 담당. 제일 위
 ────────────────────────────────
-  features 층  (components/features/)  ← 도메인 기능 컴포넌트
+  domain 층    (components/[domain]/) ← 도메인별 기능 컴포넌트
 ────────────────────────────────
-  layout 층    (components/layout/)    ← 뼈대 (헤더, 네비바)
-────────────────────────────────
-  common 층    (components/common/)    ← 버튼, 인풋 등 공통 UI. 제일 아래
+  common 층    (components/common/)  ← 버튼, 인풋 등 공통 UI. 제일 아래
 ────────────────────────────────
 ```
 
 **규칙:**
-- `pages` → `features`, `layout`, `common` 사용 가능 ✅
-- `features` → `layout`, `common` 사용 가능 ✅
-- `layout` → `common` 사용 가능 ✅
+- `pages` → `[domain]`, `common` 사용 가능 ✅
+- `[domain]` → `common` 사용 가능 ✅
 - `common` → 다른 층 사용 금지 ❌
-- `features/crew` → `features/feed` 같은 **다른 도메인 직접 import 금지** ❌
+- `components/crew` → `components/feed` 같은 **다른 도메인 직접 import 금지** ❌
 
 ---
 
@@ -150,16 +147,16 @@ dondok-fe/
 
 | 경로 | 페이지 | 담당 |
 |------|--------|-----|
-| `/login`, `/signup` | 인증 | 김세희 |
-| `/crews` | 크루 탐색/목록 | 김세희 |
+| `/login`, `/signup` | 인증 | 문창현 |
+| `/crews` | 크루 탐색/목록 | 전성 |
 | `/crews/new` | 크루 생성 (5단계 + AI 도우미) | 전성 |
-| `/crews/[id]/feed` | 인증 피드 | 서일현 |
+| `/crews/[id]/feed` | 인증 피드 | 김세희 |
 | `/crews/[id]/dashboard` | 현황 (지분율 차트) | 김세희 |
-| `/crews/[id]/participants` | 신청자 관리 (방장) | 김한비 |
+| `/crews/[id]/participants` | 신청자 관리 (방장) | 전성 |
 | `/crews/[id]/verification` | 검증 내역 탭 | 김한비 |
 | `/my` | 프로필 조회/수정 | 문창현 |
-| `/my/dodin` | 도딘 잔액/내역 | 전성 |
-| `/notifications` | 알림 목록 | 문창현 |
+| `/my/dodin` | 도딘 잔액/내역 | 서일현 |
+| `/notifications` | 알림 목록 + FCM 웹 푸시 UI | 김한비 |
 
 ---
 
