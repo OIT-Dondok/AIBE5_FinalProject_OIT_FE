@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
+import { useId } from "react";
 
 import type { ProjectionCopy, ShareSegment } from "@/mocks/data/dashboard";
 
@@ -19,16 +20,23 @@ export function DashboardCard({
 }
 
 export function ProjectionTooltip({ copy }: { copy: ProjectionCopy }) {
+  const projectionTooltipId = useId();
+
   return (
     <span className="group relative inline-flex align-middle">
       <button
         type="button"
         aria-label="예상 정산 안내"
+        aria-describedby={projectionTooltipId}
         className="flex h-4 w-4 items-center justify-center rounded-full bg-text-secondary/10 text-[10px] font-black text-text-secondary hover:bg-primary-blue/10 hover:text-primary-blue focus:outline-none focus:ring-2 focus:ring-primary-blue/20"
       >
         ?
       </button>
-      <span className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 w-52 -translate-x-1/2 rounded-xl bg-text-primary px-3 py-2 text-left text-[11px] font-bold leading-relaxed text-white opacity-0 shadow-[0_8px_24px_rgba(34,34,34,0.18)] group-hover:opacity-100 group-focus-within:opacity-100">
+      <span
+        id={projectionTooltipId}
+        role="tooltip"
+        className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 w-52 -translate-x-1/2 rounded-xl bg-text-primary px-3 py-2 text-left text-[11px] font-bold leading-relaxed text-white opacity-0 shadow-[0_8px_24px_rgba(34,34,34,0.18)] group-hover:opacity-100 group-focus-within:opacity-100"
+      >
         <b className="mb-1 block text-white">{copy.eyebrow}</b>
         {copy.description} {copy.footnote}
       </span>
