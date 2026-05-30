@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ChevronLeft, Bell } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -36,14 +37,13 @@ export const Header = ({
                             <ChevronLeft size={24} className="text-text-primary" />
                         </button>
                     ) : showLogo ? (
-                        <div className="flex items-center">
-                            {/* 로고 높이를 h-16 래퍼에 맞춘 h-10(40px)으로 유지 */}
+                        <Link href="/crews" className="flex items-center">
                             <img
                                 src="/images/logo/dondok-logo.png"
                                 alt="Dondok Logo"
                                 className="h-20 w-auto object-contain select-none"
                             />
-                        </div>
+                        </Link>
                     ) : null}
                 </div>
 

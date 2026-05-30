@@ -7,15 +7,15 @@ interface ChipProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const statusStyles = {
-  active: "bg-white text-text-primary shadow-sm",
-  inactive: "bg-transparent text-text-secondary",
-  base: "py-3 px-4 text-sm font-medium rounded-xl",
+  active: "bg-card text-text-primary font-semibold shadow-sm",
+  inactive: "bg-transparent text-text-secondary font-medium hover:text-text-primary",
+  base: "py-2.5 px-4 text-sm rounded-xl transition-colors duration-150",
 };
 
 const categoryStyles = {
-  active: "bg-primary-green text-white",
-  inactive: "bg-transparent text-text-secondary",
-  base: "py-1.5 px-3 text-xs font-medium rounded-full",
+  active: "bg-primary-green text-white font-semibold shadow-sm shadow-primary-green/25",
+  inactive: "bg-transparent text-text-secondary font-medium hover:text-text-primary",
+  base: "py-1.5 px-3 text-xs rounded-full transition-colors duration-150",
 };
 
 export const Chip = ({

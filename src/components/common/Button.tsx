@@ -22,9 +22,9 @@ export const Button = ({
 
     // 2. 테마 변수 기반 스타일 매핑 (globals.css 엔진 연동)
     const variantStyles = {
-        "primary-blue": "bg-primary-blue text-white hover:opacity-90 active:scale-[0.99] shadow-md shadow-primary-blue/10",
-        "primary-green": "bg-primary-green text-white hover:opacity-90 active:scale-[0.99] shadow-md shadow-primary-green/10",
-        outline: "border border-text-secondary text-text-primary bg-transparent hover:bg-text-secondary/5 active:scale-[0.99]",
+        "primary-blue": "bg-primary-blue text-white hover:opacity-90 active:scale-[0.98] shadow-md shadow-primary-blue/20",
+        "primary-green": "bg-primary-green text-white hover:opacity-90 active:scale-[0.98] shadow-md shadow-primary-green/20",
+        outline: "border border-text-secondary/25 text-text-primary bg-transparent hover:bg-text-secondary/5 hover:border-text-secondary/40 active:scale-[0.98]",
     };
 
     const sizeStyles = {

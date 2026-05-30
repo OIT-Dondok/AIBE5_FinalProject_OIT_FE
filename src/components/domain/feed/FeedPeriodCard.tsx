@@ -29,7 +29,7 @@ export function FeedPeriodCard({ period, isCalendarOpen, onOpenCalendar }: FeedP
   const days = calcDays(period.start_date, period.end_date);
 
   return (
-    <div className="bg-card rounded-card px-4 py-3.5 flex items-center justify-between shadow-[0_2px_12px_rgba(34,34,34,0.06)] border border-white/70">
+    <div className="bg-card rounded-card px-4 py-3.5 flex items-center justify-between shadow-card border border-text-secondary/10">
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 flex items-center justify-center bg-primary-green/10 rounded-xl flex-shrink-0">
           <CalendarDays size={18} className="text-primary-green" />

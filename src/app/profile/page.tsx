@@ -54,7 +54,7 @@ export default function ProfilePage() {
   return (
     <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
       <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-8">
-        <Header title="프로필" showBackButton rightElement={<ProfileSettingsButton />} />
+        <Header showLogo rightElement={<ProfileSettingsButton />} />
 
         <div className="px-5 pt-5 flex flex-col gap-5">
           <ProfileCard

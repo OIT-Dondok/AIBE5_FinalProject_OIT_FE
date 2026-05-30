@@ -70,8 +70,8 @@ export function ProfileCard({
 
   return (
     <form
-      className={`max-w-full bg-card rounded-card px-5 py-6 shadow-[0_2px_12px_rgba(34,34,34,0.06)] border ${
-        isInlineEditing ? "border-primary-green/20" : "border-white/70"
+      className={`max-w-full bg-card rounded-card px-5 py-6 shadow-card border ${
+        isInlineEditing ? "border-primary-green/30" : "border-text-secondary/10"
       }`}
       onSubmit={onInlineSave}
     >

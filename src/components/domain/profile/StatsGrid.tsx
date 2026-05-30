@@ -58,7 +58,7 @@ export function StatsGrid({ stats }: StatsGridProps) {
       ];
 
   return (
-    <section className="bg-card rounded-card p-4 shadow-[0_2px_12px_rgba(34,34,34,0.05)] border border-white/70">
+    <section className="bg-card rounded-card p-4 shadow-card border border-text-secondary/10">
       <div className="flex items-center justify-between mb-3">
         <div>
           <h2 className="text-sm font-extrabold text-text-primary">활동 통계</h2>

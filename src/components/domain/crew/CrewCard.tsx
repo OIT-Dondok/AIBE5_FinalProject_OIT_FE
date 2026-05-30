@@ -80,7 +80,7 @@ export default function CrewCard({ crew }: CrewCardProps) {
   }
 
   return (
-      <div className={`bg-card rounded-card p-5 flex flex-col gap-4 border border-text-secondary/8 shadow-[0_2px_16px_rgba(0,0,0,0.06)] active:scale-[0.985] transition-all duration-150 cursor-pointer ${isClosed ? 'opacity-70' : ''}`}>
+      <div className={`bg-card rounded-card p-5 flex flex-col gap-4 border border-text-secondary/10 shadow-card hover:shadow-card-elevated active:scale-[0.985] transition-all duration-200 cursor-pointer ${isClosed ? 'opacity-60' : ''}`}>
 
         {/* 상단: 이모지 + 크루명/상태 + 보증금 */}
         <div className="flex items-center gap-3.5">
