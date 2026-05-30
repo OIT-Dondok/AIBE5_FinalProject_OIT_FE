@@ -98,6 +98,10 @@ export function ProgressBar({
 }
 
 function createConicGradient(segments: ShareSegment[]) {
+  if (segments.length === 0) {
+    return "conic-gradient(#e0e0e0 0% 100%)";
+  }
+
   const total = segments.reduce((sum, segment) => sum + segment.value, 0) || 1;
   let cursor = 0;
 
