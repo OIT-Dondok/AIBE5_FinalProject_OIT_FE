@@ -69,7 +69,7 @@ export function FeedItem({ item }: FeedItemProps) {
   const timeStr = formatCertifiedAt(item.certified_at);
 
   return (
-    <article className="bg-card rounded-card overflow-hidden border border-white/70 shadow-[0_4px_24px_rgba(34,34,34,0.10)]">
+    <article className="bg-card rounded-card overflow-hidden border border-text-secondary/10 shadow-card-elevated">
       {/* 상단: 카테고리 아이콘 + 크루명 + 상태 뱃지 */}
       <div className="px-4 pt-4 pb-3 flex items-center gap-3">
         <div

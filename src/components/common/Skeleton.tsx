@@ -19,7 +19,7 @@ export const Skeleton = ({
 }: SkeletonProps) => {
   return (
     <div
-      className={`bg-gray-200 animate-pulse ${variantStyles[variant]} ${className}`}
+      className={`bg-text-secondary/12 animate-pulse ${variantStyles[variant]} ${className}`}
       style={{
         width: typeof width === "number" ? `${width}px` : width,
         height: typeof height === "number" ? `${height}px` : height,

@@ -124,7 +124,7 @@ export function FeedCalendar({ currentPeriod, onApply, onClose }: FeedCalendarPr
           : null;
 
   return (
-    <div className="bg-card rounded-card border border-white/70 shadow-[0_6px_28px_rgba(34,34,34,0.10)] p-4">
+    <div className="bg-card rounded-card border border-text-secondary/10 shadow-card-elevated p-4">
       {/* 날짜 / 기간 탭 */}
       <div className="flex items-center bg-text-secondary/8 rounded-xl p-1 gap-1 mb-4">
         {(['date', 'period'] as Tab[]).map((t) => (
