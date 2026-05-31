@@ -8,7 +8,8 @@ import { Header } from "@/components/common/Header";
 import { ProfileCard, createProfileFormState, normalizeInitials } from "@/components/domain/profile/ProfileCard";
 import { ProfileEmpty } from "@/components/domain/profile/ProfileEmpty";
 import { ProfileLoading } from "@/components/domain/profile/ProfileLoading";
-import { ProfileSettingsButton } from "@/components/domain/profile/ProfileSettingsButton";
+import { ProfileMenuSections } from "@/components/domain/profile/ProfileMenuSections";
+import { ProfileSettingsSheet } from "@/components/domain/profile/ProfileSettingsSheet";
 import { StatsGrid } from "@/components/domain/profile/StatsGrid";
 
 import { mockCrewProfile } from "@/mocks/data/profile";
@@ -53,8 +54,8 @@ export default function ProfilePage() {
 
   return (
     <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
-      <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-8">
-        <Header showLogo rightElement={<ProfileSettingsButton />} />
+      <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-28">
+        <Header showLogo rightElement={<ProfileSettingsSheet />} />
 
         <div className="px-5 pt-5 flex flex-col gap-5">
           <ProfileCard
@@ -67,6 +68,7 @@ export default function ProfilePage() {
             onInlineSave={handleInlineSave}
           />
           <StatsGrid stats={profile.stats} />
+          <ProfileMenuSections />
         </div>
       </div>
     </main>
