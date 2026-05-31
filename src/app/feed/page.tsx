@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { Header } from '@/components/common/Header';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FeedCalendar } from '@/components/domain/feed/FeedCalendar';
-import { FeedCertifyButton } from '@/components/domain/feed/FeedCertifyButton';
 import { FeedCrewFilter } from '@/components/domain/feed/FeedCrewFilter';
 import { FeedItem } from '@/components/domain/feed/FeedItem';
 import { FeedPeriodCard } from '@/components/domain/feed/FeedPeriodCard';
@@ -71,7 +70,6 @@ export default function FeedPage() {
         </div>
       </div>
 
-      <FeedCertifyButton selectedCrewId={selectedCrewId} crews={MOCK_MY_CREWS} />
     </main>
   );
 }
