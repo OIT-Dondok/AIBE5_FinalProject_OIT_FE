@@ -1,6 +1,3 @@
-"use client";
-
-import { useState } from "react";
 import {
     Users,
     Wallet,
@@ -10,7 +7,6 @@ import {
     Clock,
     Calculator,
     HelpCircle,
-    ChevronDown,
     CheckCircle2,
     ArrowRight,
     Sun,
@@ -18,6 +14,7 @@ import {
     Sunset,
 } from "lucide-react";
 import { Header } from "@/components/common/Header";
+import { FaqAccordion } from "@/components/domain/guide/FaqAccordion";
 
 // ─── 섹션 1: 돈독이란 ────────────────────────────────────────────────────────
 
@@ -54,7 +51,7 @@ interface Concept {
     bg: string;
 }
 
-const CONCEPTS: Concept[] = [
+const CONCEPTS: readonly Concept[] = [
     {
         icon: <Users size={20} className="text-primary-green" />,
         term: "크루",
@@ -79,7 +76,7 @@ const CONCEPTS: Concept[] = [
         description: "돈독 내 포인트 — 환급금이 쌓이는 곳",
         bg: "bg-violet-50",
     },
-];
+] as const;
 
 function CoreConcepts() {
     return (
@@ -119,13 +116,13 @@ interface Step {
     description: string;
 }
 
-const STEPS: Step[] = [
+const STEPS: readonly Step[] = [
     { number: 1, title: "크루 탐색", description: "마음에 드는 크루 발견" },
     { number: 2, title: "보증금 예치", description: "방장 승인 대기" },
     { number: 3, title: "매일 인증", description: "사진 + 캡션으로 인증" },
     { number: 4, title: "방장 검증", description: "승인 / 거절" },
     { number: 5, title: "정산", description: "지분율 기반 환급" },
-];
+] as const;
 
 function HowToUse() {
     return (
@@ -172,7 +169,7 @@ interface AuthType {
     border: string;
 }
 
-const AUTH_TYPES: AuthType[] = [
+const AUTH_TYPES: readonly AuthType[] = [
     {
         icon: <Sun size={16} className="text-amber-500" />,
         label: "아침형",
@@ -200,7 +197,7 @@ const AUTH_TYPES: AuthType[] = [
         bg: "bg-violet-50",
         border: "border-violet-200/60",
     },
-];
+] as const;
 
 function AuthMethod() {
     return (
@@ -271,78 +268,6 @@ function Settlement() {
                     </li>
                 ))}
             </ul>
-        </section>
-    );
-}
-
-// ─── 섹션 6: FAQ (아코디언) ───────────────────────────────────────────────────
-
-interface FaqItem {
-    question: string;
-    answer: string;
-}
-
-const FAQ_ITEMS: FaqItem[] = [
-    {
-        question: "보증금은 안전한가요?",
-        answer: "토스페이먼츠 연동으로 안전하게 관리됩니다.",
-    },
-    {
-        question: "방장 승인 전에 취소하면?",
-        answer: "보증금이 즉시 환급됩니다.",
-    },
-    {
-        question: "방장 승인 후 취소하면?",
-        answer: "취소가 불가하며, 보증금은 Lock 처리됩니다.",
-    },
-    {
-        question: "인증을 못하면?",
-        answer: "해당 일 지분율이 낮아집니다. 전액 몰수는 없습니다.",
-    },
-];
-
-function FaqAccordion() {
-    const [openIndex, setOpenIndex] = useState<number | null>(null);
-
-    const toggle = (idx: number) => {
-        setOpenIndex((prev) => (prev === idx ? null : idx));
-    };
-
-    return (
-        <section className="bg-card rounded-card shadow-card border border-text-secondary/10 overflow-hidden">
-            <div className="flex items-center gap-2 px-5 pt-5 pb-3">
-                <span className="text-xl">🙋</span>
-                <h2 className="text-base font-bold text-text-primary">자주 묻는 질문</h2>
-            </div>
-            <div className="divide-y divide-text-secondary/[0.08]">
-                {FAQ_ITEMS.map((item, idx) => {
-                    const isOpen = openIndex === idx;
-                    return (
-                        <div key={item.question}>
-                            <button
-                                type="button"
-                                onClick={() => toggle(idx)}
-                                className="w-full flex items-center justify-between px-5 py-4 hover:bg-text-secondary/5 transition-colors"
-                            >
-                                <span className="text-sm font-semibold text-text-primary text-left pr-3">
-                                    Q. {item.question}
-                                </span>
-                                <ChevronDown
-                                    size={16}
-                                    className={`text-text-secondary/60 shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
-                                />
-                            </button>
-                            {isOpen && (
-                                <div className="px-5 pb-4 pt-0">
-                                    <p className="text-sm text-text-secondary leading-relaxed pl-1 border-l-2 border-primary-green/40 pl-3">
-                                        {item.answer}
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
-            </div>
         </section>
     );
 }
