@@ -149,7 +149,7 @@ function VerificationCard({ item, isExpanded, onToggle }: { item: HostCertificat
               </p>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="flex shrink-0 items-center gap-2">
             <span className="rounded-full bg-primary-blue/10 px-2.5 py-1 text-[11px] font-extrabold text-primary-blue">
               {item.certification_status === "SUCCESS" ? "성공" : "검토중"}
             </span>
