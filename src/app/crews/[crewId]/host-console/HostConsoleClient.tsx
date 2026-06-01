@@ -169,7 +169,7 @@ function VerificationCard({ item, isExpanded, onToggle }: { item: HostCertificat
                 <p className="truncate text-sm font-extrabold text-text-primary">{item.nickname}</p>
               </div>
               <p className="mt-1 text-xs font-medium text-text-secondary">
-                {formatDate(item.submitted_at)} · {formatTime(item.submitted_at)} · Exif {exifSummaryLabel[item.exif_status]}
+                {formatDate(item.submitted_at)} · {formatTime(item.submitted_at)}
               </p>
             </div>
           </div>
