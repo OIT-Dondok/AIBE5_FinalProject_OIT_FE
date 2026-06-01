@@ -196,15 +196,21 @@ function VerificationCard({ item, isExpanded, onToggle }: { item: HostCertificat
             "{item.comment}"
           </p>
 
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <Button variant="outline" size="sm">
-              <X size={14} />
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-red-50 text-sm font-extrabold text-red-500 transition-colors hover:bg-red-100"
+            >
+              <X size={16} strokeWidth={2.8} />
               거절
-            </Button>
-            <Button variant="primary-green" size="sm">
-              <Check size={14} />
+            </button>
+            <button
+              type="button"
+              className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-primary-green text-sm font-extrabold text-white shadow-sm shadow-primary-green/20 transition-colors hover:opacity-90"
+            >
+              <Check size={16} strokeWidth={2.8} />
               승인
-            </Button>
+            </button>
           </div>
         </div>
       )}
