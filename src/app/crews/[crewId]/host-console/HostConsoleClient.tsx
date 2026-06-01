@@ -30,6 +30,7 @@ import {
   getHostNotices,
   type HostApplicationMock,
   type HostCertificationMock,
+  type HostExifStatus,
   type HostReviewBucket,
 } from "@/mocks/data/host";
 import type { ParticipantStatus } from "@/types/domain";
@@ -87,6 +88,24 @@ const applicationStatusStyles: Record<ParticipantStatus, string> = {
   EXPIRED: "bg-text-secondary/10 text-text-secondary border-text-secondary/10",
 };
 
+const exifSummaryLabel: Record<HostExifStatus, string> = {
+  NORMAL: "✓ 정상",
+  MISSING: "⚠ 없음",
+  FAILED: "✕ 실패",
+};
+
+const exifDetailLabel: Record<HostExifStatus, string> = {
+  NORMAL: "✓ 성공",
+  MISSING: "⚠ 메타데이터 없음",
+  FAILED: "✕ 실패",
+};
+
+const exifDetailStyle: Record<HostExifStatus, string> = {
+  NORMAL: "text-primary-green",
+  MISSING: "text-[#D89B4D]",
+  FAILED: "text-red-500",
+};
+
 const formatDateTime = (value: string) => {
   const matched = value.match(/^\d{4}-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
 
@@ -128,7 +147,11 @@ function SectionCard({ children, className = "" }: { children: React.ReactNode; 
 
 function VerificationCard({ item, isExpanded, onToggle }: { item: HostCertificationMock; isExpanded: boolean; onToggle: () => void }) {
   return (
-    <article className="overflow-hidden rounded-card border border-text-secondary/10 bg-card shadow-sm">
+    <article
+      className={`overflow-hidden rounded-card bg-card shadow-sm ${
+        isExpanded ? "border-2 border-[#4d73d9]" : "border border-text-secondary/10"
+      }`}
+    >
       <button type="button" onClick={onToggle} className="w-full px-4 py-3.5 text-left">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -145,7 +168,7 @@ function VerificationCard({ item, isExpanded, onToggle }: { item: HostCertificat
                 )}
               </div>
               <p className="mt-1 text-xs font-medium text-text-secondary">
-                {formatTime(item.submitted_at)} · Exif {item.exif_valid ? "✓ 정상" : "⚠ 확인"}
+                {formatTime(item.submitted_at)} · Exif {exifSummaryLabel[item.exif_status]}
               </p>
             </div>
           </div>
@@ -153,8 +176,8 @@ function VerificationCard({ item, isExpanded, onToggle }: { item: HostCertificat
             <span className="rounded-full bg-primary-blue/10 px-2.5 py-1 text-[11px] font-extrabold text-primary-blue">
               {item.certification_status === "SUCCESS" ? "성공" : "검토중"}
             </span>
-            <span className="flex h-6 w-5 items-center justify-center text-[#aeaaa1]">
-              {isExpanded ? <ChevronDown size={21} strokeWidth={2.4} /> : <ChevronRight size={21} strokeWidth={2.4} />}
+            <span className={`flex h-6 w-5 items-center justify-center ${isExpanded ? "text-[#4d73d9]" : "text-[#aeaaa1]"}`}>
+              {isExpanded ? <ChevronDown size={19} strokeWidth={2.4} /> : <ChevronRight size={21} strokeWidth={2.4} />}
             </span>
           </div>
         </div>
@@ -179,8 +202,8 @@ function VerificationCard({ item, isExpanded, onToggle }: { item: HostCertificat
               </div>
               <div className="grid grid-cols-[64px_1fr] items-center gap-2">
                 <p className="text-xs font-extrabold text-text-secondary">Exif 검증</p>
-                <p className={`text-xs font-extrabold ${item.exif_valid ? "text-primary-green" : "text-[#D89B4D]"}`}>
-                  {item.exif_valid ? "✓ 성공" : "⚠ 메타데이터 없음"}
+                <p className={`text-xs font-extrabold ${exifDetailStyle[item.exif_status]}`}>
+                  {exifDetailLabel[item.exif_status]}
                 </p>
               </div>
               <div className="grid grid-cols-[64px_1fr] items-center gap-2">

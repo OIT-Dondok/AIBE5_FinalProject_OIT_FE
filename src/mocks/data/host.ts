@@ -1,6 +1,7 @@
 import type { CertificationStatus, ParticipantStatus, RejectReasonCode } from "@/types/domain";
 
 export type HostReviewBucket = "urgent" | "warning" | "normal";
+export type HostExifStatus = "NORMAL" | "MISSING" | "FAILED";
 
 export interface HostCrewDetailMock {
   crew_id: number;
@@ -22,6 +23,7 @@ export interface HostCertificationMock {
   image_url: string | null;
   submitted_at: string;
   captured_at: string;
+  exif_status: HostExifStatus;
   exif_valid: boolean;
   is_duplicate: boolean;
   comment: string;
@@ -83,6 +85,7 @@ export const MOCK_HOST_CERTIFICATIONS: HostCertificationMock[] = [
     image_url: null,
     submitted_at: "2026-06-01T08:42:00+09:00",
     captured_at: "2026-06-01T08:39:00+09:00",
+    exif_status: "MISSING",
     exif_valid: false,
     is_duplicate: false,
     comment: "오늘 분량 완료했습니다.",
@@ -99,7 +102,8 @@ export const MOCK_HOST_CERTIFICATIONS: HostCertificationMock[] = [
     image_url: null,
     submitted_at: "2026-06-01T08:55:00+09:00",
     captured_at: "2026-06-01T08:54:00+09:00",
-    exif_valid: true,
+    exif_status: "FAILED",
+    exif_valid: false,
     is_duplicate: true,
     comment: "어제보다 집중이 잘 됐어요.",
     first_failed: false,
@@ -115,6 +119,7 @@ export const MOCK_HOST_CERTIFICATIONS: HostCertificationMock[] = [
     image_url: null,
     submitted_at: "2026-06-01T07:58:00+09:00",
     captured_at: "2026-06-01T07:57:00+09:00",
+    exif_status: "NORMAL",
     exif_valid: true,
     is_duplicate: false,
     comment: "출근 전에 인증 완료.",
