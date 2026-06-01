@@ -9,6 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@tiptap/extension-link": "^3.24.0",
+    "@tiptap/extension-underline": "^3.24.0",
+    "@tiptap/react": "^3.24.0",
+    "@tiptap/starter-kit": "^3.24.0",
     "axios": "^1.16.1",
     "lucide-react": "^1.16.0",
     "next": "16.2.6",

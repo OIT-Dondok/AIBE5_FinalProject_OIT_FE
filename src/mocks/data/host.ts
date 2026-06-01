@@ -45,6 +45,7 @@ export interface HostNoticeMock {
   notice_id: number;
   title: string;
   content: string;
+  content_html: string;
   created_at: string;
   updated_at: string | null;
   reaction_count: number;
@@ -177,6 +178,8 @@ export const MOCK_HOST_NOTICES: HostNoticeMock[] = [
     notice_id: 501,
     title: "6월 첫째 주 인증 기준 안내",
     content: "사진에는 오늘 읽은 페이지와 날짜가 함께 보이도록 올려주세요.",
+    content_html:
+      "<p><strong>사진에는 오늘 읽은 페이지와 날짜</strong>가 함께 보이도록 올려주세요.</p><ul><li>페이지 번호가 보이면 좋아요.</li><li>촬영 시각이 Exif와 크게 다르면 거절될 수 있어요.</li></ul>",
     created_at: "2026-06-01T09:00:00+09:00",
     updated_at: null,
     reaction_count: 6,
@@ -191,6 +194,8 @@ export const MOCK_HOST_NOTICES: HostNoticeMock[] = [
     notice_id: 502,
     title: "마감 10분 전 업로드 지양",
     content: "Exif 확인이 늦어질 수 있어 마감 직전 업로드는 피해주세요.",
+    content_html:
+      "<p>Exif 확인이 늦어질 수 있어 <u>마감 직전 업로드는 피해 주세요.</u></p><ol><li>가능하면 마감 30분 전까지 인증해주세요.</li><li>문제가 있으면 댓글로 남겨주세요.</li></ol>",
     created_at: "2026-05-30T21:00:00+09:00",
     updated_at: "2026-05-31T10:12:00+09:00",
     reaction_count: 3,
@@ -286,4 +291,32 @@ export function getHostNoticeComments(crewId: number, noticeId: number) {
 export function deleteHostNotice(crewId: number, noticeId: number) {
   void crewId;
   return MOCK_HOST_NOTICES.some((notice) => notice.notice_id === noticeId);
+}
+
+const htmlToPlainText = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
+export function createHostNotice(crewId: number, payload: { title: string; content_html: string }) {
+  void crewId;
+  return {
+    notice_id: Date.now(),
+    title: payload.title,
+    content: htmlToPlainText(payload.content_html),
+    content_html: payload.content_html,
+    created_at: new Date().toISOString(),
+    updated_at: null,
+    reaction_count: 0,
+    comment_count: 0,
+    reactions: {},
+  } satisfies HostNoticeMock;
+}
+
+export function updateHostNotice(crewId: number, noticeId: number, payload: { title: string; content_html: string }) {
+  void crewId;
+  return {
+    notice_id: noticeId,
+    title: payload.title,
+    content: htmlToPlainText(payload.content_html),
+    content_html: payload.content_html,
+    updated_at: new Date().toISOString(),
+  };
 }
