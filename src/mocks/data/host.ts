@@ -282,3 +282,8 @@ export function getHostNoticeComments(crewId: number, noticeId: number) {
   void crewId;
   return MOCK_HOST_NOTICE_COMMENTS.filter((comment) => comment.notice_id === noticeId);
 }
+
+export function deleteHostNotice(crewId: number, noticeId: number) {
+  void crewId;
+  return MOCK_HOST_NOTICES.some((notice) => notice.notice_id === noticeId);
+}

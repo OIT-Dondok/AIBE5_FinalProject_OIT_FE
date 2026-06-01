@@ -19,7 +19,9 @@ import { Button } from "@/components/common/Button";
 import { Chip } from "@/components/common/Chip";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
+import { Modal } from "@/components/common/Modal";
 import {
+  deleteHostNotice,
   getCrewApplications,
   getHostCertifications,
   getHostCrewDetail,
@@ -320,6 +322,16 @@ function NoticesTab() {
   const router = useRouter();
   const crewId = Number(params.crewId);
   const notices = getHostNotices(crewId);
+  const [openMenuNoticeId, setOpenMenuNoticeId] = useState<number | null>(null);
+  const [deleteTargetNoticeId, setDeleteTargetNoticeId] = useState<number | null>(null);
+
+  const handleDeleteNotice = () => {
+    if (deleteTargetNoticeId === null) return;
+    deleteHostNotice(crewId, deleteTargetNoticeId);
+    setDeleteTargetNoticeId(null);
+    setOpenMenuNoticeId(null);
+    router.push(`/crews/${crewId}/host-console`);
+  };
 
   return (
     <div className="flex flex-col gap-3">
@@ -348,7 +360,7 @@ function NoticesTab() {
           {notices.map((notice) => (
             <article
               key={notice.notice_id}
-              className="rounded-2xl border border-text-secondary/10 bg-card px-4 py-4 shadow-sm"
+              className="relative rounded-2xl border border-text-secondary/10 bg-card px-4 py-4 shadow-sm"
             >
               <div className="flex items-start justify-between gap-3">
                 <button
@@ -361,12 +373,35 @@ function NoticesTab() {
                 </button>
                 <button
                   type="button"
-                  aria-label="공지 수정"
-                  onClick={() => router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}/edit`)}
+                  aria-label="공지 메뉴 열기"
+                  onClick={() =>
+                    setOpenMenuNoticeId((current) => (current === notice.notice_id ? null : notice.notice_id))
+                  }
                   className="shrink-0 rounded-full p-1 text-text-secondary hover:bg-text-secondary/10"
                 >
                   <MoreHorizontal size={18} />
                 </button>
+                {openMenuNoticeId === notice.notice_id && (
+                  <div className="absolute right-4 top-12 z-20 w-28 overflow-hidden rounded-xl border border-text-secondary/10 bg-card shadow-card">
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}/edit`)}
+                      className="block w-full px-3 py-2.5 text-left text-xs font-bold text-text-primary hover:bg-text-secondary/5"
+                    >
+                      수정하기
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeleteTargetNoticeId(notice.notice_id);
+                        setOpenMenuNoticeId(null);
+                      }}
+                      className="block w-full px-3 py-2.5 text-left text-xs font-bold text-red-500 hover:bg-red-50"
+                    >
+                      삭제하기
+                    </button>
+                  </div>
+                )}
               </div>
               <div className="mt-3 flex items-center justify-between text-[11px] text-text-secondary">
                 <span>작성 {formatDateTime(notice.created_at)}</span>
@@ -376,6 +411,27 @@ function NoticesTab() {
           ))}
         </div>
       )}
+
+      <Modal
+        isOpen={deleteTargetNoticeId !== null}
+        onClose={() => setDeleteTargetNoticeId(null)}
+        ariaLabel="공지 삭제 확인"
+      >
+        <div className="px-5 py-5">
+          <h2 className="text-base font-extrabold text-text-primary">공지를 삭제할까요?</h2>
+          <p className="mt-2 text-sm leading-relaxed text-text-secondary">
+            삭제한 공지는 목록에서 더 이상 사용할 수 없습니다. 실제 API 연결 전까지는 mock 처리됩니다.
+          </p>
+          <div className="mt-5 grid grid-cols-2 gap-2">
+            <Button type="button" variant="outline" onClick={() => setDeleteTargetNoticeId(null)}>
+              취소
+            </Button>
+            <Button type="button" variant="primary-green" onClick={handleDeleteNotice}>
+              삭제하기
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
