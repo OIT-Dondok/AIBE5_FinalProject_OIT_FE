@@ -98,6 +98,15 @@ const formatDateTime = (value: string) => {
   return `${month}. ${day}. ${period} ${String(displayHour).padStart(2, "0")}:${minute}`;
 };
 
+const formatTime = (value: string) => {
+  const matched = value.match(/^\d{4}-\d{2}-\d{2}T(\d{2}):(\d{2})/);
+
+  if (!matched) return value;
+
+  const [, hour, minute] = matched;
+  return `${hour}:${minute}`;
+};
+
 function SectionCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <section className={`bg-card rounded-card shadow-card border border-text-secondary/10 overflow-hidden ${className}`}>
@@ -125,7 +134,7 @@ function VerificationCard({ item, isExpanded, onToggle }: { item: HostCertificat
                 )}
               </div>
               <p className="mt-1 text-xs font-medium text-text-secondary">
-                {formatDateTime(item.submitted_at)} · Exif {item.exif_valid ? "✓ 정상" : "⚠ 확인"}
+                {formatTime(item.submitted_at)} · Exif {item.exif_valid ? "✓ 정상" : "⚠ 확인"}
               </p>
             </div>
           </div>
@@ -522,7 +531,7 @@ export default function HostConsoleClient() {
           </section>
 
           <SectionCard className="p-1.5">
-            <div className="grid grid-cols-3 gap-1">
+            <div className="grid grid-cols-3 gap-2">
               {HOST_TABS.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.value;
@@ -531,7 +540,7 @@ export default function HostConsoleClient() {
                     key={tab.value}
                     type="button"
                     onClick={() => setActiveTab(tab.value)}
-                    className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-2 py-2.5 text-xs font-bold transition-colors ${
+                    className={`flex min-w-0 flex-col items-center justify-center gap-1.5 rounded-xl px-2 py-3.5 text-xs font-bold transition-colors ${
                       isActive ? "bg-success-green/55 text-primary-green" : "text-text-secondary hover:bg-text-secondary/5"
                     }`}
                   >
