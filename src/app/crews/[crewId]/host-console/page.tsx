@@ -50,8 +50,6 @@ const APPLICATION_FILTERS: Array<{ value: ApplicationFilter; label: string }> = 
   { value: "PENDING", label: "대기" },
   { value: "LOCKED", label: "승인" },
   { value: "REJECTED", label: "거절" },
-  { value: "CANCELLED", label: "취소" },
-  { value: "EXPIRED", label: "만료" },
 ];
 
 const applicationStatusLabel: Record<ParticipantStatus, string> = {
