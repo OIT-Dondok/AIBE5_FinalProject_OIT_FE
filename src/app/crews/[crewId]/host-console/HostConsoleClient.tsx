@@ -107,6 +107,15 @@ const formatTime = (value: string) => {
   return `${hour}:${minute}`;
 };
 
+const formatDate = (value: string) => {
+  const matched = value.match(/^(\d{4})-(\d{2})-(\d{2})T/);
+
+  if (!matched) return value;
+
+  const [, year, month, day] = matched;
+  return `${year}-${month}-${day}`;
+};
+
 function SectionCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <section className={`bg-card rounded-card shadow-card border border-text-secondary/10 overflow-hidden ${className}`}>
@@ -146,22 +155,33 @@ function VerificationCard({ item, isExpanded, onToggle }: { item: HostCertificat
 
       {isExpanded && (
         <div className="border-t border-text-secondary/10 bg-background/55 px-4 pb-4 pt-3">
-          <div className="grid grid-cols-3 gap-2">
-            <div className="rounded-xl bg-card px-3 py-2 border border-text-secondary/10">
-              <p className="text-[10px] font-semibold text-text-secondary">촬영 시각</p>
-              <p className="mt-1 text-[11px] font-bold text-text-primary">{formatDateTime(item.captured_at)}</p>
+          <div className="flex gap-3">
+            <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-xl bg-success-green/70">
+              {item.image_url ? (
+                <img src={item.image_url} alt={`${item.nickname} 인증 사진`} className="h-full w-full object-cover" />
+              ) : null}
+              <span className="absolute right-2 top-2 rounded-md bg-text-primary/65 px-2 py-1 text-[10px] font-extrabold text-white">
+                확대
+              </span>
             </div>
-            <div className="rounded-xl bg-card px-3 py-2 border border-text-secondary/10">
-              <p className="text-[10px] font-semibold text-text-secondary">Exif 검증</p>
-              <p className={`mt-1 text-[11px] font-bold ${item.exif_valid ? "text-primary-green" : "text-red-500"}`}>
-                {item.exif_valid ? "✓ 성공" : "확인 필요"}
-              </p>
-            </div>
-            <div className="rounded-xl bg-card px-3 py-2 border border-text-secondary/10">
-              <p className="text-[10px] font-semibold text-text-secondary">중복</p>
-              <p className={`mt-1 text-[11px] font-bold ${item.is_duplicate ? "text-amber-600" : "text-primary-green"}`}>
-                {item.is_duplicate ? "의심" : "없음"}
-              </p>
+
+            <div className="min-w-0 flex-1 space-y-2 py-1">
+              <div className="grid grid-cols-[76px_1fr] items-center gap-2">
+                <p className="text-xs font-extrabold text-text-secondary">촬영 일자</p>
+                <p className="text-xs font-extrabold text-text-primary">{formatDate(item.captured_at)}</p>
+              </div>
+              <div className="grid grid-cols-[76px_1fr] items-center gap-2">
+                <p className="text-xs font-extrabold text-text-secondary">Exif 검증</p>
+                <p className={`text-xs font-extrabold ${item.exif_valid ? "text-primary-green" : "text-amber-600"}`}>
+                  {item.exif_valid ? "✓ 성공" : "⚠ 메타데이터 없음"}
+                </p>
+              </div>
+              <div className="grid grid-cols-[76px_1fr] items-center gap-2">
+                <p className="text-xs font-extrabold text-text-secondary">중복</p>
+                <p className={`text-xs font-extrabold ${item.is_duplicate ? "text-red-500" : "text-primary-green"}`}>
+                  {item.is_duplicate ? "있음" : "없음"}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -205,7 +225,7 @@ function VerificationTab() {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
-        <div className="grid flex-1 grid-cols-3 gap-1.5">
+        <div className="flex flex-1 items-center gap-3">
           {REVIEW_FILTERS.map((filter) => {
             const isActive = reviewFilter === filter.value;
             const styles = REVIEW_FILTER_STYLES[filter.value];
@@ -218,7 +238,7 @@ function VerificationTab() {
                   setReviewFilter(filter.value);
                   setExpandedMissionLogId(null);
                 }}
-                className={`rounded-[10px] px-2 py-1.5 text-[11px] font-extrabold transition-colors ${
+                className={`rounded-[10px] px-3 py-1.5 text-[11px] font-extrabold transition-colors ${
                   isActive ? styles.active : styles.inactive
                 }`}
               >
