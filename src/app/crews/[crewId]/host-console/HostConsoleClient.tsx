@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import {
   Bell,
   Check,
+  ChevronDown,
+  ChevronRight,
   ClipboardCheck,
   FileText,
   Megaphone,
@@ -149,6 +151,9 @@ function VerificationCard({ item, isExpanded, onToggle }: { item: HostCertificat
           </div>
           <span className="shrink-0 rounded-full bg-primary-blue/10 px-2.5 py-1 text-[11px] font-extrabold text-primary-blue">
             {item.certification_status === "SUCCESS" ? "성공" : "검토중"}
+          </span>
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center text-text-secondary">
+            {isExpanded ? <ChevronDown size={19} strokeWidth={2.4} /> : <ChevronRight size={19} strokeWidth={2.4} />}
           </span>
         </div>
       </button>
