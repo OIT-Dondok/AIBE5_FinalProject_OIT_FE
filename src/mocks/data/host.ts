@@ -48,6 +48,17 @@ export interface HostNoticeMock {
   created_at: string;
   updated_at: string | null;
   reaction_count: number;
+  comment_count: number;
+  reactions: Record<string, number>;
+}
+
+export interface HostNoticeCommentMock {
+  comment_id: number;
+  notice_id: number;
+  member_uuid: string;
+  nickname: string;
+  content: string;
+  created_at: string;
 }
 
 export const MOCK_HOST_CREW_DETAIL: HostCrewDetailMock = {
@@ -169,6 +180,12 @@ export const MOCK_HOST_NOTICES: HostNoticeMock[] = [
     created_at: "2026-06-01T09:00:00+09:00",
     updated_at: null,
     reaction_count: 6,
+    comment_count: 3,
+    reactions: {
+      "👍": 3,
+      "확인": 2,
+      "🔥": 1,
+    },
   },
   {
     notice_id: 502,
@@ -177,6 +194,54 @@ export const MOCK_HOST_NOTICES: HostNoticeMock[] = [
     created_at: "2026-05-30T21:00:00+09:00",
     updated_at: "2026-05-31T10:12:00+09:00",
     reaction_count: 3,
+    comment_count: 2,
+    reactions: {
+      "👍": 2,
+      "확인": 1,
+    },
+  },
+];
+
+export const MOCK_HOST_NOTICE_COMMENTS: HostNoticeCommentMock[] = [
+  {
+    comment_id: 7001,
+    notice_id: 501,
+    member_uuid: "018f4fd2-6d7a-7a41-9f58-comment001",
+    nickname: "민서",
+    content: "확인했습니다. 오늘 인증부터 날짜가 보이게 찍을게요.",
+    created_at: "2026-06-01T09:12:00+09:00",
+  },
+  {
+    comment_id: 7002,
+    notice_id: 501,
+    member_uuid: "018f4fd2-6d7a-7a41-9f58-comment002",
+    nickname: "주원",
+    content: "페이지 번호도 같이 보이면 좋을까요?",
+    created_at: "2026-06-01T09:18:00+09:00",
+  },
+  {
+    comment_id: 7003,
+    notice_id: 501,
+    member_uuid: "018f4fd2-6d7a-7a41-9f58-comment003",
+    nickname: "하린",
+    content: "네, 기준 이해했습니다.",
+    created_at: "2026-06-01T09:24:00+09:00",
+  },
+  {
+    comment_id: 7004,
+    notice_id: 502,
+    member_uuid: "018f4fd2-6d7a-7a41-9f58-comment004",
+    nickname: "도윤",
+    content: "마감 30분 전에는 올리도록 할게요.",
+    created_at: "2026-05-30T21:14:00+09:00",
+  },
+  {
+    comment_id: 7005,
+    notice_id: 502,
+    member_uuid: "018f4fd2-6d7a-7a41-9f58-comment005",
+    nickname: "서아",
+    content: "알림 받고 바로 업로드하겠습니다.",
+    created_at: "2026-05-30T21:26:00+09:00",
   },
 ];
 
@@ -206,4 +271,14 @@ export function getCrewApplications(crewId: number, status?: ParticipantStatus) 
 export function getHostNotices(crewId: number) {
   void crewId;
   return MOCK_HOST_NOTICES;
+}
+
+export function getHostNotice(crewId: number, noticeId: number) {
+  void crewId;
+  return MOCK_HOST_NOTICES.find((notice) => notice.notice_id === noticeId) ?? null;
+}
+
+export function getHostNoticeComments(crewId: number, noticeId: number) {
+  void crewId;
+  return MOCK_HOST_NOTICE_COMMENTS.filter((comment) => comment.notice_id === noticeId);
 }

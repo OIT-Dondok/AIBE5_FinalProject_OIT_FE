@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   Bell,
   Check,
@@ -317,6 +317,7 @@ function ApplicationsTab() {
 
 function NoticesTab() {
   const params = useParams<{ crewId: string }>();
+  const router = useRouter();
   const crewId = Number(params.crewId);
   const notices = getHostNotices(crewId);
 
@@ -326,9 +327,13 @@ function NoticesTab() {
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-base font-bold text-text-primary">공지 관리</h2>
-            <p className="mt-1 text-xs text-text-secondary">공지 작성과 수정 API 연결 전 mock 목록입니다.</p>
+            <p className="mt-1 text-xs text-text-secondary">공지 게시글과 댓글, 반응 현황을 관리합니다.</p>
           </div>
-          <Button variant="primary-green" size="sm">
+          <Button
+            variant="primary-green"
+            size="sm"
+            onClick={() => router.push(`/crews/${crewId}/host-console/notices/new`)}
+          >
             공지 작성
           </Button>
         </div>
@@ -341,15 +346,23 @@ function NoticesTab() {
       ) : (
         <div className="flex flex-col gap-3">
           {notices.map((notice) => (
-            <article key={notice.notice_id} className="rounded-2xl border border-text-secondary/10 bg-card px-4 py-4 shadow-sm">
+            <article
+              key={notice.notice_id}
+              className="rounded-2xl border border-text-secondary/10 bg-card px-4 py-4 shadow-sm"
+            >
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h3 className="truncate text-sm font-bold text-text-primary">{notice.title}</h3>
-                  <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-text-secondary">{notice.content}</p>
-                </div>
                 <button
                   type="button"
-                  aria-label="공지 메뉴 열기"
+                  onClick={() => router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}`)}
+                  className="min-w-0 flex-1 text-left"
+                >
+                  <h3 className="truncate text-sm font-bold text-text-primary">{notice.title}</h3>
+                  <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-text-secondary">{notice.content}</p>
+                </button>
+                <button
+                  type="button"
+                  aria-label="공지 수정"
+                  onClick={() => router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}/edit`)}
                   className="shrink-0 rounded-full p-1 text-text-secondary hover:bg-text-secondary/10"
                 >
                   <MoreHorizontal size={18} />
@@ -357,7 +370,7 @@ function NoticesTab() {
               </div>
               <div className="mt-3 flex items-center justify-between text-[11px] text-text-secondary">
                 <span>작성 {formatDateTime(notice.created_at)}</span>
-                <span>반응 {notice.reaction_count}</span>
+                <span>댓글 {notice.comment_count} · 반응 {notice.reaction_count}</span>
               </div>
             </article>
           ))}
