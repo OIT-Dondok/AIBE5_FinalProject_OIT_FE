@@ -47,6 +47,21 @@ const REVIEW_FILTERS: Array<{ value: HostReviewBucket; label: string }> = [
   { value: "normal", label: "일반 검토" },
 ];
 
+const REVIEW_FILTER_STYLES: Record<HostReviewBucket, { active: string; inactive: string }> = {
+  urgent: {
+    active: "bg-red-50 text-red-500 shadow-sm shadow-red-100/70",
+    inactive: "text-red-500 hover:bg-red-50",
+  },
+  warning: {
+    active: "bg-amber-50 text-amber-600 shadow-sm shadow-amber-100/70",
+    inactive: "text-amber-600 hover:bg-amber-50",
+  },
+  normal: {
+    active: "bg-slate-100 text-text-secondary shadow-sm shadow-slate-200/70",
+    inactive: "text-text-secondary hover:bg-slate-100",
+  },
+};
+
 const APPLICATION_FILTERS: Array<{ value: ApplicationFilter; label: string }> = [
   { value: "ALL", label: "전체" },
   { value: "PENDING", label: "대기" },
@@ -182,23 +197,26 @@ function VerificationTab() {
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
         <div className="grid flex-1 grid-cols-3 gap-1.5 rounded-card bg-card p-1 shadow-sm border border-text-secondary/10">
-          {REVIEW_FILTERS.map((filter) => (
-            <button
-              key={filter.value}
-              type="button"
-              onClick={() => {
-                setReviewFilter(filter.value);
-                setExpandedMissionLogId(null);
-              }}
-              className={`rounded-[10px] px-2 py-2 text-[11px] font-extrabold transition-colors ${
-                reviewFilter === filter.value
-                  ? "bg-primary-blue text-white"
-                  : "text-text-secondary hover:bg-primary-blue/5"
-              }`}
-            >
-              {filter.label} {reviewCounts[filter.value]}
-            </button>
-          ))}
+          {REVIEW_FILTERS.map((filter) => {
+            const isActive = reviewFilter === filter.value;
+            const styles = REVIEW_FILTER_STYLES[filter.value];
+
+            return (
+              <button
+                key={filter.value}
+                type="button"
+                onClick={() => {
+                  setReviewFilter(filter.value);
+                  setExpandedMissionLogId(null);
+                }}
+                className={`rounded-[10px] px-2 py-2 text-[11px] font-extrabold transition-colors ${
+                  isActive ? styles.active : styles.inactive
+                }`}
+              >
+                {filter.label} {reviewCounts[filter.value]}
+              </button>
+            );
+          })}
         </div>
         <Button variant="primary-blue" size="sm" disabled={normalExifCount === 0} className="shrink-0">
           일괄승인 {normalExifCount}
