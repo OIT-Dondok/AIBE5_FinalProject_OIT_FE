@@ -36,9 +36,9 @@ export type HostTab = "verification" | "applications" | "notices";
 type ApplicationFilter = ParticipantStatus | "ALL";
 
 const HOST_TABS: Array<{ value: HostTab; label: string; icon: typeof ClipboardCheck }> = [
-  { value: "verification", label: "인증검증", icon: ClipboardCheck },
-  { value: "applications", label: "가입신청", icon: Users },
-  { value: "notices", label: "공지관리", icon: Megaphone },
+  { value: "verification", label: "인증 검증", icon: ClipboardCheck },
+  { value: "applications", label: "가입 신청", icon: Users },
+  { value: "notices", label: "공지 관리", icon: Megaphone },
 ];
 
 const REVIEW_FILTERS: Array<{ value: HostReviewBucket; label: string }> = [
@@ -513,13 +513,15 @@ export default function HostConsoleClient() {
                     key={tab.value}
                     type="button"
                     onClick={() => setActiveTab(tab.value)}
-                    className={`flex min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 py-3 text-xs font-bold transition-colors ${
+                    className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-2 py-2.5 text-xs font-bold transition-colors ${
                       isActive ? "bg-success-green/55 text-primary-green" : "text-text-secondary hover:bg-text-secondary/5"
                     }`}
                   >
-                    <Icon size={15} />
-                    <span className="truncate">{tab.label}</span>
-                    <span className="shrink-0 font-extrabold">
+                    <span className="flex items-center justify-center gap-1.5">
+                      <Icon size={15} />
+                      <span className="truncate">{tab.label}</span>
+                    </span>
+                    <span className="text-sm font-extrabold leading-none">
                       {tab.value === "verification"
                         ? pendingReviewCount
                         : tab.value === "applications"
