@@ -130,7 +130,7 @@ function VerificationCard({ item, isExpanded, onToggle }: { item: HostCertificat
   return (
     <article className="overflow-hidden rounded-card border border-text-secondary/10 bg-card shadow-sm">
       <button type="button" onClick={onToggle} className="w-full px-4 py-3.5 text-left">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-blue/10 text-sm font-extrabold text-primary-blue">
               {item.nickname.slice(0, 1)}
@@ -149,12 +149,14 @@ function VerificationCard({ item, isExpanded, onToggle }: { item: HostCertificat
               </p>
             </div>
           </div>
-          <span className="shrink-0 rounded-full bg-primary-blue/10 px-2.5 py-1 text-[11px] font-extrabold text-primary-blue">
-            {item.certification_status === "SUCCESS" ? "성공" : "검토중"}
-          </span>
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center text-text-secondary">
-            {isExpanded ? <ChevronDown size={19} strokeWidth={2.4} /> : <ChevronRight size={19} strokeWidth={2.4} />}
-          </span>
+          <div className="flex shrink-0 items-center gap-1">
+            <span className="rounded-full bg-primary-blue/10 px-2.5 py-1 text-[11px] font-extrabold text-primary-blue">
+              {item.certification_status === "SUCCESS" ? "성공" : "검토중"}
+            </span>
+            <span className="flex h-6 w-5 items-center justify-center text-[#aeaaa1]">
+              {isExpanded ? <ChevronDown size={21} strokeWidth={2.4} /> : <ChevronRight size={21} strokeWidth={2.4} />}
+            </span>
+          </div>
         </div>
       </button>
 
