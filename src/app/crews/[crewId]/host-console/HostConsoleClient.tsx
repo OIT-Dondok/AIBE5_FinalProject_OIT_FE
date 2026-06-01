@@ -55,8 +55,8 @@ const REVIEW_FILTER_STYLES: Record<HostReviewBucket, { active: string; inactive:
     inactive: "text-red-500 hover:bg-red-50",
   },
   warning: {
-    active: "bg-amber-50 text-amber-600 shadow-sm shadow-amber-100/70",
-    inactive: "text-amber-600 hover:bg-amber-50",
+    active: "bg-amber-50 text-[#D89B4D] shadow-sm shadow-amber-100/70",
+    inactive: "text-[#D89B4D] hover:bg-amber-50",
   },
   normal: {
     active: "bg-slate-100 text-text-secondary shadow-sm shadow-slate-200/70",
@@ -179,7 +179,7 @@ function VerificationCard({ item, isExpanded, onToggle }: { item: HostCertificat
               </div>
               <div className="grid grid-cols-[64px_1fr] items-center gap-2">
                 <p className="text-xs font-extrabold text-text-secondary">Exif 검증</p>
-                <p className={`text-xs font-extrabold ${item.exif_valid ? "text-primary-green" : "text-amber-600"}`}>
+                <p className={`text-xs font-extrabold ${item.exif_valid ? "text-primary-green" : "text-[#D89B4D]"}`}>
                   {item.exif_valid ? "✓ 성공" : "⚠ 메타데이터 없음"}
                 </p>
               </div>
