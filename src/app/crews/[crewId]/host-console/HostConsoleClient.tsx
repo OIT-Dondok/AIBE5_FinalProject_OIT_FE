@@ -487,7 +487,7 @@ export default function HostConsoleClient() {
         <Header showBackButton title="운영 콘솔" rightElement={<Bell size={22} className="text-text-primary" />} />
 
         <div className="px-5 pt-5 flex flex-col gap-4">
-          <section className="rounded-card bg-primary-blue px-4 py-3.5 text-white shadow-card">
+          <section className="rounded-card bg-[linear-gradient(135deg,#5d7fe3_0%,#6486ea_45%,#5f81e6_100%)] px-4 py-3.5 text-white shadow-card">
             <div className="flex items-center gap-3.5">
               <div className="flex h-7 w-7 shrink-0 items-center justify-center text-white">
                 <ShieldCheck size={20} strokeWidth={2.4} />
