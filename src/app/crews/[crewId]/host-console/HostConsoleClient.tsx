@@ -196,7 +196,7 @@ function VerificationTab() {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
-        <div className="grid flex-1 grid-cols-3 gap-1.5 rounded-card bg-card p-1 shadow-sm border border-text-secondary/10">
+        <div className="grid flex-1 grid-cols-3 gap-1.5">
           {REVIEW_FILTERS.map((filter) => {
             const isActive = reviewFilter === filter.value;
             const styles = REVIEW_FILTER_STYLES[filter.value];
@@ -209,7 +209,7 @@ function VerificationTab() {
                   setReviewFilter(filter.value);
                   setExpandedMissionLogId(null);
                 }}
-                className={`rounded-[10px] px-2 py-2 text-[11px] font-extrabold transition-colors ${
+                className={`rounded-[10px] px-2 py-1.5 text-[11px] font-extrabold transition-colors ${
                   isActive ? styles.active : styles.inactive
                 }`}
               >
