@@ -21,7 +21,7 @@ export const LayoutWrapper = ({ children }: LayoutWrapperProps) => {
     const showNav = !HIDE_NAV_PATTERNS.some((pattern) => {
         if (pattern === "/") return pathname === "/";
         return pathname === pattern || pathname.startsWith(`${pattern}/`);
-    }) && !pathname.endsWith("/host-console");
+    });
 
     return (
         <>
