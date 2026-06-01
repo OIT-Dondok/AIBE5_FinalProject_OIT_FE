@@ -106,6 +106,12 @@ const exifDetailStyle: Record<HostExifStatus, string> = {
   FAILED: "text-red-500",
 };
 
+const exifBadgeStyle: Record<HostExifStatus, string> = {
+  NORMAL: "bg-success-green/65 text-primary-green",
+  MISSING: "bg-amber-50 text-[#D89B4D]",
+  FAILED: "bg-red-50 text-red-500",
+};
+
 const formatDateTime = (value: string) => {
   const matched = value.match(/^\d{4}-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
 
@@ -161,20 +167,15 @@ function VerificationCard({ item, isExpanded, onToggle }: { item: HostCertificat
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <p className="truncate text-sm font-extrabold text-text-primary">{item.nickname}</p>
-                {item.first_failed && (
-                  <span className="rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-500">
-                    1차 실패
-                  </span>
-                )}
               </div>
               <p className="mt-1 text-xs font-medium text-text-secondary">
-                {formatTime(item.submitted_at)} · Exif {exifSummaryLabel[item.exif_status]}
+                {formatDate(item.submitted_at)} · {formatTime(item.submitted_at)} · Exif {exifSummaryLabel[item.exif_status]}
               </p>
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            <span className="rounded-full bg-primary-blue/10 px-2.5 py-1 text-[11px] font-extrabold text-primary-blue">
-              {item.certification_status === "SUCCESS" ? "성공" : "검토중"}
+            <span className={`rounded-full px-2.5 py-1 text-[11px] font-extrabold ${exifBadgeStyle[item.exif_status]}`}>
+              Exif {exifSummaryLabel[item.exif_status]}
             </span>
             <span className={`flex h-6 w-5 items-center justify-center ${isExpanded ? "text-[#4d73d9]" : "text-[#aeaaa1]"}`}>
               {isExpanded ? <ChevronDown size={19} strokeWidth={2.4} /> : <ChevronRight size={21} strokeWidth={2.4} />}
