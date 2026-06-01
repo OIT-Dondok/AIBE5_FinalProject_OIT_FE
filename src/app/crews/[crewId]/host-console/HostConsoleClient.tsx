@@ -143,6 +143,15 @@ const formatDate = (value: string) => {
   return `${year}-${month}-${day}`;
 };
 
+const formatDateMinute = (value: string) => {
+  const matched = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+
+  if (!matched) return value;
+
+  const [, year, month, day, hour, minute] = matched;
+  return `${year}-${month}-${day} · ${hour}:${minute}`;
+};
+
 function SectionCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <section className={`bg-card rounded-card shadow-card border border-text-secondary/10 overflow-hidden ${className}`}>
@@ -198,8 +207,8 @@ function VerificationCard({ item, isExpanded, onToggle }: { item: HostCertificat
 
             <div className="min-w-0 flex-1 space-y-2">
               <div className="grid grid-cols-[64px_1fr] items-center gap-2">
-                <p className="text-xs font-extrabold text-text-secondary">촬영 일자</p>
-                <p className="text-xs font-extrabold text-text-primary">{formatDate(item.captured_at)}</p>
+                <p className="text-xs font-extrabold text-text-secondary">촬영 시각</p>
+                <p className="text-xs font-extrabold text-text-primary">{formatDateMinute(item.captured_at)}</p>
               </div>
               <div className="grid grid-cols-[64px_1fr] items-center gap-2">
                 <p className="text-xs font-extrabold text-text-secondary">Exif 검증</p>
