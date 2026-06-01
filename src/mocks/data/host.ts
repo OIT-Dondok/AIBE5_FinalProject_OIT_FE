@@ -1,0 +1,209 @@
+import type { CertificationStatus, ParticipantStatus, RejectReasonCode } from "@/types/domain";
+
+export type HostReviewBucket = "urgent" | "warning" | "normal";
+
+export interface HostCrewDetailMock {
+  crew_id: number;
+  title: string;
+  status: "ACTIVE" | "RECRUITING" | "CLOSED" | "CANCELLED";
+  host_member_uuid: string;
+  isHost: boolean;
+  my_participation: {
+    crew_participant_id: number;
+    status: ParticipantStatus;
+  };
+}
+
+export interface HostCertificationMock {
+  mission_log_id: number;
+  crew_id: number;
+  member_uuid: string;
+  nickname: string;
+  image_url: string | null;
+  submitted_at: string;
+  captured_at: string;
+  exif_valid: boolean;
+  is_duplicate: boolean;
+  comment: string;
+  first_failed: boolean;
+  review_bucket: HostReviewBucket;
+  certification_status: CertificationStatus;
+  reject_reason_code: RejectReasonCode | null;
+}
+
+export interface HostApplicationMock {
+  crew_participant_id: number;
+  member_uuid: string;
+  nickname: string;
+  profile_image_url: string | null;
+  status: ParticipantStatus;
+  applied_at: string;
+  decided_at: string | null;
+}
+
+export interface HostNoticeMock {
+  notice_id: number;
+  title: string;
+  content: string;
+  created_at: string;
+  updated_at: string | null;
+  reaction_count: number;
+}
+
+export const MOCK_HOST_CREW_DETAIL: HostCrewDetailMock = {
+  crew_id: 2,
+  title: "독서 1챕터",
+  status: "ACTIVE",
+  host_member_uuid: "018f4fd2-6d7a-7a41-9f58-host00000001",
+  isHost: true,
+  my_participation: {
+    crew_participant_id: 201,
+    status: "LOCKED",
+  },
+};
+
+export const MOCK_HOST_CERTIFICATIONS: HostCertificationMock[] = [
+  {
+    mission_log_id: 901,
+    crew_id: 2,
+    member_uuid: "018f4fd2-6d7a-7a41-9f58-member001",
+    nickname: "민서",
+    image_url: null,
+    submitted_at: "2026-06-01T08:42:00+09:00",
+    captured_at: "2026-06-01T08:39:00+09:00",
+    exif_valid: false,
+    is_duplicate: false,
+    comment: "오늘 분량 완료했습니다.",
+    first_failed: true,
+    review_bucket: "urgent",
+    certification_status: "PENDING_REVIEW",
+    reject_reason_code: null,
+  },
+  {
+    mission_log_id: 902,
+    crew_id: 2,
+    member_uuid: "018f4fd2-6d7a-7a41-9f58-member002",
+    nickname: "주원",
+    image_url: null,
+    submitted_at: "2026-06-01T08:55:00+09:00",
+    captured_at: "2026-06-01T08:54:00+09:00",
+    exif_valid: true,
+    is_duplicate: true,
+    comment: "어제보다 집중이 잘 됐어요.",
+    first_failed: false,
+    review_bucket: "warning",
+    certification_status: "PENDING_REVIEW",
+    reject_reason_code: null,
+  },
+  {
+    mission_log_id: 903,
+    crew_id: 2,
+    member_uuid: "018f4fd2-6d7a-7a41-9f58-member003",
+    nickname: "하린",
+    image_url: null,
+    submitted_at: "2026-06-01T07:58:00+09:00",
+    captured_at: "2026-06-01T07:57:00+09:00",
+    exif_valid: true,
+    is_duplicate: false,
+    comment: "출근 전에 인증 완료.",
+    first_failed: false,
+    review_bucket: "normal",
+    certification_status: "PENDING_REVIEW",
+    reject_reason_code: null,
+  },
+];
+
+export const MOCK_CREW_APPLICATIONS: HostApplicationMock[] = [
+  {
+    crew_participant_id: 301,
+    member_uuid: "018f4fd2-6d7a-7a41-9f58-apply001",
+    nickname: "한비",
+    profile_image_url: null,
+    status: "PENDING",
+    applied_at: "2026-06-01T13:00:00+09:00",
+    decided_at: null,
+  },
+  {
+    crew_participant_id: 302,
+    member_uuid: "018f4fd2-6d7a-7a41-9f58-apply002",
+    nickname: "도윤",
+    profile_image_url: null,
+    status: "PENDING",
+    applied_at: "2026-06-01T13:20:00+09:00",
+    decided_at: null,
+  },
+  {
+    crew_participant_id: 303,
+    member_uuid: "018f4fd2-6d7a-7a41-9f58-apply003",
+    nickname: "서아",
+    profile_image_url: null,
+    status: "LOCKED",
+    applied_at: "2026-05-31T18:10:00+09:00",
+    decided_at: "2026-05-31T19:05:00+09:00",
+  },
+  {
+    crew_participant_id: 304,
+    member_uuid: "018f4fd2-6d7a-7a41-9f58-apply004",
+    nickname: "이준",
+    profile_image_url: null,
+    status: "REJECTED",
+    applied_at: "2026-05-31T17:45:00+09:00",
+    decided_at: "2026-05-31T18:30:00+09:00",
+  },
+  {
+    crew_participant_id: 305,
+    member_uuid: "018f4fd2-6d7a-7a41-9f58-apply005",
+    nickname: "유나",
+    profile_image_url: null,
+    status: "EXPIRED",
+    applied_at: "2026-05-30T09:10:00+09:00",
+    decided_at: "2026-06-01T00:00:00+09:00",
+  },
+];
+
+export const MOCK_HOST_NOTICES: HostNoticeMock[] = [
+  {
+    notice_id: 501,
+    title: "6월 첫째 주 인증 기준 안내",
+    content: "사진에는 오늘 읽은 페이지와 날짜가 함께 보이도록 올려주세요.",
+    created_at: "2026-06-01T09:00:00+09:00",
+    updated_at: null,
+    reaction_count: 6,
+  },
+  {
+    notice_id: 502,
+    title: "마감 10분 전 업로드 지양",
+    content: "Exif 확인이 늦어질 수 있어 마감 직전 업로드는 피해주세요.",
+    created_at: "2026-05-30T21:00:00+09:00",
+    updated_at: "2026-05-31T10:12:00+09:00",
+    reaction_count: 3,
+  },
+];
+
+export function getHostCrewDetail(crewId: number) {
+  return {
+    ...MOCK_HOST_CREW_DETAIL,
+    crew_id: crewId,
+  };
+}
+
+export function getHostCertifications(crewId: number, reviewBucket?: HostReviewBucket) {
+  return MOCK_HOST_CERTIFICATIONS.filter((item) => {
+    if (item.crew_id !== crewId) return false;
+    if (reviewBucket && item.review_bucket !== reviewBucket) return false;
+    return true;
+  });
+}
+
+export function getCrewApplications(crewId: number, status?: ParticipantStatus) {
+  void crewId;
+  return MOCK_CREW_APPLICATIONS.filter((item) => {
+    if (status && item.status !== status) return false;
+    return true;
+  });
+}
+
+export function getHostNotices(crewId: number) {
+  void crewId;
+  return MOCK_HOST_NOTICES;
+}
