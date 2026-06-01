@@ -206,7 +206,7 @@ function VerificationCard({ item, isExpanded, onToggle }: { item: HostCertificat
             </button>
             <button
               type="button"
-              className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-primary-green text-sm font-extrabold text-white shadow-sm shadow-primary-green/20 transition-colors hover:opacity-90"
+              className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-primary-green text-sm font-extrabold text-white shadow-sm shadow-primary-green/20 transition-colors hover:bg-[#3F7A55]"
             >
               <Check size={16} strokeWidth={2.8} />
               승인
