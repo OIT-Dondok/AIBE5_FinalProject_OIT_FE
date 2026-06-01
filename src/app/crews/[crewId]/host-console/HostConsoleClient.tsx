@@ -488,29 +488,17 @@ export default function HostConsoleClient() {
 
         <div className="px-5 pt-5 flex flex-col gap-4">
           <section className="rounded-card bg-primary-blue px-5 py-4 text-white shadow-card">
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/12 text-white">
+                <ShieldCheck size={28} strokeWidth={2.3} />
+              </div>
               <div className="min-w-0">
-                <p className="text-[11px] font-semibold text-white/75">방장 · {crewDetail.title}</p>
-                <h1 className="mt-1 text-lg font-extrabold tracking-tight">운영 콘솔</h1>
-              </div>
-              <div className="shrink-0 rounded-full bg-white/15 px-3 py-1.5 text-right">
-                <p className="text-[10px] font-semibold text-white/70">다음 정산까지</p>
-                <p className="mt-0.5 text-xs font-extrabold">3시간 14분</p>
-              </div>
-            </div>
-
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              <div className="rounded-xl bg-white/12 px-3 py-2.5">
-                <p className="text-[10px] font-semibold text-white/70">인증 검증</p>
-                <p className="mt-1 text-base font-extrabold">{pendingReviewCount}</p>
-              </div>
-              <div className="rounded-xl bg-white/12 px-3 py-2.5">
-                <p className="text-[10px] font-semibold text-white/70">가입 신청</p>
-                <p className="mt-1 text-base font-extrabold">{pendingApplicationCount}</p>
-              </div>
-              <div className="rounded-xl bg-white/12 px-3 py-2.5">
-                <p className="text-[10px] font-semibold text-white/70">공지 관리</p>
-                <p className="mt-1 text-base font-extrabold">{notices.length === 0 ? "—" : notices.length}</p>
+                <p className="truncate text-lg font-extrabold tracking-tight text-white">
+                  방장 · {crewDetail.title}
+                </p>
+                <p className="mt-1 text-sm font-semibold text-white/90">
+                  다음 정산까지 <span className="font-extrabold text-white">3시간 14분</span>
+                </p>
               </div>
             </div>
           </section>
@@ -525,12 +513,19 @@ export default function HostConsoleClient() {
                     key={tab.value}
                     type="button"
                     onClick={() => setActiveTab(tab.value)}
-                    className={`flex items-center justify-center gap-1.5 rounded-xl px-2 py-3 text-xs font-bold transition-colors ${
+                    className={`flex min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 py-3 text-xs font-bold transition-colors ${
                       isActive ? "bg-success-green/55 text-primary-green" : "text-text-secondary hover:bg-text-secondary/5"
                     }`}
                   >
                     <Icon size={15} />
-                    {tab.label}
+                    <span className="truncate">{tab.label}</span>
+                    <span className="shrink-0 font-extrabold">
+                      {tab.value === "verification"
+                        ? pendingReviewCount
+                        : tab.value === "applications"
+                          ? pendingApplicationCount
+                          : notices.length}
+                    </span>
                   </button>
                 );
               })}
