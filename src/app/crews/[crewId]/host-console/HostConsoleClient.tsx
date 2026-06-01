@@ -162,7 +162,7 @@ function VerificationCard({ item, isExpanded, onToggle }: { item: HostCertificat
 
       {isExpanded && (
         <div className="border-t border-text-secondary/10 bg-background/55 px-4 pb-4 pt-3">
-          <div className="flex gap-3">
+          <div className="flex items-center gap-3">
             <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-xl bg-success-green/70">
               {item.image_url ? (
                 <img src={item.image_url} alt={`${item.nickname} 인증 사진`} className="h-full w-full object-cover" />
@@ -172,18 +172,18 @@ function VerificationCard({ item, isExpanded, onToggle }: { item: HostCertificat
               </span>
             </div>
 
-            <div className="min-w-0 flex-1 space-y-2 py-1">
-              <div className="grid grid-cols-[76px_1fr] items-center gap-2">
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="grid grid-cols-[64px_1fr] items-center gap-2">
                 <p className="text-xs font-extrabold text-text-secondary">촬영 일자</p>
                 <p className="text-xs font-extrabold text-text-primary">{formatDate(item.captured_at)}</p>
               </div>
-              <div className="grid grid-cols-[76px_1fr] items-center gap-2">
+              <div className="grid grid-cols-[64px_1fr] items-center gap-2">
                 <p className="text-xs font-extrabold text-text-secondary">Exif 검증</p>
                 <p className={`text-xs font-extrabold ${item.exif_valid ? "text-primary-green" : "text-amber-600"}`}>
                   {item.exif_valid ? "✓ 성공" : "⚠ 메타데이터 없음"}
                 </p>
               </div>
-              <div className="grid grid-cols-[76px_1fr] items-center gap-2">
+              <div className="grid grid-cols-[64px_1fr] items-center gap-2">
                 <p className="text-xs font-extrabold text-text-secondary">중복</p>
                 <p className={`text-xs font-extrabold ${item.is_duplicate ? "text-red-500" : "text-primary-green"}`}>
                   {item.is_duplicate ? "있음" : "없음"}
@@ -255,7 +255,7 @@ function VerificationTab() {
           })}
         </div>
         <Button variant="primary-blue" size="sm" disabled={normalExifCount === 0} className="shrink-0">
-          일괄승인 {normalExifCount}
+          일괄 승인
         </Button>
       </div>
 
