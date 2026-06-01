@@ -487,16 +487,16 @@ export default function HostConsoleClient() {
         <Header showBackButton title="운영 콘솔" rightElement={<Bell size={22} className="text-text-primary" />} />
 
         <div className="px-5 pt-5 flex flex-col gap-4">
-          <section className="rounded-card bg-primary-blue px-4 py-3 text-white shadow-card">
-            <div className="flex items-center gap-3">
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center text-white">
-                <ShieldCheck size={17} strokeWidth={2.4} />
+          <section className="rounded-card bg-primary-blue px-4 py-3.5 text-white shadow-card">
+            <div className="flex items-center gap-3.5">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center text-white">
+                <ShieldCheck size={20} strokeWidth={2.4} />
               </div>
               <div className="min-w-0">
-                <p className="truncate text-xs font-extrabold text-white">
+                <p className="truncate text-[13px] font-extrabold leading-tight text-white">
                   방장 · {crewDetail.title}
                 </p>
-                <p className="mt-0.5 text-[11px] font-semibold leading-tight text-white/90">
+                <p className="mt-1 text-xs font-semibold leading-tight text-white/90">
                   다음 정산까지 <span className="font-extrabold text-white">3시간 14분</span>
                 </p>
               </div>
