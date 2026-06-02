@@ -195,6 +195,20 @@ export interface RefreshResponse {
 }
 
 // GET /api/me → 200
+export interface MemberProfileResponse {
+  member_uuid: string;
+  email: string;
+  nickname: string;
+  profile_image_url: string | null;
+  status_message: string | null;
+  is_host_ever: boolean;
+  hosted_crew_count: number;
+  status: MemberStatus;
+  created_at: string;
+}
+
+// NOTE: 현재 `Member`는 /api/me 응답 기준 스냅샷 타입(정규화 전 상태)입니다.
+// TODO(auth): 필요 범위에 맞춰 Auth 담당자가 사용처 기준으로 필드를 정리해서 사용하세요.
 export interface Member {
   member_uuid: string;
   email: string;
@@ -240,9 +254,11 @@ export interface ActivitySummaryInfo {
 
 export interface ActivitySummaryStats {
   total_recognized_success_count: number;
+  // 최고 지분율: Settlement.status=SUCCEEDED 항목 중 최대 share_ratio(문자열, scale 6 decimal 또는 null)
   highest_share_ratio: string | null;
   highest_share_ratio_crew_id: number | null;
   highest_share_ratio_crew_title: string | null;
+  // 평균 성공률: 정산 컨텍스트 기반 계산값(문자열, scale 6 decimal 또는 null)
   average_success_rate: string | null;
 }
 
