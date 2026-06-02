@@ -1,18 +1,35 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 import { Button } from "@/components/common/Button";
+import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
+import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { createHostNotice } from "@/mocks/data/host";
 
 export default function HostNoticeNewPage() {
   const router = useRouter();
   const params = useParams<{ crewId: string }>();
-  const crewId = Number(params.crewId);
+  const crewId = parseRouteNumber(params.crewId);
   const [title, setTitle] = useState("");
   const [contentHtml, setContentHtml] = useState("");
+
+  if (crewId === null) {
+    return (
+      <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
+        <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-8">
+          <Header showBackButton title="공지 작성" />
+          <div className="px-5 pt-5">
+            <section className="rounded-card bg-card border border-text-secondary/10 shadow-card">
+              <EmptyState icon="!" title="공지 작성 화면을 열 수 없어요" />
+            </section>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   const handleSubmit = () => {
     createHostNotice(crewId, {

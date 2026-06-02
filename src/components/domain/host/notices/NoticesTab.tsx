@@ -8,16 +8,26 @@ import { Button } from "@/components/common/Button";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Modal } from "@/components/common/Modal";
 import { formatDateTime } from "@/components/domain/host/hostFormatters";
+import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { SectionCard } from "@/components/domain/host/SectionCard";
 import { deleteHostNotice, getHostNotices } from "@/mocks/data/host";
 
 export function NoticesTab() {
-  const params = useParams<{ crewId: string }>();
-  const router = useRouter();
-  const crewId = Number(params.crewId);
-  const notices = getHostNotices(crewId);
   const [openMenuNoticeId, setOpenMenuNoticeId] = useState<number | null>(null);
   const [deleteTargetNoticeId, setDeleteTargetNoticeId] = useState<number | null>(null);
+  const params = useParams<{ crewId: string }>();
+  const router = useRouter();
+  const crewId = parseRouteNumber(params.crewId);
+
+  if (crewId === null) {
+    return (
+      <SectionCard>
+        <EmptyState icon={<FileText size={44} className="text-primary-green" />} title="공지 목록을 불러올 수 없어요" />
+      </SectionCard>
+    );
+  }
+
+  const notices = getHostNotices(crewId);
 
   const handleDeleteNotice = () => {
     if (deleteTargetNoticeId === null) return;

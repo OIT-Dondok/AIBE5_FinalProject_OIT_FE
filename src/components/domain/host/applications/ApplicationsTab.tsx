@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import { UserCheck } from "lucide-react";
 
@@ -8,6 +8,7 @@ import { Button } from "@/components/common/Button";
 import { Chip } from "@/components/common/Chip";
 import { EmptyState } from "@/components/common/EmptyState";
 import { formatDateTime } from "@/components/domain/host/hostFormatters";
+import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { SectionCard } from "@/components/domain/host/SectionCard";
 import { getCrewApplications, type HostApplicationMock } from "@/mocks/data/host";
 import type { ParticipantStatus } from "@/types/domain";
@@ -74,19 +75,23 @@ function ApplicationCard({ item }: { item: HostApplicationMock }) {
 export function ApplicationsTab() {
   const [applicationFilter, setApplicationFilter] = useState<ApplicationFilter>("PENDING");
   const params = useParams<{ crewId: string }>();
-  const crewId = Number(params.crewId);
-  const applications = getCrewApplications(crewId);
+  const crewId = parseRouteNumber(params.crewId);
 
-  const counts = useMemo(
-    () =>
-      applications.reduce(
-        (acc, item) => {
-          acc[item.status] += 1;
-          return acc;
-        },
-        { PENDING: 0, LOCKED: 0, REJECTED: 0, CANCELLED: 0, EXPIRED: 0 } as Record<ParticipantStatus, number>,
-      ),
-    [applications],
+  if (crewId === null) {
+    return (
+      <SectionCard>
+        <EmptyState icon={<UserCheck size={44} className="text-primary-green" />} title="신청 내역을 불러올 수 없어요" />
+      </SectionCard>
+    );
+  }
+
+  const applications = getCrewApplications(crewId);
+  const counts = applications.reduce(
+    (acc, item) => {
+      acc[item.status] += 1;
+      return acc;
+    },
+    { PENDING: 0, LOCKED: 0, REJECTED: 0, CANCELLED: 0, EXPIRED: 0 } as Record<ParticipantStatus, number>,
   );
 
   const filteredItems = applications.filter((item) => {
@@ -100,7 +105,7 @@ export function ApplicationsTab() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-base font-bold text-text-primary">가입 신청</h2>
-            <p className="mt-1 text-xs text-text-secondary">LOCKED 상태는 화면에서 승인으로 표시합니다.</p>
+            <p className="mt-1 text-xs text-text-secondary">방장이 참여 신청을 확인하고 처리할 수 있어요.</p>
           </div>
           <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-600">
             대기 {counts.PENDING}

@@ -5,18 +5,27 @@ import { useParams } from "next/navigation";
 import { ShieldCheck } from "lucide-react";
 
 import { EmptyState } from "@/components/common/EmptyState";
+import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { SectionCard } from "@/components/domain/host/SectionCard";
 import { VerificationCard } from "@/components/domain/host/verification/VerificationCard";
 import { REVIEW_FILTERS, REVIEW_FILTER_STYLES } from "@/components/domain/host/verification/verificationDisplay";
 import { getHostCertifications, type HostReviewBucket } from "@/mocks/data/host";
 
 export function VerificationTab() {
-  const params = useParams<{ crewId: string }>();
-  const crewId = Number(params.crewId);
   const [reviewFilter, setReviewFilter] = useState<HostReviewBucket>("urgent");
   const [expandedMissionLogId, setExpandedMissionLogId] = useState<number | null>(null);
-  const certifications = getHostCertifications(crewId);
+  const params = useParams<{ crewId: string }>();
+  const crewId = parseRouteNumber(params.crewId);
 
+  if (crewId === null) {
+    return (
+      <SectionCard>
+        <EmptyState icon={<ShieldCheck size={44} className="text-primary-green" />} title="인증 내역을 불러올 수 없어요" />
+      </SectionCard>
+    );
+  }
+
+  const certifications = getHostCertifications(crewId);
   const filteredItems = certifications.filter((item) => item.review_bucket === reviewFilter);
   const reviewCounts = REVIEW_FILTERS.reduce(
     (acc, filter) => ({
@@ -51,6 +60,9 @@ export function VerificationTab() {
             );
           })}
         </div>
+        {/* <Button variant="primary-blue" size="sm" disabled={normalExifCount === 0} className="shrink-0">
+          일괄 승인
+        </Button> */}
       </div>
 
       {filteredItems.length === 0 ? (

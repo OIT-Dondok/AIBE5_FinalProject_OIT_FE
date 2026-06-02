@@ -6,19 +6,20 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/common/Button";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
+import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { getHostNotice, updateHostNotice } from "@/mocks/data/host";
 
 export default function HostNoticeEditPage() {
   const router = useRouter();
   const params = useParams<{ crewId: string; noticeId: string }>();
-  const crewId = Number(params.crewId);
-  const noticeId = Number(params.noticeId);
-  const notice = getHostNotice(crewId, noticeId);
+  const crewId = parseRouteNumber(params.crewId);
+  const noticeId = parseRouteNumber(params.noticeId);
+  const notice = crewId !== null && noticeId !== null ? getHostNotice(crewId, noticeId) : null;
   const [title, setTitle] = useState(notice?.title ?? "");
   const [contentHtml, setContentHtml] = useState(notice?.content_html ?? "");
 
   const handleSubmit = () => {
-    if (!notice) return;
+    if (crewId === null || !notice) return;
     updateHostNotice(crewId, notice.notice_id, {
       title,
       content_html: contentHtml,
@@ -26,7 +27,7 @@ export default function HostNoticeEditPage() {
     router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}`);
   };
 
-  if (!notice) {
+  if (crewId === null || noticeId === null || !notice) {
     return (
       <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
         <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-8">
@@ -79,11 +80,7 @@ export default function HostNoticeEditPage() {
             >
               취소
             </Button>
-            <Button
-              type="button"
-              variant="primary-green"
-              onClick={handleSubmit}
-            >
+            <Button type="button" variant="primary-green" onClick={handleSubmit}>
               수정 완료
             </Button>
           </div>

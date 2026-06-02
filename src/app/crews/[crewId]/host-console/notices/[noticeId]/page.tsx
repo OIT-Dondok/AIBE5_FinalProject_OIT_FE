@@ -9,24 +9,26 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
 import { Modal } from "@/components/common/Modal";
 import { formatDateTime } from "@/components/domain/host/hostFormatters";
+import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { deleteHostNotice, getHostNotice, getHostNoticeComments } from "@/mocks/data/host";
 
 export default function HostNoticeDetailPage() {
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const router = useRouter();
   const params = useParams<{ crewId: string; noticeId: string }>();
-  const crewId = Number(params.crewId);
-  const noticeId = Number(params.noticeId);
-  const notice = getHostNotice(crewId, noticeId);
-  const comments = getHostNoticeComments(crewId, noticeId);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const crewId = parseRouteNumber(params.crewId);
+  const noticeId = parseRouteNumber(params.noticeId);
+  const notice = crewId !== null && noticeId !== null ? getHostNotice(crewId, noticeId) : null;
+  const comments = crewId !== null && noticeId !== null ? getHostNoticeComments(crewId, noticeId) : [];
 
   const handleDeleteNotice = () => {
+    if (crewId === null || noticeId === null) return;
     deleteHostNotice(crewId, noticeId);
     setIsDeleteModalOpen(false);
     router.push(`/crews/${crewId}/host-console`);
   };
 
-  if (!notice) {
+  if (crewId === null || noticeId === null || !notice) {
     return (
       <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
         <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-8">
@@ -123,9 +125,7 @@ export default function HostNoticeDetailPage() {
         <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} ariaLabel="공지 삭제 확인">
           <div className="px-5 py-5">
             <h2 className="text-base font-extrabold text-text-primary">공지를 삭제할까요?</h2>
-            <p className="mt-2 text-sm leading-relaxed text-text-secondary">
-              삭제한 공지는 되돌릴 수 없습니다.
-            </p>
+            <p className="mt-2 text-sm leading-relaxed text-text-secondary">삭제한 공지는 되돌릴 수 없습니다.</p>
             <div className="mt-5 grid grid-cols-2 gap-2">
               <Button type="button" variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
                 취소

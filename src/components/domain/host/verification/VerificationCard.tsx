@@ -80,7 +80,7 @@ export function VerificationCard({ item, isExpanded, onToggle }: VerificationCar
           </div>
 
           <p className="mt-3 rounded-xl bg-card px-3 py-3 text-xs leading-relaxed text-text-primary border border-text-secondary/10">
-            "{item.comment}"
+            &quot;{item.comment}&quot;
           </p>
 
           <div className="mt-3 grid grid-cols-2 gap-3">

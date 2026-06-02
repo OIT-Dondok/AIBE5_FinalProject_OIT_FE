@@ -65,6 +65,7 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
       <div
         ref={editorRef}
         role="textbox"
+        aria-label="공지 본문"
         aria-multiline="true"
         contentEditable
         suppressContentEditableWarning
