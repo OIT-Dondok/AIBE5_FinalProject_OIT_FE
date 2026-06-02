@@ -98,7 +98,7 @@ export const MOCK_HOST_CERTIFICATIONS: HostCertificationMock[] = [
     mission_log_id: 904,
     crew_id: 2,
     member_uuid: "018f4fd2-6d7a-7a41-9f58-member004",
-    nickname: "해뜸이",
+    nickname: "도윤",
     image_url: null,
     submitted_at: "2026-06-01T07:31:00+09:00",
     captured_at: "2026-06-01T07:29:00+09:00",
@@ -122,7 +122,7 @@ export const MOCK_HOST_CERTIFICATIONS: HostCertificationMock[] = [
     exif_status: "FAILED",
     exif_valid: false,
     is_duplicate: true,
-    comment: "어제보다 집중이 잘 됐어요.",
+    comment: "어제보다 집중해서 읽었어요.",
     first_failed: false,
     review_bucket: "warning",
     certification_status: "PENDING_REVIEW",
@@ -160,7 +160,7 @@ export const MOCK_CREW_APPLICATIONS: HostApplicationMock[] = [
   {
     crew_participant_id: 302,
     member_uuid: "018f4fd2-6d7a-7a41-9f58-apply002",
-    nickname: "도윤",
+    nickname: "지윤",
     profile_image_url: null,
     status: "PENDING",
     applied_at: "2026-06-01T13:20:00+09:00",
@@ -178,20 +178,11 @@ export const MOCK_CREW_APPLICATIONS: HostApplicationMock[] = [
   {
     crew_participant_id: 304,
     member_uuid: "018f4fd2-6d7a-7a41-9f58-apply004",
-    nickname: "이준",
+    nickname: "예지",
     profile_image_url: null,
     status: "REJECTED",
     applied_at: "2026-05-31T17:45:00+09:00",
     decided_at: "2026-05-31T18:30:00+09:00",
-  },
-  {
-    crew_participant_id: 305,
-    member_uuid: "018f4fd2-6d7a-7a41-9f58-apply005",
-    nickname: "유나",
-    profile_image_url: null,
-    status: "EXPIRED",
-    applied_at: "2026-05-30T09:10:00+09:00",
-    decided_at: "2026-06-01T00:00:00+09:00",
   },
 ];
 
@@ -201,7 +192,7 @@ export const MOCK_HOST_NOTICES: HostNoticeMock[] = [
     title: "6월 첫째 주 인증 기준 안내",
     content: "사진에는 오늘 읽은 페이지와 날짜가 함께 보이도록 올려주세요.",
     content_html:
-      "<p><strong>사진에는 오늘 읽은 페이지와 날짜</strong>가 함께 보이도록 올려주세요.</p><ul><li>페이지 번호가 보이면 좋아요.</li><li>촬영 시각이 Exif와 크게 다르면 거절될 수 있어요.</li></ul>",
+      "<p><strong>사진에는 오늘 읽은 페이지와 날짜</strong>가 함께 보이도록 올려주세요.</p><ul><li>페이지 번호가 보이면 좋아요.</li><li>촬영 시각과 Exif가 크게 다르면 거절될 수 있어요.</li></ul>",
     created_at: "2026-06-01T09:00:00+09:00",
     updated_at: null,
     reaction_count: 6,
@@ -209,13 +200,13 @@ export const MOCK_HOST_NOTICES: HostNoticeMock[] = [
     reactions: {
       "👍": 3,
       "확인": 2,
-      "🔥": 1,
+      "💚": 1,
     },
   },
   {
     notice_id: 502,
     title: "마감 10분 전 업로드 지양",
-    content: "Exif 확인이 늦어질 수 있어 마감 직전 업로드는 피해주세요.",
+    content: "Exif 확인이 늦어질 수 있어 마감 직전 업로드는 피해 주세요.",
     content_html:
       "<p>Exif 확인이 늦어질 수 있어 <u>마감 직전 업로드는 피해 주세요.</u></p><ol><li>가능하면 마감 30분 전까지 인증해주세요.</li><li>문제가 있으면 댓글로 남겨주세요.</li></ol>",
     created_at: "2026-05-30T21:00:00+09:00",
@@ -258,8 +249,8 @@ export const MOCK_HOST_NOTICE_COMMENTS: HostNoticeCommentMock[] = [
     comment_id: 7004,
     notice_id: 502,
     member_uuid: "018f4fd2-6d7a-7a41-9f58-comment004",
-    nickname: "도윤",
-    content: "마감 30분 전에는 올리도록 할게요.",
+    nickname: "지윤",
+    content: "마감 30분 전에 올리도록 할게요.",
     created_at: "2026-05-30T21:14:00+09:00",
   },
   {
