@@ -47,18 +47,20 @@ export const useAuthStore = create<AuthState>()(
       name: 'dondok-auth',
       // accessToken은 메모리에서만 관리 — localStorage에 저장 시 XSS로 탈취 가능
       // 페이지 리로드 후 accessToken은 null → 첫 API 요청에서 401 → refresh 인터셉터가 쿠키로 재발급
-      partialize: (state) => ({
-        user: state.user,
-      }),
-      onRehydrateStorage: () => (state) => {
-        if (!state) return;
-        // persist 복원 후 token manager 재연결 (세션 유지)
-        configureTokenManager({
-          getAccessToken: () => useAuthStore.getState().accessToken,
-          setAccessToken: (token) => useAuthStore.setState({ accessToken: token }),
-          clearAccessToken: () => useAuthStore.setState({ accessToken: null, user: null }),
-        });
-      },
+        partialize: (state) => ({
+            user: state.user ? {
+                member_uuid: state.user.member_uuid,
+                nickname: state.user.nickname,
+            } : null,
+        }),
+        onRehydrateStorage: () => () => {
+            // state null 여부와 무관하게 항상 연결
+            configureTokenManager({
+                getAccessToken: () => useAuthStore.getState().accessToken,
+                setAccessToken: (token) => useAuthStore.setState({ accessToken: token }),
+                clearAccessToken: () => useAuthStore.setState({ accessToken: null, user: null }),
+            });
+        },
     },
   ),
 );
