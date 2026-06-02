@@ -1,0 +1,138 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { useParams } from "next/navigation";
+import { UserCheck } from "lucide-react";
+
+import { Button } from "@/components/common/Button";
+import { Chip } from "@/components/common/Chip";
+import { EmptyState } from "@/components/common/EmptyState";
+import { formatDateTime } from "@/components/domain/host/hostFormatters";
+import { SectionCard } from "@/components/domain/host/SectionCard";
+import { getCrewApplications, type HostApplicationMock } from "@/mocks/data/host";
+import type { ParticipantStatus } from "@/types/domain";
+
+type ApplicationFilter = ParticipantStatus | "ALL";
+
+const APPLICATION_FILTERS: Array<{ value: ApplicationFilter; label: string }> = [
+  { value: "ALL", label: "전체" },
+  { value: "PENDING", label: "대기" },
+  { value: "LOCKED", label: "승인" },
+  { value: "REJECTED", label: "거절" },
+];
+
+const applicationStatusLabel: Record<ParticipantStatus, string> = {
+  PENDING: "대기",
+  LOCKED: "승인",
+  REJECTED: "거절",
+  CANCELLED: "취소",
+  EXPIRED: "만료",
+};
+
+const applicationStatusStyles: Record<ParticipantStatus, string> = {
+  PENDING: "bg-amber-50 text-amber-700 border-amber-200/70",
+  LOCKED: "bg-success-green/50 text-primary-green border-primary-green/20",
+  REJECTED: "bg-red-50 text-red-500 border-red-100",
+  CANCELLED: "bg-slate-100 text-slate-500 border-slate-200",
+  EXPIRED: "bg-text-secondary/10 text-text-secondary border-text-secondary/10",
+};
+
+function ApplicationCard({ item }: { item: HostApplicationMock }) {
+  const canDecide = item.status === "PENDING";
+
+  return (
+    <article className="rounded-2xl border border-text-secondary/10 bg-card px-4 py-3.5 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-green/10 text-sm font-bold text-primary-green">
+          {item.nickname.slice(0, 1)}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <p className="truncate text-sm font-bold text-text-primary">{item.nickname}</p>
+            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${applicationStatusStyles[item.status]}`}>
+              {applicationStatusLabel[item.status]}
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-text-secondary">신청 {formatDateTime(item.applied_at)}</p>
+        </div>
+      </div>
+
+      {canDecide && (
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <Button variant="outline" size="sm">
+            거절
+          </Button>
+          <Button variant="primary-green" size="sm">
+            승인
+          </Button>
+        </div>
+      )}
+    </article>
+  );
+}
+
+export function ApplicationsTab() {
+  const [applicationFilter, setApplicationFilter] = useState<ApplicationFilter>("PENDING");
+  const params = useParams<{ crewId: string }>();
+  const crewId = Number(params.crewId);
+  const applications = getCrewApplications(crewId);
+
+  const counts = useMemo(
+    () =>
+      applications.reduce(
+        (acc, item) => {
+          acc[item.status] += 1;
+          return acc;
+        },
+        { PENDING: 0, LOCKED: 0, REJECTED: 0, CANCELLED: 0, EXPIRED: 0 } as Record<ParticipantStatus, number>,
+      ),
+    [applications],
+  );
+
+  const filteredItems = applications.filter((item) => {
+    if (applicationFilter === "ALL") return true;
+    return item.status === applicationFilter;
+  });
+
+  return (
+    <div className="flex flex-col gap-3">
+      <SectionCard className="px-4 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-bold text-text-primary">가입 신청</h2>
+            <p className="mt-1 text-xs text-text-secondary">LOCKED 상태는 화면에서 승인으로 표시합니다.</p>
+          </div>
+          <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-600">
+            대기 {counts.PENDING}
+          </span>
+        </div>
+        <div className="mt-4 flex gap-2 overflow-x-auto no-scrollbar">
+          {APPLICATION_FILTERS.map((filter) => {
+            const count = filter.value === "ALL" ? applications.length : counts[filter.value];
+            return (
+              <Chip
+                key={filter.value}
+                label={`${filter.label} ${count}`}
+                isActive={applicationFilter === filter.value}
+                onClick={() => setApplicationFilter(filter.value)}
+                className="whitespace-nowrap"
+              />
+            );
+          })}
+        </div>
+      </SectionCard>
+
+      {filteredItems.length === 0 ? (
+        <SectionCard>
+          <EmptyState icon={<UserCheck size={44} className="text-primary-green" />} title="신청 내역이 없어요" />
+        </SectionCard>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {filteredItems.map((item) => (
+            <ApplicationCard key={item.crew_participant_id} item={item} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
