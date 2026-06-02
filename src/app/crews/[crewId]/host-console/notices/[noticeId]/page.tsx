@@ -2,20 +2,14 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import DOMPurify from "dompurify";
 
 import { Button } from "@/components/common/Button";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
 import { Modal } from "@/components/common/Modal";
+import { formatDateTime } from "@/components/domain/host/hostFormatters";
 import { deleteHostNotice, getHostNotice, getHostNoticeComments } from "@/mocks/data/host";
-
-const formatDateTime = (value: string) =>
-  new Intl.DateTimeFormat("ko-KR", {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(value));
 
 export default function HostNoticeDetailPage() {
   const router = useRouter();
@@ -76,7 +70,7 @@ export default function HostNoticeDetailPage() {
 
             <div
               className="mt-5 text-sm leading-7 text-text-primary [&_a]:text-primary-blue [&_a]:underline [&_ol]:ml-5 [&_ol]:list-decimal [&_ul]:ml-5 [&_ul]:list-disc"
-              dangerouslySetInnerHTML={{ __html: notice.content_html }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(notice.content_html) }}
             />
           </article>
 
@@ -130,8 +124,7 @@ export default function HostNoticeDetailPage() {
           <div className="px-5 py-5">
             <h2 className="text-base font-extrabold text-text-primary">공지를 삭제할까요?</h2>
             <p className="mt-2 text-sm leading-relaxed text-text-secondary">
-              삭제한 공지는 되돌릴 수 없습니다. 지금은 DELETE /api/crews/{crewId}/notices/{noticeId} 연동 전 mock
-              handler로 처리됩니다.
+              삭제한 공지는 되돌릴 수 없습니다.
             </p>
             <div className="mt-5 grid grid-cols-2 gap-2">
               <Button type="button" variant="outline" onClick={() => setIsDeleteModalOpen(false)}>

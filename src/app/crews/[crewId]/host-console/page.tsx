@@ -1,5 +1,3 @@
-"use client";
-
 import HostConsoleClient from "./HostConsoleClient";
 
 export default function HostConsolePage() {

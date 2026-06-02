@@ -14,7 +14,7 @@ export function VerificationTab() {
   const params = useParams<{ crewId: string }>();
   const crewId = Number(params.crewId);
   const [reviewFilter, setReviewFilter] = useState<HostReviewBucket>("urgent");
-  const [expandedMissionLogId, setExpandedMissionLogId] = useState<number | null>(901);
+  const [expandedMissionLogId, setExpandedMissionLogId] = useState<number | null>(null);
   const certifications = getHostCertifications(crewId);
 
   const filteredItems = certifications.filter((item) => item.review_bucket === reviewFilter);
@@ -51,9 +51,6 @@ export function VerificationTab() {
             );
           })}
         </div>
-        {/* <Button variant="primary-blue" size="sm" disabled={normalExifCount === 0} className="shrink-0">
-          일괄 승인
-        </Button> */}
       </div>
 
       {filteredItems.length === 0 ? (

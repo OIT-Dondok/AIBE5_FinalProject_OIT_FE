@@ -11,10 +11,8 @@ export default function HostNoticeNewPage() {
   const router = useRouter();
   const params = useParams<{ crewId: string }>();
   const crewId = Number(params.crewId);
-  const [title, setTitle] = useState("이번 주 인증 기준 안내");
-  const [contentHtml, setContentHtml] = useState(
-    "<p>사진에는 <strong>오늘 읽은 페이지</strong>와 날짜가 함께 보이도록 촬영해주세요.</p><ul><li>페이지 번호가 보이면 좋아요.</li><li>인증 기준이 맞지 않으면 방장 검토에서 거절될 수 있습니다.</li></ul>",
-  );
+  const [title, setTitle] = useState("");
+  const [contentHtml, setContentHtml] = useState("");
 
   const handleSubmit = () => {
     createHostNotice(crewId, {

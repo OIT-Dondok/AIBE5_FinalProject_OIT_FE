@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import DOMPurify from "dompurify";
 
 interface RichTextEditorProps {
   value: string;
@@ -16,7 +17,7 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
   useEffect(() => {
     if (!editorRef.current) return;
     if (editorRef.current.innerHTML !== value) {
-      editorRef.current.innerHTML = value;
+      editorRef.current.innerHTML = DOMPurify.sanitize(value);
     }
   }, [value]);
 
@@ -32,6 +33,10 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
   const setLink = () => {
     const url = window.prompt("링크 URL을 입력해주세요", "https://");
     if (!url) return;
+    if (!/^https?:\/\//i.test(url)) {
+      window.alert("https:// 또는 http://로 시작하는 URL만 허용됩니다.");
+      return;
+    }
     runCommand("createLink", url);
   };
 

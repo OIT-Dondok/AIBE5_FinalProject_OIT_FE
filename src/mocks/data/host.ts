@@ -303,14 +303,15 @@ export function getHostNoticeComments(crewId: number, noticeId: number) {
 
 export function deleteHostNotice(crewId: number, noticeId: number) {
   void crewId;
-  return MOCK_HOST_NOTICES.some((notice) => notice.notice_id === noticeId);
+  const index = MOCK_HOST_NOTICES.findIndex((notice) => notice.notice_id === noticeId);
+  if (index !== -1) MOCK_HOST_NOTICES.splice(index, 1);
 }
 
 const htmlToPlainText = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 
 export function createHostNotice(crewId: number, payload: { title: string; content_html: string }) {
   void crewId;
-  return {
+  const notice: HostNoticeMock = {
     notice_id: Date.now(),
     title: payload.title,
     content: htmlToPlainText(payload.content_html),
@@ -320,16 +321,18 @@ export function createHostNotice(crewId: number, payload: { title: string; conte
     reaction_count: 0,
     comment_count: 0,
     reactions: {},
-  } satisfies HostNoticeMock;
+  };
+  MOCK_HOST_NOTICES.unshift(notice);
+  return notice;
 }
 
 export function updateHostNotice(crewId: number, noticeId: number, payload: { title: string; content_html: string }) {
   void crewId;
-  return {
-    notice_id: noticeId,
-    title: payload.title,
-    content: htmlToPlainText(payload.content_html),
-    content_html: payload.content_html,
-    updated_at: new Date().toISOString(),
-  };
+  const notice = MOCK_HOST_NOTICES.find((n) => n.notice_id === noticeId);
+  if (notice) {
+    notice.title = payload.title;
+    notice.content = htmlToPlainText(payload.content_html);
+    notice.content_html = payload.content_html;
+    notice.updated_at = new Date().toISOString();
+  }
 }
