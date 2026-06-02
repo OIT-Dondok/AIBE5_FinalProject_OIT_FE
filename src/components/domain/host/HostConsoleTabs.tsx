@@ -34,17 +34,17 @@ export function HostConsoleTabs({
             key={tab.value}
             type="button"
             onClick={() => onTabChange(tab.value)}
-            className={`flex min-w-0 flex-col items-center justify-center gap-1.5 rounded-[16px] border px-2 py-3.5 text-xs font-bold shadow-sm transition-colors ${
+            className={`flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-[16px] px-2 py-3.5 text-[10px] font-bold shadow-sm transition-colors ${
               isActive
-                ? "border-primary-green/20 bg-success-green/55 text-primary-green"
-                : "border-text-secondary/10 bg-card text-text-secondary hover:bg-text-secondary/5"
+                ? "border-2 border-[#4d73d9] bg-[#FFFFFF] text-[#4d73d9]"
+                : "border border-transparent bg-[#FAF7EE] text-[#777777] hover:bg-[#FAF7EE]"
             }`}
           >
             <span className="flex items-center justify-center gap-1.5">
-              <Icon size={15} />
+              <Icon size={13} />
               <span className="truncate">{tab.label}</span>
             </span>
-            <span className="text-sm font-extrabold leading-none">
+            <span className="text-[18px] font-extrabold leading-none">
               {tab.value === "verification"
                 ? pendingReviewCount
                 : tab.value === "applications"
