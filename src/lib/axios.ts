@@ -21,21 +21,18 @@ const REFRESH_ENDPOINT = '/api/auth/refresh';
 
 // ─── Access Token 관리 ────────────────────────────────────────────────────────
 // Refresh Token은 HttpOnly 쿠키로 관리 → JS에서 접근 불가, 서버가 쿠키로 읽음
-// Access Token만 메모리(authStore)에서 관리
+// Access Token은 이 모듈의 클로저에서 관리 — Zustand 외부, localStorage 저장 안 함
 
-let _getAccessToken: () => string | null = () => null;
-let _setAccessToken: (token: string) => void = () => {};
-let _clearAccessToken: () => void = () => {};
+let _accessToken: string | null = null;
 
-/** authStore 초기화 시 주입 */
-export function configureTokenManager(opts: {
-  getAccessToken: () => string | null;
-  setAccessToken: (token: string) => void;
-  clearAccessToken: () => void;
-}) {
-  _getAccessToken = opts.getAccessToken;
-  _setAccessToken = opts.setAccessToken;
-  _clearAccessToken = opts.clearAccessToken;
+export function getAccessToken(): string | null {
+  return _accessToken;
+}
+export function setAccessToken(token: string): void {
+  _accessToken = token;
+}
+export function clearAccessToken(): void {
+  _accessToken = null;
 }
 
 // ─── Axios 인스턴스 ───────────────────────────────────────────────────────────
@@ -52,7 +49,7 @@ export const api: AxiosInstance = axios.create({
 
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = _getAccessToken();
+    const token = _accessToken;
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -122,7 +119,7 @@ api.interceptors.response.use(
 
       const { access_token } = data;
       isRefreshing = false;
-      _setAccessToken(access_token);
+      setAccessToken(access_token);
       processQueue(null, access_token);
 
       if (originalRequest.headers) {
@@ -132,7 +129,7 @@ api.interceptors.response.use(
     } catch (refreshError) {
       isRefreshing = false;
       processQueue(refreshError, null);
-      _clearAccessToken();
+      clearAccessToken();
       if (typeof window !== 'undefined') window.location.href = '/login';
       return Promise.reject(refreshError);
     }
