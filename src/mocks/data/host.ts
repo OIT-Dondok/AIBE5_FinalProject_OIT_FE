@@ -98,7 +98,7 @@ export const MOCK_HOST_CERTIFICATIONS: HostCertificationMock[] = [
     mission_log_id: 904,
     crew_id: 2,
     member_uuid: "018f4fd2-6d7a-7a41-9f58-member004",
-    nickname: "도윤",
+    nickname: "지윤",
     image_url: null,
     submitted_at: "2026-06-01T07:31:00+09:00",
     captured_at: "2026-06-01T07:29:00+09:00",
@@ -186,7 +186,7 @@ export const MOCK_CREW_APPLICATIONS: HostApplicationMock[] = [
   },
 ];
 
-export const MOCK_HOST_NOTICES: HostNoticeMock[] = [
+const INITIAL_HOST_NOTICES: HostNoticeMock[] = [
   {
     notice_id: 501,
     title: "6월 첫째 주 인증 기준 안내",
@@ -219,6 +219,10 @@ export const MOCK_HOST_NOTICES: HostNoticeMock[] = [
     },
   },
 ];
+
+let mockHostNotices: HostNoticeMock[] = INITIAL_HOST_NOTICES;
+
+export const MOCK_HOST_NOTICES = INITIAL_HOST_NOTICES;
 
 export const MOCK_HOST_NOTICE_COMMENTS: HostNoticeCommentMock[] = [
   {
@@ -263,6 +267,13 @@ export const MOCK_HOST_NOTICE_COMMENTS: HostNoticeCommentMock[] = [
   },
 ];
 
+const cloneNotice = (notice: HostNoticeMock): HostNoticeMock => ({
+  ...notice,
+  reactions: { ...notice.reactions },
+});
+
+const htmlToPlainText = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
 export function getHostCrewDetail(crewId: number) {
   return {
     ...MOCK_HOST_CREW_DETAIL,
@@ -288,26 +299,26 @@ export function getCrewApplications(crewId: number, status?: ParticipantStatus) 
 
 export function getHostNotices(crewId: number) {
   void crewId;
-  return MOCK_HOST_NOTICES;
+  return mockHostNotices.map(cloneNotice);
 }
 
 export function getHostNotice(crewId: number, noticeId: number) {
   void crewId;
-  return MOCK_HOST_NOTICES.find((notice) => notice.notice_id === noticeId) ?? null;
+  const notice = mockHostNotices.find((item) => item.notice_id === noticeId);
+  return notice ? cloneNotice(notice) : null;
 }
 
 export function getHostNoticeComments(crewId: number, noticeId: number) {
   void crewId;
-  return MOCK_HOST_NOTICE_COMMENTS.filter((comment) => comment.notice_id === noticeId);
+  return MOCK_HOST_NOTICE_COMMENTS.filter((comment) => comment.notice_id === noticeId).map((comment) => ({
+    ...comment,
+  }));
 }
 
 export function deleteHostNotice(crewId: number, noticeId: number) {
   void crewId;
-  const index = MOCK_HOST_NOTICES.findIndex((notice) => notice.notice_id === noticeId);
-  if (index !== -1) MOCK_HOST_NOTICES.splice(index, 1);
+  mockHostNotices = mockHostNotices.filter((notice) => notice.notice_id !== noticeId);
 }
-
-const htmlToPlainText = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 
 export function createHostNotice(crewId: number, payload: { title: string; content_html: string }) {
   void crewId;
@@ -322,17 +333,28 @@ export function createHostNotice(crewId: number, payload: { title: string; conte
     comment_count: 0,
     reactions: {},
   };
-  MOCK_HOST_NOTICES.unshift(notice);
-  return notice;
+
+  mockHostNotices = [notice, ...mockHostNotices];
+  return cloneNotice(notice);
 }
 
 export function updateHostNotice(crewId: number, noticeId: number, payload: { title: string; content_html: string }) {
   void crewId;
-  const notice = MOCK_HOST_NOTICES.find((n) => n.notice_id === noticeId);
-  if (notice) {
-    notice.title = payload.title;
-    notice.content = htmlToPlainText(payload.content_html);
-    notice.content_html = payload.content_html;
-    notice.updated_at = new Date().toISOString();
-  }
+  let updatedNotice: HostNoticeMock | null = null;
+
+  mockHostNotices = mockHostNotices.map((notice) => {
+    if (notice.notice_id !== noticeId) return notice;
+
+    updatedNotice = {
+      ...notice,
+      title: payload.title,
+      content: htmlToPlainText(payload.content_html),
+      content_html: payload.content_html,
+      updated_at: new Date().toISOString(),
+    };
+
+    return updatedNotice;
+  });
+
+  return updatedNotice ? cloneNotice(updatedNotice) : null;
 }
