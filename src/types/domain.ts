@@ -195,7 +195,6 @@ export interface RefreshResponse {
 }
 
 // GET /api/me → 200
-// PATCH /api/me/profile → 200
 export interface Member {
   member_uuid: string;
   email: string;
@@ -209,11 +208,56 @@ export interface Member {
   updated_at?: string;
 }
 
+// PATCH /api/me/profile → 200
+export interface ProfileUpdateResponse {
+  member_uuid: string;
+  email: string;
+  nickname: string;
+  profile_image_url: string | null;
+  status_message: string | null;
+  updated_at: string;
+}
+
 // PATCH /api/me/profile Request
 export interface UpdateProfileRequest {
   nickname?: string;
   profile_image_s3_key?: string | null;
   status_message?: string | null;
+}
+
+// GET /api/me/activity-summary → 200
+export interface ActivitySummaryCrewInfo {
+  total_crew_count: number;
+  active_crew_count: number;
+  completed_crew_count: number;
+}
+
+export interface ActivitySummaryInfo {
+  crew: ActivitySummaryCrewInfo;
+  total_verification_count: number;
+  unread_notification_count: number;
+}
+
+export interface ActivitySummaryStats {
+  total_recognized_success_count: number;
+  highest_share_ratio: string | null;
+  highest_share_ratio_crew_id: number | null;
+  highest_share_ratio_crew_title: string | null;
+  average_success_rate: string | null;
+}
+
+export interface MeActivitySummaryResponse {
+  member_uuid: string;
+  activity_info: ActivitySummaryInfo;
+  activity_stats: ActivitySummaryStats;
+  generated_at: string;
+}
+
+// GET /api/me/host-operation-summary → 200
+export interface HostOperationSummaryResponse {
+  member_uuid: string;
+  total_pending_count: number;
+  generated_at: string;
 }
 
 
