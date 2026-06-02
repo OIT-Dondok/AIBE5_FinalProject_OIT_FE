@@ -6,12 +6,14 @@ import DOMPurify from "dompurify";
 interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
+  ariaLabel?: string;
+  labelId?: string;
 }
 
 const toolbarButtonClass =
   "min-h-9 rounded-lg border border-text-secondary/15 bg-card px-2.5 text-xs font-bold text-text-primary transition-colors hover:bg-text-secondary/5";
 
-export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
+export function RichTextEditor({ value, onChange, ariaLabel = "공지 본문", labelId }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -34,7 +36,7 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
     const url = window.prompt("링크 URL을 입력해주세요", "https://");
     if (!url) return;
     if (!/^https?:\/\//i.test(url)) {
-      window.alert("https:// 또는 http://로 시작하는 URL만 허용됩니다.");
+      window.alert("https:// 또는 http://로 시작하는 URL만 사용할 수 있습니다.");
       return;
     }
     runCommand("createLink", url);
@@ -65,7 +67,8 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
       <div
         ref={editorRef}
         role="textbox"
-        aria-label="공지 본문"
+        aria-label={labelId ? undefined : ariaLabel}
+        aria-labelledby={labelId}
         aria-multiline="true"
         contentEditable
         suppressContentEditableWarning

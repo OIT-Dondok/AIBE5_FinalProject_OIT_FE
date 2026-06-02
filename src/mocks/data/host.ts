@@ -44,6 +44,7 @@ export interface HostApplicationMock {
 }
 
 export interface HostNoticeMock {
+  crew_id: number;
   notice_id: number;
   title: string;
   content: string;
@@ -56,6 +57,7 @@ export interface HostNoticeMock {
 }
 
 export interface HostNoticeCommentMock {
+  crew_id: number;
   comment_id: number;
   notice_id: number;
   member_uuid: string;
@@ -188,6 +190,7 @@ export const MOCK_CREW_APPLICATIONS: HostApplicationMock[] = [
 
 const INITIAL_HOST_NOTICES: HostNoticeMock[] = [
   {
+    crew_id: 2,
     notice_id: 501,
     title: "6월 첫째 주 인증 기준 안내",
     content: "사진에는 오늘 읽은 페이지와 날짜가 함께 보이도록 올려주세요.",
@@ -204,6 +207,7 @@ const INITIAL_HOST_NOTICES: HostNoticeMock[] = [
     },
   },
   {
+    crew_id: 2,
     notice_id: 502,
     title: "마감 10분 전 업로드 지양",
     content: "Exif 확인이 늦어질 수 있어 마감 직전 업로드는 피해 주세요.",
@@ -222,10 +226,9 @@ const INITIAL_HOST_NOTICES: HostNoticeMock[] = [
 
 let mockHostNotices: HostNoticeMock[] = INITIAL_HOST_NOTICES;
 
-export const MOCK_HOST_NOTICES = INITIAL_HOST_NOTICES;
-
 export const MOCK_HOST_NOTICE_COMMENTS: HostNoticeCommentMock[] = [
   {
+    crew_id: 2,
     comment_id: 7001,
     notice_id: 501,
     member_uuid: "018f4fd2-6d7a-7a41-9f58-comment001",
@@ -234,6 +237,7 @@ export const MOCK_HOST_NOTICE_COMMENTS: HostNoticeCommentMock[] = [
     created_at: "2026-06-01T09:12:00+09:00",
   },
   {
+    crew_id: 2,
     comment_id: 7002,
     notice_id: 501,
     member_uuid: "018f4fd2-6d7a-7a41-9f58-comment002",
@@ -242,6 +246,7 @@ export const MOCK_HOST_NOTICE_COMMENTS: HostNoticeCommentMock[] = [
     created_at: "2026-06-01T09:18:00+09:00",
   },
   {
+    crew_id: 2,
     comment_id: 7003,
     notice_id: 501,
     member_uuid: "018f4fd2-6d7a-7a41-9f58-comment003",
@@ -250,6 +255,7 @@ export const MOCK_HOST_NOTICE_COMMENTS: HostNoticeCommentMock[] = [
     created_at: "2026-06-01T09:24:00+09:00",
   },
   {
+    crew_id: 2,
     comment_id: 7004,
     notice_id: 502,
     member_uuid: "018f4fd2-6d7a-7a41-9f58-comment004",
@@ -258,6 +264,7 @@ export const MOCK_HOST_NOTICE_COMMENTS: HostNoticeCommentMock[] = [
     created_at: "2026-05-30T21:14:00+09:00",
   },
   {
+    crew_id: 2,
     comment_id: 7005,
     notice_id: 502,
     member_uuid: "018f4fd2-6d7a-7a41-9f58-comment005",
@@ -271,6 +278,8 @@ const cloneNotice = (notice: HostNoticeMock): HostNoticeMock => ({
   ...notice,
   reactions: { ...notice.reactions },
 });
+
+export const getMockHostNotices = () => mockHostNotices.map(cloneNotice);
 
 const htmlToPlainText = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 
@@ -298,31 +307,31 @@ export function getCrewApplications(crewId: number, status?: ParticipantStatus) 
 }
 
 export function getHostNotices(crewId: number) {
-  void crewId;
-  return mockHostNotices.map(cloneNotice);
+  return mockHostNotices.filter((notice) => notice.crew_id === crewId).map(cloneNotice);
 }
 
 export function getHostNotice(crewId: number, noticeId: number) {
-  void crewId;
-  const notice = mockHostNotices.find((item) => item.notice_id === noticeId);
+  const notice = mockHostNotices.find((item) => item.crew_id === crewId && item.notice_id === noticeId);
   return notice ? cloneNotice(notice) : null;
 }
 
 export function getHostNoticeComments(crewId: number, noticeId: number) {
-  void crewId;
-  return MOCK_HOST_NOTICE_COMMENTS.filter((comment) => comment.notice_id === noticeId).map((comment) => ({
+  return MOCK_HOST_NOTICE_COMMENTS.filter(
+    (comment) => comment.crew_id === crewId && comment.notice_id === noticeId,
+  ).map((comment) => ({
     ...comment,
   }));
 }
 
 export function deleteHostNotice(crewId: number, noticeId: number) {
-  void crewId;
-  mockHostNotices = mockHostNotices.filter((notice) => notice.notice_id !== noticeId);
+  mockHostNotices = mockHostNotices.filter(
+    (notice) => notice.crew_id !== crewId || notice.notice_id !== noticeId,
+  );
 }
 
 export function createHostNotice(crewId: number, payload: { title: string; content_html: string }) {
-  void crewId;
   const notice: HostNoticeMock = {
+    crew_id: crewId,
     notice_id: Date.now(),
     title: payload.title,
     content: htmlToPlainText(payload.content_html),
@@ -339,11 +348,10 @@ export function createHostNotice(crewId: number, payload: { title: string; conte
 }
 
 export function updateHostNotice(crewId: number, noticeId: number, payload: { title: string; content_html: string }) {
-  void crewId;
   let updatedNotice: HostNoticeMock | null = null;
 
   mockHostNotices = mockHostNotices.map((notice) => {
-    if (notice.notice_id !== noticeId) return notice;
+    if (notice.crew_id !== crewId || notice.notice_id !== noticeId) return notice;
 
     updatedNotice = {
       ...notice,

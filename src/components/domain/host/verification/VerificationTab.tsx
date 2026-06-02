@@ -26,11 +26,12 @@ export function VerificationTab() {
   }
 
   const certifications = getHostCertifications(crewId);
-  const filteredItems = certifications.filter((item) => item.review_bucket === reviewFilter);
+  const pendingCertifications = certifications.filter((item) => item.certification_status === "PENDING_REVIEW");
+  const filteredItems = pendingCertifications.filter((item) => item.review_bucket === reviewFilter);
   const reviewCounts = REVIEW_FILTERS.reduce(
     (acc, filter) => ({
       ...acc,
-      [filter.value]: certifications.filter((item) => item.review_bucket === filter.value).length,
+      [filter.value]: pendingCertifications.filter((item) => item.review_bucket === filter.value).length,
     }),
     {} as Record<HostReviewBucket, number>,
   );
