@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { ShieldCheck } from "lucide-react";
 
-import { Button } from "@/components/common/Button";
 import { EmptyState } from "@/components/common/EmptyState";
 import { SectionCard } from "@/components/domain/host/SectionCard";
 import { VerificationCard } from "@/components/domain/host/verification/VerificationCard";
@@ -19,7 +18,6 @@ export function VerificationTab() {
   const certifications = getHostCertifications(crewId);
 
   const filteredItems = certifications.filter((item) => item.review_bucket === reviewFilter);
-  const normalExifCount = certifications.filter((item) => item.exif_valid && !item.is_duplicate).length;
   const reviewCounts = REVIEW_FILTERS.reduce(
     (acc, filter) => ({
       ...acc,
@@ -53,9 +51,9 @@ export function VerificationTab() {
             );
           })}
         </div>
-        <Button variant="primary-blue" size="sm" disabled={normalExifCount === 0} className="shrink-0">
+        {/* <Button variant="primary-blue" size="sm" disabled={normalExifCount === 0} className="shrink-0">
           일괄 승인
-        </Button>
+        </Button> */}
       </div>
 
       {filteredItems.length === 0 ? (
