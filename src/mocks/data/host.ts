@@ -34,6 +34,7 @@ export interface HostCertificationMock {
 }
 
 export interface HostApplicationMock {
+  crew_id: number;
   crew_participant_id: number;
   member_uuid: string;
   nickname: string;
@@ -151,6 +152,7 @@ export const MOCK_HOST_CERTIFICATIONS: HostCertificationMock[] = [
 
 export const MOCK_CREW_APPLICATIONS: HostApplicationMock[] = [
   {
+    crew_id: 2,
     crew_participant_id: 301,
     member_uuid: "018f4fd2-6d7a-7a41-9f58-apply001",
     nickname: "한비",
@@ -160,6 +162,7 @@ export const MOCK_CREW_APPLICATIONS: HostApplicationMock[] = [
     decided_at: null,
   },
   {
+    crew_id: 2,
     crew_participant_id: 302,
     member_uuid: "018f4fd2-6d7a-7a41-9f58-apply002",
     nickname: "지윤",
@@ -169,6 +172,7 @@ export const MOCK_CREW_APPLICATIONS: HostApplicationMock[] = [
     decided_at: null,
   },
   {
+    crew_id: 2,
     crew_participant_id: 303,
     member_uuid: "018f4fd2-6d7a-7a41-9f58-apply003",
     nickname: "서아",
@@ -178,6 +182,7 @@ export const MOCK_CREW_APPLICATIONS: HostApplicationMock[] = [
     decided_at: "2026-05-31T19:05:00+09:00",
   },
   {
+    crew_id: 2,
     crew_participant_id: 304,
     member_uuid: "018f4fd2-6d7a-7a41-9f58-apply004",
     nickname: "예지",
@@ -299,8 +304,8 @@ export function getHostCertifications(crewId: number, reviewBucket?: HostReviewB
 }
 
 export function getCrewApplications(crewId: number, status?: ParticipantStatus) {
-  void crewId;
   return MOCK_CREW_APPLICATIONS.filter((item) => {
+    if (item.crew_id !== crewId) return false;
     if (status && item.status !== status) return false;
     return true;
   });
