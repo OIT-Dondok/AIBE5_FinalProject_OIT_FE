@@ -1,0 +1,81 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import DOMPurify from "dompurify";
+
+interface RichTextEditorProps {
+  value: string;
+  onChange: (value: string) => void;
+  ariaLabel?: string;
+  labelId?: string;
+}
+
+const toolbarButtonClass =
+  "min-h-9 rounded-lg border border-text-secondary/15 bg-card px-2.5 text-xs font-bold text-text-primary transition-colors hover:bg-text-secondary/5";
+
+export function RichTextEditor({ value, onChange, ariaLabel = "공지 본문", labelId }: RichTextEditorProps) {
+  const editorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!editorRef.current) return;
+    if (editorRef.current.innerHTML !== value) {
+      editorRef.current.innerHTML = DOMPurify.sanitize(value);
+    }
+  }, [value]);
+
+  const syncValue = () => {
+    onChange(editorRef.current?.innerHTML ?? "");
+  };
+
+  const runCommand = (command: string, commandValue?: string) => {
+    document.execCommand(command, false, commandValue);
+    syncValue();
+  };
+
+  const setLink = () => {
+    const url = window.prompt("링크 URL을 입력해주세요", "https://");
+    if (!url) return;
+    if (!/^https?:\/\//i.test(url)) {
+      window.alert("https:// 또는 http://로 시작하는 URL만 사용할 수 있습니다.");
+      return;
+    }
+    runCommand("createLink", url);
+  };
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-text-secondary/20 focus-within:border-primary-green">
+      <div className="flex flex-wrap gap-1 border-b border-text-secondary/10 bg-card px-2 py-2">
+        <button type="button" className={toolbarButtonClass} onClick={() => runCommand("bold")}>
+          B
+        </button>
+        <button type="button" className={toolbarButtonClass} onClick={() => runCommand("italic")}>
+          I
+        </button>
+        <button type="button" className={toolbarButtonClass} onClick={() => runCommand("underline")}>
+          U
+        </button>
+        <button type="button" className={toolbarButtonClass} onClick={() => runCommand("insertUnorderedList")}>
+          목록
+        </button>
+        <button type="button" className={toolbarButtonClass} onClick={() => runCommand("insertOrderedList")}>
+          번호
+        </button>
+        <button type="button" className={toolbarButtonClass} onClick={setLink}>
+          링크
+        </button>
+      </div>
+      <div
+        ref={editorRef}
+        role="textbox"
+        aria-label={labelId ? undefined : ariaLabel}
+        aria-labelledby={labelId}
+        aria-multiline="true"
+        contentEditable
+        suppressContentEditableWarning
+        onInput={syncValue}
+        onBlur={syncValue}
+        className="min-h-[220px] w-full rounded-b-xl bg-background px-3.5 py-3 text-sm leading-7 text-text-primary outline-none [&_a]:text-primary-blue [&_a]:underline [&_ol]:ml-5 [&_ol]:list-decimal [&_ul]:ml-5 [&_ul]:list-disc"
+      />
+    </div>
+  );
+}

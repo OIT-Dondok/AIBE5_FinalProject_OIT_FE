@@ -12,6 +12,7 @@ import {
     BookOpen,
     type LucideIcon,
 } from "lucide-react";
+import { MOCK_HOST_CREW_DETAIL } from "@/mocks/data/host";
 
 const MOCK_UNREAD_NOTIFICATIONS = 2;
 const MOCK_PENDING_OPERATOR = 6;
@@ -145,7 +146,7 @@ export function ProfileMenuSections() {
                     title: "운영 콘솔",
                     subtitle: "검증 · 공지 · 가입 관리",
                     badge: MOCK_PENDING_OPERATOR,
-                    onClick: () => alert("준비 중"),
+                    onClick: () => router.push(`/crews/${MOCK_HOST_CREW_DETAIL.crew_id}/host-console`),
                 },
             ],
         },
