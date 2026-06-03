@@ -207,19 +207,11 @@ export interface MemberProfileResponse {
   created_at: string;
 }
 
-// NOTE: 현재 `Member`는 /api/me 응답 기준 스냅샷 타입(정규화 전 상태)입니다.
-// TODO(auth): 필요 범위에 맞춰 Auth 담당자가 사용처 기준으로 필드를 정리해서 사용하세요.
+// auth 전용 최소 타입 — authStore(zustand persist) 저장 기준
+// 전체 프로필 필요 시 MemberProfileResponse 사용
 export interface Member {
   member_uuid: string;
-  email: string;
   nickname: string;
-  profile_image_url: string | null;
-  status_message: string | null;
-  is_host_ever: boolean;
-  hosted_crew_count: number;
-  status: MemberStatus;
-  created_at: string;
-  updated_at?: string;
 }
 
 // PATCH /api/me/profile → 200
