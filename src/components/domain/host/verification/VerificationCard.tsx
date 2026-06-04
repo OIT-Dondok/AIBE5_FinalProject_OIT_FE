@@ -20,6 +20,8 @@ type VerificationCardProps = {
   onToggle: () => void;
 };
 
+type ModerationDecision = "approved" | "rejected" | null;
+
 const rejectReasonOptions: Array<{ value: RejectReasonCode; label: string; description: string }> = [
   { value: "TIME_VIOLATION", label: "시간 위반", description: "마감 후 촬영" },
   { value: "DUPLICATE", label: "중복 업로드", description: "이미 인증된 사진" },
@@ -33,13 +35,26 @@ export function VerificationCard({ item, isExpanded, onToggle }: VerificationCar
   const [isRejectSheetOpen, setIsRejectSheetOpen] = useState(false);
   const [selectedRejectReason, setSelectedRejectReason] = useState<RejectReasonCode | null>(null);
   const [rejectMemo, setRejectMemo] = useState("");
+  const [moderationDecision, setModerationDecision] = useState<ModerationDecision>(null);
   const isRejectConfirmDisabled =
     selectedRejectReason === null || (selectedRejectReason === "OTHER" && rejectMemo.trim().length === 0);
 
   const handleRejectConfirm = () => {
     if (isRejectConfirmDisabled) return;
+    setModerationDecision("rejected");
     setIsRejectSheetOpen(false);
   };
+
+  const handleApprove = () => {
+    setModerationDecision("approved");
+  };
+
+  const handleUndoDecision = () => {
+    setModerationDecision(null);
+  };
+
+  const selectedRejectReasonLabel =
+    rejectReasonOptions.find((option) => option.value === selectedRejectReason)?.label ?? "사유 미선택";
 
   return (
     <>
@@ -60,11 +75,23 @@ export function VerificationCard({ item, isExpanded, onToggle }: VerificationCar
                   {formatDate(item.submitted_at)} · {formatTime(item.submitted_at)}
                 </p>
               </div>
-            </div>
+          </div>
 
-            <div className="flex shrink-0 items-center gap-2">
-              <span className={`rounded-full px-2.5 py-1 text-[11px] font-extrabold ${exifBadgeStyle[item.exif_status]}`}>
-                Exif {exifSummaryLabel[item.exif_status]}
+          <div className="flex shrink-0 items-center gap-2">
+              <span
+                className={`rounded-full px-2.5 py-1 text-[11px] font-extrabold ${
+                  moderationDecision === "approved"
+                    ? "bg-success-green/65 text-primary-green"
+                    : moderationDecision === "rejected"
+                      ? "bg-[#FCEDEC] text-[#DB5C55]"
+                      : exifBadgeStyle[item.exif_status]
+                }`}
+              >
+                {moderationDecision === "approved"
+                  ? "승인됨"
+                  : moderationDecision === "rejected"
+                    ? "거절됨"
+                    : `Exif ${exifSummaryLabel[item.exif_status]}`}
               </span>
               <span className={`flex h-6 w-5 items-center justify-center ${isExpanded ? "text-[#4d73d9]" : "text-[#aeaaa1]"}`}>
                 {isExpanded ? <ChevronDown size={19} strokeWidth={2.4} /> : <ChevronRight size={21} strokeWidth={2.4} />}
@@ -111,23 +138,45 @@ export function VerificationCard({ item, isExpanded, onToggle }: VerificationCar
               &quot;{item.comment}&quot;
             </p>
 
-            <div className="mt-3 grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setIsRejectSheetOpen(true)}
-                className="inline-flex h-14 min-h-14 items-center justify-center gap-1.5 rounded-xl bg-[#FCEDEC] text-base font-extrabold leading-none text-[#DB5C55] transition-colors hover:bg-[#F8DEDC]"
-              >
-                <X size={16} strokeWidth={2.8} />
-                거절
-              </button>
-              <button
-                type="button"
-                className="inline-flex h-14 min-h-14 items-center justify-center gap-1.5 rounded-xl bg-primary-green text-base font-extrabold leading-none text-white shadow-sm shadow-primary-green/20 transition-colors hover:bg-[#3F7A55]"
-              >
-                <Check size={16} strokeWidth={2.8} />
-                승인
-              </button>
-            </div>
+            {moderationDecision ? (
+              <div className="mt-3 flex h-14 items-center justify-between gap-3 rounded-xl bg-[#FAF7EE] px-4">
+                <p
+                  className={`min-w-0 truncate text-sm font-extrabold ${
+                    moderationDecision === "approved" ? "text-primary-green" : "text-[#DB5C55]"
+                  }`}
+                >
+                  {moderationDecision === "approved"
+                    ? "승인 완료 · 정산에 반영됩니다"
+                    : `거절 완료 · ${selectedRejectReasonLabel}`}
+                </p>
+                <button
+                  type="button"
+                  onClick={handleUndoDecision}
+                  className="shrink-0 rounded-full bg-card px-3 py-1.5 text-xs font-extrabold text-text-secondary transition-colors hover:bg-[#EDE8DF]"
+                >
+                  되돌리기
+                </button>
+              </div>
+            ) : (
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsRejectSheetOpen(true)}
+                  className="inline-flex h-14 min-h-14 items-center justify-center gap-1.5 rounded-xl bg-[#FCEDEC] text-base font-extrabold leading-none text-[#DB5C55] transition-colors hover:bg-[#F8DEDC]"
+                >
+                  <X size={16} strokeWidth={2.8} />
+                  거절
+                </button>
+                <button
+                  type="button"
+                  onClick={handleApprove}
+                  className="inline-flex h-14 min-h-14 items-center justify-center gap-1.5 rounded-xl bg-primary-green text-base font-extrabold leading-none text-white shadow-sm shadow-primary-green/20 transition-colors hover:bg-[#3F7A55]"
+                >
+                  <Check size={16} strokeWidth={2.8} />
+                  승인
+                </button>
+              </div>
+            )}
           </div>
         )}
       </article>
