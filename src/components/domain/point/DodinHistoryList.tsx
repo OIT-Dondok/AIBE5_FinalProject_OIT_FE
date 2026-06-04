@@ -128,7 +128,9 @@ export function DodinHistoryList({
         <DodinHistoryEmptyState activeFilter={activeFilter} />
       )}
 
-      <DodinHistoryFooter hasMore={hasMore} loadMoreRef={loadMoreRef} />
+      {visibleHistory.length > 0 && (
+        <DodinHistoryFooter hasMore={hasMore} loadMoreRef={loadMoreRef} />
+      )}
     </section>
   );
 }
