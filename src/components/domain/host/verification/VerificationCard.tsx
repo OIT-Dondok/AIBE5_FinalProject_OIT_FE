@@ -66,9 +66,9 @@ export function VerificationCard({
   return (
     <>
       <article
-        className={`overflow-hidden rounded-card bg-card shadow-sm ${
+        className={`overflow-hidden rounded-card bg-card shadow-sm transition-opacity ${
           isExpanded ? "border-2 border-[#4d73d9]" : "border border-text-secondary/10"
-        }`}
+        } ${moderationDecision && !isExpanded ? "opacity-55 grayscale-[15%]" : ""}`}
       >
         <button type="button" onClick={onToggle} className="w-full px-4 py-3.5 text-left">
           <div className="flex items-center justify-between gap-3">

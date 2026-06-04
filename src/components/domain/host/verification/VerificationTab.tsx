@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { ShieldCheck } from "lucide-react";
+import { Check, ShieldCheck } from "lucide-react";
 
 import { EmptyState } from "@/components/common/EmptyState";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
@@ -128,8 +128,11 @@ export function VerificationTab({ moderationResults, onModerationResultsChange }
       </div>
 
       {isAllReviewed && (
-        <div className="rounded-xl bg-[#E8F2EB] px-4 py-3 text-sm font-medium text-primary-green">
-          모든 인증을 검토했어요
+        <div className="flex flex-col items-center justify-center rounded-card border border-text-secondary/10 bg-card px-4 py-5 text-center shadow-sm">
+          <div className="mb-1.5 flex items-center justify-center text-primary-green">
+            <Check size={22} strokeWidth={3} />
+          </div>
+          <p className="text-sm font-medium text-text-secondary">모든 인증을 검토했어요</p>
         </div>
       )}
 
