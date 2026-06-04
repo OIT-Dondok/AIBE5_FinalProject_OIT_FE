@@ -102,6 +102,7 @@ export function HistoryFilterTabs({
           <button
             key={filter.value}
             type="button"
+            aria-pressed={isActive}
             onClick={() => onFilterChange(filter.value)}
             className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-extrabold transition-colors ${
               isActive
