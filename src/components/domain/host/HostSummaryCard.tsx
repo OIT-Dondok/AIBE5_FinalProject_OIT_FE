@@ -36,8 +36,8 @@ export function HostSummaryCard({ crewDetail }: { crewDetail: HostCrewDetailMock
               다음 정산까지 <span className="font-extrabold text-white">3시간 14분</span>
             </p>
           </div>
-          <span className="shrink-0 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-extrabold leading-tight text-white ring-1 ring-white/25">
-            내 크루 {crewCount}
+          <span className="shrink-0 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-medium leading-tight text-white ring-1 ring-white/25">
+            내 크루 <span className="font-extrabold">{crewCount}</span>
           </span>
           <ChevronDown
             size={18}

@@ -79,7 +79,7 @@ export function VerificationCard({ item, isExpanded, onToggle }: VerificationCar
 
           <div className="flex shrink-0 items-center gap-2">
               <span
-                className={`rounded-full px-2.5 py-1 text-[11px] ${moderationDecision ? "font-medium" : "font-extrabold"} ${
+                className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
                   moderationDecision === "approved"
                     ? "bg-success-green/65 text-primary-green"
                     : moderationDecision === "rejected"
