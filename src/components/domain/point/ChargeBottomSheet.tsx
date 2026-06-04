@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { CircleAlert, Info, Loader2, RotateCcw } from "lucide-react";
 
 import { BottomSheet } from "@/components/common/BottomSheet";
@@ -52,13 +52,6 @@ export function ChargeBottomSheet({ isOpen, onClose, currentBalance }: ChargeBot
   const projectedBalance =
     currentBalance != null && isValidAmount && amount != null ? currentBalance + amount : null;
 
-  useEffect(() => {
-    if (!isOpen) {
-      setMockStatus("idle");
-      setAmountInput(String(QUICK_ADD_AMOUNTS[0]));
-    }
-  }, [isOpen]);
-
   const handleAmountChange = (next: string) => {
     setMockStatus("idle");
     const sanitized = next.replace(/[^0-9]/g, "").replace(/^0+(?=\d)/, "").slice(0, 7);
@@ -82,8 +75,14 @@ export function ChargeBottomSheet({ isOpen, onClose, currentBalance }: ChargeBot
     setMockStatus("pending");
   };
 
+  const handleClose = () => {
+    setMockStatus("idle");
+    setAmountInput(String(QUICK_ADD_AMOUNTS[0]));
+    onClose();
+  };
+
   return (
-    <BottomSheet isOpen={isOpen} onClose={onClose} title="도딘 충전" ariaLabel="도딘 충전 바텀시트">
+    <BottomSheet isOpen={isOpen} onClose={handleClose} title="도딘 충전" ariaLabel="도딘 충전 바텀시트">
       <div className="px-5 pb-6 pt-4">
         {/* 히어로 — 충전 금액 입력 */}
         <div className="relative overflow-hidden rounded-[26px] border border-primary-green/15 bg-primary-green/[0.06] px-5 pb-5 pt-6 duration-300 animate-in fade-in slide-in-from-bottom-2">
@@ -197,7 +196,7 @@ export function ChargeBottomSheet({ isOpen, onClose, currentBalance }: ChargeBot
         <div className="mt-6 grid grid-cols-[1fr_2fr] gap-2">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="h-12 rounded-2xl bg-text-secondary/10 text-sm font-extrabold text-text-primary transition-transform active:scale-[0.98]"
           >
             취소
