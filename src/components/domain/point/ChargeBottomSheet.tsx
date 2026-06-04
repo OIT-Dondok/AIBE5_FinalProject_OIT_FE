@@ -37,7 +37,9 @@ function resolveInitialAmount(rawAmount: number | undefined) {
   if (rawAmount <= 0) return DEFAULT_AMOUNT;
 
   const clamped = Math.min(rawAmount, MAX_CHARGE_AMOUNT);
-  return Math.max(MIN_CHARGE_AMOUNT, Math.floor(clamped));
+  const stepAligned = Math.floor(clamped / CHARGE_STEP_AMOUNT) * CHARGE_STEP_AMOUNT;
+
+  return Math.max(MIN_CHARGE_AMOUNT, Math.min(stepAligned, MAX_CHARGE_AMOUNT));
 }
 
 function getAmountError(amount: number | null) {
