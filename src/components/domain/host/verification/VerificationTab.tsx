@@ -52,11 +52,11 @@ export function VerificationTab() {
                   setReviewFilter(filter.value);
                   setExpandedMissionLogId(null);
                 }}
-                className={`rounded-[10px] px-3 py-1.5 text-[11px] font-extrabold transition-colors ${
+                className={`rounded-[10px] px-3 py-1.5 text-[11px] font-medium transition-colors ${
                   isActive ? styles.active : styles.inactive
                 }`}
               >
-                {filter.label} {reviewCounts[filter.value]}
+                <span>{filter.label}</span> <span className="font-extrabold">{reviewCounts[filter.value]}</span>
               </button>
             );
           })}
