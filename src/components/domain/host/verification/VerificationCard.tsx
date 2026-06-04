@@ -138,7 +138,7 @@ export function VerificationCard({ item, isExpanded, onToggle }: VerificationCar
         title="거절 사유를 선택해주세요"
         subtitle="크루원에게 사유가 표시됩니다"
       >
-        <div className="px-5 pb-5 pt-3">
+        <div className="bg-[#F5F0E6] px-5 pb-5 pt-3">
           <div className="grid grid-cols-2 gap-2">
             {rejectReasonOptions.map((option) => {
               const isSelected = selectedRejectReason === option.value;
@@ -148,15 +148,18 @@ export function VerificationCard({ item, isExpanded, onToggle }: VerificationCar
                   key={option.value}
                   type="button"
                   onClick={() => setSelectedRejectReason(option.value)}
-                  className={`flex min-h-[86px] w-full flex-col items-start justify-center rounded-2xl border px-3 py-3 text-left transition-colors ${
+                  className={`relative flex min-h-[86px] w-full flex-col items-start justify-center rounded-2xl px-3 py-3 text-left transition-colors ${
                     isSelected
-                      ? "border-[#DB5C55] bg-[#FCEDEC]"
-                      : "border-text-secondary/10 bg-card hover:bg-[#FAF7EE]"
+                      ? "border-2 border-[#D9534C] bg-white"
+                      : "border border-text-secondary/10 bg-[#FAF7EE] hover:bg-[#F2ECE1]"
                   }`}
                 >
-                  <span className={`text-sm font-extrabold ${isSelected ? "text-[#DB5C55]" : "text-text-primary"}`}>
-                    {option.label}
-                  </span>
+                  {isSelected && (
+                    <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#D9534C]">
+                      <Check size={12} strokeWidth={3} className="text-white" />
+                    </span>
+                  )}
+                  <span className="text-sm font-extrabold text-text-primary">{option.label}</span>
                   <span className="mt-0.5 text-[11px] font-medium text-text-secondary">{option.description}</span>
                   <span className="mt-1.5 text-[9px] font-medium text-text-secondary/70">{option.value}</span>
                 </button>
@@ -179,7 +182,7 @@ export function VerificationCard({ item, isExpanded, onToggle }: VerificationCar
             <button
               type="button"
               onClick={() => setIsRejectSheetOpen(false)}
-              className="inline-flex h-11 items-center justify-center rounded-xl bg-[#F5F0E6] text-sm font-extrabold text-text-secondary"
+              className="inline-flex h-14 items-center justify-center rounded-xl border-2 border-[#EDE8DF] bg-[#F5F0E6] text-base font-extrabold text-text-primary transition-colors hover:bg-[#EDE8DF] active:bg-[#EDE8DF]"
             >
               취소
             </button>
@@ -187,9 +190,9 @@ export function VerificationCard({ item, isExpanded, onToggle }: VerificationCar
               type="button"
               disabled={isRejectConfirmDisabled}
               onClick={handleRejectConfirm}
-              className="inline-flex h-11 items-center justify-center rounded-xl bg-[#DB5C55] text-sm font-extrabold text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex h-14 items-center justify-center rounded-xl bg-[#DB5C55] text-base font-extrabold text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
             >
-              거절 처리
+              거절 확인
             </button>
           </div>
         </div>
