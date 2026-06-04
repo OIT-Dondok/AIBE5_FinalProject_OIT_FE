@@ -1,4 +1,5 @@
 import type { CertificationStatus, ParticipantStatus, RejectReasonCode } from "@/types/domain";
+import { MOCK_CREWS } from "@/mocks/data/crews";
 
 export type HostReviewBucket = "urgent" | "warning" | "normal";
 export type HostExifStatus = "NORMAL" | "MISSING" | "FAILED";
@@ -289,9 +290,13 @@ export const getMockHostNotices = () => mockHostNotices.map(cloneNotice);
 const htmlToPlainText = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 
 export function getHostCrewDetail(crewId: number) {
+  const crew = MOCK_CREWS.find((item) => item.crew_id === crewId);
+
   return {
     ...MOCK_HOST_CREW_DETAIL,
     crew_id: crewId,
+    title: crew?.title ?? MOCK_HOST_CREW_DETAIL.title,
+    status: crew?.status ?? MOCK_HOST_CREW_DETAIL.status,
   };
 }
 
