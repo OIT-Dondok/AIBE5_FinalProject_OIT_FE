@@ -10,26 +10,22 @@ import {
 } from "@/components/domain/point/WalletHistorySection";
 import { WalletSummaryCard } from "@/components/domain/point/WalletSummaryCard";
 import { createWalletViewModel } from "@/components/domain/point/pointViewModel";
+import { useChargeBottomSheet } from "@/components/domain/point/useChargeBottomSheet";
 import { mockPointAccount, mockPointHistory } from "@/mocks/data/points";
 
 export default function DodinWalletPage() {
-  const [isChargeSheetOpen, setIsChargeSheetOpen] = useState(false);
-  const [chargeInitialAmount, setChargeInitialAmount] = useState<number | undefined>(undefined);
   const [activeFilter, setActiveFilter] = useState<HistoryFilter>("ALL");
+  const {
+    chargeInitialAmount,
+    closeChargeBottomSheet,
+    isChargeSheetOpen,
+    openChargeBottomSheet,
+  } = useChargeBottomSheet();
 
   const wallet = useMemo(
     () => createWalletViewModel(mockPointAccount, mockPointHistory.items),
     [],
   );
-
-  const openChargeBottomSheet = (amount?: number) => {
-    setChargeInitialAmount(amount);
-    setIsChargeSheetOpen(true);
-  };
-
-  const closeChargeBottomSheet = () => {
-    setIsChargeSheetOpen(false);
-  };
 
   return (
     <main className="min-h-screen w-full overflow-x-hidden bg-transparent">

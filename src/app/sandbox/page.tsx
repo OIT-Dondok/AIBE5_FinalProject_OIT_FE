@@ -15,6 +15,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { Skeleton } from "@/components/common/Skeleton";
 import { ChargeBottomSheet } from "@/components/domain/point/ChargeBottomSheet";
 import { DodinShortageModal } from "@/components/domain/point/DodinShortageModal";
+import { useChargeBottomSheet } from "@/components/domain/point/useChargeBottomSheet";
 
 import { X } from "lucide-react";
 
@@ -23,23 +24,18 @@ export default function SandboxPage() {
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [isInputOpen, setIsInputOpen] = useState(false);
     const [isDodinShortageOpen, setIsDodinShortageOpen] = useState(false);
-    const [isChargeBottomSheetOpen, setIsChargeBottomSheetOpen] = useState(false);
-    const [chargeInitialAmount, setChargeInitialAmount] = useState<number | undefined>(undefined);
     const [isToastOpen, setIsToastOpen] = useState(false); // 👈 토스트 스위치 상태 선언
     const [activeChips, setActiveChips] = useState<Set<string>>(new Set(["status-모집 중", "cat-운동"]));
     const [demoStep, setDemoStep] = useState(2);
+    const {
+        chargeInitialAmount,
+        closeChargeBottomSheet,
+        isChargeSheetOpen,
+        openChargeBottomSheet,
+    } = useChargeBottomSheet();
     const shortageRequiredAmount = 50000;
     const shortageCurrentBalance = 32000;
     const shortageAmount = Math.max(shortageRequiredAmount - shortageCurrentBalance, 0);
-
-    const openChargeBottomSheet = (amount?: number) => {
-        setChargeInitialAmount(amount);
-        setIsChargeBottomSheetOpen(true);
-    };
-
-    const closeChargeBottomSheet = () => {
-        setIsChargeBottomSheetOpen(false);
-    };
 
     const toggleChip = (label: string) =>
         setActiveChips((prev) => {
@@ -537,7 +533,7 @@ export default function SandboxPage() {
             />
 
             <ChargeBottomSheet
-                isOpen={isChargeBottomSheetOpen}
+                isOpen={isChargeSheetOpen}
                 onClose={closeChargeBottomSheet}
                 currentBalance={shortageCurrentBalance}
                 initialAmount={chargeInitialAmount}
