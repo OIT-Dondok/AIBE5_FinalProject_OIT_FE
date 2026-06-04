@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+
 import { ArrowDown, Plus } from "lucide-react";
 
 import type { WalletSummaryMetric, WalletViewModel } from "@/components/domain/point/pointViewModel";
@@ -10,18 +12,24 @@ interface WalletSummaryCardProps {
 }
 
 function HoverHint({ text }: { text: string }) {
+  const tooltipId = useId();
+
   return (
-    <span className="group relative inline-flex">
+    <button
+      type="button"
+      className="group relative ml-1 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[#D9E3CF]/35 text-[10px] text-[#D9E3CF]/75 outline-none transition-colors focus-visible:border-[#F7F1E5]/70 focus-visible:text-[#F7F1E5]"
+      aria-describedby={tooltipId}
+      aria-label="도움말"
+    >
+      i
       <span
-        className="ml-1 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[#D9E3CF]/35 text-[10px] text-[#D9E3CF]/75"
-        aria-hidden="true"
+        id={tooltipId}
+        role="tooltip"
+        className="pointer-events-none absolute left-1/2 top-auto bottom-full z-10 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-white/20 bg-[#0f172a] px-2 py-1 text-[10px] font-semibold leading-snug text-[#F7F1E5] shadow-lg group-hover:block group-focus:block"
       >
-        i
-      </span>
-      <span className="pointer-events-none absolute left-1/2 top-auto bottom-full z-10 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-white/20 bg-[#0f172a] px-2 py-1 text-[10px] font-semibold leading-snug text-[#F7F1E5] shadow-lg group-hover:block">
         {text}
       </span>
-    </span>
+    </button>
   );
 }
 
