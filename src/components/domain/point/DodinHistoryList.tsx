@@ -57,7 +57,6 @@ export function DodinHistoryList({
   const [activeFilter, setActiveFilter] = useState<HistoryFilter>("ALL");
   const [visibleCount, setVisibleCount] = useState(pageSize);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
-  const wasIntersectingRef = useRef(false);
   const isLoadingRef = useRef(false);
 
   const filteredHistory = useMemo(
@@ -74,7 +73,7 @@ export function DodinHistoryList({
   const handleFilterChange = (filter: HistoryFilter) => {
     setActiveFilter(filter);
     setVisibleCount(pageSize);
-    wasIntersectingRef.current = false;
+    isLoadingRef.current = false;
   };
 
   useEffect(() => {
@@ -85,20 +84,15 @@ export function DodinHistoryList({
       ([entry]) => {
         const isIntersecting = entry?.isIntersecting ?? false;
 
-        if (!isIntersecting) {
-          wasIntersectingRef.current = false;
-          return;
-        }
+        if (!isIntersecting || !hasMore) return;
 
-        if (isLoadingRef.current || wasIntersectingRef.current) {
+        if (isLoadingRef.current) {
           return;
         }
 
         isLoadingRef.current = true;
-        wasIntersectingRef.current = true;
 
         setVisibleCount((current) => Math.min(current + pageSize, filteredHistory.length));
-        isLoadingRef.current = false;
       },
       {
         root: null,
@@ -111,6 +105,12 @@ export function DodinHistoryList({
 
     return () => observer.disconnect();
   }, [filteredHistory.length, hasMore, pageSize]);
+
+  useEffect(() => {
+    if (isLoadingRef.current) {
+      isLoadingRef.current = false;
+    }
+  }, [visibleCount]);
 
   return (
     <section className="overflow-hidden rounded-[24px] border border-text-secondary/10 bg-card shadow-card">
