@@ -69,6 +69,7 @@ export const POINT_TRANSACTION_TYPE = {
   CREW_DEPOSIT_RESERVE: 'CREW_DEPOSIT_RESERVE',   // 보증금 예약 (reserve)
   CREW_RESERVE_RELEASE: 'CREW_RESERVE_RELEASE',   // 예약 해제 (취소/거절/만료)
   CREW_SETTLEMENT_REFUND: 'CREW_SETTLEMENT_REFUND', // 최종 정산 환급
+  POINT_WITHDRAWAL: 'POINT_WITHDRAWAL', // 출금 요청(현재 UI/목데이터)
 } as const;
 export type PointTransactionType = (typeof POINT_TRANSACTION_TYPE)[keyof typeof POINT_TRANSACTION_TYPE];
 
@@ -148,6 +149,14 @@ export const POINT_HISTORY_REFERENCE_TYPE = {
   SETTLEMENT_ITEM: 'SETTLEMENT_ITEM',
 } as const;
 export type PointHistoryReferenceType = (typeof POINT_HISTORY_REFERENCE_TYPE)[keyof typeof POINT_HISTORY_REFERENCE_TYPE];
+
+export interface PointHistoryReferenceMeta {
+  crew_id?: number;
+  crew_title?: string;
+  crew_participant_id?: number;
+  settlement_id?: number;
+  settlement_item_id?: number;
+}
 
 // CertificationStatus (mission_log.certification_status)
 // PENDING_REVIEW: 업로드 직후 검수 대기
@@ -792,6 +801,7 @@ export interface PointHistoryItem {
   transaction_type: PointTransactionType;
   reference_type: PointHistoryReferenceType;
   reference_id: number;
+  reference_meta?: PointHistoryReferenceMeta;
   created_at: string;
 }
 
