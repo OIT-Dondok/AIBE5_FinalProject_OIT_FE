@@ -24,12 +24,22 @@ export default function SandboxPage() {
     const [isInputOpen, setIsInputOpen] = useState(false);
     const [isDodinShortageOpen, setIsDodinShortageOpen] = useState(false);
     const [isChargeBottomSheetOpen, setIsChargeBottomSheetOpen] = useState(false);
+    const [chargeInitialAmount, setChargeInitialAmount] = useState<number | undefined>(undefined);
     const [isToastOpen, setIsToastOpen] = useState(false); // 👈 토스트 스위치 상태 선언
     const [activeChips, setActiveChips] = useState<Set<string>>(new Set(["status-모집 중", "cat-운동"]));
     const [demoStep, setDemoStep] = useState(2);
     const shortageRequiredAmount = 50000;
     const shortageCurrentBalance = 32000;
     const shortageAmount = Math.max(shortageRequiredAmount - shortageCurrentBalance, 0);
+
+    const openChargeBottomSheet = (amount?: number) => {
+        setChargeInitialAmount(amount);
+        setIsChargeBottomSheetOpen(true);
+    };
+
+    const closeChargeBottomSheet = () => {
+        setIsChargeBottomSheetOpen(false);
+    };
 
     const toggleChip = (label: string) =>
         setActiveChips((prev) => {
@@ -520,7 +530,7 @@ export default function SandboxPage() {
                 onClose={() => setIsDodinShortageOpen(false)}
                 onCharge={() => {
                     setIsDodinShortageOpen(false);
-                    setIsChargeBottomSheetOpen(true);
+                    openChargeBottomSheet(shortageAmount);
                 }}
                 requiredAmount={shortageRequiredAmount}
                 currentBalance={shortageCurrentBalance}
@@ -528,9 +538,9 @@ export default function SandboxPage() {
 
             <ChargeBottomSheet
                 isOpen={isChargeBottomSheetOpen}
-                onClose={() => setIsChargeBottomSheetOpen(false)}
+                onClose={closeChargeBottomSheet}
                 currentBalance={shortageCurrentBalance}
-                initialAmount={shortageAmount}
+                initialAmount={chargeInitialAmount}
             />
 
             {/* 📌 실물 토스트 컴포넌트: 바텀 네비바(bottom-24) 바로 위 공중 */}

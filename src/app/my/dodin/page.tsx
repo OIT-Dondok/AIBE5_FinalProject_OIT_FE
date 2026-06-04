@@ -14,6 +14,7 @@ import { mockPointAccount, mockPointHistory } from "@/mocks/data/points";
 
 export default function DodinWalletPage() {
   const [isChargeSheetOpen, setIsChargeSheetOpen] = useState(false);
+  const [chargeInitialAmount, setChargeInitialAmount] = useState<number | undefined>(undefined);
   const [activeFilter, setActiveFilter] = useState<HistoryFilter>("ALL");
 
   const wallet = useMemo(
@@ -21,13 +22,22 @@ export default function DodinWalletPage() {
     [],
   );
 
+  const openChargeBottomSheet = (amount?: number) => {
+    setChargeInitialAmount(amount);
+    setIsChargeSheetOpen(true);
+  };
+
+  const closeChargeBottomSheet = () => {
+    setIsChargeSheetOpen(false);
+  };
+
   return (
     <main className="min-h-screen w-full overflow-x-hidden bg-transparent">
       <div className="mx-auto flex w-full max-w-[430px] flex-col pb-10">
         <Header title="도딘 지갑" showBackButton />
 
         <div className="px-5 pt-5">
-          <WalletSummaryCard wallet={wallet} onOpenCharge={() => setIsChargeSheetOpen(true)} />
+          <WalletSummaryCard wallet={wallet} onOpenCharge={() => openChargeBottomSheet()} />
           <WalletHistorySection
             activeFilter={activeFilter}
             historyItems={wallet.historyItems}
@@ -39,7 +49,8 @@ export default function DodinWalletPage() {
 
       <ChargeBottomSheet
         isOpen={isChargeSheetOpen}
-        onClose={() => setIsChargeSheetOpen(false)}
+        onClose={closeChargeBottomSheet}
+        initialAmount={chargeInitialAmount}
         currentBalance={mockPointAccount.available_balance}
       />
     </main>
