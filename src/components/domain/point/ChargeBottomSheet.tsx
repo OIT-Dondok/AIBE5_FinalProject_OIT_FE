@@ -9,12 +9,14 @@ interface ChargeBottomSheetProps {
   isOpen: boolean;
   onClose: () => void;
   currentBalance?: number;
+  initialAmount?: number;
 }
 
 const QUICK_ADD_AMOUNTS = [10000, 30000, 50000, 100000] as const;
 const MIN_CHARGE_AMOUNT = 1000;
 const CHARGE_STEP_AMOUNT = 1000;
 const MAX_CHARGE_AMOUNT = 1000000;
+const DEFAULT_AMOUNT = QUICK_ADD_AMOUNTS[0];
 
 function formatKrw(value: number) {
   return `${new Intl.NumberFormat("ko-KR").format(value)}원`;
@@ -29,6 +31,15 @@ function formatInputValue(value: string) {
   return new Intl.NumberFormat("ko-KR").format(Number(value));
 }
 
+function resolveInitialAmount(rawAmount: number | undefined) {
+  if (rawAmount == null) return DEFAULT_AMOUNT;
+  if (!Number.isFinite(rawAmount)) return DEFAULT_AMOUNT;
+  if (rawAmount <= 0) return DEFAULT_AMOUNT;
+
+  const clamped = Math.min(rawAmount, MAX_CHARGE_AMOUNT);
+  return Math.max(MIN_CHARGE_AMOUNT, Math.floor(clamped));
+}
+
 function getAmountError(amount: number | null) {
   if (amount == null) return "충전 금액을 입력해 주세요.";
   if (amount < MIN_CHARGE_AMOUNT) return "1,000원 이상부터 충전할 수 있어요.";
@@ -37,8 +48,9 @@ function getAmountError(amount: number | null) {
   return "";
 }
 
-export function ChargeBottomSheet({ isOpen, onClose, currentBalance }: ChargeBottomSheetProps) {
-  const [amountInput, setAmountInput] = useState(String(QUICK_ADD_AMOUNTS[0]));
+export function ChargeBottomSheet({ isOpen, onClose, currentBalance, initialAmount }: ChargeBottomSheetProps) {
+  const initialAmountInput = useMemo(() => String(resolveInitialAmount(initialAmount)), [initialAmount]);
+  const [amountInput, setAmountInput] = useState(initialAmountInput);
   const [mockStatus, setMockStatus] = useState<"idle" | "pending">("idle");
 
   const amount = useMemo(() => {
@@ -77,7 +89,7 @@ export function ChargeBottomSheet({ isOpen, onClose, currentBalance }: ChargeBot
 
   const handleClose = () => {
     setMockStatus("idle");
-    setAmountInput(String(QUICK_ADD_AMOUNTS[0]));
+    setAmountInput(initialAmountInput);
     onClose();
   };
 
