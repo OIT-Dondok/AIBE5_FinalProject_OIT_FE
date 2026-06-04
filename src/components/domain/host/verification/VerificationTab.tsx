@@ -132,7 +132,7 @@ export function VerificationTab({ moderationResults, onModerationResultsChange }
           <div className="mb-1.5 flex items-center justify-center text-primary-green">
             <Check size={22} strokeWidth={3} />
           </div>
-          <p className="text-sm font-medium text-text-secondary">모든 인증을 검토했어요</p>
+          <p className="text-[13px] font-medium text-text-secondary">모든 인증을 검토했어요</p>
         </div>
       )}
 
