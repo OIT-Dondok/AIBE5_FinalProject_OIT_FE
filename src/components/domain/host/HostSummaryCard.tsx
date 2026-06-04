@@ -5,16 +5,16 @@ import { useRouter } from "next/navigation";
 import { ChevronDown, ShieldCheck } from "lucide-react";
 
 import { MOCK_CREWS } from "@/mocks/data/crews";
-import type { HostCrewDetailMock } from "@/mocks/data/host";
+import { getCrewApplications, type HostCrewDetailMock } from "@/mocks/data/host";
 
 export function HostSummaryCard({ crewDetail }: { crewDetail: HostCrewDetailMock }) {
   const router = useRouter();
   const [isCrewListOpen, setIsCrewListOpen] = useState(false);
   const crewCount = MOCK_CREWS.length;
-  const otherCrews = MOCK_CREWS.filter((crew) => crew.crew_id !== crewDetail.crew_id);
 
   const handleCrewSelect = (crewId: number) => {
     setIsCrewListOpen(false);
+    if (crewId === crewDetail.crew_id) return;
     router.push(`/crews/${crewId}/host-console`);
   };
 
@@ -51,25 +51,41 @@ export function HostSummaryCard({ crewDetail }: { crewDetail: HostCrewDetailMock
 
       {isCrewListOpen && (
         <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-30 overflow-hidden rounded-[18px] border border-text-secondary/10 bg-card shadow-card">
+          <div className="border-b border-text-secondary/10 px-4 pb-2.5 pt-3">
+            <p className="text-xs font-extrabold text-text-primary">운영중인 크루</p>
+          </div>
           <div className="max-h-64 overflow-y-auto py-1.5">
-            {otherCrews.map((crew) => (
-              <button
-                key={crew.crew_id}
-                type="button"
-                onClick={() => handleCrewSelect(crew.crew_id)}
-                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-[#FAF7EE]"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-extrabold text-text-primary">{crew.title}</p>
-                  <p className="mt-0.5 text-[11px] font-semibold text-text-secondary">
-                    {crew.current_participants}/{crew.max_participants}명 · 보증금 {crew.deposit_amount.toLocaleString()}도딘
-                  </p>
-                </div>
-                <span className="shrink-0 rounded-full bg-[#EEF3FF] px-2.5 py-1 text-[10px] font-extrabold text-[#4d73d9]">
-                  이동
-                </span>
-              </button>
-            ))}
+            {MOCK_CREWS.map((crew) => {
+              const isSelected = crew.crew_id === crewDetail.crew_id;
+              const pendingApplicationCount = getCrewApplications(crew.crew_id, "PENDING").length;
+
+              return (
+                <button
+                  key={crew.crew_id}
+                  type="button"
+                  onClick={() => handleCrewSelect(crew.crew_id)}
+                  className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors ${
+                    isSelected ? "bg-[#E0E8FA]" : "hover:bg-[#FAF7EE]"
+                  }`}
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EEF3FF] text-sm font-extrabold text-[#4d73d9]">
+                      {crew.title.slice(0, 1)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-extrabold text-text-primary">{crew.title}</p>
+                      <p className="mt-0.5 text-[11px] font-semibold text-text-secondary">
+                        {crew.current_participants}/{crew.max_participants}명 · 보증금{" "}
+                        {crew.deposit_amount.toLocaleString()}도딘
+                      </p>
+                    </div>
+                  </div>
+                  <span className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-[#EEF3FF] px-2 text-[11px] font-extrabold text-[#4d73d9]">
+                    {pendingApplicationCount}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
