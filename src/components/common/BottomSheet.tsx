@@ -8,11 +8,12 @@ interface BottomSheetProps {
     isOpen: boolean;
     onClose: () => void;
     title?: string;
+    subtitle?: string;
     children: ReactNode;
     ariaLabel?: string;
 }
 
-export function BottomSheet({ isOpen, onClose, title, children, ariaLabel }: BottomSheetProps) {
+export function BottomSheet({ isOpen, onClose, title, subtitle, children, ariaLabel }: BottomSheetProps) {
     const previousOverflow = useRef<string>("");
 
     useEffect(() => {
@@ -54,7 +55,10 @@ export function BottomSheet({ isOpen, onClose, title, children, ariaLabel }: Bot
                 {/* 헤더 */}
                 {title && (
                     <div className="flex items-center justify-between px-5 py-3 border-b border-text-secondary/[0.08]">
-                        <h2 className="text-base font-bold text-text-primary">{title}</h2>
+                        <div>
+                            <h2 className="text-base font-bold text-text-primary">{title}</h2>
+                            {subtitle && <p className="mt-1 text-xs font-medium text-text-secondary">{subtitle}</p>}
+                        </div>
                         <button
                             type="button"
                             onClick={onClose}
