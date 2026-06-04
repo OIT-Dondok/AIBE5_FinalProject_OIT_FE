@@ -100,7 +100,7 @@ export function NoticesTab() {
                         setDeleteTargetNoticeId(notice.notice_id);
                         setOpenMenuNoticeId(null);
                       }}
-                      className="block w-full px-3 py-2.5 text-left text-xs font-bold text-red-500 hover:bg-red-50"
+                      className="block w-full px-3 py-2.5 text-left text-xs font-bold text-[#DB5C55] hover:bg-[#FCEDEC]"
                     >
                       삭제하기
                     </button>

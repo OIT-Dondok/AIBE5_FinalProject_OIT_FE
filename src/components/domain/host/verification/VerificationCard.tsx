@@ -72,7 +72,7 @@ export function VerificationCard({ item, isExpanded, onToggle }: VerificationCar
               </div>
               <div className="grid grid-cols-[64px_1fr] items-center gap-2">
                 <p className="text-xs font-medium text-text-secondary">중복</p>
-                <p className={`text-xs font-extrabold ${item.is_duplicate ? "text-red-500" : "text-primary-green"}`}>
+                <p className={`text-xs font-extrabold ${item.is_duplicate ? "text-[#DB5C55]" : "text-primary-green"}`}>
                   {item.is_duplicate ? "있음" : "없음"}
                 </p>
               </div>
@@ -86,7 +86,7 @@ export function VerificationCard({ item, isExpanded, onToggle }: VerificationCar
           <div className="mt-3 grid grid-cols-2 gap-3">
             <button
               type="button"
-              className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-red-50 text-sm font-extrabold text-red-500 transition-colors hover:bg-red-100"
+              className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-[#FCEDEC] text-sm font-extrabold text-[#DB5C55] transition-colors hover:bg-[#F8DEDC]"
             >
               <X size={16} strokeWidth={2.8} />
               거절

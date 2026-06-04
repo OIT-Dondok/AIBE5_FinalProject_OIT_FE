@@ -33,7 +33,7 @@ const applicationStatusLabel: Record<ParticipantStatus, string> = {
 const applicationStatusStyles: Record<ParticipantStatus, string> = {
   PENDING: "bg-amber-50 text-amber-700 border-amber-200/70",
   LOCKED: "bg-success-green/50 text-primary-green border-primary-green/20",
-  REJECTED: "bg-red-50 text-red-500 border-red-100",
+  REJECTED: "bg-[#FCEDEC] text-[#DB5C55] border-[#FCEDEC]",
   CANCELLED: "bg-slate-100 text-slate-500 border-slate-200",
   EXPIRED: "bg-text-secondary/10 text-text-secondary border-text-secondary/10",
 };
