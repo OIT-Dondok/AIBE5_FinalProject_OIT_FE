@@ -126,7 +126,7 @@ export function toWalletHistoryViewItem(item: PointHistoryItem): WalletHistoryVi
     id: item.point_history_id,
     label: POINT_TRANSACTION_LABELS[item.transaction_type],
     description: getCrewTransactionDescription(item),
-    displayAmount: `${sign}${formatKrw(item.amount)}`,
+    displayAmount: `${sign}${formatKrw(Math.abs(item.amount))}`,
     balanceAfter: formatKrw(item.balance_after),
     dateLabel: formatHistoryDate(item.created_at),
     direction,
