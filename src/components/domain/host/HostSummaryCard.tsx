@@ -80,7 +80,7 @@ export function HostSummaryCard({ crewDetail }: { crewDetail: HostCrewDetailMock
                       </p>
                     </div>
                   </div>
-                  <span className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-[#EEF3FF] px-2 text-[11px] font-extrabold text-[#4d73d9]">
+                  <span className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-[#FCEDEC] px-2 text-[11px] font-extrabold text-[#DB5C55]">
                     {pendingApplicationCount}
                   </span>
                 </button>
