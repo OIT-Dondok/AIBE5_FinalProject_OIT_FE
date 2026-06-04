@@ -54,7 +54,7 @@ export function HostSummaryCard({ crewDetail }: { crewDetail: HostCrewDetailMock
           <div className="border-b border-text-secondary/10 px-4 pb-2.5 pt-3">
             <p className="text-xs font-extrabold text-text-primary">운영중인 크루</p>
           </div>
-          <div className="max-h-64 overflow-y-auto py-1.5">
+          <div className="hover-scrollbar max-h-64 overflow-y-auto py-1.5">
             {MOCK_CREWS.map((crew) => {
               const isSelected = crew.crew_id === crewDetail.crew_id;
               const pendingApplicationCount = getCrewApplications(crew.crew_id, "PENDING").length;
