@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CircleAlert, Info, Loader2, RotateCcw } from "lucide-react";
 
 import { BottomSheet } from "@/components/common/BottomSheet";
@@ -52,6 +52,12 @@ export function ChargeBottomSheet({ isOpen, onClose, currentBalance, initialAmou
   const initialAmountInput = useMemo(() => String(resolveInitialAmount(initialAmount)), [initialAmount]);
   const [amountInput, setAmountInput] = useState(initialAmountInput);
   const [mockStatus, setMockStatus] = useState<"idle" | "pending">("idle");
+
+  useEffect(() => {
+    if (!isOpen) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setAmountInput(String(resolveInitialAmount(initialAmount)));
+  }, [initialAmount, isOpen]);
 
   const amount = useMemo(() => {
     if (!amountInput) return null;
