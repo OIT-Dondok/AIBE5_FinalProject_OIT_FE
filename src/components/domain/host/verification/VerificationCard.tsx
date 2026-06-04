@@ -148,7 +148,7 @@ export function VerificationCard({
             {moderationDecision ? (
               <div
                 className={`mt-3 flex h-14 items-center justify-between gap-3 rounded-xl px-4 ${
-                  moderationDecision === "approved" ? "bg-[#FAF7EE]" : "bg-[#FCEDEC]"
+                  moderationDecision === "approved" ? "bg-[#E8F2EB]" : "bg-[#FCEDEC]"
                 }`}
               >
                 <p
@@ -156,7 +156,11 @@ export function VerificationCard({
                     moderationDecision === "approved" ? "text-primary-green" : "text-[#DB5C55]"
                   }`}
                 >
-                  {moderationDecision === "rejected" && <X size={18} strokeWidth={2.8} className="shrink-0" />}
+                  {moderationDecision === "approved" ? (
+                    <Check size={18} strokeWidth={2.8} className="shrink-0" />
+                  ) : (
+                    <X size={18} strokeWidth={2.8} className="shrink-0" />
+                  )}
                   <span className="truncate">
                     {moderationDecision === "approved"
                       ? "승인 완료 · 정산에 반영됩니다"
@@ -166,8 +170,8 @@ export function VerificationCard({
                 <button
                   type="button"
                   onClick={onUndo}
-                  className={`shrink-0 rounded-full border border-text-secondary/10 px-3 py-1.5 text-xs font-medium text-text-primary transition-colors ${
-                    moderationDecision === "approved" ? "bg-card hover:bg-[#EDE8DF]" : "bg-[#FCEDEC] hover:bg-[#F8DEDC]"
+                  className={`shrink-0 rounded-[10px] border border-text-secondary/10 px-2.5 py-1.5 text-xs font-medium text-text-primary transition-colors ${
+                    moderationDecision === "approved" ? "bg-[#E8F2EB] hover:bg-[#DCEBDF]" : "bg-[#FCEDEC] hover:bg-[#F4E6E5]"
                   }`}
                 >
                   되돌리기
