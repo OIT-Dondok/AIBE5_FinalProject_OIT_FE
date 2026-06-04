@@ -18,9 +18,16 @@ type VerificationCardProps = {
   item: HostCertificationMock;
   isExpanded: boolean;
   onToggle: () => void;
+  moderationResult: VerificationModerationResult | null;
+  onApprove: () => void;
+  onReject: (rejectReasonLabel: string) => void;
+  onUndo: () => void;
 };
 
-type ModerationDecision = "approved" | "rejected" | null;
+export type VerificationModerationResult = {
+  decision: "approved" | "rejected";
+  rejectReasonLabel?: string;
+};
 
 const rejectReasonOptions: Array<{ value: RejectReasonCode; label: string; description: string }> = [
   { value: "TIME_VIOLATION", label: "시간 위반", description: "마감 후 촬영" },
@@ -31,26 +38,26 @@ const rejectReasonOptions: Array<{ value: RejectReasonCode; label: string; descr
   { value: "OTHER", label: "기타", description: "직접 입력" },
 ];
 
-export function VerificationCard({ item, isExpanded, onToggle }: VerificationCardProps) {
+export function VerificationCard({
+  item,
+  isExpanded,
+  onToggle,
+  moderationResult,
+  onApprove,
+  onReject,
+  onUndo,
+}: VerificationCardProps) {
   const [isRejectSheetOpen, setIsRejectSheetOpen] = useState(false);
   const [selectedRejectReason, setSelectedRejectReason] = useState<RejectReasonCode | null>(null);
   const [rejectMemo, setRejectMemo] = useState("");
-  const [moderationDecision, setModerationDecision] = useState<ModerationDecision>(null);
   const isRejectConfirmDisabled =
     selectedRejectReason === null || (selectedRejectReason === "OTHER" && rejectMemo.trim().length === 0);
+  const moderationDecision = moderationResult?.decision ?? null;
 
   const handleRejectConfirm = () => {
     if (isRejectConfirmDisabled) return;
-    setModerationDecision("rejected");
+    onReject(selectedRejectReasonLabel);
     setIsRejectSheetOpen(false);
-  };
-
-  const handleApprove = () => {
-    setModerationDecision("approved");
-  };
-
-  const handleUndoDecision = () => {
-    setModerationDecision(null);
   };
 
   const selectedRejectReasonLabel =
@@ -147,11 +154,11 @@ export function VerificationCard({ item, isExpanded, onToggle }: VerificationCar
                 >
                   {moderationDecision === "approved"
                     ? "승인 완료 · 정산에 반영됩니다"
-                    : `거절 완료 · ${selectedRejectReasonLabel}`}
+                    : `거절 완료 · ${moderationResult?.rejectReasonLabel ?? selectedRejectReasonLabel}`}
                 </p>
                 <button
                   type="button"
-                  onClick={handleUndoDecision}
+                  onClick={onUndo}
                   className="shrink-0 rounded-full bg-card px-3 py-1.5 text-xs font-extrabold text-text-secondary transition-colors hover:bg-[#EDE8DF]"
                 >
                   되돌리기
@@ -169,7 +176,7 @@ export function VerificationCard({ item, isExpanded, onToggle }: VerificationCar
                 </button>
                 <button
                   type="button"
-                  onClick={handleApprove}
+                  onClick={onApprove}
                   className="inline-flex h-14 min-h-14 items-center justify-center gap-1.5 rounded-xl bg-primary-green text-base font-extrabold leading-none text-white shadow-sm shadow-primary-green/20 transition-colors hover:bg-[#3F7A55]"
                 >
                   <Check size={16} strokeWidth={2.8} />
