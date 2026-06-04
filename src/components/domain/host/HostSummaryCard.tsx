@@ -31,16 +31,14 @@ export function HostSummaryCard({ crewDetail }: { crewDetail: HostCrewDetailMock
             <ShieldCheck size={24} strokeWidth={2.4} />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex min-w-0 items-center gap-2">
-              <p className="truncate text-[13px] font-extrabold leading-tight text-white">방장 · {crewDetail.title}</p>
-              <span className="shrink-0 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-extrabold leading-tight text-white ring-1 ring-white/25">
-                내 크루 {crewCount}
-              </span>
-            </div>
+            <p className="truncate text-[13px] font-extrabold leading-tight text-white">방장 · {crewDetail.title}</p>
             <p className="mt-1 text-xs font-semibold leading-tight text-white/90">
               다음 정산까지 <span className="font-extrabold text-white">3시간 14분</span>
             </p>
           </div>
+          <span className="shrink-0 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-extrabold leading-tight text-white ring-1 ring-white/25">
+            내 크루 {crewCount}
+          </span>
           <ChevronDown
             size={18}
             strokeWidth={2.6}
