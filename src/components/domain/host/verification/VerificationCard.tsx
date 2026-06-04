@@ -135,10 +135,16 @@ export function VerificationCard({ item, isExpanded, onToggle }: VerificationCar
       <BottomSheet
         isOpen={isRejectSheetOpen}
         onClose={() => setIsRejectSheetOpen(false)}
-        title="거절 사유를 선택해주세요"
-        subtitle="크루원에게 사유가 표시됩니다"
+        ariaLabel="거절 사유를 선택해주세요"
+        showCloseButton={false}
+        showHeaderBorder={false}
+        panelClassName="bg-[#F5F0E6]"
       >
         <div className="bg-[#F5F0E6] px-5 pb-5 pt-3">
+          <div className="pb-4">
+            <h2 className="text-base font-bold text-text-primary">거절 사유를 선택해주세요</h2>
+            <p className="mt-1 text-xs font-medium text-text-secondary">크루원에게 사유가 표시됩니다</p>
+          </div>
           <div className="grid grid-cols-2 gap-2">
             {rejectReasonOptions.map((option) => {
               const isSelected = selectedRejectReason === option.value;
