@@ -37,7 +37,11 @@ export default function DodinWalletPage() {
         </div>
       </div>
 
-      <ChargeBottomSheet isOpen={isChargeSheetOpen} onClose={() => setIsChargeSheetOpen(false)} />
+      <ChargeBottomSheet
+        isOpen={isChargeSheetOpen}
+        onClose={() => setIsChargeSheetOpen(false)}
+        currentBalance={mockPointAccount.available_balance}
+      />
     </main>
   );
 }
