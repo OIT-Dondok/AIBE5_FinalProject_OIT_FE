@@ -21,22 +21,6 @@ const APPLICATION_FILTERS: Array<{ value: ApplicationFilter; label: string }> = 
   { value: "REJECTED", label: "거절" },
 ];
 
-const applicationStatusLabel: Record<ParticipantStatus, string> = {
-  PENDING: "대기",
-  LOCKED: "승인",
-  REJECTED: "거절",
-  CANCELLED: "취소",
-  EXPIRED: "만료",
-};
-
-const applicationStatusStyles: Record<ParticipantStatus, string> = {
-  PENDING: "bg-amber-50 text-amber-700 border-amber-200/70",
-  LOCKED: "bg-success-green/50 text-primary-green border-primary-green/20",
-  REJECTED: "bg-[#FCEDEC] text-[#DB5C55] border-[#FCEDEC]",
-  CANCELLED: "bg-slate-100 text-slate-500 border-slate-200",
-  EXPIRED: "bg-text-secondary/10 text-text-secondary border-text-secondary/10",
-};
-
 function ApplicationCard({ item }: { item: HostApplicationMock }) {
   const canDecide = item.status === "PENDING";
 
