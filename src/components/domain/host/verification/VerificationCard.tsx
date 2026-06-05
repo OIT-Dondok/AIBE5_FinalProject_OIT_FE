@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, ChevronDown, ChevronRight, Scan, X } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Maximize2, X } from "lucide-react";
 
 import { BottomSheet } from "@/components/common/BottomSheet";
 import { formatDate, formatDateMinute, formatTime } from "@/components/domain/host/hostFormatters";
@@ -48,6 +48,7 @@ export function VerificationCard({
   onUndo,
 }: VerificationCardProps) {
   const [isRejectSheetOpen, setIsRejectSheetOpen] = useState(false);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [selectedRejectReason, setSelectedRejectReason] = useState<RejectReasonCode | null>(null);
   const [rejectMemo, setRejectMemo] = useState("");
   const isRejectConfirmDisabled =
@@ -110,15 +111,20 @@ export function VerificationCard({
         {isExpanded && (
           <div className="border-t border-text-secondary/10 bg-[#FAFCFF] px-4 pb-4 pt-3">
             <div className="flex items-center gap-3">
-              <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-xl bg-success-green/70">
+              <button
+                type="button"
+                onClick={() => setIsLightboxOpen(true)}
+                className="relative h-32 w-32 shrink-0 cursor-zoom-in overflow-hidden rounded-xl bg-success-green/70"
+                aria-label={`${item.nickname} 인증 사진 확대`}
+              >
                 {item.image_url ? (
                   <img src={item.image_url} alt={`${item.nickname} 인증 사진`} className="h-full w-full object-cover" />
                 ) : null}
                 <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-md bg-text-primary/65 px-2 py-1 text-[10px] font-medium text-white">
-                  <Scan size={11} strokeWidth={2.4} />
+                  <Maximize2 size={11} strokeWidth={2.4} />
                   확대
                 </span>
-              </div>
+              </button>
 
               <div className="min-w-0 flex-1 space-y-2">
                 <div className="grid grid-cols-[64px_1fr] items-center gap-2">
@@ -273,6 +279,72 @@ export function VerificationCard({
           </div>
         </div>
       </BottomSheet>
+
+      {isLightboxOpen && (
+        <div className="fixed inset-0 z-[80] flex justify-center bg-black/70" onClick={() => setIsLightboxOpen(false)}>
+          <div className="relative flex h-full w-full max-w-[430px] flex-col bg-black text-white">
+            <div className="absolute left-0 right-0 top-0 z-10 flex items-center justify-between bg-black/45 px-5 py-4 backdrop-blur-sm">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-sm font-extrabold text-white">
+                  {item.nickname.slice(0, 1)}
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-extrabold text-white">{item.nickname}</p>
+                  <p className="mt-0.5 text-xs font-medium text-white/70">
+                    {item.exif_status === "MISSING" ? "-" : formatDateMinute(item.captured_at)}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setIsLightboxOpen(false);
+                }}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25"
+                aria-label="확대 사진 닫기"
+              >
+                <X size={20} strokeWidth={2.6} />
+              </button>
+            </div>
+
+            <div className="flex min-h-0 flex-1 cursor-zoom-out items-center justify-center px-4 py-20">
+              <div className="relative w-full overflow-hidden rounded-2xl bg-white/10" onClick={(event) => event.stopPropagation()}>
+                {item.image_url ? (
+                  <img src={item.image_url} alt={`${item.nickname} 인증 사진 확대`} className="max-h-[68vh] w-full object-contain" />
+                ) : (
+                  <div className="flex aspect-[3/4] w-full items-center justify-center text-sm font-medium text-white/70">
+                    인증 사진
+                  </div>
+                )}
+                <div className="absolute bottom-0 left-0 right-0 bg-black/45 px-4 py-3 backdrop-blur-sm">
+                  <p className="text-sm font-medium text-white">{item.comment}</p>
+                  <p className="mt-1 text-xs font-medium text-white/70">
+                    제출 {formatDate(item.submitted_at)} · {formatTime(item.submitted_at)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="absolute bottom-0 left-0 right-0 z-10 bg-black/55 px-5 pb-5 pt-3 backdrop-blur-sm">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl bg-white/10 px-3 py-3">
+                  <p className="text-[11px] font-medium text-white/60">Exif 검증</p>
+                  <p className={`mt-1 text-sm font-medium ${exifDetailStyle[item.exif_status]}`}>
+                    {exifDetailLabel[item.exif_status]}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-white/10 px-3 py-3">
+                  <p className="text-[11px] font-medium text-white/60">중복</p>
+                  <p className={`mt-1 text-sm font-medium ${item.is_duplicate ? "text-[#DB5C55]" : "text-primary-green"}`}>
+                    {item.is_duplicate ? "있음" : "없음"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
