@@ -175,9 +175,8 @@ export function ApplicationsTab() {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-3">
-        <div>
-          <h2 className="text-base font-bold text-text-primary">가입 신청</h2>
-          <p className="mt-1 text-xs text-text-secondary">방장이 참여 신청을 확인하고 처리할 수 있어요.</p>
+        <div className="py-1">
+          <h2 className="text-sm font-bold text-text-primary">대기 중인 신청</h2>
         </div>
         <div className="grid grid-cols-4 gap-2">
           {APPLICATION_FILTERS.map((filter) => {
