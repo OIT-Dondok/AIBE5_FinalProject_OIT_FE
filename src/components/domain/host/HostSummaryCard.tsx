@@ -68,7 +68,7 @@ export function HostSummaryCard({ crewDetail }: { crewDetail: HostCrewDetailMock
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EEF3FF] text-sm font-extrabold text-[#4d73d9]">
-                      {crew.title.slice(0, 1)}
+                      {crew.title.slice(0, 1) || "?"}
                     </div>
                     <div className="min-w-0">
                       <p className="truncate text-sm font-extrabold text-text-primary">{crew.title}</p>

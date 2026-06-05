@@ -57,12 +57,17 @@ export function VerificationCard({
     selectedRejectReason === null || (selectedRejectReason === "OTHER" && rejectMemo.trim().length === 0);
   const moderationDecision = moderationResult?.decision ?? null;
 
+  const selectedRejectReasonLabel =
+    rejectReasonOptions.find((option) => option.value === selectedRejectReason)?.label ?? "사유 미선택";
+
+  const TOAST_DURATION_MS = 2400;
+
   useEffect(() => {
     if (!toastDecision) return;
 
     const timeoutId = window.setTimeout(() => {
       setToastDecision(null);
-    }, 2400);
+    }, TOAST_DURATION_MS);
 
     return () => window.clearTimeout(timeoutId);
   }, [toastDecision]);
@@ -80,7 +85,8 @@ export function VerificationCard({
     }
 
     if (confirmDecision === "rejected") {
-      onReject({ code: selectedRejectReason!, label: selectedRejectReasonLabel, memo: rejectMemo || undefined });
+      if (!selectedRejectReason) return;
+      onReject({ code: selectedRejectReason, label: selectedRejectReasonLabel, memo: rejectMemo || undefined });
       setToastDecision("rejected");
     }
 
@@ -91,9 +97,6 @@ export function VerificationCard({
 
     setConfirmDecision(null);
   };
-
-  const selectedRejectReasonLabel =
-    rejectReasonOptions.find((option) => option.value === selectedRejectReason)?.label ?? "사유 미선택";
 
   return (
     <>
@@ -149,7 +152,7 @@ export function VerificationCard({
                 aria-label={`${item.nickname} 인증 사진 확대`}
               >
                 {item.image_url ? (
-                  <img src={item.image_url} alt={`${item.nickname} 인증 사진`} className="h-full w-full object-cover" />
+                  <img src={item.image_url} alt={`${item.nickname} 인증 사진`} loading="lazy" className="h-full w-full object-cover" />
                 ) : null}
                 <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-md bg-text-primary/65 px-2 py-1 text-[10px] font-medium text-white">
                   <Maximize2 size={11} strokeWidth={2.4} />
@@ -274,7 +277,6 @@ export function VerificationCard({
                   )}
                   <span className="text-sm font-extrabold text-text-primary">{option.label}</span>
                   <span className="mt-0.5 text-[11px] font-medium text-text-secondary">{option.description}</span>
-                  <span className="mt-1.5 text-[9px] font-medium text-text-secondary/70">{option.value}</span>
                 </button>
               );
             })}
@@ -287,7 +289,7 @@ export function VerificationCard({
               maxLength={50}
               placeholder="기타 사유를 입력해주세요"
               aria-label="기타 거절 사유"
-              className="mt-3 h-20 w-full resize-none rounded-2xl border border-text-secondary/10 bg-[#FAFCFF] px-4 py-3 text-sm font-medium text-text-primary outline-none placeholder:text-text-secondary focus:border-[#DB5C55]"
+              className="mt-3 h-20 w-full resize-none rounded-2xl border border-text-secondary/10 bg-[#FAFCFF] px-4 py-3 text-sm font-medium text-text-primary outline-none placeholder:text-text-secondary focus:border-[#DB5C55] focus-visible:ring-2 focus-visible:ring-[#DB5C55]/50"
             />
           )}
 
@@ -446,7 +448,7 @@ export function VerificationCard({
             <div className="flex min-h-0 flex-1 cursor-zoom-out items-center justify-center px-4 py-20">
               <div className="relative w-full overflow-hidden rounded-2xl bg-white/10" onClick={(event) => event.stopPropagation()}>
                 {item.image_url ? (
-                  <img src={item.image_url} alt={`${item.nickname} 인증 사진 확대`} className="max-h-[68vh] w-full object-contain" />
+                  <img src={item.image_url} alt={`${item.nickname} 인증 사진 확대`} loading="lazy" className="max-h-[68vh] w-full object-contain" />
                 ) : (
                   <div className="flex aspect-[3/4] w-full items-center justify-center text-sm font-medium text-white/70">
                     인증 사진
