@@ -408,7 +408,7 @@ export function VerificationCard({
                 <RotateCcw size={12} strokeWidth={3} />
               </span>
             )}
-            <span className="text-sm font-extrabold">
+            <span className="text-[13px] font-extrabold">
               {toastDecision === "undo" ? "결정을 되돌렸어요" : `인증을 ${toastDecision === "approved" ? "승인했어요" : "거절했어요"}`}
             </span>
           </div>
