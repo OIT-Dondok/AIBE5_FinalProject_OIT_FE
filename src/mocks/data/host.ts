@@ -41,6 +41,7 @@ export interface HostApplicationMock {
   nickname: string;
   profile_image_url: string | null;
   status: ParticipantStatus;
+  application_message: string;
   applied_at: string;
   decided_at: string | null;
 }
@@ -159,6 +160,7 @@ export const MOCK_CREW_APPLICATIONS: HostApplicationMock[] = [
     nickname: "한비",
     profile_image_url: null,
     status: "PENDING",
+    application_message: "매일 아침 인증하면서 꾸준히 참여하고 싶어요.",
     applied_at: "2026-06-01T13:00:00+09:00",
     decided_at: null,
   },
@@ -169,6 +171,7 @@ export const MOCK_CREW_APPLICATIONS: HostApplicationMock[] = [
     nickname: "지윤",
     profile_image_url: null,
     status: "PENDING",
+    application_message: "혼자서는 자주 미뤄서 크루원들과 함께 목표를 지키고 싶습니다.",
     applied_at: "2026-06-01T13:20:00+09:00",
     decided_at: null,
   },
@@ -179,6 +182,7 @@ export const MOCK_CREW_APPLICATIONS: HostApplicationMock[] = [
     nickname: "서아",
     profile_image_url: null,
     status: "LOCKED",
+    application_message: "꾸준히 참여하겠습니다.",
     applied_at: "2026-05-31T18:10:00+09:00",
     decided_at: "2026-05-31T19:05:00+09:00",
   },
@@ -189,6 +193,7 @@ export const MOCK_CREW_APPLICATIONS: HostApplicationMock[] = [
     nickname: "예지",
     profile_image_url: null,
     status: "REJECTED",
+    application_message: "이번 달 목표를 꼭 달성하고 싶어요.",
     applied_at: "2026-05-31T17:45:00+09:00",
     decided_at: "2026-05-31T18:30:00+09:00",
   },
