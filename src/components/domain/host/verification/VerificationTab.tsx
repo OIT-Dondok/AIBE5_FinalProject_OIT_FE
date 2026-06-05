@@ -63,21 +63,6 @@ export function VerificationTab({ moderationResults, onModerationResultsChange }
       return;
     }
 
-    const nextBucket = REVIEW_FILTERS.find((filter) =>
-      pendingCertifications.some(
-        (item) => item.review_bucket === filter.value && !nextResults[item.mission_log_id],
-      ),
-    );
-
-    if (nextBucket) {
-      const nextItem = pendingCertifications.find(
-        (item) => item.review_bucket === nextBucket.value && !nextResults[item.mission_log_id],
-      );
-      setReviewFilter(nextBucket.value);
-      setExpandedMissionLogId(nextItem?.mission_log_id ?? null);
-      return;
-    }
-
     setExpandedMissionLogId(null);
   };
 
