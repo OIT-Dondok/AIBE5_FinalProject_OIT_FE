@@ -49,9 +49,6 @@ function ApplicationCard({ item }: { item: HostApplicationMock }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <p className="truncate text-sm font-bold text-text-primary">{item.nickname}</p>
-            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${applicationStatusStyles[item.status]}`}>
-              {applicationStatusLabel[item.status]}
-            </span>
           </div>
           <p className="mt-1 text-xs text-text-secondary">신청 {formatDateTime(item.applied_at)}</p>
         </div>
