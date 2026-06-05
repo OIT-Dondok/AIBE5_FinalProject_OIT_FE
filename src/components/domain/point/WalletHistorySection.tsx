@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   ArrowDown,
   ArrowUp,
@@ -18,7 +19,12 @@ import type { PointTransactionType } from "@/types/domain";
 
 export type HistoryFilter = "ALL" | PointTransactionType;
 
-const HISTORY_FILTERS: Array<{ label: string; value: HistoryFilter }> = [
+export interface HistoryFilterOption {
+  label: string;
+  value: HistoryFilter;
+}
+
+export const WALLET_PREVIEW_HISTORY_FILTERS: HistoryFilterOption[] = [
   { label: "전체", value: "ALL" },
   { label: "충전", value: "POINT_CHARGE" },
   { label: "예치", value: "CREW_DEPOSIT_RESERVE" },
@@ -37,11 +43,14 @@ const POINT_HISTORY_ICON: Record<PointTransactionType, LucideIcon> = {
 
 const HISTORY_ROW_COUNT = 5;
 
-interface WalletHistorySectionProps {
+export interface WalletHistorySectionProps {
   activeFilter: HistoryFilter;
   historyItems: WalletHistoryViewItem[];
   onFilterChange: (filter: HistoryFilter) => void;
   updatedAtLabel: string;
+  filters?: HistoryFilterOption[];
+  limit?: number;
+  fullHistoryHref?: string;
 }
 
 function HistoryIcon({ item }: { item: WalletHistoryViewItem }) {
@@ -56,7 +65,7 @@ function HistoryIcon({ item }: { item: WalletHistoryViewItem }) {
   );
 }
 
-function HistoryRow({ item }: { item: WalletHistoryViewItem }) {
+export function HistoryRow({ item }: { item: WalletHistoryViewItem }) {
   const isInflow = item.direction === "inflow";
 
   return (
@@ -74,21 +83,26 @@ function HistoryRow({ item }: { item: WalletHistoryViewItem }) {
         <p className={`text-[14px] font-extrabold tabular-nums ${isInflow ? "text-primary-green" : "text-text-primary"}`}>
           {item.displayAmount}
         </p>
-        <p className="mt-0.5 text-[10px] font-semibold text-text-secondary">잔액 {item.balanceAfter}</p>
+        <p className="mt-0.5 text-[10px] font-semibold text-text-secondary">사용가능 잔액 {item.balanceAfter}</p>
       </div>
     </li>
   );
 }
 
-function HistoryFilterTabs({ activeFilter, onFilterChange }: Pick<WalletHistorySectionProps, "activeFilter" | "onFilterChange">) {
+export function HistoryFilterTabs({
+  activeFilter,
+  filters = WALLET_PREVIEW_HISTORY_FILTERS,
+  onFilterChange,
+}: Pick<WalletHistorySectionProps, "activeFilter" | "filters" | "onFilterChange">) {
   return (
     <div className="no-scrollbar -mx-4 mt-3 flex gap-1.5 overflow-x-auto px-4">
-      {HISTORY_FILTERS.map((filter) => {
+      {filters.map((filter) => {
         const isActive = activeFilter === filter.value;
         return (
           <button
             key={filter.value}
             type="button"
+            aria-pressed={isActive}
             onClick={() => onFilterChange(filter.value)}
             className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-extrabold transition-colors ${
               isActive
@@ -104,22 +118,36 @@ function HistoryFilterTabs({ activeFilter, onFilterChange }: Pick<WalletHistoryS
   );
 }
 
-function getFilteredHistory(historyItems: WalletHistoryViewItem[], activeFilter: HistoryFilter) {
-  return historyItems
-    .filter((item) => {
-      if (activeFilter === "ALL") return true;
-      return item.transactionType === activeFilter;
-    })
-    .slice(0, HISTORY_ROW_COUNT);
+export function getFilteredHistory(
+  historyItems: WalletHistoryViewItem[],
+  activeFilter: HistoryFilter,
+  options: { limit?: number; supportedFilters?: HistoryFilterOption[] } = {},
+) {
+  const supportedValues = options.supportedFilters?.map((filter) => filter.value);
+  const visibleItems = supportedValues
+    ? historyItems.filter((item) => supportedValues.includes(item.transactionType))
+    : historyItems;
+  const filteredItems = visibleItems.filter((item) => {
+    if (activeFilter === "ALL") return true;
+    return item.transactionType === activeFilter;
+  });
+
+  return typeof options.limit === "number" ? filteredItems.slice(0, options.limit) : filteredItems;
 }
 
 export function WalletHistorySection({
   activeFilter,
+  filters = WALLET_PREVIEW_HISTORY_FILTERS,
+  fullHistoryHref = "/my/dodin/history",
   historyItems,
+  limit = HISTORY_ROW_COUNT,
   onFilterChange,
   updatedAtLabel,
 }: WalletHistorySectionProps) {
-  const filteredHistory = getFilteredHistory(historyItems, activeFilter);
+  const filteredHistory = getFilteredHistory(historyItems, activeFilter, {
+    limit,
+    supportedFilters: filters,
+  });
 
   return (
     <section className="mt-5 overflow-hidden rounded-[24px] border border-text-secondary/10 bg-card shadow-card">
@@ -129,16 +157,16 @@ export function WalletHistorySection({
             <h2 className="text-[15px] font-extrabold text-text-primary">도딘 내역</h2>
             <p className="mt-0.5 text-[11px] font-medium text-text-secondary">{updatedAtLabel}</p>
           </div>
-          <button
-            type="button"
+          <Link
+            href={fullHistoryHref}
             className="inline-flex items-center gap-0.5 text-xs font-extrabold text-primary-blue"
-            aria-label="전체 도딘 내역 보기 준비 중"
+            aria-label="전체 도딘 내역 보기"
           >
             전체 <ChevronRight size={14} />
-          </button>
+          </Link>
         </div>
 
-        <HistoryFilterTabs activeFilter={activeFilter} onFilterChange={onFilterChange} />
+        <HistoryFilterTabs activeFilter={activeFilter} filters={filters} onFilterChange={onFilterChange} />
       </div>
 
       <ul className="divide-y divide-text-secondary/[0.08]">

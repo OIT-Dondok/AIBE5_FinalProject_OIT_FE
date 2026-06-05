@@ -13,6 +13,9 @@ import { Chip } from "@/components/common/Chip";
 import { StepProgressBar } from "@/components/common/StepProgressBar";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Skeleton } from "@/components/common/Skeleton";
+import { ChargeBottomSheet } from "@/components/domain/point/ChargeBottomSheet";
+import { DodinShortageModal } from "@/components/domain/point/DodinShortageModal";
+import { useChargeBottomSheet } from "@/components/domain/point/useChargeBottomSheet";
 
 import { X } from "lucide-react";
 
@@ -20,9 +23,19 @@ export default function SandboxPage() {
     // 1. 인터랙션 컴포넌트 상태 관리
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [isInputOpen, setIsInputOpen] = useState(false);
+    const [isDodinShortageOpen, setIsDodinShortageOpen] = useState(false);
     const [isToastOpen, setIsToastOpen] = useState(false); // 👈 토스트 스위치 상태 선언
     const [activeChips, setActiveChips] = useState<Set<string>>(new Set(["status-모집 중", "cat-운동"]));
     const [demoStep, setDemoStep] = useState(2);
+    const {
+        chargeInitialAmount,
+        closeChargeBottomSheet,
+        isChargeSheetOpen,
+        openChargeBottomSheet,
+    } = useChargeBottomSheet();
+    const shortageRequiredAmount = 50000;
+    const shortageCurrentBalance = 32000;
+    const shortageAmount = Math.max(shortageRequiredAmount - shortageCurrentBalance, 0);
 
     const toggleChip = (label: string) =>
         setActiveChips((prev) => {
@@ -187,11 +200,32 @@ export default function SandboxPage() {
                         </div>
                     </section>
 
-                    {/*  7. MVP Toast Feedback */}
+                    {/* 7. Dodin Shortage Modal */}
                     <section className="bg-card p-6 rounded-card shadow-sm flex flex-col gap-4">
                         <div className="flex flex-col gap-1">
                             <h2 className="text-sm font-bold text-text-secondary uppercase">
-                                7. MVP Toast Feedback
+                                7. Dodin Shortage Modal
+                            </h2>
+
+                            <p className="text-[10px] text-text-secondary">
+                                크루 참여 전 사용가능 도딘 부족 상황을 검증하는 목업 모달
+                            </p>
+                        </div>
+
+                        <Button
+                            variant="primary-blue"
+                            fullWidth
+                            onClick={() => setIsDodinShortageOpen(true)}
+                        >
+                            💰 도딘 부족 모달 열기
+                        </Button>
+                    </section>
+
+                    {/*  8. MVP Toast Feedback */}
+                    <section className="bg-card p-6 rounded-card shadow-sm flex flex-col gap-4">
+                        <div className="flex flex-col gap-1">
+                            <h2 className="text-sm font-bold text-text-secondary uppercase">
+                                8. MVP Toast Feedback
                             </h2>
 
                             <p className="text-[10px] text-text-secondary">
@@ -208,11 +242,11 @@ export default function SandboxPage() {
                         </Button>
                     </section>
 
-                    {/* 8. Input Component */}
+                    {/* 9. Input Component */}
                     <section className="bg-card p-6 rounded-card shadow-sm flex flex-col gap-4">
                         <div className="flex flex-col gap-1">
                             <h2 className="text-sm font-bold text-text-secondary uppercase">
-                                8. Input Component
+                                9. Input Component
                             </h2>
                             <p className="text-[10px] text-text-secondary">
                                 라벨, 에러 핸들링, 비밀번호 토글이 내장된 공통 인풋
@@ -247,11 +281,11 @@ export default function SandboxPage() {
                         </div>
                     </section>
 
-                    {/* 9. Chip */}
+                    {/* 10. Chip */}
                     <section className="bg-card rounded-card shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex flex-col gap-5 overflow-hidden">
                         <div className="px-6 pt-6 flex flex-col gap-1">
                             <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider">
-                                9. Chip
+                                10. Chip
                             </h2>
                             <p className="text-[10px] text-text-secondary">
                                 클릭하면 active 상태가 토글됩니다
@@ -301,11 +335,11 @@ export default function SandboxPage() {
                         </div>
                     </section>
 
-                    {/* 10. StepProgressBar */}
+                    {/* 11. StepProgressBar */}
                     <section className="bg-card p-6 rounded-card shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex flex-col gap-4">
                         <div className="flex flex-col gap-1">
                             <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider">
-                                10. StepProgressBar
+                                11. StepProgressBar
                             </h2>
                             <p className="text-[10px] text-text-secondary">
                                 현재 {demoStep}/4 단계
@@ -338,11 +372,11 @@ export default function SandboxPage() {
                         </div>
                     </section>
 
-                    {/* 11. EmptyState */}
+                    {/* 12. EmptyState */}
                     <section className="bg-card rounded-card shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex flex-col gap-4 overflow-hidden">
                         <div className="px-6 pt-6 flex flex-col gap-1">
                             <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider">
-                                11. EmptyState
+                                12. EmptyState
                             </h2>
                         </div>
 
@@ -362,10 +396,10 @@ export default function SandboxPage() {
                         />
                     </section>
 
-                    {/* 12. Skeleton */}
+                    {/* 13. Skeleton */}
                     <section className="bg-card p-6 rounded-card shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex flex-col gap-5">
                         <h2 className="text-sm font-bold text-text-secondary uppercase tracking-wider">
-                            12. Skeleton
+                            13. Skeleton
                         </h2>
 
                         <div className="flex flex-col gap-2">
@@ -486,6 +520,24 @@ export default function SandboxPage() {
                     </Button>
                 </div>
             </Modal>
+
+            <DodinShortageModal
+                isOpen={isDodinShortageOpen}
+                onClose={() => setIsDodinShortageOpen(false)}
+                onCharge={() => {
+                    setIsDodinShortageOpen(false);
+                    openChargeBottomSheet(shortageAmount);
+                }}
+                requiredAmount={shortageRequiredAmount}
+                currentBalance={shortageCurrentBalance}
+            />
+
+            <ChargeBottomSheet
+                isOpen={isChargeSheetOpen}
+                onClose={closeChargeBottomSheet}
+                currentBalance={shortageCurrentBalance}
+                initialAmount={chargeInitialAmount}
+            />
 
             {/* 📌 실물 토스트 컴포넌트: 바텀 네비바(bottom-24) 바로 위 공중 */}
             <Toast

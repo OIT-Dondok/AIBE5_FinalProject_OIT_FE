@@ -10,11 +10,17 @@ import {
 } from "@/components/domain/point/WalletHistorySection";
 import { WalletSummaryCard } from "@/components/domain/point/WalletSummaryCard";
 import { createWalletViewModel } from "@/components/domain/point/pointViewModel";
+import { useChargeBottomSheet } from "@/components/domain/point/useChargeBottomSheet";
 import { mockPointAccount, mockPointHistory } from "@/mocks/data/points";
 
 export default function DodinWalletPage() {
-  const [isChargeSheetOpen, setIsChargeSheetOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<HistoryFilter>("ALL");
+  const {
+    chargeInitialAmount,
+    closeChargeBottomSheet,
+    isChargeSheetOpen,
+    openChargeBottomSheet,
+  } = useChargeBottomSheet();
 
   const wallet = useMemo(
     () => createWalletViewModel(mockPointAccount, mockPointHistory.items),
@@ -27,7 +33,7 @@ export default function DodinWalletPage() {
         <Header title="도딘 지갑" showBackButton />
 
         <div className="px-5 pt-5">
-          <WalletSummaryCard wallet={wallet} onOpenCharge={() => setIsChargeSheetOpen(true)} />
+          <WalletSummaryCard wallet={wallet} onOpenCharge={() => openChargeBottomSheet()} />
           <WalletHistorySection
             activeFilter={activeFilter}
             historyItems={wallet.historyItems}
@@ -39,7 +45,8 @@ export default function DodinWalletPage() {
 
       <ChargeBottomSheet
         isOpen={isChargeSheetOpen}
-        onClose={() => setIsChargeSheetOpen(false)}
+        onClose={closeChargeBottomSheet}
+        initialAmount={chargeInitialAmount}
         currentBalance={mockPointAccount.available_balance}
       />
     </main>
