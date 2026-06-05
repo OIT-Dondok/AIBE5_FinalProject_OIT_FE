@@ -139,8 +139,8 @@ export function VerificationTab({ moderationResults, onModerationResultsChange }
                 )
               }
               onApprove={() => updateModerationResult(item.mission_log_id, { decision: "approved" })}
-              onReject={(rejectReasonLabel) =>
-                updateModerationResult(item.mission_log_id, { decision: "rejected", rejectReasonLabel })
+              onReject={(reason) =>
+                updateModerationResult(item.mission_log_id, { decision: "rejected", rejectReason: reason })
               }
               onUndo={() => undoModerationResult(item.mission_log_id)}
             />

@@ -20,13 +20,13 @@ type VerificationCardProps = {
   onToggle: () => void;
   moderationResult: VerificationModerationResult | null;
   onApprove: () => void;
-  onReject: (rejectReasonLabel: string) => void;
+  onReject: (reason: { code: string; label: string; memo?: string }) => void;
   onUndo: () => void;
 };
 
 export type VerificationModerationResult = {
   decision: "approved" | "rejected";
-  rejectReasonLabel?: string;
+  rejectReason?: { code: string; label: string; memo?: string };
 };
 
 const rejectReasonOptions: Array<{ value: RejectReasonCode; label: string; description: string }> = [
@@ -80,7 +80,7 @@ export function VerificationCard({
     }
 
     if (confirmDecision === "rejected") {
-      onReject(selectedRejectReasonLabel);
+      onReject({ code: selectedRejectReason!, label: selectedRejectReasonLabel, memo: rejectMemo || undefined });
       setToastDecision("rejected");
     }
 
@@ -202,7 +202,7 @@ export function VerificationCard({
                   <span className="truncate">
                     {moderationDecision === "approved"
                       ? "승인 완료 · 정산에 반영됩니다"
-                      : `거절 완료 · ${moderationResult?.rejectReasonLabel ?? selectedRejectReasonLabel}`}
+                      : `거절 완료 · ${moderationResult?.rejectReason?.label ?? selectedRejectReasonLabel}`}
                   </span>
                 </p>
                 <button
