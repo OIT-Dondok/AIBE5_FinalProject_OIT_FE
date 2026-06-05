@@ -319,19 +319,22 @@ export function VerificationCard({
                 )}
                 <div className="absolute bottom-0 left-0 right-0 bg-black/45 px-4 py-3 backdrop-blur-sm">
                   <p className="text-sm font-medium text-white">{item.comment}</p>
+                  <p className="mt-1 text-xs font-medium text-white/70">
+                    제출 {formatDate(item.submitted_at)} · {formatTime(item.submitted_at)}
+                  </p>
                 </div>
               </div>
             </div>
 
             <div className="absolute bottom-0 left-0 right-0 z-10 bg-black/55 px-5 pb-5 pt-3 backdrop-blur-sm">
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-xl bg-[#42413E] px-3 py-3">
+                <div className="rounded-xl bg-white/10 px-3 py-3">
                   <p className="text-[11px] font-medium text-white/60">Exif 검증</p>
                   <p className={`mt-1 text-sm font-medium ${exifDetailStyle[item.exif_status]}`}>
                     {exifDetailLabel[item.exif_status]}
                   </p>
                 </div>
-                <div className="rounded-xl bg-[#42413E] px-3 py-3">
+                <div className="rounded-xl bg-white/10 px-3 py-3">
                   <p className="text-[11px] font-medium text-white/60">중복</p>
                   <p className={`mt-1 text-sm font-medium ${item.is_duplicate ? "text-[#DB5C55]" : "text-primary-green"}`}>
                     {item.is_duplicate ? "있음" : "없음"}
