@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { Check, UserCheck, X } from "lucide-react";
 
@@ -9,9 +9,8 @@ import { formatDate, formatTime } from "@/components/domain/host/hostFormatters"
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { SectionCard } from "@/components/domain/host/SectionCard";
 import { getCrewApplications, type HostApplicationMock } from "@/mocks/data/host";
-import type { ParticipantStatus } from "@/types/domain";
 
-type ApplicationFilter = ParticipantStatus | "ALL";
+type ApplicationFilter = ApplicationVisibleStatus | "ALL";
 type ApplicationDecision = "approved" | "rejected";
 type ApplicationVisibleStatus = "PENDING" | "LOCKED" | "REJECTED";
 
@@ -21,6 +20,13 @@ const APPLICATION_FILTERS: Array<{ value: ApplicationFilter; label: string }> = 
   { value: "LOCKED", label: "승인" },
   { value: "REJECTED", label: "거절" },
 ];
+
+const TOAST_DURATION_MS = 2400;
+
+const allFilterStyle = {
+  active: "bg-[#4d73d9] text-white",
+  inactive: "bg-[#E0E8FA] text-[#4d73d9]",
+};
 
 const applicationFilterStyles: Record<ApplicationVisibleStatus, { active: string; inactive: string }> = {
   PENDING: {
@@ -69,7 +75,7 @@ function ApplicationCard({
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-blue/10 text-sm font-extrabold text-primary-blue">
+          <div aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-blue/10 text-sm font-extrabold text-primary-blue">
             {item.nickname.slice(0, 1)}
           </div>
           <div className="min-w-0 flex-1">
@@ -121,19 +127,40 @@ export function ApplicationsTab() {
     item: HostApplicationMock;
     decision: ApplicationDecision;
   } | null>(null);
-  const [toastDecision, setToastDecision] = useState<ApplicationDecision | null>(null);
+  const [toastDecision, setToastDecision] = useState<{ type: ApplicationDecision; seq: number } | null>(null);
+  const confirmDialogRef = useRef<HTMLDivElement>(null);
   const params = useParams<{ crewId: string }>();
   const crewId = parseRouteNumber(params.crewId);
 
   useEffect(() => {
     if (!toastDecision) return;
-
-    const timeoutId = window.setTimeout(() => {
-      setToastDecision(null);
-    }, 2400);
-
+    const timeoutId = window.setTimeout(() => setToastDecision(null), TOAST_DURATION_MS);
     return () => window.clearTimeout(timeoutId);
   }, [toastDecision]);
+
+  useEffect(() => {
+    if (!confirmTarget) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [confirmTarget]);
+
+  useEffect(() => {
+    if (!confirmTarget) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const firstButton = confirmDialogRef.current?.querySelector<HTMLButtonElement>("button");
+    firstButton?.focus();
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setConfirmTarget(null);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      previousFocus?.focus();
+    };
+  }, [confirmTarget]);
 
   if (crewId === null) {
     return (
@@ -163,7 +190,6 @@ export function ApplicationsTab() {
 
   const filteredItems = applicationsWithStatus.filter(({ visibleStatus }) => {
     if (applicationFilter === "ALL") return true;
-    if (applicationFilter === "CANCELLED" || applicationFilter === "EXPIRED") return false;
     return visibleStatus === applicationFilter;
   });
 
@@ -174,7 +200,7 @@ export function ApplicationsTab() {
       ...current,
       [confirmTarget.item.crew_participant_id]: confirmTarget.decision,
     }));
-    setToastDecision(confirmTarget.decision);
+    setToastDecision((prev) => ({ type: confirmTarget.decision, seq: (prev?.seq ?? 0) + 1 }));
     setConfirmTarget(null);
   };
 
@@ -187,19 +213,14 @@ export function ApplicationsTab() {
         <div className="grid grid-cols-4 gap-2">
           {APPLICATION_FILTERS.map((filter) => {
             const isActive = applicationFilter === filter.value;
-            const count = filter.value === "ALL" ? totalCount : counts[filter.value as ApplicationVisibleStatus];
-            const filterStyle =
-              filter.value === "ALL"
-                ? {
-                    active: "bg-[#4d73d9] text-white",
-                    inactive: "bg-[#E0E8FA] text-[#4d73d9]",
-                  }
-                : applicationFilterStyles[filter.value as ApplicationVisibleStatus];
+            const count = filter.value === "ALL" ? totalCount : counts[filter.value];
+            const filterStyle = filter.value === "ALL" ? allFilterStyle : applicationFilterStyles[filter.value];
 
             return (
               <button
                 key={filter.value}
                 type="button"
+                aria-pressed={isActive}
                 onClick={() => setApplicationFilter(filter.value)}
                 className={`rounded-full px-3 py-1.5 text-[11px] font-medium transition-colors ${
                   isActive ? filterStyle.active : filterStyle.inactive
@@ -242,8 +263,21 @@ export function ApplicationsTab() {
           onClick={() => setConfirmTarget(null)}
         >
           <div
+            ref={confirmDialogRef}
             className="w-full max-w-[340px] rounded-2xl bg-card px-5 py-5 shadow-lg"
             onClick={(event) => event.stopPropagation()}
+            onKeyDown={(e) => {
+              if (e.key !== "Tab") return;
+              const buttons = Array.from(confirmDialogRef.current?.querySelectorAll<HTMLButtonElement>("button") ?? []);
+              if (buttons.length < 2) return;
+              if (e.shiftKey && document.activeElement === buttons[0]) {
+                e.preventDefault();
+                buttons[buttons.length - 1].focus();
+              } else if (!e.shiftKey && document.activeElement === buttons[buttons.length - 1]) {
+                e.preventDefault();
+                buttons[0].focus();
+              }
+            }}
           >
             <div
               className={`mx-auto flex h-11 w-11 items-center justify-center rounded-full ${
@@ -293,7 +327,7 @@ export function ApplicationsTab() {
             role="status"
             aria-live="polite"
           >
-            {toastDecision === "approved" ? (
+            {toastDecision.type === "approved" ? (
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-green text-white">
                 <Check size={13} strokeWidth={3} />
               </span>
@@ -303,7 +337,7 @@ export function ApplicationsTab() {
               </span>
             )}
             <span className="text-[13px] font-extrabold">
-              가입을 {toastDecision === "approved" ? "승인했어요" : "거절했어요"}
+              가입을 {toastDecision.type === "approved" ? "승인했어요" : "거절했어요"}
             </span>
           </div>
         </div>
