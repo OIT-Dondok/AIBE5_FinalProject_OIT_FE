@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, ChevronDown, ChevronRight, Maximize2, X } from "lucide-react";
 
 import { BottomSheet } from "@/components/common/BottomSheet";
@@ -49,16 +49,42 @@ export function VerificationCard({
 }: VerificationCardProps) {
   const [isRejectSheetOpen, setIsRejectSheetOpen] = useState(false);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [confirmDecision, setConfirmDecision] = useState<"approved" | "rejected" | null>(null);
+  const [toastDecision, setToastDecision] = useState<"approved" | "rejected" | null>(null);
   const [selectedRejectReason, setSelectedRejectReason] = useState<RejectReasonCode | null>(null);
   const [rejectMemo, setRejectMemo] = useState("");
   const isRejectConfirmDisabled =
     selectedRejectReason === null || (selectedRejectReason === "OTHER" && rejectMemo.trim().length === 0);
   const moderationDecision = moderationResult?.decision ?? null;
 
+  useEffect(() => {
+    if (!toastDecision) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setToastDecision(null);
+    }, 2400);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [toastDecision]);
+
   const handleRejectConfirm = () => {
     if (isRejectConfirmDisabled) return;
-    onReject(selectedRejectReasonLabel);
     setIsRejectSheetOpen(false);
+    setConfirmDecision("rejected");
+  };
+
+  const handleConfirmModeration = () => {
+    if (confirmDecision === "approved") {
+      onApprove();
+      setToastDecision("approved");
+    }
+
+    if (confirmDecision === "rejected") {
+      onReject(selectedRejectReasonLabel);
+      setToastDecision("rejected");
+    }
+
+    setConfirmDecision(null);
   };
 
   const selectedRejectReasonLabel =
@@ -196,7 +222,7 @@ export function VerificationCard({
                 </button>
                 <button
                   type="button"
-                  onClick={onApprove}
+                  onClick={() => setConfirmDecision("approved")}
                   className="inline-flex h-14 min-h-14 items-center justify-center gap-1.5 rounded-xl bg-primary-green text-base font-extrabold leading-none text-white shadow-sm shadow-primary-green/20 transition-colors hover:bg-[#3F7A55]"
                 >
                   <Check size={16} strokeWidth={2.8} />
@@ -279,6 +305,75 @@ export function VerificationCard({
           </div>
         </div>
       </BottomSheet>
+
+      {confirmDecision && (
+        <div
+          className="fixed inset-0 z-[85] flex items-center justify-center bg-black/40 px-5"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={`verification-${confirmDecision}-title-${item.mission_log_id}`}
+          onClick={() => setConfirmDecision(null)}
+        >
+          <div
+            className="w-full max-w-[340px] rounded-2xl bg-card px-5 py-5 shadow-lg"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div
+              className={`mx-auto flex h-11 w-11 items-center justify-center rounded-full ${
+                confirmDecision === "approved" ? "bg-[#E8F2EB] text-primary-green" : "bg-[#FCEDEC] text-[#DB5C55]"
+              }`}
+            >
+              {confirmDecision === "approved" ? <Check size={22} strokeWidth={2.8} /> : <X size={22} strokeWidth={2.8} />}
+            </div>
+            <h2
+              id={`verification-${confirmDecision}-title-${item.mission_log_id}`}
+              className="mt-3 text-center text-base font-extrabold text-text-primary"
+            >
+              {confirmDecision === "approved" ? "승인하시겠습니까?" : "거절하시겠습니까?"}
+            </h2>
+            <p className="mt-2 text-center text-sm font-medium leading-relaxed text-text-secondary">
+              {item.nickname}님의 인증을 {confirmDecision === "approved" ? "승인합니다." : "거절합니다."}
+              <br />
+              {confirmDecision === "approved" ? "승인 후 정산에 반영됩니다." : "크루원에게 사유가 표시됩니다."}
+            </p>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmDecision(null)}
+                className="inline-flex h-12 items-center justify-center rounded-xl border-2 border-[#EDE8DF] bg-card text-sm font-extrabold text-text-primary transition-colors hover:bg-[#EDE8DF]"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmModeration}
+                className={`inline-flex h-12 items-center justify-center rounded-xl text-sm font-extrabold text-white transition-colors ${
+                  confirmDecision === "approved" ? "bg-primary-green hover:bg-[#3F7A55]" : "bg-[#DB5C55] hover:bg-[#C84D46]"
+                }`}
+              >
+                {confirmDecision === "approved" ? "승인" : "거절"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {toastDecision && (
+        <div className="fixed inset-x-0 bottom-6 z-[90] flex justify-center px-5 pointer-events-none">
+          <div
+            className={`flex w-full max-w-[340px] items-center justify-between rounded-2xl px-4 py-3 shadow-lg ${
+              toastDecision === "approved" ? "bg-[#E8F2EB] text-primary-green" : "bg-[#FCEDEC] text-[#DB5C55]"
+            }`}
+            role="status"
+            aria-live="polite"
+          >
+            <span className="text-sm font-extrabold">
+              인증을 {toastDecision === "approved" ? "승인했어요" : "거절했어요"}
+            </span>
+            {toastDecision === "approved" ? <Check size={19} strokeWidth={2.8} /> : <X size={19} strokeWidth={2.8} />}
+          </div>
+        </div>
+      )}
 
       {isLightboxOpen && (
         <div className="fixed inset-0 z-[80] flex justify-center bg-black/70" onClick={() => setIsLightboxOpen(false)}>
