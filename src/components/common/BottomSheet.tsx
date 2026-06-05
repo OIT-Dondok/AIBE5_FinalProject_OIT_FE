@@ -49,7 +49,7 @@ export function BottomSheet({
         <div className="fixed inset-0 z-[60] flex items-end justify-center">
             {/* 배경 딤 — 전체 화면 덮기 */}
             <div
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
+                className="absolute inset-0 bg-black/40 animate-in fade-in duration-200"
                 onClick={onClose}
             />
 
