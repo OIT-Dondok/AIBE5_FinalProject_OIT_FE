@@ -361,16 +361,23 @@ export function VerificationCard({
       {toastDecision && (
         <div className="fixed inset-x-0 bottom-6 z-[90] flex justify-center px-5 pointer-events-none">
           <div
-            className={`flex w-full max-w-[340px] items-center justify-between rounded-2xl px-4 py-3 shadow-lg ${
-              toastDecision === "approved" ? "bg-[#E8F2EB] text-primary-green" : "bg-[#FCEDEC] text-[#DB5C55]"
-            }`}
+            className="flex w-fit items-center gap-2.5 rounded-2xl bg-[#28251F] px-4 py-3 text-white shadow-lg"
             role="status"
             aria-live="polite"
           >
+            {toastDecision === "approved" && (
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-green text-white">
+                <Check size={13} strokeWidth={3} />
+              </span>
+            )}
+            {toastDecision === "rejected" && (
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#DB5C55] text-white">
+                <X size={13} strokeWidth={3} />
+              </span>
+            )}
             <span className="text-sm font-extrabold">
               인증을 {toastDecision === "approved" ? "승인했어요" : "거절했어요"}
             </span>
-            {toastDecision === "approved" ? <Check size={19} strokeWidth={2.8} /> : <X size={19} strokeWidth={2.8} />}
           </div>
         </div>
       )}
