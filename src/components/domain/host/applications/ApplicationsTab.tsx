@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { UserCheck } from "lucide-react";
+import { Check, UserCheck, X } from "lucide-react";
 
-import { Button } from "@/components/common/Button";
 import { Chip } from "@/components/common/Chip";
 import { EmptyState } from "@/components/common/EmptyState";
 import { formatDateTime } from "@/components/domain/host/hostFormatters";
@@ -59,13 +58,21 @@ function ApplicationCard({ item }: { item: HostApplicationMock }) {
       </div>
 
       {canDecide && (
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <Button variant="outline" size="sm">
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            className="inline-flex h-14 min-h-14 items-center justify-center gap-1.5 rounded-xl bg-[#FCEDEC] text-base font-extrabold leading-none text-[#DB5C55] transition-colors hover:bg-[#F8DEDC]"
+          >
+            <X size={16} strokeWidth={2.8} />
             거절
-          </Button>
-          <Button variant="primary-green" size="sm">
+          </button>
+          <button
+            type="button"
+            className="inline-flex h-14 min-h-14 items-center justify-center gap-1.5 rounded-xl bg-primary-green text-base font-extrabold leading-none text-white shadow-sm shadow-primary-green/20 transition-colors hover:bg-[#3F7A55]"
+          >
+            <Check size={16} strokeWidth={2.8} />
             승인
-          </Button>
+          </button>
         </div>
       )}
     </article>
