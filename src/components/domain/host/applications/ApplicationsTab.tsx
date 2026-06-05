@@ -43,26 +43,28 @@ function getApplicationVisibleStatus(
 ): ApplicationVisibleStatus {
   if (decision === "approved") return "LOCKED";
   if (decision === "rejected") return "REJECTED";
+  if (item.status === "LOCKED") return "LOCKED";
+  if (item.status === "REJECTED") return "REJECTED";
   return "PENDING";
 }
 
 function ApplicationCard({
   item,
-  decision,
+  visibleStatus,
   onApproveClick,
   onRejectClick,
 }: {
   item: HostApplicationMock;
-  decision: ApplicationDecision | null;
+  visibleStatus: ApplicationVisibleStatus;
   onApproveClick: () => void;
   onRejectClick: () => void;
 }) {
-  const canDecide = decision === null;
+  const canDecide = visibleStatus === "PENDING";
 
   return (
     <article
       className={`rounded-card border border-text-secondary/10 bg-card px-4 py-3.5 shadow-sm transition-opacity ${
-        decision ? "opacity-55 grayscale-[15%]" : ""
+        visibleStatus !== "PENDING" ? "opacity-55 grayscale-[15%]" : ""
       }`}
     >
       <div className="flex items-center justify-between gap-3">
@@ -77,13 +79,13 @@ function ApplicationCard({
             </p>
           </div>
         </div>
-        {decision && (
+        {visibleStatus !== "PENDING" && (
           <span
             className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium ${
-              decision === "approved" ? "bg-success-green/65 text-primary-green" : "bg-[#FCEDEC] text-[#DB5C55]"
+              visibleStatus === "LOCKED" ? "bg-success-green/65 text-primary-green" : "bg-[#FCEDEC] text-[#DB5C55]"
             }`}
           >
-            {decision === "approved" ? "승인됨" : "거절됨"}
+            {visibleStatus === "LOCKED" ? "승인됨" : "거절됨"}
           </span>
         )}
       </div>
@@ -141,7 +143,9 @@ export function ApplicationsTab() {
     );
   }
 
-  const applications = getCrewApplications(crewId);
+  const applications = getCrewApplications(crewId).filter(
+    (item) => item.status !== "CANCELLED" && item.status !== "EXPIRED",
+  );
   const applicationsWithStatus = applications.map((item) => ({
     item,
     visibleStatus: getApplicationVisibleStatus(item, applicationDecisions[item.crew_participant_id] ?? null),
@@ -217,11 +221,11 @@ export function ApplicationsTab() {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {filteredItems.map(({ item }) => (
+          {filteredItems.map(({ item, visibleStatus }) => (
             <ApplicationCard
               key={item.crew_participant_id}
               item={item}
-              decision={applicationDecisions[item.crew_participant_id] ?? null}
+              visibleStatus={visibleStatus}
               onApproveClick={() => setConfirmTarget({ item, decision: "approved" })}
               onRejectClick={() => setConfirmTarget({ item, decision: "rejected" })}
             />
