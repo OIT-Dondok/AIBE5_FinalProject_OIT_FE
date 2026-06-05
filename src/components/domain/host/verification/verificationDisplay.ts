@@ -8,16 +8,16 @@ export const REVIEW_FILTERS: Array<{ value: HostReviewBucket; label: string }> =
 
 export const REVIEW_FILTER_STYLES: Record<HostReviewBucket, { active: string; inactive: string }> = {
   urgent: {
-    active: "bg-red-50 text-red-500 shadow-sm shadow-red-100/70",
-    inactive: "text-red-500 hover:bg-red-50",
+    active: "bg-[#D9534C] text-white shadow-sm shadow-[#FCEDEC]/70",
+    inactive: "bg-[#FCEDEC] text-[#D9534C] hover:bg-[#F8DEDC]",
   },
   warning: {
-    active: "bg-amber-50 text-[#D89B4D] shadow-sm shadow-amber-100/70",
-    inactive: "text-[#D89B4D] hover:bg-amber-50",
+    active: "bg-[#D89B4C] text-white shadow-sm shadow-[#FBF1E1]/70",
+    inactive: "bg-[#FBF1E1] text-[#D89B4C] hover:bg-[#F6E7CD]",
   },
   normal: {
-    active: "bg-slate-100 text-text-secondary shadow-sm shadow-slate-200/70",
-    inactive: "text-text-secondary hover:bg-slate-100",
+    active: "bg-[#777777] text-white shadow-sm shadow-[#F3F0E9]/70",
+    inactive: "bg-[#F3F0E9] text-[#777777] hover:bg-[#E9E4DA]",
   },
 };
 
@@ -36,11 +36,11 @@ export const exifDetailLabel: Record<HostExifStatus, string> = {
 export const exifDetailStyle: Record<HostExifStatus, string> = {
   NORMAL: "text-primary-green",
   MISSING: "text-[#D89B4D]",
-  FAILED: "text-red-500",
+  FAILED: "text-[#DB5C55]",
 };
 
 export const exifBadgeStyle: Record<HostExifStatus, string> = {
   NORMAL: "bg-success-green/65 text-primary-green",
   MISSING: "bg-amber-50 text-[#D89B4D]",
-  FAILED: "bg-red-50 text-red-500",
+  FAILED: "bg-[#FCEDEC] text-[#DB5C55]",
 };

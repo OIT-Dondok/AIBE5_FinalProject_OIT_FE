@@ -1,4 +1,5 @@
 import type { CertificationStatus, ParticipantStatus, RejectReasonCode } from "@/types/domain";
+import { MOCK_CREWS } from "@/mocks/data/crews";
 
 export type HostReviewBucket = "urgent" | "warning" | "normal";
 export type HostExifStatus = "NORMAL" | "MISSING" | "FAILED";
@@ -85,7 +86,7 @@ export const MOCK_HOST_CERTIFICATIONS: HostCertificationMock[] = [
     crew_id: 2,
     member_uuid: "018f4fd2-6d7a-7a41-9f58-member001",
     nickname: "민서",
-    image_url: null,
+    image_url: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=900&q=80",
     submitted_at: "2026-06-01T08:42:00+09:00",
     captured_at: "2026-06-01T08:39:00+09:00",
     exif_status: "MISSING",
@@ -102,7 +103,7 @@ export const MOCK_HOST_CERTIFICATIONS: HostCertificationMock[] = [
     crew_id: 2,
     member_uuid: "018f4fd2-6d7a-7a41-9f58-member004",
     nickname: "지윤",
-    image_url: null,
+    image_url: "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=900&q=80",
     submitted_at: "2026-06-01T07:31:00+09:00",
     captured_at: "2026-06-01T07:29:00+09:00",
     exif_status: "MISSING",
@@ -119,7 +120,7 @@ export const MOCK_HOST_CERTIFICATIONS: HostCertificationMock[] = [
     crew_id: 2,
     member_uuid: "018f4fd2-6d7a-7a41-9f58-member002",
     nickname: "주원",
-    image_url: null,
+    image_url: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=900&q=80",
     submitted_at: "2026-06-01T08:55:00+09:00",
     captured_at: "2026-06-01T08:54:00+09:00",
     exif_status: "FAILED",
@@ -136,7 +137,7 @@ export const MOCK_HOST_CERTIFICATIONS: HostCertificationMock[] = [
     crew_id: 2,
     member_uuid: "018f4fd2-6d7a-7a41-9f58-member003",
     nickname: "하린",
-    image_url: null,
+    image_url: "https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=900&q=80",
     submitted_at: "2026-06-01T07:58:00+09:00",
     captured_at: "2026-06-01T07:57:00+09:00",
     exif_status: "NORMAL",
@@ -289,9 +290,13 @@ export const getMockHostNotices = () => mockHostNotices.map(cloneNotice);
 const htmlToPlainText = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 
 export function getHostCrewDetail(crewId: number) {
+  const crew = MOCK_CREWS.find((item) => item.crew_id === crewId);
+
   return {
     ...MOCK_HOST_CREW_DETAIL,
     crew_id: crewId,
+    title: crew?.title ?? MOCK_HOST_CREW_DETAIL.title,
+    status: crew?.status ?? MOCK_HOST_CREW_DETAIL.status,
   };
 }
 

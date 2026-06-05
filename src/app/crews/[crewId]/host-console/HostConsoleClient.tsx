@@ -14,6 +14,7 @@ import { NoticesTab } from "@/components/domain/host/notices/NoticesTab";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { SectionCard } from "@/components/domain/host/SectionCard";
 import { VerificationTab } from "@/components/domain/host/verification/VerificationTab";
+import type { VerificationModerationResult } from "@/components/domain/host/verification/VerificationCard";
 import {
   getCrewApplications,
   getHostCertifications,
@@ -25,6 +26,9 @@ export default function HostConsoleClient() {
   const params = useParams<{ crewId: string }>();
   const crewId = parseRouteNumber(params.crewId);
   const [activeTab, setActiveTab] = useState<HostTab>("verification");
+  const [verificationModerationResults, setVerificationModerationResults] = useState<
+    Record<number, VerificationModerationResult>
+  >({});
 
   if (crewId === null) {
     return (
@@ -51,7 +55,7 @@ export default function HostConsoleClient() {
   const notices = getHostNotices(crewId);
 
   const pendingReviewCount = certifications.filter(
-    (item) => item.certification_status === "PENDING_REVIEW",
+    (item) => item.certification_status === "PENDING_REVIEW" && !verificationModerationResults[item.mission_log_id],
   ).length;
   const pendingApplicationCount = applications.filter((item) => item.status === "PENDING").length;
 
@@ -89,7 +93,12 @@ export default function HostConsoleClient() {
             onTabChange={setActiveTab}
           />
 
-          {activeTab === "verification" && <VerificationTab />}
+          {activeTab === "verification" && (
+            <VerificationTab
+              moderationResults={verificationModerationResults}
+              onModerationResultsChange={setVerificationModerationResults}
+            />
+          )}
           {activeTab === "applications" && <ApplicationsTab />}
           {activeTab === "notices" && <NoticesTab />}
         </div>
