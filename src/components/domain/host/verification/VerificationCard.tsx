@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, ChevronDown, ChevronRight, X } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Scan, X } from "lucide-react";
 
 import { BottomSheet } from "@/components/common/BottomSheet";
 import { formatDate, formatDateMinute, formatTime } from "@/components/domain/host/hostFormatters";
@@ -114,8 +114,9 @@ export function VerificationCard({
                 {item.image_url ? (
                   <img src={item.image_url} alt={`${item.nickname} 인증 사진`} className="h-full w-full object-cover" />
                 ) : null}
-                <span className="absolute right-2 top-2 rounded-md bg-text-primary/65 px-2 py-1 text-[10px] font-extrabold text-white">
-                  인증
+                <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-md bg-text-primary/65 px-2 py-1 text-[10px] font-medium text-white">
+                  <Scan size={11} strokeWidth={2.4} />
+                  확대
                 </span>
               </div>
 
