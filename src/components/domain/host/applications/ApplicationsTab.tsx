@@ -206,9 +206,12 @@ export function ApplicationsTab() {
       </div>
 
       {filteredItems.length === 0 ? (
-        <SectionCard>
-          <EmptyState icon={<UserCheck size={44} className="text-primary-green" />} title="신청 내역이 없어요" />
-        </SectionCard>
+        <div className="flex flex-col items-center justify-center rounded-card border border-text-secondary/10 bg-card px-4 py-5 text-center shadow-sm">
+          <div className="mb-1.5 flex items-center justify-center text-primary-green">
+            <Check size={22} strokeWidth={3} />
+          </div>
+          <p className="text-[13px] font-medium text-text-secondary">대기 중인 신청이 없어요</p>
+        </div>
       ) : (
         <div className="flex flex-col gap-3">
           {filteredItems.map(({ item }) => (
