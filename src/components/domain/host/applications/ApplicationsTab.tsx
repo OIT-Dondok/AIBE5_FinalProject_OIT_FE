@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { Check, UserCheck, X } from "lucide-react";
 
 import { EmptyState } from "@/components/common/EmptyState";
-import { formatDateTime } from "@/components/domain/host/hostFormatters";
+import { formatDate, formatTime } from "@/components/domain/host/hostFormatters";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { SectionCard } from "@/components/domain/host/SectionCard";
 import { getCrewApplications, type HostApplicationMock } from "@/mocks/data/host";
@@ -61,18 +61,20 @@ function ApplicationCard({
 
   return (
     <article
-      className={`rounded-2xl border border-text-secondary/10 bg-card px-4 py-3.5 shadow-sm transition-opacity ${
+      className={`rounded-card border border-text-secondary/10 bg-card px-4 py-3.5 shadow-sm transition-opacity ${
         decision ? "opacity-55 grayscale-[15%]" : ""
       }`}
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-green/10 text-sm font-bold text-primary-green">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-blue/10 text-sm font-extrabold text-primary-blue">
             {item.nickname.slice(0, 1)}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold text-text-primary">{item.nickname}</p>
-            <p className="mt-1 text-xs text-text-secondary">신청 {formatDateTime(item.applied_at)}</p>
+            <p className="truncate text-sm font-extrabold text-text-primary">{item.nickname}</p>
+            <p className="mt-0.5 text-xs font-medium text-text-secondary">
+              신청 {formatDate(item.applied_at)} · {formatTime(item.applied_at)}
+            </p>
           </div>
         </div>
         {decision && (
