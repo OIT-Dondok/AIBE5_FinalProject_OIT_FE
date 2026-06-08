@@ -93,6 +93,7 @@ export default function HostNoticeEditPage() {
               onChange={(event) => setContentHtml(event.target.value)}
               placeholder="크루원에게 전할 내용을 작성하세요"
               rows={10}
+              maxLength={65000}
               className="mt-2 w-full resize-none rounded-xl border border-text-secondary/20 bg-white px-3.5 py-3 text-sm font-medium leading-relaxed text-text-primary outline-none placeholder:text-text-secondary/70 focus:border-[#4C73D9]"
             />
           </div>
