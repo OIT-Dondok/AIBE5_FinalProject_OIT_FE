@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import DOMPurify from "dompurify";
+import { SmilePlus } from "lucide-react";
 
 import { Button } from "@/components/common/Button";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -16,6 +17,10 @@ import { deleteHostNotice, getHostNotice, getHostNoticeComments } from "@/mocks/
 const sanitizeNoticeHtml = (html: string) => {
   const sanitizer = DOMPurify as unknown as { sanitize?: (value: string) => string };
   return typeof sanitizer.sanitize === "function" ? sanitizer.sanitize(html) : html;
+};
+
+const NOTICE_REACTION_LABELS: Record<string, string> = {
+  확인: "✅",
 };
 
 export default function HostNoticeDetailPage() {
@@ -94,17 +99,23 @@ export default function HostNoticeDetailPage() {
           </article>
 
           <section className="px-1 py-1">
-            <h2 className="text-sm font-bold text-text-primary">이모지 반응</h2>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2">
               {Object.entries(notice.reactions).map(([emoji, count]) => (
                 <button
                   key={emoji}
                   type="button"
-                  className="rounded-full border border-text-secondary/15 bg-background px-3 py-1.5 text-sm font-bold text-text-primary"
+                  className="rounded-full border border-text-secondary/15 bg-white px-3 py-1.5 text-sm font-bold text-text-primary"
                 >
-                  {emoji} {count}
+                  {NOTICE_REACTION_LABELS[emoji] ?? emoji} {count}
                 </button>
               ))}
+              <button
+                type="button"
+                aria-label="이모지 추가"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-text-secondary/15 bg-white text-text-secondary"
+              >
+                <SmilePlus size={16} strokeWidth={2.2} />
+              </button>
             </div>
           </section>
 
