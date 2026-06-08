@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import DOMPurify from "dompurify";
 import { SmilePlus } from "lucide-react";
 
+import { BottomSheet } from "@/components/common/BottomSheet";
 import { Button } from "@/components/common/Button";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
@@ -23,20 +24,73 @@ const NOTICE_REACTION_LABELS: Record<string, string> = {
   확인: "✅",
 };
 
+const EMOJI_OPTIONS = [
+  "😀",
+  "😄",
+  "😊",
+  "😍",
+  "🥰",
+  "😘",
+  "😎",
+  "🤩",
+  "👍",
+  "👏",
+  "🙌",
+  "💪",
+  "🙏",
+  "👌",
+  "🤝",
+  "🫶",
+  "✅",
+  "🔥",
+  "✨",
+  "💚",
+  "💙",
+  "💛",
+  "❤️",
+  "⭐",
+  "🌈",
+  "☀️",
+  "🌙",
+  "📌",
+  "📣",
+  "🎉",
+  "🏆",
+  "👑",
+];
+
 export default function HostNoticeDetailPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isEmojiSheetOpen, setIsEmojiSheetOpen] = useState(false);
   const router = useRouter();
   const params = useParams<{ crewId: string; noticeId: string }>();
   const crewId = parseRouteNumber(params.crewId);
   const noticeId = parseRouteNumber(params.noticeId);
   const notice = crewId !== null && noticeId !== null ? getHostNotice(crewId, noticeId) : null;
   const comments = crewId !== null && noticeId !== null ? getHostNoticeComments(crewId, noticeId) : [];
+  const [reactions, setReactions] = useState<Record<string, number>>(() =>
+    notice ? { ...notice.reactions } : {},
+  );
+  const [selectedReactions, setSelectedReactions] = useState<Set<string>>(() => new Set());
 
   const handleDeleteNotice = () => {
     if (crewId === null || noticeId === null) return;
     deleteHostNotice(crewId, noticeId);
     setIsDeleteModalOpen(false);
     router.push(`/crews/${crewId}/host-console`);
+  };
+
+  const handleReactionClick = (emoji: string) => {
+    setReactions((current) => ({
+      ...current,
+      [emoji]: (current[emoji] ?? 0) + 1,
+    }));
+    setSelectedReactions((current) => new Set(current).add(emoji));
+  };
+
+  const handleEmojiSelect = (emoji: string) => {
+    handleReactionClick(emoji);
+    setIsEmojiSheetOpen(false);
   };
 
   if (crewId === null || noticeId === null || !notice) {
@@ -100,18 +154,28 @@ export default function HostNoticeDetailPage() {
 
           <section className="px-1 py-1">
             <div className="flex flex-wrap gap-2">
-              {Object.entries(notice.reactions).map(([emoji, count]) => (
-                <button
-                  key={emoji}
-                  type="button"
-                  className="rounded-full border border-text-secondary/15 bg-white px-3 py-1.5 text-sm font-bold text-text-primary"
-                >
-                  {NOTICE_REACTION_LABELS[emoji] ?? emoji} {count}
-                </button>
-              ))}
+              {Object.entries(reactions).map(([emoji, count]) => {
+                const isSelected = selectedReactions.has(emoji);
+
+                return (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => handleReactionClick(emoji)}
+                    className={`rounded-full border px-3 py-1.5 text-sm font-bold transition active:scale-95 ${
+                      isSelected
+                        ? "border-[#4D73D9] bg-[#E0E8FA] text-[#4D73D9]"
+                        : "border-text-secondary/15 bg-white text-text-primary"
+                    }`}
+                  >
+                    {NOTICE_REACTION_LABELS[emoji] ?? emoji} {count}
+                  </button>
+                );
+              })}
               <button
                 type="button"
                 aria-label="이모지 추가"
+                onClick={() => setIsEmojiSheetOpen(true)}
                 className="flex h-8 w-9 items-center justify-center rounded-full border border-text-secondary/15 bg-white text-text-secondary"
               >
                 <SmilePlus size={16} strokeWidth={2.2} />
@@ -156,6 +220,32 @@ export default function HostNoticeDetailPage() {
             </div>
           </section>
         </div>
+
+        <BottomSheet
+          isOpen={isEmojiSheetOpen}
+          onClose={() => setIsEmojiSheetOpen(false)}
+          title="이모지 추가"
+          showCloseButton={false}
+          showHeaderBorder={false}
+          panelClassName="bg-[#F5F0E6]"
+          ariaLabel="공지 이모지 추가"
+        >
+          <div className="px-5 pb-6 pt-1">
+            <div className="grid grid-cols-8 gap-2">
+              {EMOJI_OPTIONS.map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => handleEmojiSelect(emoji)}
+                  className="flex aspect-square items-center justify-center rounded-xl bg-white text-xl shadow-sm transition hover:bg-[#E0E8FA] active:scale-95"
+                  aria-label={`${emoji} 이모지 추가`}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+        </BottomSheet>
 
         <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} ariaLabel="공지 삭제 확인">
           <div className="px-5 py-5">
