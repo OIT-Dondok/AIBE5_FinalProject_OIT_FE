@@ -212,12 +212,12 @@ export default function HostNoticeDetailPage() {
             </div>
 
             <div
-              className="mt-5 text-sm leading-7 text-text-primary [&_a]:text-primary-blue [&_a]:underline [&_ol]:ml-5 [&_ol]:list-decimal [&_ul]:ml-5 [&_ul]:list-disc"
+              className="mt-4 text-sm leading-7 text-text-primary [&_a]:text-primary-blue [&_a]:underline [&_ol]:ml-5 [&_ol]:list-decimal [&_ul]:ml-5 [&_ul]:list-disc"
               dangerouslySetInnerHTML={{ __html: sanitizeNoticeHtml(notice.content_html) }}
             />
           </article>
 
-          <section className="px-1 py-1">
+          <section className="-mt-1 px-1 py-1">
             <div className="flex flex-wrap gap-2">
               {Object.entries(reactions).map(([emoji, count]) => {
                 const isSelected = selectedReactions.has(emoji);
@@ -255,9 +255,9 @@ export default function HostNoticeDetailPage() {
               <h2 className="text-sm font-bold text-text-primary">댓글 {commentItems.length}</h2>
             </div>
 
-            <div className="mt-3 flex flex-col gap-1.5">
+            <div className="mt-3 flex flex-col gap-1">
               {commentItems.map((comment) => (
-                <article key={comment.comment_id} className="py-1.5">
+                <article key={comment.comment_id} className="py-1">
                   <div className="flex gap-2.5">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-blue/10 text-xs font-extrabold text-primary-blue">
                       {comment.nickname.slice(0, 1)}
