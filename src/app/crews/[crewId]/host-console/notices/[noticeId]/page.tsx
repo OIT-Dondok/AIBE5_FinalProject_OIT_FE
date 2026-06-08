@@ -13,7 +13,7 @@ import { HostConfirmDialog } from "@/components/domain/host/common/HostConfirmDi
 import { HostMoreMenu } from "@/components/domain/host/common/HostMoreMenu";
 import { formatDateMinute } from "@/components/domain/host/hostFormatters";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
-import { deleteHostNotice, getHostNotice, getHostNoticeComments } from "@/mocks/data/host";
+import { addHostNoticeComment, deleteHostNotice, getHostNotice, getHostNoticeComments, updateHostNoticeReactions } from "@/mocks/data/host";
 import { mockCrewProfile } from "@/mocks/data/profile";
 
 const sanitizeNoticeHtml = (html: string) => {
@@ -104,10 +104,16 @@ export default function HostNoticeDetailPage() {
   const handleReactionClick = (emoji: string) => {
     const isSelected = selectedReactions.has(emoji);
 
-    setReactions((current) => ({
-      ...current,
-      [emoji]: Math.max((current[emoji] ?? 0) + (isSelected ? -1 : 1), 0),
-    }));
+    setReactions((current) => {
+      const next = {
+        ...current,
+        [emoji]: Math.max((current[emoji] ?? 0) + (isSelected ? -1 : 1), 0),
+      };
+      if (crewId !== null && noticeId !== null) {
+        updateHostNoticeReactions(crewId, noticeId, next);
+      }
+      return next;
+    });
     setSelectedReactions((current) => {
       const next = new Set(current);
 
@@ -131,18 +137,20 @@ export default function HostNoticeDetailPage() {
 
     if (!content || crewId === null || noticeId === null) return;
 
+    const newComment = {
+      comment_id: Date.now() * 1000 + Math.floor(Math.random() * 1000),
+      crew_id: crewId,
+      notice_id: noticeId,
+      member_uuid: "mock-current-member",
+      nickname: currentProfileName,
+      content,
+      created_at: new Date().toISOString(),
+    };
+
+    addHostNoticeComment(newComment);
     setCommentItems((current) => [
       ...current,
-      {
-        comment_id: Date.now() * 1000 + Math.floor(Math.random() * 1000),
-        crew_id: crewId,
-        notice_id: noticeId,
-        member_uuid: "mock-current-member",
-        nickname: currentProfileName,
-        profile_image_url: mockCrewProfile?.avatarImageUrl ?? null,
-        content,
-        created_at: new Date().toISOString(),
-      },
+      { ...newComment, profile_image_url: mockCrewProfile?.avatarImageUrl ?? null },
     ]);
     setCommentInput("");
   };
