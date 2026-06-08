@@ -322,7 +322,13 @@ export default function HostNoticeDetailPage() {
           </div>
         </BottomSheet>
 
-        <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} ariaLabel="공지 삭제 확인">
+        <Modal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          ariaLabel="공지 삭제 확인"
+          className="max-w-[340px]"
+          backdropClassName="bg-black/40"
+        >
           <div className="px-5 py-5">
             <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-[#FCEDEC] text-[#DB5C55]">
               <Trash2 size={21} strokeWidth={2.6} />

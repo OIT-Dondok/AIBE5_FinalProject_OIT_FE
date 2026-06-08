@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { FileText, MessageCircle, MoreHorizontal, Plus, Smile } from "lucide-react";
+import { FileText, MessageCircle, MoreHorizontal, Pencil, Plus, Smile, Trash2 } from "lucide-react";
 
 import { EmptyState } from "@/components/common/EmptyState";
 import { Modal } from "@/components/common/Modal";
@@ -88,18 +88,19 @@ export function NoticesTab() {
                   onClick={() =>
                     setOpenMenuNoticeId((current) => (current === notice.notice_id ? null : notice.notice_id))
                   }
-                  className="shrink-0 rounded-full p-1 text-text-secondary transition-colors hover:bg-text-secondary/10"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-text-secondary transition hover:bg-[#EBE7DD]/70 active:scale-95"
                 >
-                  <MoreHorizontal size={18} />
+                  <MoreHorizontal size={20} strokeWidth={2.4} />
                 </button>
                 {openMenuNoticeId === notice.notice_id && (
-                  <div className="absolute right-4 top-12 z-20 w-28 overflow-hidden rounded-xl border border-[#E7E1D3] bg-card shadow-card">
+                  <div className="absolute right-4 top-12 z-20 w-36 overflow-hidden rounded-xl border border-text-secondary/10 bg-white shadow-[0_8px_20px_rgba(40,37,31,0.12)]">
                     <button
                       type="button"
                       onClick={() => router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}/edit`)}
-                      className="block w-full px-3 py-2.5 text-left text-xs font-bold text-text-primary hover:bg-[#F5F0E6]"
+                      className="flex w-full items-center gap-2.5 px-4 py-3 text-left text-sm font-medium text-text-primary transition hover:bg-[#FAF7EE]"
                     >
-                      수정하기
+                      <Pencil size={16} />
+                      수정
                     </button>
                     <button
                       type="button"
@@ -107,9 +108,10 @@ export function NoticesTab() {
                         setDeleteTargetNoticeId(notice.notice_id);
                         setOpenMenuNoticeId(null);
                       }}
-                      className="block w-full px-3 py-2.5 text-left text-xs font-bold text-[#DB5C55] hover:bg-[#FCEDEC]"
+                      className="flex w-full items-center gap-2.5 px-4 py-3 text-left text-sm font-medium text-[#DB5C55] transition hover:bg-[#FCEDEC]"
                     >
-                      삭제하기
+                      <Trash2 size={16} />
+                      삭제
                     </button>
                   </div>
                 )}
@@ -133,13 +135,20 @@ export function NoticesTab() {
         isOpen={deleteTargetNoticeId !== null}
         onClose={() => setDeleteTargetNoticeId(null)}
         ariaLabel="공지 삭제 확인"
+        className="max-w-[340px]"
+        backdropClassName="bg-black/40"
       >
         <div className="px-5 py-5">
-          <h2 className="text-base font-extrabold text-text-primary">공지를 삭제할까요?</h2>
-          <p className="mt-2 text-sm leading-relaxed text-text-secondary">
-            삭제한 공지는 목록에서 더 이상 사용할 수 없습니다. 실제 API 연결 전까지는 mock 처리합니다.
+          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-[#FCEDEC] text-[#DB5C55]">
+            <Trash2 size={21} strokeWidth={2.6} />
+          </div>
+          <h2 className="mt-3 text-center text-base font-extrabold text-text-primary">공지를 삭제할까요?</h2>
+          <p className="mt-2 text-center text-sm font-medium leading-relaxed text-text-secondary">
+            삭제한 공지는 되돌릴 수 없습니다.
+            <br />
+            댓글과 이모지 반응도 함께 사라집니다.
           </p>
-          <div className="mt-5 grid grid-cols-2 gap-2">
+          <div className="mt-5 grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => setDeleteTargetNoticeId(null)}
@@ -152,7 +161,7 @@ export function NoticesTab() {
               onClick={handleDeleteNotice}
               className="inline-flex h-12 items-center justify-center rounded-xl bg-[#DB5C55] text-sm font-extrabold text-white transition-colors hover:bg-[#C84D46]"
             >
-              삭제하기
+              삭제
             </button>
           </div>
         </div>
