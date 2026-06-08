@@ -18,7 +18,7 @@ export default function HostNoticeEditPage() {
   const notice = crewId !== null && noticeId !== null ? getHostNotice(crewId, noticeId) : null;
   const crewDetail = crewId !== null ? getHostCrewDetail(crewId) : null;
   const [title, setTitle] = useState(notice?.title ?? "");
-  const [contentHtml, setContentHtml] = useState(notice?.content_html ?? "");
+  const [contentHtml, setContentHtml] = useState((notice?.content_html ?? "").replace(/<br\s*\/?>/gi, "\n"));
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const isTitleReady = title.trim().length > 0;
 
@@ -41,7 +41,7 @@ export default function HostNoticeEditPage() {
 
     updateHostNotice(crewId, notice.notice_id, {
       title,
-      content_html: contentHtml,
+      content_html: contentHtml.replace(/\n/g, "<br>"),
     });
     router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}`);
   };
