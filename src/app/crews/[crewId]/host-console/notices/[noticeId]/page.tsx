@@ -13,7 +13,7 @@ import { HostConfirmDialog } from "@/components/domain/host/common/HostConfirmDi
 import { HostMoreMenu } from "@/components/domain/host/common/HostMoreMenu";
 import { formatDateMinute } from "@/components/domain/host/hostFormatters";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
-import { addHostNoticeComment, deleteHostNotice, getHostNotice, getHostNoticeComments, updateHostNoticeReactions } from "@/mocks/data/host";
+import { addHostNoticeComment, deleteHostNotice, getHostNotice, getHostNoticeComments, type HostNoticeMock, updateHostNoticeReactions } from "@/mocks/data/host";
 import { mockCrewProfile } from "@/mocks/data/profile";
 
 const sanitizeNoticeHtml = (html: string) => {
@@ -60,9 +60,6 @@ const EMOJI_OPTIONS = [
   "👑",
 ];
 
-const currentProfileName = mockCrewProfile?.nickname ?? "나";
-const currentProfileInitial = mockCrewProfile?.initials ?? currentProfileName.slice(0, 1);
-
 export default function HostNoticeDetailPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [showDeleteToast, setShowDeleteToast] = useState(false);
@@ -80,6 +77,9 @@ export default function HostNoticeDetailPage() {
     notice ? { ...notice.reactions } : {},
   );
   const [selectedReactions, setSelectedReactions] = useState<Set<string>>(() => new Set());
+  const [deletedNoticeSnapshot, setDeletedNoticeSnapshot] = useState<HostNoticeMock | null>(null);
+  const currentProfileName = mockCrewProfile?.nickname ?? "나";
+  const currentProfileInitial = mockCrewProfile?.initials ?? currentProfileName.slice(0, 1);
   const deleteToastTimerRef = useRef<number | null>(null);
   const deleteNavTimerRef = useRef<number | null>(null);
 
@@ -91,11 +91,15 @@ export default function HostNoticeDetailPage() {
   }, []);
 
   const handleDeleteNotice = () => {
-    if (crewId === null || noticeId === null) return;
+    if (crewId === null || noticeId === null || !notice) return;
+    setDeletedNoticeSnapshot(notice);
     deleteHostNotice(crewId, noticeId);
     setIsDeleteModalOpen(false);
     setShowDeleteToast(true);
-    deleteToastTimerRef.current = window.setTimeout(() => setShowDeleteToast(false), 2400);
+    deleteToastTimerRef.current = window.setTimeout(() => {
+      setShowDeleteToast(false);
+      setDeletedNoticeSnapshot(null);
+    }, 2400);
     deleteNavTimerRef.current = window.setTimeout(() => {
       router.push(`/crews/${crewId}/host-console?tab=notices`);
     }, 2000);
@@ -105,10 +109,9 @@ export default function HostNoticeDetailPage() {
     const isSelected = selectedReactions.has(emoji);
 
     setReactions((current) => {
-      const next = {
-        ...current,
-        [emoji]: Math.max((current[emoji] ?? 0) + (isSelected ? -1 : 1), 0),
-      };
+      const nextCount = Math.max((current[emoji] ?? 0) + (isSelected ? -1 : 1), 0);
+      const next = { ...current, [emoji]: nextCount };
+      if (nextCount === 0) delete next[emoji];
       if (crewId !== null && noticeId !== null) {
         updateHostNoticeReactions(crewId, noticeId, next);
       }
@@ -155,7 +158,9 @@ export default function HostNoticeDetailPage() {
     setCommentInput("");
   };
 
-  if (crewId === null || noticeId === null || !notice) {
+  const displayNotice = notice ?? deletedNoticeSnapshot;
+
+  if (crewId === null || noticeId === null || !displayNotice) {
     return (
       <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
         <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-8">
@@ -183,7 +188,7 @@ export default function HostNoticeDetailPage() {
           <article className="px-1 py-1">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h1 className="text-lg font-extrabold leading-snug text-text-primary">{notice.title}</h1>
+                <h1 className="text-lg font-extrabold leading-snug text-text-primary">{displayNotice.title}</h1>
                 <div className="mt-3 flex items-center gap-2.5">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-blue/10 text-xs font-extrabold text-primary-blue">
                     {currentProfileInitial}
@@ -193,7 +198,7 @@ export default function HostNoticeDetailPage() {
                       <p className="text-xs font-extrabold text-text-primary">{currentProfileName}</p>
                       <HostBadge label="방장" className="shrink-0" />
                     </div>
-                    <p className="mt-0.5 text-xs text-text-secondary">{formatDateMinute(notice.created_at)}</p>
+                    <p className="mt-0.5 text-xs text-text-secondary">{formatDateMinute(displayNotice.created_at)}</p>
                   </div>
                 </div>
               </div>
@@ -206,7 +211,7 @@ export default function HostNoticeDetailPage() {
                     icon: <Pencil size={16} />,
                     onClick: () => {
                       setIsNoticeMenuOpen(false);
-                      router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}/edit`);
+                      router.push(`/crews/${crewId}/host-console/notices/${displayNotice.notice_id}/edit`);
                     },
                   },
                   {
@@ -224,7 +229,7 @@ export default function HostNoticeDetailPage() {
 
             <div
               className="mt-4 text-sm leading-7 text-text-primary [&_a]:text-primary-blue [&_a]:underline [&_ol]:ml-5 [&_ol]:list-decimal [&_ul]:ml-5 [&_ul]:list-disc"
-              dangerouslySetInnerHTML={{ __html: sanitizeNoticeHtml(notice.content_html) }}
+              dangerouslySetInnerHTML={{ __html: sanitizeNoticeHtml(displayNotice.content_html) }}
             />
           </article>
 
