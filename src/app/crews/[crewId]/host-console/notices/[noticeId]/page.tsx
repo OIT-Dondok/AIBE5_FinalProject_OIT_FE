@@ -209,11 +209,9 @@ export default function HostNoticeDetailPage() {
                       {comment.nickname.slice(0, 1)}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="truncate text-xs font-bold text-text-primary">{comment.nickname}</p>
-                        <p className="shrink-0 text-[11px] text-text-secondary">{formatDateMinute(comment.created_at)}</p>
-                      </div>
+                      <p className="truncate text-xs font-bold text-text-primary">{comment.nickname}</p>
                       <p className="mt-1.5 text-xs leading-relaxed text-text-primary">{comment.content}</p>
+                      <p className="mt-1.5 text-[11px] text-text-secondary">{formatDateMinute(comment.created_at)}</p>
                     </div>
                   </div>
                 </article>
