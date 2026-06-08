@@ -2,10 +2,10 @@
 
 import type { ChangeEvent, Dispatch, FormEvent, SetStateAction } from "react";
 import { useState } from "react";
-import { Camera, Crown, Pencil } from "lucide-react";
+import { Camera, Pencil } from "lucide-react";
 
-import { Badge } from "@/components/common/Badge";
 import { Button } from "@/components/common/Button";
+import { HostBadge } from "@/components/common/HostBadge";
 
 import type { CrewProfileFormState, CrewProfileMock } from "@/mocks/data/profile";
 
@@ -145,10 +145,7 @@ export function ProfileCard({
             </h1>
           )}
           {profile.isHostEver && (
-            <Badge className="mt-2 shrink-0">
-              <Crown size={12} className="mr-1" fill="currentColor" />
-              방장 {profile.hostedCrewCount}회
-            </Badge>
+            <HostBadge count={profile.hostedCrewCount} className="mt-2 shrink-0" />
           )}
         </div>
       </div>
