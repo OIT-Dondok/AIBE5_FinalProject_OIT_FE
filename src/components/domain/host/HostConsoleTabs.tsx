@@ -34,7 +34,7 @@ export function HostConsoleTabs({
             key={tab.value}
             type="button"
             onClick={() => onTabChange(tab.value)}
-            className={`flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-[16px] px-2 pb-4 pt-3.5 text-[10px] font-bold shadow-sm transition-colors ${
+            className={`flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-[16px] px-2 pb-5 pt-3.5 text-[10px] font-bold shadow-sm transition-colors ${
               isActive
                 ? "border-2 border-[#4d73d9] bg-[#FFFFFF] text-[#4d73d9]"
                 : "border border-transparent bg-[#FAF7EE] text-[#777777] hover:bg-[#FAF7EE]"

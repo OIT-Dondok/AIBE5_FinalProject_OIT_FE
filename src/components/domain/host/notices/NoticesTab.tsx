@@ -41,14 +41,14 @@ export function NoticesTab() {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-3 py-0.5">
+        <div className="flex items-center justify-between gap-3 py-0">
           <h2 className="text-sm font-bold text-text-primary">
             작성한 공지 <span className="font-extrabold text-[#4d73d9]">{notices.length}</span>
           </h2>
           <HostActionButton
             variant="primary"
             icon={<Pencil size={13} strokeWidth={2.4} />}
-            className="!h-14 !min-h-14 shrink-0 !rounded-2xl px-[18px] !text-[13px]"
+            className="!h-14 !min-h-14 shrink-0 px-[18px] !text-[13px]"
             onClick={() => router.push(`/crews/${crewId}/host-console/notices/new`)}
           >
             글쓰기
