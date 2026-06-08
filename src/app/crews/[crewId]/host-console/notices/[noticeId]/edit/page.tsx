@@ -7,6 +7,7 @@ import { Megaphone } from "lucide-react";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
 import { HostActionButton } from "@/components/domain/host/common/HostActionButton";
+import { HostToast } from "@/components/domain/host/common/HostToast";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { getHostCrewDetail, getHostNotice, updateHostNotice } from "@/mocks/data/host";
 
@@ -113,18 +114,7 @@ export default function HostNoticeEditPage() {
             </HostActionButton>
           </div>
         </form>
-        {toastMessage && (
-          <div className="fixed inset-x-0 bottom-6 z-[90] flex justify-center px-5 pointer-events-none">
-            <div className="flex w-fit items-center gap-2.5 rounded-2xl bg-[#28251F] px-4 py-3 text-white shadow-lg" role="status" aria-live="polite">
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#D89B4C] text-xs font-extrabold text-white">
-                !
-              </span>
-              <span className="text-[13px] font-extrabold">
-              {toastMessage}
-              </span>
-            </div>
-          </div>
-        )}
+        {toastMessage && <HostToast message={toastMessage} />}
       </div>
     </main>
   );

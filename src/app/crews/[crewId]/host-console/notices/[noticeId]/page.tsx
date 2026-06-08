@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import DOMPurify from "dompurify";
 import { Pencil, Send, SmilePlus, Trash2, X } from "lucide-react";
@@ -80,14 +80,23 @@ export default function HostNoticeDetailPage() {
     notice ? { ...notice.reactions } : {},
   );
   const [selectedReactions, setSelectedReactions] = useState<Set<string>>(() => new Set());
+  const deleteToastTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  const deleteNavTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (deleteToastTimerRef.current !== null) clearTimeout(deleteToastTimerRef.current);
+      if (deleteNavTimerRef.current !== null) clearTimeout(deleteNavTimerRef.current);
+    };
+  }, []);
 
   const handleDeleteNotice = () => {
     if (crewId === null || noticeId === null) return;
     deleteHostNotice(crewId, noticeId);
     setIsDeleteModalOpen(false);
     setShowDeleteToast(true);
-    window.setTimeout(() => setShowDeleteToast(false), 2400);
-    window.setTimeout(() => {
+    deleteToastTimerRef.current = window.setTimeout(() => setShowDeleteToast(false), 2400);
+    deleteNavTimerRef.current = window.setTimeout(() => {
       router.push(`/crews/${crewId}/host-console?tab=notices`);
     }, 2000);
   };
@@ -125,7 +134,7 @@ export default function HostNoticeDetailPage() {
     setCommentItems((current) => [
       ...current,
       {
-        comment_id: Date.now(),
+        comment_id: Date.now() * 1000 + Math.floor(Math.random() * 1000),
         crew_id: crewId,
         notice_id: noticeId,
         member_uuid: "mock-current-member",

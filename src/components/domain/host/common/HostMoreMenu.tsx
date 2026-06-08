@@ -1,4 +1,6 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useEffect, useRef, type ReactNode } from "react";
 import { MoreHorizontal } from "lucide-react";
 
 type HostMoreMenuItemTone = "default" | "danger";
@@ -23,8 +25,23 @@ const itemClassNames: Record<HostMoreMenuItemTone, string> = {
 };
 
 export function HostMoreMenu({ isOpen, onToggle, items, alignClassName = "right-0 top-10" }: HostMoreMenuProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
+        onToggle();
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [isOpen, onToggle]);
+
   return (
-    <div className="relative shrink-0">
+    <div ref={rootRef} className="relative shrink-0">
       <button
         type="button"
         aria-label="메뉴 열기"
