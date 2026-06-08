@@ -151,7 +151,11 @@ export default function HostNoticeDetailPage() {
   return (
     <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
       <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-8">
-        <Header showBackButton title="공지 상세" />
+        <Header
+          showBackButton
+          title="공지 상세"
+          onBackClick={() => router.push(`/crews/${crewId}/host-console?tab=notices`)}
+        />
 
         <div className="px-5 pt-5 flex flex-col gap-4">
           <article className="px-1 py-1">

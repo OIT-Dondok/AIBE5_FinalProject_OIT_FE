@@ -8,6 +8,7 @@ interface HeaderProps {
     title?: string; // 중앙 타이틀
     showLogo?: boolean; // 로고 표시 여부
     showBackButton?: boolean; // 뒤로가기 버튼 여부
+    onBackClick?: () => void; // 커스텀 뒤로가기 동작
     rightElement?: React.ReactNode; // 우측 커스텀 버튼 (알림, 닫기 등)
 }
 
@@ -15,6 +16,7 @@ export const Header = ({
                            title,
                            showLogo = false,
                            showBackButton = false,
+                           onBackClick,
                            rightElement,
                        }: HeaderProps) => {
     const router = useRouter();
@@ -31,7 +33,7 @@ export const Header = ({
                         <button
                             type="button"
                             aria-label="뒤로가기"
-                            onClick={() => router.back()}
+                            onClick={onBackClick ?? (() => router.back())}
                             className="p-1 -ml-1 hover:opacity-75 active:scale-95 transition-all"
                         >
                             <ChevronLeft size={24} className="text-text-primary" />

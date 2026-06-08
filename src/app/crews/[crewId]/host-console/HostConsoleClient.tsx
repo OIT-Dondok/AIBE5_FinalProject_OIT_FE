@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Bell, ShieldCheck } from "lucide-react";
 
@@ -33,6 +33,14 @@ export default function HostConsoleClient() {
     Record<number, VerificationModerationResult>
   >({});
   const [applicationDecisions, setApplicationDecisions] = useState<Record<number, ApplicationDecision>>({});
+
+  useEffect(() => {
+    const tabParam = new URLSearchParams(window.location.search).get("tab");
+
+    if (tabParam === "verification" || tabParam === "applications" || tabParam === "notices") {
+      setActiveTab(tabParam);
+    }
+  }, []);
 
   if (crewId === null) {
     return (
