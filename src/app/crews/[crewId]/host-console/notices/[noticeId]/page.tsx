@@ -58,15 +58,17 @@ export default function HostNoticeDetailPage() {
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <h1 className="text-lg font-extrabold leading-snug text-text-primary">{notice.title}</h1>
-                <div className="mt-3 flex items-center gap-2">
+                <div className="mt-3 flex items-center gap-2.5">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-blue/10 text-xs font-extrabold text-primary-blue">
                     방
                   </div>
-                  <p className="text-xs font-extrabold text-text-primary">
-                    방장 <span className="font-medium text-text-secondary">· 방장</span>
-                  </p>
+                  <div className="min-w-0">
+                    <p className="text-xs font-extrabold text-text-primary">
+                      방장 <span className="font-medium text-text-secondary">👑</span>
+                    </p>
+                    <p className="mt-0.5 text-xs text-text-secondary">작성 {formatDateTime(notice.created_at)}</p>
+                  </div>
                 </div>
-                <p className="mt-1.5 text-xs text-text-secondary">작성 {formatDateTime(notice.created_at)}</p>
               </div>
               <div className="shrink-0 flex gap-2">
                 <Button
