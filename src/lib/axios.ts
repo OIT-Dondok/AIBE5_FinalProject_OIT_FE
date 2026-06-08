@@ -38,11 +38,15 @@ export function clearAccessToken(): void {
 // ─── Axios 인스턴스 ───────────────────────────────────────────────────────────
 
 export const api: AxiosInstance = axios.create({
-  baseURL: BASE_URL,
-  timeout: 10_000,
-  headers: { 'Content-Type': 'application/json' },
-  // [명세 근거] Refresh Token 쿠키 자동 전송을 위해 credentials 포함
-  withCredentials: true,
+    // AS-IS: 환경 변수 주소를 다이렉트로 꽂으면 CORS 에러가 터짐
+    // baseURL: BASE_URL,
+
+    // TO-BE: Next.js 프록시 우회 채널을 타기 위해 상대 경로로 변경
+    baseURL: '/api',
+
+    timeout: 10_000,
+    headers: { 'Content-Type': 'application/json' },
+    withCredentials: true,
 });
 
 // ─── 요청 인터셉터: Access Token 자동 주입 ───────────────────────────────────
@@ -112,7 +116,7 @@ api.interceptors.response.use(
     try {
       // body 없음 - refreshToken 쿠키가 withCredentials로 자동 전송됨
       const { data } = await axios.post<{ access_token: string }>(
-        `${BASE_URL}${REFRESH_ENDPOINT}`,
+          REFRESH_ENDPOINT,
         undefined,
         { withCredentials: true, timeout: 10_000 },
       );
