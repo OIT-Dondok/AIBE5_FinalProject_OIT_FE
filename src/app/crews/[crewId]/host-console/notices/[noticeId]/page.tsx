@@ -81,11 +81,23 @@ export default function HostNoticeDetailPage() {
   };
 
   const handleReactionClick = (emoji: string) => {
+    const isSelected = selectedReactions.has(emoji);
+
     setReactions((current) => ({
       ...current,
-      [emoji]: (current[emoji] ?? 0) + 1,
+      [emoji]: Math.max((current[emoji] ?? 0) + (isSelected ? -1 : 1), 0),
     }));
-    setSelectedReactions((current) => new Set(current).add(emoji));
+    setSelectedReactions((current) => {
+      const next = new Set(current);
+
+      if (isSelected) {
+        next.delete(emoji);
+      } else {
+        next.add(emoji);
+      }
+
+      return next;
+    });
   };
 
   const handleEmojiSelect = (emoji: string) => {
