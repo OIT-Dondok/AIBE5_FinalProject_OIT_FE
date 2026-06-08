@@ -68,8 +68,7 @@ export default function HostNoticeDetailPage() {
                     <div className="flex items-center gap-1.5">
                       <p className="text-xs font-extrabold text-text-primary">방장</p>
                       <Badge className="shrink-0">
-                        <Crown size={12} className="mr-1" fill="currentColor" />
-                        방장
+                        <Crown size={12} fill="currentColor" />
                       </Badge>
                     </div>
                     <p className="mt-0.5 text-xs text-text-secondary">작성 {formatDateTime(notice.created_at)}</p>
