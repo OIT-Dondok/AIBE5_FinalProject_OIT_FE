@@ -177,22 +177,22 @@ export default function HostNoticeDetailPage() {
                   aria-label="공지 메뉴 열기"
                   aria-expanded={isNoticeMenuOpen}
                   onClick={() => setIsNoticeMenuOpen((current) => !current)}
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-text-secondary transition hover:bg-white active:scale-95"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary transition hover:bg-[#EBE7DD]/70 active:scale-95"
                 >
                   <MoreHorizontal size={20} strokeWidth={2.4} />
                 </button>
 
                 {isNoticeMenuOpen && (
-                  <div className="absolute right-0 top-9 z-20 w-28 overflow-hidden rounded-xl border border-text-secondary/10 bg-white shadow-[0_8px_20px_rgba(40,37,31,0.12)]">
+                  <div className="absolute right-0 top-10 z-20 w-36 overflow-hidden rounded-xl border border-text-secondary/10 bg-white shadow-[0_8px_20px_rgba(40,37,31,0.12)]">
                     <button
                       type="button"
                       onClick={() => {
                         setIsNoticeMenuOpen(false);
                         router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}/edit`);
                       }}
-                      className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs font-medium text-text-primary transition hover:bg-[#FAF7EE]"
+                      className="flex w-full items-center gap-2.5 px-4 py-3 text-left text-sm font-medium text-text-primary transition hover:bg-[#FAF7EE]"
                     >
-                      <Pencil size={14} />
+                      <Pencil size={16} />
                       수정
                     </button>
                     <button
@@ -201,9 +201,9 @@ export default function HostNoticeDetailPage() {
                         setIsNoticeMenuOpen(false);
                         setIsDeleteModalOpen(true);
                       }}
-                      className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs font-medium text-[#DB5C55] transition hover:bg-[#FCEDEC]"
+                      className="flex w-full items-center gap-2.5 px-4 py-3 text-left text-sm font-medium text-[#DB5C55] transition hover:bg-[#FCEDEC]"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={16} />
                       삭제
                     </button>
                   </div>
@@ -247,6 +247,8 @@ export default function HostNoticeDetailPage() {
               </button>
             </div>
           </section>
+
+          <div className="h-px bg-text-secondary/10" />
 
           <section className="px-1 py-1">
             <div className="flex items-center justify-between">
