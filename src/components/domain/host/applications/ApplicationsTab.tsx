@@ -11,7 +11,7 @@ import { SectionCard } from "@/components/domain/host/SectionCard";
 import { getCrewApplications, type HostApplicationMock } from "@/mocks/data/host";
 
 type ApplicationFilter = ApplicationVisibleStatus | "ALL";
-type ApplicationDecision = "approved" | "rejected";
+export type ApplicationDecision = "approved" | "rejected";
 type ApplicationVisibleStatus = "PENDING" | "LOCKED" | "REJECTED";
 
 const APPLICATION_FILTERS: Array<{ value: ApplicationFilter; label: string }> = [
@@ -49,8 +49,6 @@ function getApplicationVisibleStatus(
 ): ApplicationVisibleStatus {
   if (decision === "approved") return "LOCKED";
   if (decision === "rejected") return "REJECTED";
-  if (item.status === "LOCKED") return "LOCKED";
-  if (item.status === "REJECTED") return "REJECTED";
   return "PENDING";
 }
 
@@ -120,9 +118,16 @@ function ApplicationCard({
   );
 }
 
-export function ApplicationsTab() {
+type ApplicationsTabProps = {
+  applicationDecisions: Record<number, ApplicationDecision>;
+  onApplicationDecisionsChange: (decisions: Record<number, ApplicationDecision>) => void;
+};
+
+export function ApplicationsTab({
+  applicationDecisions,
+  onApplicationDecisionsChange,
+}: ApplicationsTabProps) {
   const [applicationFilter, setApplicationFilter] = useState<ApplicationFilter>("PENDING");
-  const [applicationDecisions, setApplicationDecisions] = useState<Record<number, ApplicationDecision>>({});
   const [confirmTarget, setConfirmTarget] = useState<{
     item: HostApplicationMock;
     decision: ApplicationDecision;
@@ -187,7 +192,6 @@ export function ApplicationsTab() {
   const totalCount = applicationsWithStatus.length;
 
   const currentFilterLabel = APPLICATION_FILTERS.find((f) => f.value === applicationFilter)?.label ?? "전체";
-
   const filteredItems = applicationsWithStatus.filter(({ visibleStatus }) => {
     if (applicationFilter === "ALL") return true;
     return visibleStatus === applicationFilter;
@@ -196,10 +200,10 @@ export function ApplicationsTab() {
   const handleConfirmDecision = () => {
     if (!confirmTarget) return;
 
-    setApplicationDecisions((current) => ({
-      ...current,
+    onApplicationDecisionsChange({
+      ...applicationDecisions,
       [confirmTarget.item.crew_participant_id]: confirmTarget.decision,
-    }));
+    });
     setToastDecision((prev) => ({ type: confirmTarget.decision, seq: (prev?.seq ?? 0) + 1 }));
     setConfirmTarget(null);
   };
@@ -208,7 +212,7 @@ export function ApplicationsTab() {
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-3">
         <div className="py-1">
-          <h2 className="text-sm font-bold text-text-primary">{currentFilterLabel} 신청</h2>
+          <h2 className="text-sm font-bold text-text-primary">대기 중인 신청</h2>
         </div>
         <div className="grid grid-cols-4 gap-2">
           {APPLICATION_FILTERS.map((filter) => {

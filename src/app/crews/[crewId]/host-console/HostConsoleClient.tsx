@@ -6,7 +6,10 @@ import { Bell, ShieldCheck } from "lucide-react";
 
 import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
-import { ApplicationsTab } from "@/components/domain/host/applications/ApplicationsTab";
+import {
+  ApplicationsTab,
+  type ApplicationDecision,
+} from "@/components/domain/host/applications/ApplicationsTab";
 import { HostConsoleTabs } from "@/components/domain/host/HostConsoleTabs";
 import type { HostTab } from "@/components/domain/host/hostConsoleTypes";
 import { HostSummaryCard } from "@/components/domain/host/HostSummaryCard";
@@ -29,6 +32,7 @@ export default function HostConsoleClient() {
   const [verificationModerationResults, setVerificationModerationResults] = useState<
     Record<number, VerificationModerationResult>
   >({});
+  const [applicationDecisions, setApplicationDecisions] = useState<Record<number, ApplicationDecision>>({});
 
   if (crewId === null) {
     return (
@@ -57,7 +61,12 @@ export default function HostConsoleClient() {
   const pendingReviewCount = certifications.filter(
     (item) => item.certification_status === "PENDING_REVIEW" && !verificationModerationResults[item.mission_log_id],
   ).length;
-  const pendingApplicationCount = applications.filter((item) => item.status === "PENDING").length;
+  const pendingApplicationCount = applications.filter(
+    (item) =>
+      item.status !== "CANCELLED" &&
+      item.status !== "EXPIRED" &&
+      !applicationDecisions[item.crew_participant_id],
+  ).length;
 
   if (!crewDetail.isHost) {
     return (
@@ -99,7 +108,12 @@ export default function HostConsoleClient() {
               onModerationResultsChange={setVerificationModerationResults}
             />
           )}
-          {activeTab === "applications" && <ApplicationsTab />}
+          {activeTab === "applications" && (
+            <ApplicationsTab
+              applicationDecisions={applicationDecisions}
+              onApplicationDecisionsChange={setApplicationDecisions}
+            />
+          )}
           {activeTab === "notices" && <NoticesTab />}
         </div>
       </div>
