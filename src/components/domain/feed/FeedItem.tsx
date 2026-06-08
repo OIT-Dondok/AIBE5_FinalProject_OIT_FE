@@ -50,11 +50,14 @@ const STATUS_CONFIG: Record<CertificationStatus, { label: string; className: str
 function formatCertifiedAt(isoStr: string): string {
   const d = new Date(isoStr);
   if (isNaN(d.getTime())) return '-';
-  const kstHours = (d.getUTCHours() + 9) % 24;
-  const ampm = kstHours < 12 ? '오전' : '오후';
-  const displayHours = kstHours % 12 || 12;
-  const minutes = String(d.getUTCMinutes()).padStart(2, '0');
-  return `${ampm} ${displayHours}:${minutes}`;
+  const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+  const month = kst.getUTCMonth() + 1;
+  const day = kst.getUTCDate();
+  const hours = kst.getUTCHours();
+  const ampm = hours < 12 ? '오전' : '오후';
+  const displayHours = hours % 12 || 12;
+  const minutes = String(kst.getUTCMinutes()).padStart(2, '0');
+  return `${month}/${day} ${ampm} ${displayHours}:${minutes}`;
 }
 
 interface FeedItemProps {
@@ -67,22 +70,23 @@ export function FeedItem({ item }: FeedItemProps) {
   const placeholderBg = CATEGORY_PLACEHOLDER_BG[item.category];
   const status = STATUS_CONFIG[item.certification_status];
   const timeStr = formatCertifiedAt(item.certified_at);
+  const initial = item.nickname.trim().charAt(0).toUpperCase();
 
   return (
     <article className="bg-card rounded-card overflow-hidden border border-text-secondary/10 shadow-card-elevated">
-      {/* 상단: 카테고리 아이콘 + 크루명 + 상태 뱃지 */}
+      {/* 상단: 사용자 프로필(닉네임 첫 글자) + 크루명 + 상태 뱃지 */}
       <div className="px-4 pt-4 pb-3 flex items-center gap-3">
         <div
-          className={`w-11 h-11 flex items-center justify-center ${iconBg} rounded-full flex-shrink-0 text-2xl shadow-sm`}
+          className={`w-11 h-11 flex items-center justify-center ${iconBg} rounded-full flex-shrink-0 text-base font-bold text-text-primary shadow-sm`}
         >
-          {emoji}
+          {initial}
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-[15px] font-bold text-text-primary leading-tight truncate">
-            {item.crew_title}
+            {item.nickname}
           </p>
           <p className="text-[11px] text-text-secondary mt-0.5 truncate">
-            {emoji} {item.nickname} · {timeStr} · {item.share_ratio}%
+            {timeStr} · {emoji} {item.crew_title} · {item.share_ratio}%
           </p>
         </div>
         <span
@@ -92,16 +96,21 @@ export function FeedItem({ item }: FeedItemProps) {
         </span>
       </div>
 
-      {/* 이미지 영역: 4:3 그라데이션 placeholder */}
+      {/* 이미지 영역: 4:3 그라데이션 placeholder (크루 인증 이미지) */}
       <div className={`relative w-full aspect-[4/3] overflow-hidden ${placeholderBg}`}>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-7xl opacity-20 select-none">{emoji}</span>
+          <span className="text-7xl opacity-25 select-none">{emoji}</span>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-        <p className="absolute bottom-3.5 left-4 right-4 text-white text-xs font-semibold leading-snug line-clamp-2 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
-          {item.caption}
-        </p>
       </div>
+
+      {/* 캡션 (이미지 밖 별도 영역) */}
+      {item.caption && (
+        <div className="px-4 pt-3.5">
+          <p className="text-sm text-text-primary leading-relaxed whitespace-pre-line">
+            {item.caption}
+          </p>
+        </div>
+      )}
 
       {/* 리액션 바 */}
       <div className="px-4 py-3.5">

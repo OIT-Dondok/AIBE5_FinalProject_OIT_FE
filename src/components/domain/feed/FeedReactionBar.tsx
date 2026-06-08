@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from 'react';
+import { SmilePlus } from 'lucide-react';
 
 import type { FeedReaction } from '@/mocks/data/feed';
-
-const PRESET_EMOJIS = ['👍', '🔥', '💪', '🎉', '😂'] as const;
+import { EmojiPicker } from '@/components/domain/feed/EmojiPicker';
 
 interface FeedReactionBarProps {
   initialReactions: FeedReaction[];
@@ -13,24 +13,14 @@ interface FeedReactionBarProps {
 export function FeedReactionBar({ initialReactions }: FeedReactionBarProps) {
   const [reactions, setReactions] = useState<FeedReaction[]>(initialReactions);
   const [activated, setActivated] = useState<Set<string>>(new Set());
-  const [showPicker, setShowPicker] = useState(false);
-  const pickerRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setReactions(initialReactions);
     setActivated(new Set());
   }, [initialReactions]);
-
-  useEffect(() => {
-    if (!showPicker) return;
-    const handler = (e: MouseEvent) => {
-      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
-        setShowPicker(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [showPicker]);
 
   const handleReactionClick = (emoji: string) => {
     const isActive = activated.has(emoji);
@@ -49,8 +39,7 @@ export function FeedReactionBar({ initialReactions }: FeedReactionBarProps) {
     );
   };
 
-  const handleAddEmoji = (emoji: string) => {
-    setShowPicker(false);
+  const handleSelectEmoji = (emoji: string) => {
     const exists = reactions.some((r) => r.emoji === emoji);
     if (exists) {
       if (!activated.has(emoji)) handleReactionClick(emoji);
@@ -61,6 +50,18 @@ export function FeedReactionBar({ initialReactions }: FeedReactionBarProps) {
         next.add(emoji);
         return next;
       });
+    }
+    setOpen(false); // 선택 즉시 닫기
+  };
+
+  const closePicker = () => setOpen(false);
+
+  const togglePicker = () => {
+    if (open) {
+      setOpen(false);
+    } else if (buttonRef.current) {
+      setAnchorRect(buttonRef.current.getBoundingClientRect());
+      setOpen(true);
     }
   };
 
@@ -87,34 +88,30 @@ export function FeedReactionBar({ initialReactions }: FeedReactionBarProps) {
         );
       })}
 
-      <div className="relative" ref={pickerRef}>
-        <button
-          type="button"
-          onClick={() => setShowPicker((v) => !v)}
-          className={`inline-flex items-center gap-0.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all active:scale-95 ${
-            showPicker
-              ? 'bg-primary-green/10 border border-primary-green/30 text-primary-green'
-              : 'bg-background border border-text-secondary/15 text-text-secondary hover:bg-text-secondary/5'
-          }`}
-        >
-          + 이모지
-        </button>
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={togglePicker}
+        aria-label="이모지 추가"
+        aria-expanded={open}
+        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all active:scale-95 ${
+          open
+            ? 'bg-primary-green/10 border border-primary-green/30 text-primary-green'
+            : 'bg-background border border-text-secondary/15 text-text-secondary hover:bg-text-secondary/5'
+        }`}
+      >
+        <SmilePlus size={14} />
+        이모지
+      </button>
 
-        {showPicker && (
-          <div className="absolute bottom-full left-0 mb-2 bg-card rounded-2xl border border-white/80 shadow-[0_8px_24px_rgba(34,34,34,0.14)] p-2 flex gap-1 z-50">
-            {PRESET_EMOJIS.map((emoji) => (
-              <button
-                key={emoji}
-                type="button"
-                onClick={() => handleAddEmoji(emoji)}
-                className="w-9 h-9 flex items-center justify-center text-xl rounded-xl hover:bg-text-secondary/10 active:scale-90 transition-all"
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      {open && anchorRect && (
+        <EmojiPicker
+          anchorRect={anchorRect}
+          triggerRef={buttonRef}
+          onSelect={handleSelectEmoji}
+          onClose={closePicker}
+        />
+      )}
     </div>
   );
 }
