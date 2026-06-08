@@ -14,6 +14,7 @@ import { Modal } from "@/components/common/Modal";
 import { formatDateMinute } from "@/components/domain/host/hostFormatters";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { deleteHostNotice, getHostNotice, getHostNoticeComments } from "@/mocks/data/host";
+import { mockCrewProfile } from "@/mocks/data/profile";
 
 const sanitizeNoticeHtml = (html: string) => {
   const sanitizer = DOMPurify as unknown as { sanitize?: (value: string) => string };
@@ -58,6 +59,9 @@ const EMOJI_OPTIONS = [
   "🏆",
   "👑",
 ];
+
+const currentProfileName = mockCrewProfile?.nickname ?? "나";
+const currentProfileInitial = mockCrewProfile?.initials ?? currentProfileName.slice(0, 1);
 
 export default function HostNoticeDetailPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -119,8 +123,8 @@ export default function HostNoticeDetailPage() {
         crew_id: crewId,
         notice_id: noticeId,
         member_uuid: "mock-current-member",
-        nickname: "나",
-        profile_image_url: null,
+        nickname: currentProfileName,
+        profile_image_url: mockCrewProfile?.avatarImageUrl ?? null,
         content,
         created_at: new Date().toISOString(),
       },
@@ -155,11 +159,11 @@ export default function HostNoticeDetailPage() {
                 <h1 className="text-lg font-extrabold leading-snug text-text-primary">{notice.title}</h1>
                 <div className="mt-3 flex items-center gap-2.5">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-blue/10 text-xs font-extrabold text-primary-blue">
-                    방
+                    {currentProfileInitial}
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <p className="text-xs font-extrabold text-text-primary">방장</p>
+                      <p className="text-xs font-extrabold text-text-primary">{currentProfileName}</p>
                       <HostBadge label="방장" className="shrink-0" />
                     </div>
                     <p className="mt-0.5 text-xs text-text-secondary">{formatDateMinute(notice.created_at)}</p>
