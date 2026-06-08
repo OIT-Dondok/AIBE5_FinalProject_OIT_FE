@@ -255,17 +255,17 @@ export default function HostNoticeDetailPage() {
               <h2 className="text-sm font-bold text-text-primary">댓글 {commentItems.length}</h2>
             </div>
 
-            <div className="mt-3 flex flex-col gap-3">
+            <div className="mt-3 flex flex-col gap-1.5">
               {commentItems.map((comment) => (
-                <article key={comment.comment_id} className="border-t border-text-secondary/10 py-3">
+                <article key={comment.comment_id} className="py-1.5">
                   <div className="flex gap-2.5">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-blue/10 text-xs font-extrabold text-primary-blue">
                       {comment.nickname.slice(0, 1)}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs font-bold text-text-primary">{comment.nickname}</p>
-                      <p className="mt-1.5 text-xs leading-relaxed text-text-primary">{comment.content}</p>
-                      <p className="mt-1.5 text-[11px] text-text-secondary">{formatDateMinute(comment.created_at)}</p>
+                      <p className="truncate text-[13px] font-bold text-text-primary">{comment.nickname}</p>
+                      <p className="mt-0.5 text-[13px] leading-relaxed text-text-primary">{comment.content}</p>
+                      <p className="mt-0.5 text-[11px] text-text-secondary">{formatDateMinute(comment.created_at)}</p>
                     </div>
                   </div>
                 </article>
