@@ -11,7 +11,7 @@ import { SectionCard } from "@/components/domain/host/SectionCard";
 import { getCrewApplications, type HostApplicationMock } from "@/mocks/data/host";
 
 type ApplicationFilter = ApplicationVisibleStatus | "ALL";
-type ApplicationDecision = "approved" | "rejected";
+export type ApplicationDecision = "approved" | "rejected";
 type ApplicationVisibleStatus = "PENDING" | "LOCKED" | "REJECTED";
 
 const APPLICATION_FILTERS: Array<{ value: ApplicationFilter; label: string }> = [
@@ -118,9 +118,16 @@ function ApplicationCard({
   );
 }
 
-export function ApplicationsTab() {
+type ApplicationsTabProps = {
+  applicationDecisions: Record<number, ApplicationDecision>;
+  onApplicationDecisionsChange: (decisions: Record<number, ApplicationDecision>) => void;
+};
+
+export function ApplicationsTab({
+  applicationDecisions,
+  onApplicationDecisionsChange,
+}: ApplicationsTabProps) {
   const [applicationFilter, setApplicationFilter] = useState<ApplicationFilter>("PENDING");
-  const [applicationDecisions, setApplicationDecisions] = useState<Record<number, ApplicationDecision>>({});
   const [confirmTarget, setConfirmTarget] = useState<{
     item: HostApplicationMock;
     decision: ApplicationDecision;
@@ -193,10 +200,10 @@ export function ApplicationsTab() {
   const handleConfirmDecision = () => {
     if (!confirmTarget) return;
 
-    setApplicationDecisions((current) => ({
-      ...current,
+    onApplicationDecisionsChange({
+      ...applicationDecisions,
       [confirmTarget.item.crew_participant_id]: confirmTarget.decision,
-    }));
+    });
     setToastDecision((prev) => ({ type: confirmTarget.decision, seq: (prev?.seq ?? 0) + 1 }));
     setConfirmTarget(null);
   };
