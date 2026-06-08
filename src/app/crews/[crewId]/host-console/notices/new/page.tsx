@@ -51,11 +51,11 @@ export default function HostNoticeNewPage() {
       return;
     }
 
-    createHostNotice(crewId, {
+    const createdNotice = createHostNotice(crewId, {
       title,
       content_html: contentHtml,
     });
-    router.push(`/crews/${crewId}/host-console`);
+    router.push(`/crews/${crewId}/host-console/notices/${createdNotice.notice_id}`);
   };
 
   return (

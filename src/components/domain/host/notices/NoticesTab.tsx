@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { FileText, MessageCircle, Pencil, Plus, Smile, Trash2 } from "lucide-react";
+import { FileText, MessageCircle, Pencil, Smile, Trash2 } from "lucide-react";
 
 import { EmptyState } from "@/components/common/EmptyState";
 import { HostActionButton } from "@/components/domain/host/common/HostActionButton";
@@ -41,14 +41,14 @@ export function NoticesTab() {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-3 py-1">
+        <div className="flex items-center justify-between gap-3 py-0.5">
           <h2 className="text-sm font-bold text-text-primary">
             작성한 공지 <span className="font-extrabold text-[#4d73d9]">{notices.length}</span>
           </h2>
           <HostActionButton
             variant="primary"
-            icon={<Plus size={16} strokeWidth={2.8} />}
-            className="shrink-0 px-4"
+            icon={<Pencil size={13} strokeWidth={2.4} />}
+            className="!h-14 !min-h-14 shrink-0 px-[18px] !text-[13px]"
             onClick={() => router.push(`/crews/${crewId}/host-console/notices/new`)}
           >
             글쓰기
