@@ -4,9 +4,11 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, Check, X } from 'lucide-react';
+import type { AxiosError } from 'axios';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Modal } from '@/components/common/Modal';
+import { signup } from '@/services/auth';
 
 type TermsModalKey = 'terms' | 'privacy';
 
@@ -147,6 +149,8 @@ export default function SignupPage() {
   const [agreePrivacy, setAgreePrivacy] = useState(false);
   const [agreeMarketing, setAgreeMarketing] = useState(false);
 
+  const [isLoading, setIsLoading] = useState(false);
+
   // 모달
   const [termsModal, setTermsModal] = useState<TermsModalKey | null>(null);
 
@@ -169,10 +173,9 @@ export default function SignupPage() {
     }
     setNicknameError('');
     setIsNicknameChecked(true);
-    alert('사용 가능한 닉네임입니다');
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     let valid = true;
 
     if (!email) {
@@ -217,8 +220,25 @@ export default function SignupPage() {
 
     if (!valid) return;
 
-    alert('회원가입 준비 중입니다');
-    // TODO: 백엔드 연동 시 POST /api/auth/signup 호출
+    setIsLoading(true);
+    try {
+      await signup(email, password, nickname);
+      router.push('/login');
+    } catch (err) {
+      const code = (err as AxiosError<{ code: string }>)?.response?.data?.code;
+      if (code === 'EMAIL_ALREADY_EXISTS') {
+        setEmailError('이미 사용 중인 이메일입니다');
+      } else if (code === 'NICKNAME_ALREADY_EXISTS') {
+        setNicknameError('이미 사용 중인 닉네임입니다');
+        setIsNicknameChecked(false);
+      } else if (code === 'VALIDATION_ERROR') {
+        setEmailError('입력값을 확인해주세요');
+      } else {
+        alert('회원가입 중 오류가 발생했습니다');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -363,6 +383,7 @@ export default function SignupPage() {
         variant="primary-green"
         size="lg"
         fullWidth
+        isLoading={isLoading}
         onClick={handleSubmit}
       >
         가입하기

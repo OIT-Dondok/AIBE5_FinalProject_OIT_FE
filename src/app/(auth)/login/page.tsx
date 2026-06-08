@@ -6,6 +6,8 @@ import { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/common/Button";
 import { Input } from "@/components/common/Input";
+import { login } from "@/services/auth";
+import { useAuthStore } from "@/store/authStore";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -14,6 +16,7 @@ export default function LoginPage() {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const router = useRouter();
+  const { setAuth } = useAuthStore();
 
   const [slogan1Visible, setSlogan1Visible] = useState(false);
   const [slogan2Visible, setSlogan2Visible] = useState(false);
@@ -51,9 +54,24 @@ export default function LoginPage() {
     e.preventDefault();
     if (!validate()) return;
     setIsLoading(true);
-    // TODO: 백엔드 연동 시 실제 로그인 로직으로 교체
-    await new Promise((res) => setTimeout(res, 1000));
-    setIsLoading(false);
+    try {
+      const res = await login(email, password);
+      setAuth(res.data.member, res.data.access_token);
+      router.push('/crews');
+    } catch (err) {
+      const code = (err as { response?: { data?: { code?: string } } })?.response?.data?.code;
+      if (code === 'INVALID_CREDENTIALS') {
+        setPasswordError('이메일 또는 비밀번호가 올바르지 않습니다');
+      } else if (code === 'MEMBER_DEACTIVATED') {
+        setEmailError('비활성화된 계정입니다');
+      } else if (code === 'INVALID_INPUT') {
+        setEmailError('입력값을 확인해주세요');
+      } else {
+        setPasswordError('로그인 중 오류가 발생했습니다');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleLogin = () => {
