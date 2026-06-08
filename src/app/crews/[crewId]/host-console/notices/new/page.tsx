@@ -53,7 +53,7 @@ export default function HostNoticeNewPage() {
 
     const createdNotice = createHostNotice(crewId, {
       title,
-      content_html: contentHtml,
+      content_html: contentHtml.replace(/\n/g, "<br>"),
     });
     router.push(`/crews/${crewId}/host-console/notices/${createdNotice.notice_id}`);
   };
