@@ -11,7 +11,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
 import { HostBadge } from "@/components/common/HostBadge";
 import { Modal } from "@/components/common/Modal";
-import { formatDateTime } from "@/components/domain/host/hostFormatters";
+import { formatDateMinute } from "@/components/domain/host/hostFormatters";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { deleteHostNotice, getHostNotice, getHostNoticeComments } from "@/mocks/data/host";
 
@@ -139,7 +139,7 @@ export default function HostNoticeDetailPage() {
                       <p className="text-xs font-extrabold text-text-primary">방장</p>
                       <HostBadge label="방장" className="shrink-0" />
                     </div>
-                    <p className="mt-0.5 text-xs text-text-secondary">작성 {formatDateTime(notice.created_at)}</p>
+                    <p className="mt-0.5 text-xs text-text-secondary">{formatDateMinute(notice.created_at)}</p>
                   </div>
                 </div>
               </div>
@@ -211,7 +211,7 @@ export default function HostNoticeDetailPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
                         <p className="truncate text-xs font-bold text-text-primary">{comment.nickname}</p>
-                        <p className="shrink-0 text-[11px] text-text-secondary">{formatDateTime(comment.created_at)}</p>
+                        <p className="shrink-0 text-[11px] text-text-secondary">{formatDateMinute(comment.created_at)}</p>
                       </div>
                       <p className="mt-1.5 text-xs leading-relaxed text-text-primary">{comment.content}</p>
                     </div>
