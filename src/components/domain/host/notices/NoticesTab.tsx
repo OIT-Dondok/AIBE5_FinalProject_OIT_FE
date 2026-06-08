@@ -111,10 +111,32 @@ export function NoticesTab() {
                   <MessageCircle size={12} />
                   댓글 {notice.comment_count}
                 </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-[#E0E8FA] px-2.5 py-1 text-[#4d73d9]">
-                  <Smile size={12} />
-                  반응 {notice.reaction_count}
-                </span>
+                {(() => {
+                  const REACTION_LABELS: Record<string, string> = { "확인": "✅" };
+                  const sorted = Object.entries(notice.reactions)
+                    .filter(([, count]) => count > 0)
+                    .sort(([, a], [, b]) => b - a);
+                  const top3 = sorted.slice(0, 3);
+                  const restCount = sorted.slice(3).reduce((sum, [, count]) => sum + count, 0);
+
+                  return (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E0E8FA] px-2.5 py-1 text-[#4d73d9]">
+                      {top3.length === 0 ? (
+                        <>
+                          <Smile size={12} />
+                          반응 0
+                        </>
+                      ) : (
+                        <>
+                          {top3.map(([emoji, count]) => (
+                            <span key={emoji}>{REACTION_LABELS[emoji] ?? emoji}{count}</span>
+                          ))}
+                          {restCount > 0 && <span>+{restCount}</span>}
+                        </>
+                      )}
+                    </span>
+                  );
+                })()}
               </div>
             </article>
           ))}
