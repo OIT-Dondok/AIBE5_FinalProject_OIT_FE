@@ -137,7 +137,7 @@ export default function HostNoticeDetailPage() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
                       <p className="text-xs font-extrabold text-text-primary">방장</p>
-                      <HostBadge compact className="shrink-0" />
+                      <HostBadge label="방장" className="shrink-0" />
                     </div>
                     <p className="mt-0.5 text-xs text-text-secondary">작성 {formatDateTime(notice.created_at)}</p>
                   </div>

@@ -4,12 +4,15 @@ import { Badge } from "@/components/common/Badge";
 
 interface HostBadgeProps {
   count?: number;
+  label?: string;
   compact?: boolean;
   className?: string;
 }
 
-export function HostBadge({ count, compact = false, className = "" }: HostBadgeProps) {
+export function HostBadge({ count, label, compact = false, className = "" }: HostBadgeProps) {
   const hasCount = typeof count === "number";
+  const text = hasCount ? `방장 ${count}회` : label;
+  const hasText = Boolean(text);
   const compactClassName = compact ? "relative !h-6 !w-[25px] !px-0" : "";
   const crownSize = compact ? 11 : 12;
 
@@ -27,8 +30,8 @@ export function HostBadge({ count, compact = false, className = "" }: HostBadgeP
 
   return (
     <Badge className={`${compactClassName} ${className}`}>
-      <Crown size={crownSize} className={hasCount ? "mr-1" : ""} fill="currentColor" />
-      {hasCount ? `방장 ${count}회` : null}
+      <Crown size={crownSize} className={hasText ? "mr-1" : ""} fill="currentColor" />
+      {text}
     </Badge>
   );
 }
