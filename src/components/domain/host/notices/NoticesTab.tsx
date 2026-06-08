@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { FileText, MessageCircle, Pencil, Smile, Trash2, X } from "lucide-react";
 
@@ -13,13 +13,24 @@ import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { SectionCard } from "@/components/domain/host/SectionCard";
 import { deleteHostNotice, getHostNotices } from "@/mocks/data/host";
 
+const REACTION_LABELS: Record<string, string> = { "확인": "✅" };
+
 export function NoticesTab() {
   const [openMenuNoticeId, setOpenMenuNoticeId] = useState<number | null>(null);
   const [deleteTargetNoticeId, setDeleteTargetNoticeId] = useState<number | null>(null);
   const [showDeleteToast, setShowDeleteToast] = useState(false);
+  const deleteToastTimerRef = useRef<number | null>(null);
+  const deleteNavTimerRef = useRef<number | null>(null);
   const params = useParams<{ crewId: string }>();
   const router = useRouter();
   const crewId = parseRouteNumber(params.crewId);
+
+  useEffect(() => {
+    return () => {
+      if (deleteToastTimerRef.current !== null) clearTimeout(deleteToastTimerRef.current);
+      if (deleteNavTimerRef.current !== null) clearTimeout(deleteNavTimerRef.current);
+    };
+  }, []);
 
   if (crewId === null) {
     return (
@@ -37,8 +48,8 @@ export function NoticesTab() {
     setDeleteTargetNoticeId(null);
     setOpenMenuNoticeId(null);
     setShowDeleteToast(true);
-    window.setTimeout(() => setShowDeleteToast(false), 2400);
-    window.setTimeout(() => {
+    deleteToastTimerRef.current = window.setTimeout(() => setShowDeleteToast(false), 2400);
+    deleteNavTimerRef.current = window.setTimeout(() => {
       router.push(`/crews/${crewId}/host-console`);
     }, 2000);
   };
@@ -117,7 +128,6 @@ export function NoticesTab() {
                   댓글 {notice.comment_count}
                 </span>
                 {(() => {
-                  const REACTION_LABELS: Record<string, string> = { "확인": "✅" };
                   const sorted = Object.entries(notice.reactions)
                     .filter(([, count]) => count > 0)
                     .sort(([, a], [, b]) => b - a);
