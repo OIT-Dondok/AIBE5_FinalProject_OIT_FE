@@ -1,4 +1,3 @@
-// 💡 @/lib/instance 에서 @/lib/api/instance 로 정밀 조준 완료!
 import { api } from '@/lib/axios';
 
 /**
