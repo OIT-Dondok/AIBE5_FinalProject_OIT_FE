@@ -15,6 +15,8 @@ export const getCrews = (status: string, category: string, keyword: string) => {
  * 2. 크루 생성 (유저가 입력한 폼 데이터 전송)
  * POST /api/crews
  */
-export const createCrew = (crewData: any) => {
+export const createCrew = (crewData: CreateCrewRequest) => {
+    return api.post<CreateCrewResponse>('/crews', crewData);
+};
     return api.post('/crews', crewData);
 };
