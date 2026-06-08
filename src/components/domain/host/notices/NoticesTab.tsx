@@ -37,6 +37,7 @@ export function NoticesTab() {
     setDeleteTargetNoticeId(null);
     setOpenMenuNoticeId(null);
     setShowDeleteToast(true);
+    window.setTimeout(() => setShowDeleteToast(false), 2400);
     window.setTimeout(() => {
       router.push(`/crews/${crewId}/host-console`);
     }, 2000);

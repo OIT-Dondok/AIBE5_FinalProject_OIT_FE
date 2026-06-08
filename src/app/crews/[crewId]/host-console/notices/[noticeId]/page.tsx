@@ -86,6 +86,7 @@ export default function HostNoticeDetailPage() {
     deleteHostNotice(crewId, noticeId);
     setIsDeleteModalOpen(false);
     setShowDeleteToast(true);
+    window.setTimeout(() => setShowDeleteToast(false), 2400);
     window.setTimeout(() => {
       router.push(`/crews/${crewId}/host-console?tab=notices`);
     }, 2000);
