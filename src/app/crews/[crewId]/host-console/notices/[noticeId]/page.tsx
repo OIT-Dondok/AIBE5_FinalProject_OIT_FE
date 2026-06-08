@@ -68,6 +68,8 @@ export default function HostNoticeDetailPage() {
   const noticeId = parseRouteNumber(params.noticeId);
   const notice = crewId !== null && noticeId !== null ? getHostNotice(crewId, noticeId) : null;
   const comments = crewId !== null && noticeId !== null ? getHostNoticeComments(crewId, noticeId) : [];
+  const [commentItems, setCommentItems] = useState(() => comments);
+  const [commentInput, setCommentInput] = useState("");
   const [reactions, setReactions] = useState<Record<string, number>>(() =>
     notice ? { ...notice.reactions } : {},
   );
@@ -103,6 +105,27 @@ export default function HostNoticeDetailPage() {
   const handleEmojiSelect = (emoji: string) => {
     handleReactionClick(emoji);
     setIsEmojiSheetOpen(false);
+  };
+
+  const handleCommentSubmit = () => {
+    const content = commentInput.trim();
+
+    if (!content || crewId === null || noticeId === null) return;
+
+    setCommentItems((current) => [
+      ...current,
+      {
+        comment_id: Date.now(),
+        crew_id: crewId,
+        notice_id: noticeId,
+        member_uuid: "mock-current-member",
+        nickname: "나",
+        profile_image_url: null,
+        content,
+        created_at: new Date().toISOString(),
+      },
+    ]);
+    setCommentInput("");
   };
 
   if (crewId === null || noticeId === null || !notice) {
@@ -197,12 +220,11 @@ export default function HostNoticeDetailPage() {
 
           <section className="px-1 py-1">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold text-text-primary">댓글 {comments.length}</h2>
-              <span className="text-[11px] font-semibold text-text-secondary">mock</span>
+              <h2 className="text-sm font-bold text-text-primary">댓글 {commentItems.length}</h2>
             </div>
 
             <div className="mt-3 flex flex-col gap-3">
-              {comments.map((comment) => (
+              {commentItems.map((comment) => (
                 <article key={comment.comment_id} className="border-t border-text-secondary/10 py-3">
                   <div className="flex gap-2.5">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-blue/10 text-xs font-extrabold text-primary-blue">
@@ -221,10 +243,17 @@ export default function HostNoticeDetailPage() {
             <div className="mt-4 flex gap-2">
               <input
                 type="text"
+                value={commentInput}
+                onChange={(event) => setCommentInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    handleCommentSubmit();
+                  }
+                }}
                 placeholder="댓글을 입력해주세요"
                 className="min-w-0 flex-1 rounded-xl border border-text-secondary/20 bg-background px-3 py-2.5 text-xs text-text-primary outline-none focus:border-primary-green"
               />
-              <Button type="button" variant="primary-green" size="sm">
+              <Button type="button" variant="primary-green" size="sm" onClick={handleCommentSubmit}>
                 등록
               </Button>
             </div>
