@@ -3,13 +3,12 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import DOMPurify from "dompurify";
-import { ArrowLeft, Pencil } from "lucide-react";
 
 import { Button } from "@/components/common/Button";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
 import { Modal } from "@/components/common/Modal";
-import { formatDate, formatDateTime, formatTime } from "@/components/domain/host/hostFormatters";
+import { formatDateTime } from "@/components/domain/host/hostFormatters";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { deleteHostNotice, getHostNotice, getHostNoticeComments } from "@/mocks/data/host";
 
@@ -55,56 +54,34 @@ export default function HostNoticeDetailPage() {
         <Header showBackButton title="공지 상세" />
 
         <div className="px-5 pt-5 flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-3 py-1">
-            <button
-              type="button"
-              onClick={() => router.push(`/crews/${crewId}/host-console`)}
-              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-[#E7E1D3] bg-card px-3 text-xs font-extrabold text-text-primary transition-colors hover:bg-[#F5F0E6]"
-            >
-              <ArrowLeft size={15} strokeWidth={2.6} />
-              목록으로
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}/edit`)}
-              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[#4C73D9] px-3.5 text-xs font-extrabold text-white shadow-sm transition-colors hover:bg-[#3F63C3]"
-            >
-              <Pencil size={14} strokeWidth={2.6} />
-              수정
-            </button>
-          </div>
-
-          <article className="rounded-card bg-card border border-[#E7E1D3] shadow-sm px-4 py-4">
-            <div className="border-b border-[#F1ECE0] pb-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h1 className="text-lg font-extrabold leading-snug text-text-primary">{notice.title}</h1>
-                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-text-secondary">
-                    <span className="inline-flex items-center rounded-full bg-[#F5F0E6] px-2.5 py-1 text-[#777777]">
-                      작성자 방장
-                    </span>
-                    <span>
-                      {formatDate(notice.created_at)} · {formatTime(notice.created_at)}
-                    </span>
-                  </div>
-                </div>
-                <button
+          <article className="px-1 py-1">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h1 className="text-lg font-extrabold leading-snug text-text-primary">{notice.title}</h1>
+                <p className="mt-1 text-xs text-text-secondary">작성 {formatDateTime(notice.created_at)}</p>
+              </div>
+              <div className="shrink-0 flex gap-2">
+                <Button
                   type="button"
-                  onClick={() => setIsDeleteModalOpen(true)}
-                  className="shrink-0 rounded-xl bg-[#FCEDEC] px-3 py-2 text-xs font-extrabold text-[#DB5C55] transition-colors hover:bg-[#F8DEDC]"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}/edit`)}
                 >
+                  수정
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => setIsDeleteModalOpen(true)}>
                   삭제
-                </button>
+                </Button>
               </div>
             </div>
 
             <div
-              className="mt-5 rounded-xl bg-[#FAFCFF] px-3.5 py-4 text-sm font-medium leading-7 text-text-primary [&_a]:text-primary-blue [&_a]:underline [&_ol]:ml-5 [&_ol]:list-decimal [&_ul]:ml-5 [&_ul]:list-disc [&_strong]:font-extrabold"
+              className="mt-5 text-sm leading-7 text-text-primary [&_a]:text-primary-blue [&_a]:underline [&_ol]:ml-5 [&_ol]:list-decimal [&_ul]:ml-5 [&_ul]:list-disc"
               dangerouslySetInnerHTML={{ __html: sanitizeNoticeHtml(notice.content_html) }}
             />
           </article>
 
-          <section className="rounded-card bg-card border border-text-secondary/10 px-4 py-4">
+          <section className="px-1 py-1">
             <h2 className="text-sm font-bold text-text-primary">이모지 반응</h2>
             <div className="mt-3 flex flex-wrap gap-2">
               {Object.entries(notice.reactions).map(([emoji, count]) => (
@@ -119,7 +96,7 @@ export default function HostNoticeDetailPage() {
             </div>
           </section>
 
-          <section className="rounded-card bg-card border border-text-secondary/10 px-4 py-4">
+          <section className="px-1 py-1">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold text-text-primary">댓글 {comments.length}</h2>
               <span className="text-[11px] font-semibold text-text-secondary">mock</span>
@@ -127,7 +104,7 @@ export default function HostNoticeDetailPage() {
 
             <div className="mt-3 flex flex-col gap-3">
               {comments.map((comment) => (
-                <article key={comment.comment_id} className="rounded-xl bg-background px-3 py-3">
+                <article key={comment.comment_id} className="border-t border-text-secondary/10 py-3">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-xs font-bold text-text-primary">{comment.nickname}</p>
                     <p className="shrink-0 text-[11px] text-text-secondary">{formatDateTime(comment.created_at)}</p>
