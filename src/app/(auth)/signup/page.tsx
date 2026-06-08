@@ -234,7 +234,6 @@ export default function SignupPage() {
       } else if (code === 'VALIDATION_ERROR') {
         setEmailError('입력값을 확인해주세요');
       } else {
-        console.error(err);
         alert('회원가입 중 오류가 발생했습니다');
       }
     } finally {

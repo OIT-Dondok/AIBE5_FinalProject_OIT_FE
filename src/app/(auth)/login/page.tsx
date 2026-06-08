@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/common/Button";
 import { Input } from "@/components/common/Input";
 import { login } from "@/services/auth";
-import { setAccessToken } from "@/lib/axios";
+import { useAuthStore } from "@/store/authStore";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -16,6 +16,7 @@ export default function LoginPage() {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const router = useRouter();
+  const { setAuth } = useAuthStore();
 
   const [slogan1Visible, setSlogan1Visible] = useState(false);
   const [slogan2Visible, setSlogan2Visible] = useState(false);
@@ -55,7 +56,7 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       const res = await login(email, password);
-      setAccessToken(res.data.access_token);
+      setAuth(res.data.member, res.data.access_token);
       router.push('/crews');
     } catch (err) {
       const code = (err as { response?: { data?: { code?: string } } })?.response?.data?.code;
