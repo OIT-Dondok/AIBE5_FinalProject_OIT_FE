@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { FileText, MessageCircle, Pencil, Smile, Trash2 } from "lucide-react";
+import { FileText, MessageCircle, Pencil, Smile, Trash2, X } from "lucide-react";
 
 import { EmptyState } from "@/components/common/EmptyState";
 import { HostActionButton } from "@/components/domain/host/common/HostActionButton";
@@ -16,6 +16,7 @@ import { deleteHostNotice, getHostNotices } from "@/mocks/data/host";
 export function NoticesTab() {
   const [openMenuNoticeId, setOpenMenuNoticeId] = useState<number | null>(null);
   const [deleteTargetNoticeId, setDeleteTargetNoticeId] = useState<number | null>(null);
+  const [showDeleteToast, setShowDeleteToast] = useState(false);
   const params = useParams<{ crewId: string }>();
   const router = useRouter();
   const crewId = parseRouteNumber(params.crewId);
@@ -35,7 +36,10 @@ export function NoticesTab() {
     deleteHostNotice(crewId, deleteTargetNoticeId);
     setDeleteTargetNoticeId(null);
     setOpenMenuNoticeId(null);
-    router.push(`/crews/${crewId}/host-console`);
+    setShowDeleteToast(true);
+    window.setTimeout(() => {
+      router.push(`/crews/${crewId}/host-console`);
+    }, 2000);
   };
 
   return (
@@ -140,6 +144,17 @@ export function NoticesTab() {
               </div>
             </article>
           ))}
+        </div>
+      )}
+
+      {showDeleteToast && (
+        <div className="fixed inset-x-0 bottom-6 z-[90] flex justify-center px-5 pointer-events-none">
+          <div className="flex w-fit items-center gap-2.5 rounded-2xl bg-[#28251F] px-4 py-3 text-white shadow-lg" role="status" aria-live="polite">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#DB5C55] text-white">
+              <X size={13} strokeWidth={3} />
+            </span>
+            <span className="text-[13px] font-extrabold">게시글이 삭제되었습니다</span>
+          </div>
         </div>
       )}
 

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import DOMPurify from "dompurify";
-import { Pencil, Send, SmilePlus, Trash2 } from "lucide-react";
+import { Pencil, Send, SmilePlus, Trash2, X } from "lucide-react";
 
 import { BottomSheet } from "@/components/common/BottomSheet";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -65,6 +65,7 @@ const currentProfileInitial = mockCrewProfile?.initials ?? currentProfileName.sl
 
 export default function HostNoticeDetailPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [showDeleteToast, setShowDeleteToast] = useState(false);
   const [isEmojiSheetOpen, setIsEmojiSheetOpen] = useState(false);
   const [isNoticeMenuOpen, setIsNoticeMenuOpen] = useState(false);
   const router = useRouter();
@@ -84,7 +85,10 @@ export default function HostNoticeDetailPage() {
     if (crewId === null || noticeId === null) return;
     deleteHostNotice(crewId, noticeId);
     setIsDeleteModalOpen(false);
-    router.push(`/crews/${crewId}/host-console?tab=notices`);
+    setShowDeleteToast(true);
+    window.setTimeout(() => {
+      router.push(`/crews/${crewId}/host-console?tab=notices`);
+    }, 2000);
   };
 
   const handleReactionClick = (emoji: string) => {
@@ -311,6 +315,17 @@ export default function HostNoticeDetailPage() {
             </div>
           </div>
         </BottomSheet>
+
+        {showDeleteToast && (
+          <div className="fixed inset-x-0 bottom-6 z-[90] flex justify-center px-5 pointer-events-none">
+            <div className="flex w-fit items-center gap-2.5 rounded-2xl bg-[#28251F] px-4 py-3 text-white shadow-lg" role="status" aria-live="polite">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#DB5C55] text-white">
+                <X size={13} strokeWidth={3} />
+              </span>
+              <span className="text-[13px] font-extrabold">게시글이 삭제되었습니다</span>
+            </div>
+          </div>
+        )}
 
         {isDeleteModalOpen && (
           <HostConfirmDialog
