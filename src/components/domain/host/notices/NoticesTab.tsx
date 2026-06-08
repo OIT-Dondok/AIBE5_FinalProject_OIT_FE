@@ -2,12 +2,11 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { FileText, MoreHorizontal } from "lucide-react";
+import { FileText, MessageCircle, MoreHorizontal, Plus, Smile } from "lucide-react";
 
-import { Button } from "@/components/common/Button";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Modal } from "@/components/common/Modal";
-import { formatDateTime } from "@/components/domain/host/hostFormatters";
+import { formatDate, formatTime } from "@/components/domain/host/hostFormatters";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { SectionCard } from "@/components/domain/host/SectionCard";
 import { deleteHostNotice, getHostNotices } from "@/mocks/data/host";
@@ -39,32 +38,35 @@ export function NoticesTab() {
 
   return (
     <div className="flex flex-col gap-3">
-      <SectionCard className="px-4 py-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-base font-bold text-text-primary">공지 관리</h2>
-            <p className="mt-1 text-xs text-text-secondary">공지 게시글과 댓글, 반응 현황을 관리합니다.</p>
-          </div>
-          <Button
-            variant="primary-green"
-            size="sm"
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-3 py-1">
+          <h2 className="text-sm font-bold text-text-primary">
+            작성한 공지 <span className="font-extrabold text-[#4d73d9]">{notices.length}</span>
+          </h2>
+          <button
+            type="button"
             onClick={() => router.push(`/crews/${crewId}/host-console/notices/new`)}
+            className="inline-flex h-12 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#4C73D9] px-4 text-sm font-extrabold text-white shadow-sm transition-colors hover:bg-[#3F63C3]"
           >
-            공지 작성
-          </Button>
+            <Plus size={16} strokeWidth={2.8} />
+            글쓰기
+          </button>
         </div>
-      </SectionCard>
+      </div>
 
       {notices.length === 0 ? (
-        <SectionCard>
-          <EmptyState icon={<FileText size={44} className="text-primary-green" />} title="등록된 공지가 없어요" />
-        </SectionCard>
+        <div className="flex flex-col items-center justify-center rounded-card border border-text-secondary/10 bg-card px-4 py-5 text-center shadow-sm">
+          <div className="mb-1.5 flex items-center justify-center text-[#4d73d9]">
+            <FileText size={22} strokeWidth={2.5} />
+          </div>
+          <p className="text-[13px] font-medium text-text-secondary">등록된 공지가 없어요</p>
+        </div>
       ) : (
         <div className="flex flex-col gap-3">
           {notices.map((notice) => (
             <article
               key={notice.notice_id}
-              className="relative rounded-2xl border border-text-secondary/10 bg-card px-4 py-4 shadow-sm"
+              className="relative rounded-card border border-[#E7E1D3] bg-card px-4 py-4 shadow-sm"
             >
               <div className="flex items-start justify-between gap-3">
                 <button
@@ -72,8 +74,13 @@ export function NoticesTab() {
                   onClick={() => router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}`)}
                   className="min-w-0 flex-1 text-left"
                 >
-                  <h3 className="truncate text-sm font-bold text-text-primary">{notice.title}</h3>
-                  <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-text-secondary">{notice.content}</p>
+                  <h3 className="truncate text-sm font-extrabold text-text-primary">{notice.title}</h3>
+                  <p className="mt-1 text-xs font-medium text-text-secondary">
+                    {formatDate(notice.created_at)} · {formatTime(notice.created_at)}
+                  </p>
+                  <p className="mt-3 line-clamp-2 text-xs font-medium leading-relaxed text-text-secondary">
+                    {notice.content}
+                  </p>
                 </button>
                 <button
                   type="button"
@@ -81,16 +88,16 @@ export function NoticesTab() {
                   onClick={() =>
                     setOpenMenuNoticeId((current) => (current === notice.notice_id ? null : notice.notice_id))
                   }
-                  className="shrink-0 rounded-full p-1 text-text-secondary hover:bg-text-secondary/10"
+                  className="shrink-0 rounded-full p-1 text-text-secondary transition-colors hover:bg-text-secondary/10"
                 >
                   <MoreHorizontal size={18} />
                 </button>
                 {openMenuNoticeId === notice.notice_id && (
-                  <div className="absolute right-4 top-12 z-20 w-28 overflow-hidden rounded-xl border border-text-secondary/10 bg-card shadow-card">
+                  <div className="absolute right-4 top-12 z-20 w-28 overflow-hidden rounded-xl border border-[#E7E1D3] bg-card shadow-card">
                     <button
                       type="button"
                       onClick={() => router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}/edit`)}
-                      className="block w-full px-3 py-2.5 text-left text-xs font-bold text-text-primary hover:bg-text-secondary/5"
+                      className="block w-full px-3 py-2.5 text-left text-xs font-bold text-text-primary hover:bg-[#F5F0E6]"
                     >
                       수정하기
                     </button>
@@ -107,10 +114,14 @@ export function NoticesTab() {
                   </div>
                 )}
               </div>
-              <div className="mt-3 flex items-center justify-between text-[11px] text-text-secondary">
-                <span>작성 {formatDateTime(notice.created_at)}</span>
-                <span>
-                  댓글 {notice.comment_count} · 반응 {notice.reaction_count}
+              <div className="mt-3 flex items-center gap-2 text-[11px] font-medium text-text-secondary">
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#F5F0E6] px-2.5 py-1">
+                  <MessageCircle size={12} />
+                  댓글 {notice.comment_count}
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#E0E8FA] px-2.5 py-1 text-[#4d73d9]">
+                  <Smile size={12} />
+                  반응 {notice.reaction_count}
                 </span>
               </div>
             </article>
@@ -129,12 +140,20 @@ export function NoticesTab() {
             삭제한 공지는 목록에서 더 이상 사용할 수 없습니다. 실제 API 연결 전까지는 mock 처리합니다.
           </p>
           <div className="mt-5 grid grid-cols-2 gap-2">
-            <Button type="button" variant="outline" onClick={() => setDeleteTargetNoticeId(null)}>
+            <button
+              type="button"
+              onClick={() => setDeleteTargetNoticeId(null)}
+              className="inline-flex h-12 items-center justify-center rounded-xl border-2 border-[#EDE8DF] bg-card text-sm font-extrabold text-text-primary transition-colors hover:bg-[#EDE8DF]"
+            >
               취소
-            </Button>
-            <Button type="button" variant="primary-green" onClick={handleDeleteNotice}>
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteNotice}
+              className="inline-flex h-12 items-center justify-center rounded-xl bg-[#DB5C55] text-sm font-extrabold text-white transition-colors hover:bg-[#C84D46]"
+            >
               삭제하기
-            </Button>
+            </button>
           </div>
         </div>
       </Modal>
