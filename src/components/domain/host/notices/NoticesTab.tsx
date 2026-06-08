@@ -50,7 +50,7 @@ export function NoticesTab() {
     setShowDeleteToast(true);
     deleteToastTimerRef.current = window.setTimeout(() => setShowDeleteToast(false), 2400);
     deleteNavTimerRef.current = window.setTimeout(() => {
-      router.push(`/crews/${crewId}/host-console`);
+      router.push(`/crews/${crewId}/host-console?tab=notices`);
     }, 2000);
   };
 

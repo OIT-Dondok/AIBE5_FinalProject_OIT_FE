@@ -45,6 +45,7 @@ export function HostConfirmDialog({
       role="dialog"
       aria-modal="true"
       aria-labelledby={labelledById}
+      aria-label={!labelledById ? title : undefined}
       onClick={onCancel}
     >
       <div className="w-full max-w-[340px] rounded-2xl bg-card px-5 py-5 shadow-lg" onClick={(event) => event.stopPropagation()}>
