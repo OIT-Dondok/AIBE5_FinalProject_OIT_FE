@@ -49,8 +49,6 @@ function getApplicationVisibleStatus(
 ): ApplicationVisibleStatus {
   if (decision === "approved") return "LOCKED";
   if (decision === "rejected") return "REJECTED";
-  if (item.status === "LOCKED") return "LOCKED";
-  if (item.status === "REJECTED") return "REJECTED";
   return "PENDING";
 }
 
@@ -187,7 +185,6 @@ export function ApplicationsTab() {
   const totalCount = applicationsWithStatus.length;
 
   const currentFilterLabel = APPLICATION_FILTERS.find((f) => f.value === applicationFilter)?.label ?? "전체";
-
   const filteredItems = applicationsWithStatus.filter(({ visibleStatus }) => {
     if (applicationFilter === "ALL") return true;
     return visibleStatus === applicationFilter;
@@ -208,7 +205,7 @@ export function ApplicationsTab() {
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-3">
         <div className="py-1">
-          <h2 className="text-sm font-bold text-text-primary">{currentFilterLabel} 신청</h2>
+          <h2 className="text-sm font-bold text-text-primary">대기 중인 신청</h2>
         </div>
         <div className="grid grid-cols-4 gap-2">
           {APPLICATION_FILTERS.map((filter) => {
