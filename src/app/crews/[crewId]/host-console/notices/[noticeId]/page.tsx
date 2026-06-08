@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import DOMPurify from "dompurify";
-import { SmilePlus } from "lucide-react";
+import { MoreHorizontal, Pencil, SmilePlus, Trash2 } from "lucide-react";
 
 import { BottomSheet } from "@/components/common/BottomSheet";
 import { Button } from "@/components/common/Button";
@@ -66,6 +66,7 @@ const currentProfileInitial = mockCrewProfile?.initials ?? currentProfileName.sl
 export default function HostNoticeDetailPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEmojiSheetOpen, setIsEmojiSheetOpen] = useState(false);
+  const [isNoticeMenuOpen, setIsNoticeMenuOpen] = useState(false);
   const router = useRouter();
   const params = useParams<{ crewId: string; noticeId: string }>();
   const crewId = parseRouteNumber(params.crewId);
@@ -170,18 +171,43 @@ export default function HostNoticeDetailPage() {
                   </div>
                 </div>
               </div>
-              <div className="shrink-0 flex gap-2">
-                <Button
+              <div className="relative shrink-0">
+                <button
                   type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}/edit`)}
+                  aria-label="공지 메뉴 열기"
+                  aria-expanded={isNoticeMenuOpen}
+                  onClick={() => setIsNoticeMenuOpen((current) => !current)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-text-secondary transition hover:bg-white active:scale-95"
                 >
-                  수정
-                </Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => setIsDeleteModalOpen(true)}>
-                  삭제
-                </Button>
+                  <MoreHorizontal size={20} strokeWidth={2.4} />
+                </button>
+
+                {isNoticeMenuOpen && (
+                  <div className="absolute right-0 top-9 z-20 w-28 overflow-hidden rounded-xl border border-text-secondary/10 bg-white shadow-[0_8px_20px_rgba(40,37,31,0.12)]">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsNoticeMenuOpen(false);
+                        router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}/edit`);
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs font-medium text-text-primary transition hover:bg-[#FAF7EE]"
+                    >
+                      <Pencil size={14} />
+                      수정
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsNoticeMenuOpen(false);
+                        setIsDeleteModalOpen(true);
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs font-medium text-[#DB5C55] transition hover:bg-[#FCEDEC]"
+                    >
+                      <Trash2 size={14} />
+                      삭제
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
