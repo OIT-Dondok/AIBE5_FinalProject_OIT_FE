@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { Check, UserCheck, X } from "lucide-react";
 
 import { EmptyState } from "@/components/common/EmptyState";
+import { HostActionButton } from "@/components/domain/host/common/HostActionButton";
 import { formatDate, formatTime } from "@/components/domain/host/hostFormatters";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { SectionCard } from "@/components/domain/host/SectionCard";
@@ -96,22 +97,12 @@ function ApplicationCard({
 
       {canDecide && (
         <div className="mt-3 grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={onRejectClick}
-            className="inline-flex h-[52px] min-h-[52px] items-center justify-center gap-1.5 rounded-xl bg-[#FCEDEC] text-base font-extrabold leading-none text-[#DB5C55] transition-colors hover:bg-[#F8DEDC]"
-          >
-            <X size={16} strokeWidth={2.8} />
+          <HostActionButton variant="reject" icon={<X size={16} strokeWidth={2.8} />} onClick={onRejectClick}>
             거절
-          </button>
-          <button
-            type="button"
-            onClick={onApproveClick}
-            className="inline-flex h-[52px] min-h-[52px] items-center justify-center gap-1.5 rounded-xl bg-primary-green text-base font-extrabold leading-none text-white shadow-sm shadow-primary-green/20 transition-colors hover:bg-[#3F7A55]"
-          >
-            <Check size={16} strokeWidth={2.8} />
+          </HostActionButton>
+          <HostActionButton variant="approve" icon={<Check size={16} strokeWidth={2.8} />} onClick={onApproveClick}>
             승인
-          </button>
+          </HostActionButton>
         </div>
       )}
     </article>
@@ -303,22 +294,15 @@ export function ApplicationsTab({
               {confirmTarget.decision === "approved" ? "승인 후 크루 참여가 확정됩니다." : "거절 후 신청 상태가 변경됩니다."}
             </p>
             <div className="mt-5 grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setConfirmTarget(null)}
-                  className="inline-flex h-[52px] min-h-[52px] items-center justify-center rounded-xl border-2 border-[#EDE8DF] bg-card text-base font-extrabold text-text-primary transition-colors hover:bg-[#EDE8DF]"
-              >
+              <HostActionButton variant="cancel" onClick={() => setConfirmTarget(null)}>
                 취소
-              </button>
-              <button
-                type="button"
+              </HostActionButton>
+              <HostActionButton
+                variant={confirmTarget.decision === "approved" ? "approve" : "danger"}
                 onClick={handleConfirmDecision}
-                  className={`inline-flex h-[52px] min-h-[52px] items-center justify-center rounded-xl text-base font-extrabold text-white transition-colors ${
-                  confirmTarget.decision === "approved" ? "bg-primary-green hover:bg-[#3F7A55]" : "bg-[#DB5C55] hover:bg-[#C84D46]"
-                }`}
               >
                 {confirmTarget.decision === "approved" ? "승인" : "거절"}
-              </button>
+              </HostActionButton>
             </div>
           </div>
         </div>

@@ -3,13 +3,14 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import DOMPurify from "dompurify";
-import { MoreHorizontal, Pencil, Send, SmilePlus, Trash2 } from "lucide-react";
+import { Pencil, Send, SmilePlus, Trash2 } from "lucide-react";
 
 import { BottomSheet } from "@/components/common/BottomSheet";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
 import { HostBadge } from "@/components/common/HostBadge";
-import { Modal } from "@/components/common/Modal";
+import { HostConfirmDialog } from "@/components/domain/host/common/HostConfirmDialog";
+import { HostMoreMenu } from "@/components/domain/host/common/HostMoreMenu";
 import { formatDateMinute } from "@/components/domain/host/hostFormatters";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { deleteHostNotice, getHostNotice, getHostNoticeComments } from "@/mocks/data/host";
@@ -170,44 +171,29 @@ export default function HostNoticeDetailPage() {
                   </div>
                 </div>
               </div>
-              <div className="relative shrink-0">
-                <button
-                  type="button"
-                  aria-label="공지 메뉴 열기"
-                  aria-expanded={isNoticeMenuOpen}
-                  onClick={() => setIsNoticeMenuOpen((current) => !current)}
-                  className="flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary transition hover:bg-[#EBE7DD]/70 active:scale-95"
-                >
-                  <MoreHorizontal size={20} strokeWidth={2.4} />
-                </button>
-
-                {isNoticeMenuOpen && (
-                  <div className="absolute right-0 top-10 z-20 w-36 overflow-hidden rounded-xl border border-text-secondary/10 bg-white shadow-[0_8px_20px_rgba(40,37,31,0.12)]">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsNoticeMenuOpen(false);
-                        router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}/edit`);
-                      }}
-                      className="flex w-full items-center gap-2.5 px-4 py-3 text-left text-sm font-medium text-text-primary transition hover:bg-[#FAF7EE]"
-                    >
-                      <Pencil size={16} />
-                      수정
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsNoticeMenuOpen(false);
-                        setIsDeleteModalOpen(true);
-                      }}
-                      className="flex w-full items-center gap-2.5 px-4 py-3 text-left text-sm font-medium text-[#DB5C55] transition hover:bg-[#FCEDEC]"
-                    >
-                      <Trash2 size={16} />
-                      삭제
-                    </button>
-                  </div>
-                )}
-              </div>
+              <HostMoreMenu
+                isOpen={isNoticeMenuOpen}
+                onToggle={() => setIsNoticeMenuOpen((current) => !current)}
+                items={[
+                  {
+                    label: "수정",
+                    icon: <Pencil size={16} />,
+                    onClick: () => {
+                      setIsNoticeMenuOpen(false);
+                      router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}/edit`);
+                    },
+                  },
+                  {
+                    label: "삭제",
+                    icon: <Trash2 size={16} />,
+                    tone: "danger",
+                    onClick: () => {
+                      setIsNoticeMenuOpen(false);
+                      setIsDeleteModalOpen(true);
+                    },
+                  },
+                ]}
+              />
             </div>
 
             <div
@@ -322,41 +308,23 @@ export default function HostNoticeDetailPage() {
           </div>
         </BottomSheet>
 
-        <Modal
-          isOpen={isDeleteModalOpen}
-          onClose={() => setIsDeleteModalOpen(false)}
-          ariaLabel="공지 삭제 확인"
-          className="max-w-[340px]"
-          backdropClassName="bg-black/40"
-        >
-          <div className="px-5 py-5">
-            <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-[#FCEDEC] text-[#DB5C55]">
-              <Trash2 size={21} strokeWidth={2.6} />
-            </div>
-            <h2 className="mt-3 text-center text-base font-extrabold text-text-primary">공지를 삭제할까요?</h2>
-            <p className="mt-2 text-center text-sm font-medium leading-relaxed text-text-secondary">
-              삭제한 공지는 되돌릴 수 없습니다.
-              <br />
-              댓글과 이모지 반응도 함께 사라집니다.
-            </p>
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setIsDeleteModalOpen(false)}
-                className="inline-flex h-[52px] min-h-[52px] items-center justify-center rounded-xl border-2 border-[#EDE8DF] bg-card text-base font-extrabold text-text-primary transition-colors hover:bg-[#EDE8DF]"
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                onClick={handleDeleteNotice}
-                className="inline-flex h-[52px] min-h-[52px] items-center justify-center rounded-xl bg-[#DB5C55] text-base font-extrabold text-white transition-colors hover:bg-[#C84D46]"
-              >
-                삭제
-              </button>
-            </div>
-          </div>
-        </Modal>
+        {isDeleteModalOpen && (
+          <HostConfirmDialog
+            title="공지를 삭제할까요?"
+            description={
+              <>
+                삭제한 공지는 되돌릴 수 없습니다.
+                <br />
+                댓글과 이모지 반응도 함께 사라집니다.
+              </>
+            }
+            icon={<Trash2 size={21} strokeWidth={2.6} />}
+            tone="danger"
+            confirmLabel="삭제"
+            onCancel={() => setIsDeleteModalOpen(false)}
+            onConfirm={handleDeleteNotice}
+          />
+        )}
       </div>
     </main>
   );

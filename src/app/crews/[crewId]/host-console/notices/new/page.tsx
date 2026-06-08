@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Megaphone } from "lucide-react";
 
-import { Button } from "@/components/common/Button";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
+import { HostActionButton } from "@/components/domain/host/common/HostActionButton";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { createHostNotice, getHostCrewDetail } from "@/mocks/data/host";
 
@@ -95,23 +95,15 @@ export default function HostNoticeNewPage() {
           </div>
 
           <div className="grid grid-cols-[0.85fr_1.15fr] gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              className="!h-[52px] !min-h-[52px] !rounded-xl !text-base !font-extrabold"
-              onClick={() => router.push(`/crews/${crewId}/host-console`)}
-            >
+            <HostActionButton variant="cancel" onClick={() => router.push(`/crews/${crewId}/host-console`)}>
               취소
-            </Button>
-            <button
-              type="button"
+            </HostActionButton>
+            <HostActionButton
+              variant={isTitleReady ? "primary" : "primaryDisabled"}
               onClick={handleSubmit}
-              className={`inline-flex h-[52px] min-h-[52px] items-center justify-center rounded-xl text-base font-extrabold text-white shadow-sm transition-colors active:scale-[0.98] ${
-                isTitleReady ? "bg-[#4C73D9] hover:bg-[#3358BD]" : "bg-[#A0B1DF]"
-              }`}
             >
               공지 등록
-            </button>
+            </HostActionButton>
           </div>
         </form>
         {toastMessage && (

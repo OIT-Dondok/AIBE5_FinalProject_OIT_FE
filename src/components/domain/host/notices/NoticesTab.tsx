@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { FileText, MessageCircle, MoreHorizontal, Pencil, Plus, Smile, Trash2 } from "lucide-react";
+import { FileText, MessageCircle, Pencil, Plus, Smile, Trash2 } from "lucide-react";
 
 import { EmptyState } from "@/components/common/EmptyState";
-import { Modal } from "@/components/common/Modal";
+import { HostActionButton } from "@/components/domain/host/common/HostActionButton";
+import { HostConfirmDialog } from "@/components/domain/host/common/HostConfirmDialog";
+import { HostMoreMenu } from "@/components/domain/host/common/HostMoreMenu";
 import { formatDate, formatTime } from "@/components/domain/host/hostFormatters";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { SectionCard } from "@/components/domain/host/SectionCard";
@@ -43,14 +45,14 @@ export function NoticesTab() {
           <h2 className="text-sm font-bold text-text-primary">
             작성한 공지 <span className="font-extrabold text-[#4d73d9]">{notices.length}</span>
           </h2>
-          <button
-            type="button"
+          <HostActionButton
+            variant="primary"
+            icon={<Plus size={16} strokeWidth={2.8} />}
+            className="shrink-0 px-4"
             onClick={() => router.push(`/crews/${crewId}/host-console/notices/new`)}
-            className="inline-flex h-[52px] min-h-[52px] shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#4C73D9] px-4 text-base font-extrabold text-white shadow-sm transition-colors hover:bg-[#3F63C3]"
           >
-            <Plus size={16} strokeWidth={2.8} />
             글쓰기
-          </button>
+          </HostActionButton>
         </div>
       </div>
 
@@ -82,39 +84,27 @@ export function NoticesTab() {
                     {notice.content}
                   </p>
                 </button>
-                <button
-                  type="button"
-                  aria-label="공지 메뉴 열기"
-                  onClick={() =>
-                    setOpenMenuNoticeId((current) => (current === notice.notice_id ? null : notice.notice_id))
-                  }
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-text-secondary transition hover:bg-[#EBE7DD]/70 active:scale-95"
-                >
-                  <MoreHorizontal size={20} strokeWidth={2.4} />
-                </button>
-                {openMenuNoticeId === notice.notice_id && (
-                  <div className="absolute right-4 top-12 z-20 w-36 overflow-hidden rounded-xl border border-text-secondary/10 bg-white shadow-[0_8px_20px_rgba(40,37,31,0.12)]">
-                    <button
-                      type="button"
-                      onClick={() => router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}/edit`)}
-                      className="flex w-full items-center gap-2.5 px-4 py-3 text-left text-sm font-medium text-text-primary transition hover:bg-[#FAF7EE]"
-                    >
-                      <Pencil size={16} />
-                      수정
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
+                <HostMoreMenu
+                  isOpen={openMenuNoticeId === notice.notice_id}
+                  onToggle={() => setOpenMenuNoticeId((current) => (current === notice.notice_id ? null : notice.notice_id))}
+                  alignClassName="right-0 top-10"
+                  items={[
+                    {
+                      label: "수정",
+                      icon: <Pencil size={16} />,
+                      onClick: () => router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}/edit`),
+                    },
+                    {
+                      label: "삭제",
+                      icon: <Trash2 size={16} />,
+                      tone: "danger",
+                      onClick: () => {
                         setDeleteTargetNoticeId(notice.notice_id);
                         setOpenMenuNoticeId(null);
-                      }}
-                      className="flex w-full items-center gap-2.5 px-4 py-3 text-left text-sm font-medium text-[#DB5C55] transition hover:bg-[#FCEDEC]"
-                    >
-                      <Trash2 size={16} />
-                      삭제
-                    </button>
-                  </div>
-                )}
+                      },
+                    },
+                  ]}
+                />
               </div>
               <div className="mt-3 flex items-center gap-2 text-[11px] font-medium text-text-secondary">
                 <span className="inline-flex items-center gap-1 rounded-full bg-[#F5F0E6] px-2.5 py-1">
@@ -131,41 +121,23 @@ export function NoticesTab() {
         </div>
       )}
 
-      <Modal
-        isOpen={deleteTargetNoticeId !== null}
-        onClose={() => setDeleteTargetNoticeId(null)}
-        ariaLabel="공지 삭제 확인"
-        className="max-w-[340px]"
-        backdropClassName="bg-black/40"
-      >
-        <div className="px-5 py-5">
-          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-[#FCEDEC] text-[#DB5C55]">
-            <Trash2 size={21} strokeWidth={2.6} />
-          </div>
-          <h2 className="mt-3 text-center text-base font-extrabold text-text-primary">공지를 삭제할까요?</h2>
-          <p className="mt-2 text-center text-sm font-medium leading-relaxed text-text-secondary">
-            삭제한 공지는 되돌릴 수 없습니다.
-            <br />
-            댓글과 이모지 반응도 함께 사라집니다.
-          </p>
-          <div className="mt-5 grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => setDeleteTargetNoticeId(null)}
-              className="inline-flex h-[52px] min-h-[52px] items-center justify-center rounded-xl border-2 border-[#EDE8DF] bg-card text-base font-extrabold text-text-primary transition-colors hover:bg-[#EDE8DF]"
-            >
-              취소
-            </button>
-            <button
-              type="button"
-              onClick={handleDeleteNotice}
-              className="inline-flex h-[52px] min-h-[52px] items-center justify-center rounded-xl bg-[#DB5C55] text-base font-extrabold text-white transition-colors hover:bg-[#C84D46]"
-            >
-              삭제
-            </button>
-          </div>
-        </div>
-      </Modal>
+      {deleteTargetNoticeId !== null && (
+        <HostConfirmDialog
+          title="공지를 삭제할까요?"
+          description={
+            <>
+              삭제한 공지는 되돌릴 수 없습니다.
+              <br />
+              댓글과 이모지 반응도 함께 사라집니다.
+            </>
+          }
+          icon={<Trash2 size={21} strokeWidth={2.6} />}
+          tone="danger"
+          confirmLabel="삭제"
+          onCancel={() => setDeleteTargetNoticeId(null)}
+          onConfirm={handleDeleteNotice}
+        />
+      )}
     </div>
   );
 }
