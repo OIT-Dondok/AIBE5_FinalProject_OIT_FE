@@ -84,7 +84,7 @@ export default function HostNoticeDetailPage() {
     if (crewId === null || noticeId === null) return;
     deleteHostNotice(crewId, noticeId);
     setIsDeleteModalOpen(false);
-    router.push(`/crews/${crewId}/host-console`);
+    router.push(`/crews/${crewId}/host-console?tab=notices`);
   };
 
   const handleReactionClick = (emoji: string) => {

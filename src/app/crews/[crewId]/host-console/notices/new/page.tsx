@@ -95,7 +95,7 @@ export default function HostNoticeNewPage() {
           </div>
 
           <div className="grid grid-cols-[0.85fr_1.15fr] gap-2">
-            <HostActionButton variant="cancel" onClick={() => router.push(`/crews/${crewId}/host-console`)}>
+            <HostActionButton variant="cancel" onClick={() => router.push(`/crews/${crewId}/host-console?tab=notices`)}>
               취소
             </HostActionButton>
             <HostActionButton
