@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import DOMPurify from "dompurify";
+import { Crown } from "lucide-react";
 
+import { Badge } from "@/components/common/Badge";
 import { Button } from "@/components/common/Button";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
@@ -63,9 +65,13 @@ export default function HostNoticeDetailPage() {
                     방
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs font-extrabold text-text-primary">
-                      방장 <span className="font-medium text-text-secondary">👑</span>
-                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs font-extrabold text-text-primary">방장</p>
+                      <Badge className="shrink-0">
+                        <Crown size={12} className="mr-1" fill="currentColor" />
+                        방장
+                      </Badge>
+                    </div>
                     <p className="mt-0.5 text-xs text-text-secondary">작성 {formatDateTime(notice.created_at)}</p>
                   </div>
                 </div>
