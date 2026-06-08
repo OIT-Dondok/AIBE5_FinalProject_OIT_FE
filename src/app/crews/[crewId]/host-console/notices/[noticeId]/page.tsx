@@ -6,7 +6,6 @@ import DOMPurify from "dompurify";
 import { MoreHorizontal, Pencil, Send, SmilePlus, Trash2 } from "lucide-react";
 
 import { BottomSheet } from "@/components/common/BottomSheet";
-import { Button } from "@/components/common/Button";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
 import { HostBadge } from "@/components/common/HostBadge";
@@ -325,15 +324,30 @@ export default function HostNoticeDetailPage() {
 
         <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} ariaLabel="공지 삭제 확인">
           <div className="px-5 py-5">
-            <h2 className="text-base font-extrabold text-text-primary">공지를 삭제할까요?</h2>
-            <p className="mt-2 text-sm leading-relaxed text-text-secondary">삭제한 공지는 되돌릴 수 없습니다.</p>
-            <div className="mt-5 grid grid-cols-2 gap-2">
-              <Button type="button" variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
+            <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-[#FCEDEC] text-[#DB5C55]">
+              <Trash2 size={21} strokeWidth={2.6} />
+            </div>
+            <h2 className="mt-3 text-center text-base font-extrabold text-text-primary">공지를 삭제할까요?</h2>
+            <p className="mt-2 text-center text-sm font-medium leading-relaxed text-text-secondary">
+              삭제한 공지는 되돌릴 수 없습니다.
+              <br />
+              댓글과 이모지 반응도 함께 사라집니다.
+            </p>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="inline-flex h-12 items-center justify-center rounded-xl border-2 border-[#EDE8DF] bg-card text-sm font-extrabold text-text-primary transition-colors hover:bg-[#EDE8DF]"
+              >
                 취소
-              </Button>
-              <Button type="button" variant="primary-green" onClick={handleDeleteNotice}>
-                삭제하기
-              </Button>
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteNotice}
+                className="inline-flex h-12 items-center justify-center rounded-xl bg-[#DB5C55] text-sm font-extrabold text-white transition-colors hover:bg-[#C84D46]"
+              >
+                삭제
+              </button>
             </div>
           </div>
         </Modal>
