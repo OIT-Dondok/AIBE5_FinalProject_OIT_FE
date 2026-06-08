@@ -26,19 +26,21 @@ const itemClassNames: Record<HostMoreMenuItemTone, string> = {
 
 export function HostMoreMenu({ isOpen, onToggle, items, alignClassName = "right-0 top-10" }: HostMoreMenuProps) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const onToggleRef = useRef(onToggle);
+  onToggleRef.current = onToggle;
 
   useEffect(() => {
     if (!isOpen) return;
 
     const handleOutsideClick = (event: MouseEvent) => {
       if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
-        onToggle();
+        onToggleRef.current();
       }
     };
 
     document.addEventListener("mousedown", handleOutsideClick);
     return () => document.removeEventListener("mousedown", handleOutsideClick);
-  }, [isOpen, onToggle]);
+  }, [isOpen]);
 
   return (
     <div ref={rootRef} className="relative shrink-0">
