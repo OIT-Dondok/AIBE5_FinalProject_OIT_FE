@@ -80,8 +80,8 @@ export default function HostNoticeDetailPage() {
     notice ? { ...notice.reactions } : {},
   );
   const [selectedReactions, setSelectedReactions] = useState<Set<string>>(() => new Set());
-  const deleteToastTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
-  const deleteNavTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  const deleteToastTimerRef = useRef<number | null>(null);
+  const deleteNavTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     return () => {
