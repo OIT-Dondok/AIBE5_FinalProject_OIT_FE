@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { FeedCalendar } from '@/components/domain/feed/FeedCalendar';
 import { FeedCrewFilter } from '@/components/domain/feed/FeedCrewFilter';
 import { FeedItem } from '@/components/domain/feed/FeedItem';
+import { FeedSkeletonList } from '@/components/domain/feed/FeedItemSkeleton';
 import { FeedPeriodCard } from '@/components/domain/feed/FeedPeriodCard';
 import { MOCK_FEED_ITEMS, MOCK_FEED_PERIOD, MOCK_MY_CREWS } from '@/mocks/data/feed';
 import type { FeedPeriod } from '@/mocks/data/feed';
@@ -15,6 +16,8 @@ export default function FeedPage() {
   const [selectedCrewId, setSelectedCrewId] = useState<number | null>(null);
   const [period, setPeriod] = useState<FeedPeriod>(MOCK_FEED_PERIOD);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  // TODO: API 연동 시 피드 fetch 로딩 상태로 교체 (true면 스켈레톤 노출)
+  const isLoading = false;
 
   const filteredItems = MOCK_FEED_ITEMS.filter((item) => {
     if (selectedCrewId !== null && item.crew_id !== selectedCrewId) return false;
@@ -56,7 +59,9 @@ export default function FeedPage() {
           )}
 
           {/* 피드 목록 */}
-          {filteredItems.length === 0 ? (
+          {isLoading ? (
+            <FeedSkeletonList count={3} />
+          ) : filteredItems.length === 0 ? (
             <EmptyState
               icon="📭"
               title="이 기간에 인증 내역이 없어요"
