@@ -112,7 +112,7 @@ export default function HostNoticeDetailPage() {
               <button
                 type="button"
                 aria-label="이모지 추가"
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-text-secondary/15 bg-white text-text-secondary"
+                className="flex h-8 w-9 items-center justify-center rounded-full border border-text-secondary/15 bg-white text-text-secondary"
               >
                 <SmilePlus size={16} strokeWidth={2.2} />
               </button>
