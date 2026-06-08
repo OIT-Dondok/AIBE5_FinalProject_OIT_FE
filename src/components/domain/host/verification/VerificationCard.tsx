@@ -366,14 +366,14 @@ export function VerificationCard({
               <button
                 type="button"
                 onClick={() => setConfirmDecision(null)}
-                className="inline-flex h-12 items-center justify-center rounded-xl border-2 border-[#EDE8DF] bg-card text-sm font-extrabold text-text-primary transition-colors hover:bg-[#EDE8DF]"
+                className="inline-flex h-[52px] min-h-[52px] items-center justify-center rounded-xl border-2 border-[#EDE8DF] bg-card text-base font-extrabold text-text-primary transition-colors hover:bg-[#EDE8DF]"
               >
                 취소
               </button>
               <button
                 type="button"
                 onClick={handleConfirmModeration}
-                className={`inline-flex h-12 items-center justify-center rounded-xl text-sm font-extrabold text-white transition-colors ${
+                className={`inline-flex h-[52px] min-h-[52px] items-center justify-center rounded-xl text-base font-extrabold text-white transition-colors ${
                   confirmDecision === "approved"
                     ? "bg-primary-green hover:bg-[#3F7A55]"
                     : confirmDecision === "rejected"

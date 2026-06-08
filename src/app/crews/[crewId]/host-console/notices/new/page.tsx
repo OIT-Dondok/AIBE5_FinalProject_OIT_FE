@@ -98,7 +98,7 @@ export default function HostNoticeNewPage() {
             <Button
               type="button"
               variant="outline"
-              className="h-[52px] min-h-[52px]"
+              className="!h-[52px] !min-h-[52px] !rounded-xl !text-base !font-extrabold"
               onClick={() => router.push(`/crews/${crewId}/host-console`)}
             >
               취소
@@ -106,7 +106,7 @@ export default function HostNoticeNewPage() {
             <button
               type="button"
               onClick={handleSubmit}
-              className={`inline-flex h-[52px] min-h-[52px] items-center justify-center rounded-button text-sm font-extrabold text-white shadow-sm transition-colors active:scale-[0.98] ${
+              className={`inline-flex h-[52px] min-h-[52px] items-center justify-center rounded-xl text-base font-extrabold text-white shadow-sm transition-colors active:scale-[0.98] ${
                 isTitleReady ? "bg-[#4C73D9] hover:bg-[#3358BD]" : "bg-[#A0B1DF]"
               }`}
             >

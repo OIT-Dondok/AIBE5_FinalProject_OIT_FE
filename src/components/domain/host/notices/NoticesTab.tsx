@@ -46,7 +46,7 @@ export function NoticesTab() {
           <button
             type="button"
             onClick={() => router.push(`/crews/${crewId}/host-console/notices/new`)}
-            className="inline-flex h-12 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#4C73D9] px-4 text-sm font-extrabold text-white shadow-sm transition-colors hover:bg-[#3F63C3]"
+            className="inline-flex h-[52px] min-h-[52px] shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#4C73D9] px-4 text-base font-extrabold text-white shadow-sm transition-colors hover:bg-[#3F63C3]"
           >
             <Plus size={16} strokeWidth={2.8} />
             글쓰기
@@ -152,14 +152,14 @@ export function NoticesTab() {
             <button
               type="button"
               onClick={() => setDeleteTargetNoticeId(null)}
-              className="inline-flex h-12 items-center justify-center rounded-xl border-2 border-[#EDE8DF] bg-card text-sm font-extrabold text-text-primary transition-colors hover:bg-[#EDE8DF]"
+              className="inline-flex h-[52px] min-h-[52px] items-center justify-center rounded-xl border-2 border-[#EDE8DF] bg-card text-base font-extrabold text-text-primary transition-colors hover:bg-[#EDE8DF]"
             >
               취소
             </button>
             <button
               type="button"
               onClick={handleDeleteNotice}
-              className="inline-flex h-12 items-center justify-center rounded-xl bg-[#DB5C55] text-sm font-extrabold text-white transition-colors hover:bg-[#C84D46]"
+              className="inline-flex h-[52px] min-h-[52px] items-center justify-center rounded-xl bg-[#DB5C55] text-base font-extrabold text-white transition-colors hover:bg-[#C84D46]"
             >
               삭제
             </button>

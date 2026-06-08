@@ -97,11 +97,11 @@ export default function HostNoticeEditPage() {
             />
           </div>
 
-          <div className="grid grid-cols-[0.85fr_1.15fr] gap-2">
+          <div className="mt-1 grid grid-cols-[0.85fr_1.15fr] gap-2">
             <Button
               type="button"
               variant="outline"
-              className="h-[52px] min-h-[52px]"
+              className="!h-[52px] !min-h-[52px] !rounded-xl !text-base !font-extrabold"
               onClick={() => router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}`)}
             >
               취소
@@ -109,11 +109,11 @@ export default function HostNoticeEditPage() {
             <button
               type="button"
               onClick={handleSubmit}
-              className={`inline-flex h-[52px] min-h-[52px] items-center justify-center rounded-button text-sm font-extrabold text-white shadow-sm transition-colors active:scale-[0.98] ${
+              className={`inline-flex h-[52px] min-h-[52px] items-center justify-center rounded-xl text-base font-extrabold text-white shadow-sm transition-colors active:scale-[0.98] ${
                 isTitleReady ? "bg-[#4C73D9] hover:bg-[#3358BD]" : "bg-[#A0B1DF]"
               }`}
             >
-              공지 등록
+              수정 완료
             </button>
           </div>
         </form>

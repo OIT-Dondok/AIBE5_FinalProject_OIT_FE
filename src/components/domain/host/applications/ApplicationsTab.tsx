@@ -306,14 +306,14 @@ export function ApplicationsTab({
               <button
                 type="button"
                 onClick={() => setConfirmTarget(null)}
-                className="inline-flex h-12 items-center justify-center rounded-xl border-2 border-[#EDE8DF] bg-card text-sm font-extrabold text-text-primary transition-colors hover:bg-[#EDE8DF]"
+                  className="inline-flex h-[52px] min-h-[52px] items-center justify-center rounded-xl border-2 border-[#EDE8DF] bg-card text-base font-extrabold text-text-primary transition-colors hover:bg-[#EDE8DF]"
               >
                 취소
               </button>
               <button
                 type="button"
                 onClick={handleConfirmDecision}
-                className={`inline-flex h-12 items-center justify-center rounded-xl text-sm font-extrabold text-white transition-colors ${
+                  className={`inline-flex h-[52px] min-h-[52px] items-center justify-center rounded-xl text-base font-extrabold text-white transition-colors ${
                   confirmTarget.decision === "approved" ? "bg-primary-green hover:bg-[#3F7A55]" : "bg-[#DB5C55] hover:bg-[#C84D46]"
                 }`}
               >

@@ -343,14 +343,14 @@ export default function HostNoticeDetailPage() {
               <button
                 type="button"
                 onClick={() => setIsDeleteModalOpen(false)}
-                className="inline-flex h-12 items-center justify-center rounded-xl border-2 border-[#EDE8DF] bg-card text-sm font-extrabold text-text-primary transition-colors hover:bg-[#EDE8DF]"
+                className="inline-flex h-[52px] min-h-[52px] items-center justify-center rounded-xl border-2 border-[#EDE8DF] bg-card text-base font-extrabold text-text-primary transition-colors hover:bg-[#EDE8DF]"
               >
                 취소
               </button>
               <button
                 type="button"
                 onClick={handleDeleteNotice}
-                className="inline-flex h-12 items-center justify-center rounded-xl bg-[#DB5C55] text-sm font-extrabold text-white transition-colors hover:bg-[#C84D46]"
+                className="inline-flex h-[52px] min-h-[52px] items-center justify-center rounded-xl bg-[#DB5C55] text-base font-extrabold text-white transition-colors hover:bg-[#C84D46]"
               >
                 삭제
               </button>
