@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import DOMPurify from "dompurify";
-import { MoreHorizontal, Pencil, SmilePlus, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Send, SmilePlus, Trash2 } from "lucide-react";
 
 import { BottomSheet } from "@/components/common/BottomSheet";
 import { Button } from "@/components/common/Button";
@@ -272,7 +272,7 @@ export default function HostNoticeDetailPage() {
               ))}
             </div>
 
-            <div className="mt-4 flex gap-2">
+            <div className="mt-4 flex items-center gap-2">
               <input
                 type="text"
                 value={commentInput}
@@ -283,11 +283,16 @@ export default function HostNoticeDetailPage() {
                   }
                 }}
                 placeholder="댓글을 입력해주세요"
-                className="min-w-0 flex-1 rounded-xl border border-text-secondary/20 bg-background px-3 py-2.5 text-xs text-text-primary outline-none focus:border-primary-green"
+                className="min-w-0 flex-1 rounded-full border border-text-secondary/10 bg-white px-4 py-2.5 text-sm text-text-primary outline-none transition placeholder:text-text-secondary/70 focus:border-[#4C73D9]"
               />
-              <Button type="button" variant="primary-green" size="sm" onClick={handleCommentSubmit}>
-                등록
-              </Button>
+              <button
+                type="button"
+                aria-label="댓글 등록"
+                onClick={handleCommentSubmit}
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#4C73D9] text-white shadow-sm transition hover:bg-[#3358BD] active:scale-95"
+              >
+                <Send size={17} strokeWidth={1.8} fill="none" />
+              </button>
             </div>
           </section>
         </div>
