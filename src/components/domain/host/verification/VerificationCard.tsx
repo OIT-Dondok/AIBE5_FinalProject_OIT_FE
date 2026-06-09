@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { Check, ChevronDown, ChevronRight, Maximize2, RotateCcw, X } from "lucide-react";
 
 import { BottomSheet } from "@/components/common/BottomSheet";
+import { HostActionButton } from "@/components/domain/host/common/HostActionButton";
+import { HostConfirmDialog } from "@/components/domain/host/common/HostConfirmDialog";
 import { formatDate, formatDateMinute, formatTime } from "@/components/domain/host/hostFormatters";
 import {
   exifBadgeStyle,
@@ -220,22 +222,20 @@ export function VerificationCard({
               </div>
             ) : (
               <div className="mt-3 grid grid-cols-2 gap-3">
-                <button
-                  type="button"
+                <HostActionButton
+                  variant="reject"
+                  icon={<X size={16} strokeWidth={2.8} />}
                   onClick={() => setIsRejectSheetOpen(true)}
-                  className="inline-flex h-[52px] min-h-[52px] items-center justify-center gap-1.5 rounded-xl bg-[#FCEDEC] text-base font-extrabold leading-none text-[#DB5C55] transition-colors hover:bg-[#F8DEDC]"
                 >
-                  <X size={16} strokeWidth={2.8} />
                   거절
-                </button>
-                <button
-                  type="button"
+                </HostActionButton>
+                <HostActionButton
+                  variant="approve"
+                  icon={<Check size={16} strokeWidth={2.8} />}
                   onClick={() => setConfirmDecision("approved")}
-                  className="inline-flex h-[52px] min-h-[52px] items-center justify-center gap-1.5 rounded-xl bg-primary-green text-base font-extrabold leading-none text-white shadow-sm shadow-primary-green/20 transition-colors hover:bg-[#3F7A55]"
                 >
-                  <Check size={16} strokeWidth={2.8} />
                   승인
-                </button>
+                </HostActionButton>
               </div>
             )}
           </div>
@@ -294,65 +294,33 @@ export function VerificationCard({
           )}
 
           <div className="mt-4 grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => setIsRejectSheetOpen(false)}
-              className="inline-flex h-14 items-center justify-center rounded-xl border-2 border-[#EDE8DF] bg-[#F5F0E6] text-base font-extrabold text-text-primary transition-colors hover:bg-[#EDE8DF] active:bg-[#EDE8DF]"
-            >
+            <HostActionButton variant="cancel" className="bg-[#F5F0E6]" onClick={() => setIsRejectSheetOpen(false)}>
               취소
-            </button>
-            <button
-              type="button"
+            </HostActionButton>
+            <HostActionButton
+              variant="danger"
               disabled={isRejectConfirmDisabled}
               onClick={handleRejectConfirm}
-              className="inline-flex h-14 items-center justify-center rounded-xl bg-[#DB5C55] text-base font-extrabold text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+              className="disabled:cursor-not-allowed disabled:opacity-40"
             >
               거절 확인
-            </button>
+            </HostActionButton>
           </div>
         </div>
       </BottomSheet>
 
       {confirmDecision && (
-        <div
-          className="fixed inset-0 z-[85] flex items-center justify-center bg-black/40 px-5"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={`verification-${confirmDecision}-title-${item.mission_log_id}`}
-          onClick={() => setConfirmDecision(null)}
-        >
-          <div
-            className="w-full max-w-[340px] rounded-2xl bg-card px-5 py-5 shadow-lg"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div
-              className={`mx-auto flex h-11 w-11 items-center justify-center rounded-full ${
-                confirmDecision === "approved"
-                  ? "bg-[#E8F2EB] text-primary-green"
-                  : confirmDecision === "rejected"
-                    ? "bg-[#FCEDEC] text-[#DB5C55]"
-                    : "bg-[#EFEDE8] text-text-secondary"
-              }`}
-            >
-              {confirmDecision === "approved" ? (
-                <Check size={22} strokeWidth={2.8} />
-              ) : confirmDecision === "rejected" ? (
-                <X size={22} strokeWidth={2.8} />
-              ) : (
-                <RotateCcw size={22} strokeWidth={2.6} />
-              )}
-            </div>
-            <h2
-              id={`verification-${confirmDecision}-title-${item.mission_log_id}`}
-              className="mt-3 text-center text-base font-extrabold text-text-primary"
-            >
-              {confirmDecision === "approved"
-                ? "승인하시겠습니까?"
-                : confirmDecision === "rejected"
-                  ? "거절하시겠습니까?"
-                  : "되돌리시겠습니까?"}
-            </h2>
-            <p className="mt-2 text-center text-sm font-medium leading-relaxed text-text-secondary">
+        <HostConfirmDialog
+          labelledById={`verification-${confirmDecision}-title-${item.mission_log_id}`}
+          title={
+            confirmDecision === "approved"
+              ? "승인하시겠습니까?"
+              : confirmDecision === "rejected"
+                ? "거절하시겠습니까?"
+                : "되돌리시겠습니까?"
+          }
+          description={
+            <>
               {item.nickname}님의 인증을{" "}
               {confirmDecision === "approved" ? "승인합니다." : confirmDecision === "rejected" ? "거절합니다." : "검토 대기로 되돌립니다."}
               <br />
@@ -361,31 +329,22 @@ export function VerificationCard({
                 : confirmDecision === "rejected"
                   ? "크루원에게 사유가 표시됩니다."
                   : "되돌린 뒤 다시 승인하거나 거절할 수 있습니다."}
-            </p>
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setConfirmDecision(null)}
-                className="inline-flex h-12 items-center justify-center rounded-xl border-2 border-[#EDE8DF] bg-card text-sm font-extrabold text-text-primary transition-colors hover:bg-[#EDE8DF]"
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmModeration}
-                className={`inline-flex h-12 items-center justify-center rounded-xl text-sm font-extrabold text-white transition-colors ${
-                  confirmDecision === "approved"
-                    ? "bg-primary-green hover:bg-[#3F7A55]"
-                    : confirmDecision === "rejected"
-                      ? "bg-[#DB5C55] hover:bg-[#C84D46]"
-                      : "bg-text-primary hover:bg-[#3A362E]"
-                }`}
-              >
-                {confirmDecision === "approved" ? "승인" : confirmDecision === "rejected" ? "거절" : "되돌리기"}
-              </button>
-            </div>
-          </div>
-        </div>
+            </>
+          }
+          icon={
+            confirmDecision === "approved" ? (
+              <Check size={22} strokeWidth={2.8} />
+            ) : confirmDecision === "rejected" ? (
+              <X size={22} strokeWidth={2.8} />
+            ) : (
+              <RotateCcw size={22} strokeWidth={2.6} />
+            )
+          }
+          tone={confirmDecision === "approved" ? "approve" : confirmDecision === "rejected" ? "danger" : "neutral"}
+          confirmLabel={confirmDecision === "approved" ? "승인" : confirmDecision === "rejected" ? "거절" : "되돌리기"}
+          onCancel={() => setConfirmDecision(null)}
+          onConfirm={handleConfirmModeration}
+        />
       )}
 
       {toastDecision && (

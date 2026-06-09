@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import HostConsoleClient from "./HostConsoleClient";
 import { MOCK_CREWS } from "@/mocks/data/crews";
 
@@ -8,5 +9,9 @@ export function generateStaticParams() {
 }
 
 export default function HostConsolePage() {
-  return <HostConsoleClient />;
+  return (
+    <Suspense>
+      <HostConsoleClient />
+    </Suspense>
+  );
 }

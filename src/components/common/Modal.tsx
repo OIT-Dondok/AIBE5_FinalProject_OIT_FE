@@ -7,6 +7,7 @@ interface ModalProps {
     onClose: () => void;
     children: ReactNode; // 모달 내부에 들어갈 모든 UI (뼈대 속 내용물)
     className?: string;  // 모달 창의 너비나 패딩을 조정하기 위한 탈출구
+    backdropClassName?: string; // 배경 딤 스타일 조정
     ariaLabel?: string;  // 📌 스크린 리더용 모달 이름 (웹 접근성 강화)
 }
 
@@ -15,6 +16,7 @@ export const Modal = ({
                           onClose,
                           children,
                           className = "",
+                          backdropClassName = "bg-black/40 backdrop-blur-sm",
                           ariaLabel = "Modal Dialog", // 📌 기본 접근성 네임 제공
                       }: ModalProps) => {
     // 모달이 열리기 전, 기존 body의 overflow 스타일 상태를 기억할 저장소
@@ -42,7 +44,7 @@ export const Modal = ({
 
             {/* 1. 배경 암전 (Dim Layer): 배경 클릭 시 닫기 기능 포함 */}
             <div
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
+                className={`absolute inset-0 animate-in fade-in duration-200 ${backdropClassName}`}
                 onClick={onClose}
             />
 

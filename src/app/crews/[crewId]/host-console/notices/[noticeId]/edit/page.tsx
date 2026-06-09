@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { Megaphone } from "lucide-react";
 
-import { Button } from "@/components/common/Button";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
+import { HostActionButton } from "@/components/domain/host/common/HostActionButton";
+import { HostToast } from "@/components/domain/host/common/HostToast";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
-import { getHostNotice, updateHostNotice } from "@/mocks/data/host";
+import { getHostCrewDetail, getHostNotice, updateHostNotice } from "@/mocks/data/host";
 
 export default function HostNoticeEditPage() {
   const router = useRouter();
@@ -15,14 +17,32 @@ export default function HostNoticeEditPage() {
   const crewId = parseRouteNumber(params.crewId);
   const noticeId = parseRouteNumber(params.noticeId);
   const notice = crewId !== null && noticeId !== null ? getHostNotice(crewId, noticeId) : null;
+  const crewDetail = crewId !== null ? getHostCrewDetail(crewId) : null;
   const [title, setTitle] = useState(notice?.title ?? "");
-  const [contentHtml, setContentHtml] = useState(notice?.content_html ?? "");
+  const [contentHtml, setContentHtml] = useState((notice?.content_html ?? "").replace(/<br\s*\/?>/gi, "\n"));
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const isTitleReady = title.trim().length > 0;
+
+  useEffect(() => {
+    if (!toastMessage) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setToastMessage(null);
+    }, 2200);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [toastMessage]);
 
   const handleSubmit = () => {
     if (crewId === null || !notice) return;
+    if (!isTitleReady) {
+      setToastMessage("제목을 작성해주세요");
+      return;
+    }
+
     updateHostNotice(crewId, notice.notice_id, {
       title,
-      content_html: contentHtml,
+      content_html: contentHtml.replace(/\n/g, "<br>"),
     });
     router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}`);
   };
@@ -48,8 +68,12 @@ export default function HostNoticeEditPage() {
         <Header showBackButton title="공지 수정" />
 
         <form className="px-5 pt-5 flex flex-col gap-4">
-          <section className="rounded-card bg-card border border-text-secondary/10 shadow-card px-4 py-4">
-            <label className="block text-[12px] font-bold text-text-secondary" htmlFor="notice-title">
+          <div className="px-1">
+            <p className="mb-3 flex items-center gap-1.5 text-xs font-medium text-text-secondary">
+              <Megaphone size={14} strokeWidth={2.3} className="text-[#4C73D9]" />
+              <span className="font-extrabold text-text-primary">{crewDetail?.title}</span> 크루에 공지를 올립니다
+            </p>
+            <label className="block text-[12px] font-bold text-text-primary" htmlFor="notice-title">
               제목
             </label>
             <input
@@ -57,34 +81,40 @@ export default function HostNoticeEditPage() {
               type="text"
               value={title}
               onChange={(event) => setTitle(event.target.value)}
-              className="mt-2 w-full rounded-xl border border-text-secondary/20 bg-background px-3.5 py-3 text-sm font-semibold text-text-primary outline-none focus:border-primary-green"
+              placeholder="공지 제목을 입력해주세요"
+              className="mt-2 w-full rounded-xl border border-text-secondary/20 bg-white px-3.5 py-3 text-sm font-medium text-text-primary outline-none placeholder:text-text-secondary/70 focus:border-[#4C73D9]"
             />
 
-            <label className="mt-4 block text-[12px] font-bold text-text-secondary" htmlFor="notice-content">
-              본문
+            <label className="mt-4 block text-[12px] font-bold text-text-primary" htmlFor="notice-content">
+              내용
             </label>
             <textarea
               id="notice-content"
               value={contentHtml}
               onChange={(event) => setContentHtml(event.target.value)}
+              placeholder="크루원에게 전할 내용을 작성하세요"
               rows={10}
-              className="mt-2 w-full resize-none rounded-xl border border-text-secondary/20 bg-background px-3.5 py-3 text-sm leading-relaxed text-text-primary outline-none focus:border-primary-green"
+              maxLength={65000}
+              className="mt-2 w-full resize-none rounded-xl border border-text-secondary/20 bg-white px-3.5 py-3 text-sm font-medium leading-relaxed text-text-primary outline-none placeholder:text-text-secondary/70 focus:border-[#4C73D9]"
             />
-          </section>
+          </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              type="button"
-              variant="outline"
+          <div className="mt-1 grid grid-cols-[0.85fr_1.15fr] gap-2">
+            <HostActionButton
+              variant="cancel"
               onClick={() => router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}`)}
             >
               취소
-            </Button>
-            <Button type="button" variant="primary-green" onClick={handleSubmit}>
+            </HostActionButton>
+            <HostActionButton
+              variant={isTitleReady ? "primary" : "primaryDisabled"}
+              onClick={handleSubmit}
+            >
               수정 완료
-            </Button>
+            </HostActionButton>
           </div>
         </form>
+        {toastMessage && <HostToast message={toastMessage} />}
       </div>
     </main>
   );

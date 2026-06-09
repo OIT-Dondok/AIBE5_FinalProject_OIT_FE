@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { Bell, ShieldCheck } from "lucide-react";
 
 import { EmptyState } from "@/components/common/EmptyState";
@@ -28,7 +28,13 @@ import {
 export default function HostConsoleClient() {
   const params = useParams<{ crewId: string }>();
   const crewId = parseRouteNumber(params.crewId);
-  const [activeTab, setActiveTab] = useState<HostTab>("verification");
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState<HostTab>(
+    tabParam === "verification" || tabParam === "applications" || tabParam === "notices"
+      ? tabParam
+      : "verification"
+  );
   const [verificationModerationResults, setVerificationModerationResults] = useState<
     Record<number, VerificationModerationResult>
   >({});

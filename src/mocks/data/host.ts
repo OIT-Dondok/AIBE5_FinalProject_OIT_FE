@@ -204,12 +204,13 @@ const INITIAL_HOST_NOTICES: HostNoticeMock[] = [
       "<p><strong>사진에는 오늘 읽은 페이지와 날짜</strong>가 함께 보이도록 올려주세요.</p><ul><li>페이지 번호가 보이면 좋아요.</li><li>촬영 시각과 Exif가 크게 다르면 거절될 수 있어요.</li></ul>",
     created_at: "2026-06-01T09:00:00+09:00",
     updated_at: null,
-    reaction_count: 6,
+    reaction_count: 8,
     comment_count: 3,
     reactions: {
       "👍": 3,
       "확인": 2,
       "💚": 1,
+      "🎉": 2,
     },
   },
   {
@@ -232,7 +233,7 @@ const INITIAL_HOST_NOTICES: HostNoticeMock[] = [
 
 let mockHostNotices: HostNoticeMock[] = INITIAL_HOST_NOTICES;
 
-export const MOCK_HOST_NOTICE_COMMENTS: HostNoticeCommentMock[] = [
+let mockHostNoticeComments: HostNoticeCommentMock[] = [
   {
     crew_id: 2,
     comment_id: 7001,
@@ -326,7 +327,7 @@ export function getHostNotice(crewId: number, noticeId: number) {
 }
 
 export function getHostNoticeComments(crewId: number, noticeId: number) {
-  return MOCK_HOST_NOTICE_COMMENTS.filter(
+  return mockHostNoticeComments.filter(
     (comment) => comment.crew_id === crewId && comment.notice_id === noticeId,
   ).map((comment) => ({
     ...comment,
@@ -337,6 +338,22 @@ export function deleteHostNotice(crewId: number, noticeId: number) {
   mockHostNotices = mockHostNotices.filter(
     (notice) => notice.crew_id !== crewId || notice.notice_id !== noticeId,
   );
+}
+
+export function updateHostNoticeReactions(crewId: number, noticeId: number, reactions: Record<string, number>) {
+  mockHostNotices = mockHostNotices.map((notice) => {
+    if (notice.crew_id !== crewId || notice.notice_id !== noticeId) return notice;
+    const reactionCount = Object.values(reactions).reduce((sum, c) => sum + c, 0);
+    return { ...notice, reactions: { ...reactions }, reaction_count: reactionCount };
+  });
+}
+
+export function addHostNoticeComment(comment: HostNoticeCommentMock) {
+  mockHostNoticeComments = [...mockHostNoticeComments, comment];
+  mockHostNotices = mockHostNotices.map((notice) => {
+    if (notice.crew_id !== comment.crew_id || notice.notice_id !== comment.notice_id) return notice;
+    return { ...notice, comment_count: notice.comment_count + 1 };
+  });
 }
 
 export function createHostNotice(crewId: number, payload: { title: string; content_html: string }) {
