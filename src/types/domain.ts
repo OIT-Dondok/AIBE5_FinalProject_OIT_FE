@@ -592,6 +592,7 @@ export interface FeedItem {
   crew_participant_id: number;
   member_uuid: string;
   nickname: string;
+  profile_image_url: string | null;
   image_url: string | null;
   caption: string | null;
   server_time: string;
