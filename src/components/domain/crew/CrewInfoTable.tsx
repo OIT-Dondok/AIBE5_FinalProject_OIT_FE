@@ -25,13 +25,10 @@ export default function CrewInfoTable({ crew }: CrewInfoTableProps) {
 
   return (
     <div className="bg-card rounded-card overflow-hidden border border-text-secondary/10">
-      {rows.map((row, i) => (
-        <div
-          key={row.label}
-          className={`flex items-center px-4 py-3 ${i < rows.length - 1 ? 'border-b border-text-secondary/8' : ''}`}
-        >
-          <span className="w-24 text-xs text-text-secondary flex-shrink-0">{row.label}</span>
-          <span className="text-sm font-medium text-text-primary">{row.value}</span>
+      {rows.map((row) => (
+        <div key={row.label} className="flex items-center justify-between px-4 py-4">
+          <span className="text-sm text-text-secondary font-medium">{row.label}</span>
+          <span className="text-sm font-semibold text-text-primary text-right">{row.value}</span>
         </div>
       ))}
     </div>

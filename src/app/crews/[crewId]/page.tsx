@@ -13,7 +13,7 @@ import type { ErrorResponse } from '@/types/common';
 import {
   CATEGORY_EMOJI,
   CATEGORY_LABEL,
-  CATEGORY_BG,
+  CATEGORY_GRADIENT,
   SETTLEMENT_TYPE_LABEL,
 } from '@/constants/crew';
 
@@ -73,7 +73,7 @@ export default function CrewDetailPage() {
       <>
         <Header showBackButton />
         <div className="w-full max-w-[430px] mx-auto">
-          <div className="w-full h-52 bg-text-secondary/10 animate-pulse" />
+          <div className="w-full h-72 bg-text-secondary/10 animate-pulse" />
           <div className="px-5 py-4 flex flex-col gap-3">
             <div className="h-5 w-2/3 bg-text-secondary/10 rounded-full animate-pulse" />
             <div className="h-4 w-1/3 bg-text-secondary/10 rounded-full animate-pulse" />
@@ -89,7 +89,7 @@ export default function CrewDetailPage() {
 
   const emoji = CATEGORY_EMOJI[crew.category] ?? '📌';
   const categoryDisplay = CATEGORY_LABEL[crew.category] ?? crew.category;
-  const categoryBg = CATEGORY_BG[crew.category] ?? 'bg-gray-100';
+  const categoryGradient = CATEGORY_GRADIENT[crew.category] ?? 'from-gray-300 to-gray-200';
 
   return (
     <>
@@ -108,23 +108,38 @@ export default function CrewDetailPage() {
       />
 
       <div className="w-full max-w-[430px] mx-auto pb-32">
-        <div className="w-full h-52 overflow-hidden">
+        {/* Hero image / category gradient */}
+        <div className="relative w-full h-72 overflow-hidden">
           {crew.image_url ? (
             <img src={crew.image_url} alt={crew.title} className="w-full h-full object-cover" />
           ) : (
-            <div className={`w-full h-full flex items-center justify-center ${categoryBg}`}>
-              <span className="text-8xl">{emoji}</span>
-            </div>
+            <>
+              <div className={`w-full h-full bg-gradient-to-br ${categoryGradient}`} />
+              <span className="absolute inset-0 flex items-center justify-center text-[160px] opacity-[0.15] select-none leading-none pointer-events-none">
+                {emoji}
+              </span>
+            </>
           )}
-        </div>
 
-        <div className="flex items-center gap-2 px-5 pt-4 pb-2 flex-wrap">
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary-green/10 text-primary-green text-xs font-semibold">
-            {categoryDisplay}
-          </span>
-          <span className="inline-flex items-center px-3 py-1 rounded-full bg-text-secondary/10 text-text-secondary text-xs font-semibold">
-            {crew.daily_settlement_type} · {SETTLEMENT_TYPE_LABEL[crew.daily_settlement_type]}
-          </span>
+          {/* Bottom gradient overlay for text readability */}
+          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+
+          {/* Category badge + title overlay */}
+          <div className="absolute bottom-0 left-0 px-5 pb-5 flex flex-col gap-2">
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white text-xs font-semibold w-fit">
+              {categoryDisplay}
+            </span>
+            <h1 className="text-xl font-bold text-white leading-tight drop-shadow-sm">
+              {crew.title}
+            </h1>
+          </div>
+
+          {/* Settlement type badge — top right */}
+          <div className="absolute top-4 right-4">
+            <span className="inline-flex items-center px-3 py-1 rounded-full bg-black/30 backdrop-blur-sm text-white text-xs font-semibold">
+              {crew.daily_settlement_type} · {SETTLEMENT_TYPE_LABEL[crew.daily_settlement_type]}
+            </span>
+          </div>
         </div>
 
         <CrewDetailTabs crew={crew} />

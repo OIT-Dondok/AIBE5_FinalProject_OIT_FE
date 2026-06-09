@@ -30,6 +30,16 @@ export const CATEGORY_BG: Record<string, string> = {
   HEALTH: 'bg-rose-100',
 } as const;
 
+export const CATEGORY_GRADIENT: Record<string, string> = {
+  MORNING: 'from-orange-400 to-amber-300',
+  READING: 'from-amber-500 to-yellow-400',
+  EXERCISE: 'from-blue-500 to-sky-400',
+  STUDY: 'from-violet-500 to-purple-400',
+  DIET: 'from-green-500 to-emerald-400',
+  MIND: 'from-teal-500 to-cyan-400',
+  HEALTH: 'from-rose-500 to-pink-400',
+} as const;
+
 export const SETTLEMENT_TYPE_LABEL: Record<DailySettlementType, string> = {
   A: '아침형',
   B: '표준형',
