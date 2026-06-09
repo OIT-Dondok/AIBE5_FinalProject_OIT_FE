@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Plus, Search } from 'lucide-react';
 import { Header } from '@/components/common/Header';
 import { Chip } from '@/components/common/Chip';
@@ -164,7 +165,9 @@ export default function CrewsPage() {
                 />
             ) : (
                 crews.map((crew) => (
-                    <CrewCard key={crew.crew_id} crew={crew} />
+                    <Link key={crew.crew_id} href={`/crews/${crew.crew_id}`}>
+                        <CrewCard crew={crew} />
+                    </Link>
                 ))
             )}
 

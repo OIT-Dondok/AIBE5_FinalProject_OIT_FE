@@ -1,5 +1,5 @@
 import { api } from '@/lib/axios';
-import type { CrewListResponse, CreateCrewRequest } from '@/types/domain';
+import type { CrewListResponse, CrewDetail, CreateCrewRequest } from '@/types/domain';
 
 export const getCrews = (params?: {
   status?: string;
@@ -9,6 +9,10 @@ export const getCrews = (params?: {
   limit?: number;
 }) => {
   return api.get<CrewListResponse>('/crews', { params });
+};
+
+export const getCrew = (crewId: number) => {
+  return api.get<CrewDetail>(`/crews/${crewId}`);
 };
 
 export const createCrew = (crewData: CreateCrewRequest) => {
