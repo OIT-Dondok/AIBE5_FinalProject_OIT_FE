@@ -1,15 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Search } from 'lucide-react';
 import { Header } from '@/components/common/Header';
 import { Chip } from '@/components/common/Chip';
 import { EmptyState } from '@/components/common/EmptyState';
 import CrewCard from '@/components/domain/crew/CrewCard';
-import { MOCK_CREWS } from '@/mocks/data/crews';
-import type { CrewStatus, CrewCategory } from '@/mocks/data/crews';
+import { getCrews } from '@/services/crew';
+import type { CrewListItem, CrewStatus } from '@/types/domain';
 
+type CrewCategory = 'MORNING' | 'READING' | 'EXERCISE' | 'STUDY' | 'DIET' | 'MIND' | 'HEALTH';
 type StatusFilter = CrewStatus | 'ALL';
 type CategoryFilter = CrewCategory | 'ALL';
 
@@ -34,13 +35,52 @@ export default function CrewsPage() {
   const [activeStatus, setActiveStatus] = useState<StatusFilter>('ALL');
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  const [crews, setCrews] = useState<CrewListItem[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const filteredCrews = MOCK_CREWS.filter((crew) => {
-    if (activeStatus !== 'ALL' && crew.status !== activeStatus) return false;
-    if (activeCategory !== 'ALL' && crew.category !== activeCategory) return false;
-    if (searchQuery.trim() && !crew.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    return true;
-  });
+  useEffect(() => {
+    setCrews([]);
+    setNextCursor(null);
+
+    const fetchCrews = async () => {
+      setIsLoading(true);
+      try {
+        const res = await getCrews({
+          status: activeStatus !== 'ALL' ? activeStatus : undefined,
+          category: activeCategory !== 'ALL' ? activeCategory : undefined,
+          keyword: searchQuery.trim() || undefined,
+        });
+        setCrews(res.data.items);
+        setNextCursor(res.data.next_cursor);
+      } catch {
+        // axios interceptor handles errors
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCrews();
+  }, [activeStatus, activeCategory, searchQuery]);
+
+  const handleLoadMore = async () => {
+    if (!nextCursor || isLoading) return;
+    setIsLoading(true);
+    try {
+      const res = await getCrews({
+        status: activeStatus !== 'ALL' ? activeStatus : undefined,
+        category: activeCategory !== 'ALL' ? activeCategory : undefined,
+        keyword: searchQuery.trim() || undefined,
+        cursor: nextCursor,
+      });
+      setCrews((prev) => [...prev, ...res.data.items]);
+      setNextCursor(res.data.next_cursor);
+    } catch {
+      // axios interceptor handles errors
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
       <>
@@ -98,7 +138,7 @@ export default function CrewsPage() {
           <div className="px-5 pt-4 pb-2 flex items-center justify-between">
           <span className="text-xs text-text-secondary">
             총{' '}
-            <span className="font-bold text-text-primary">{filteredCrews.length}</span>
+            <span className="font-bold text-text-primary">{crews.length}</span>
             개의 크루
           </span>
             {activeStatus !== 'ALL' || activeCategory !== 'ALL' || searchQuery ? (
@@ -118,16 +158,27 @@ export default function CrewsPage() {
 
           {/* 크루 카드 리스트 */}
           <div className="flex flex-col gap-3 px-5 pb-10">
-            {filteredCrews.length === 0 ? (
+            {crews.length === 0 && !isLoading ? (
                 <EmptyState
                     icon="🔍"
                     title="조건에 맞는 크루가 없어요"
                     description="다른 필터를 선택하거나 검색어를 바꿔보세요"
                 />
             ) : (
-                filteredCrews.map((crew) => (
+                crews.map((crew) => (
                     <CrewCard key={crew.crew_id} crew={crew} />
                 ))
+            )}
+
+            {nextCursor && (
+                <button
+                    type="button"
+                    onClick={handleLoadMore}
+                    disabled={isLoading}
+                    className="w-full py-3 text-sm font-semibold text-primary-green border border-primary-green/30 rounded-2xl hover:bg-primary-green/5 transition-colors disabled:opacity-50"
+                >
+                  {isLoading ? '로딩 중...' : '더 보기'}
+                </button>
             )}
           </div>
         </div>
