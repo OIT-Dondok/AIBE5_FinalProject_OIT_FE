@@ -20,7 +20,8 @@ interface MenuItemData {
   title: string;
   subtitle: string;
   badge?: number;
-  onClick: () => void;
+  onClick?: () => void;
+  isDisabled?: boolean;
 }
 
 interface MenuSectionData {
@@ -53,7 +54,12 @@ function MenuItem({ item }: { item: MenuItemData }) {
     <button
       type="button"
       onClick={item.onClick}
-      className="w-full flex items-center gap-3.5 px-4 py-3.5 hover:bg-text-secondary/5 active:bg-text-secondary/10 transition-colors"
+      disabled={item.isDisabled}
+      className={`w-full flex items-center gap-3.5 px-4 py-3.5 transition-colors ${
+        item.isDisabled
+          ? "cursor-not-allowed opacity-60"
+          : "hover:bg-text-secondary/5 active:bg-text-secondary/10"
+      }`}
     >
       <span className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${item.iconBg}`}>
         <Icon size={20} className={item.iconColor} strokeWidth={2} />
@@ -120,8 +126,8 @@ export function ProfileMenuSections({
           iconBg: "bg-violet-50",
           iconColor: "text-violet-500",
           title: "인증 이력",
-          subtitle: `총 ${totalVerificationCount}건`,
-          onClick: () => alert("인증 이력은 추후 안내될 예정입니다."),
+          subtitle: "추후 안내",
+          isDisabled: true,
         },
         {
           icon: Wallet,
