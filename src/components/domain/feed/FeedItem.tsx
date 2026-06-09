@@ -28,7 +28,7 @@ export function FeedItem({ item }: FeedItemProps) {
   const initial = getInitial(item.nickname);
 
   return (
-    <article className="bg-card rounded-card overflow-hidden border border-text-secondary/10 shadow-card-elevated">
+    <article className="bg-card rounded-card overflow-hidden border border-text-secondary/10 shadow-card-elevated animate-feed-in">
       {/* 상단: 사용자 프로필(닉네임 첫 글자) + 크루명 + 상태 뱃지 */}
       <div className="px-4 pt-4 pb-3 flex items-center gap-3">
         <div

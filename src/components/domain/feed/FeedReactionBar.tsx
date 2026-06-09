@@ -26,6 +26,7 @@ export function FeedReactionBar({ initialReactions }: FeedReactionBarProps) {
   }
 
   const handleReactionClick = (emoji: string) => {
+    // TODO: API - 리액션 토글 반영 (추가 POST /feeds/{feedId}/reactions, 취소 DELETE)
     const isActive = activated.has(emoji);
     setActivated((prev) => {
       const next = new Set(prev);
@@ -43,6 +44,7 @@ export function FeedReactionBar({ initialReactions }: FeedReactionBarProps) {
   };
 
   const handleSelectEmoji = (emoji: string) => {
+    // TODO: API - 새 이모지 반응 추가 (POST /feeds/{feedId}/reactions)
     const exists = reactions.some((r) => r.emoji === emoji);
     if (exists) {
       if (!activated.has(emoji)) handleReactionClick(emoji);
@@ -77,7 +79,9 @@ export function FeedReactionBar({ initialReactions }: FeedReactionBarProps) {
             key={reaction.emoji}
             type="button"
             onClick={() => handleReactionClick(reaction.emoji)}
-            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all active:scale-95 ${
+            aria-pressed={isActive}
+            aria-label={`${reaction.emoji} 반응 ${reaction.count}개`}
+            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-green/50 ${
               isActive
                 ? 'bg-primary-green/15 border border-primary-green/40 text-primary-green'
                 : 'bg-background border border-text-secondary/15 text-text-primary hover:bg-text-secondary/5'
@@ -96,8 +100,9 @@ export function FeedReactionBar({ initialReactions }: FeedReactionBarProps) {
         type="button"
         onClick={togglePicker}
         aria-label="이모지 추가"
+        aria-haspopup="dialog"
         aria-expanded={open}
-        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all active:scale-95 ${
+        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-green/50 ${
           open
             ? 'bg-primary-green/10 border border-primary-green/30 text-primary-green'
             : 'bg-background border border-text-secondary/15 text-text-secondary hover:bg-text-secondary/5'

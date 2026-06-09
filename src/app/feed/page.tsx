@@ -18,10 +18,14 @@ export default function FeedPage() {
   const [selectedCrewId, setSelectedCrewId] = useState<number | null>(null);
   const [period, setPeriod] = useState<FeedPeriod>(MOCK_FEED_PERIOD);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  // TODO: API 연동 시 피드 fetch 로딩 상태로 교체 (true면 스켈레톤 노출)
+  // TODO: API - 피드 fetch 로딩 상태로 교체 (true면 스켈레톤 노출)
   const isLoading = false;
+
+  // TODO: API - 내 가입 크루 목록을 GET /me/crews 응답으로 교체 (필터 칩 + 가입 여부 판단)
   const hasCrews = MOCK_MY_CREWS.length > 0;
 
+  // TODO: API - MOCK_FEED_ITEMS를 GET /feeds?crewId={selectedCrewId}&startDate={}&endDate={} 응답으로 교체.
+  //            아래 필터/정렬(최신순)은 서버 쿼리 파라미터·정렬로 이관 예정.
   const filteredItems = MOCK_FEED_ITEMS.filter((item) => {
     if (selectedCrewId !== null && item.crew_id !== selectedCrewId) return false;
     const certDate = item.certified_at.substring(0, 10);
@@ -64,7 +68,12 @@ export default function FeedPage() {
             />
           )}
 
-          {/* 피드 목록 */}
+          {/* 피드 목록 (필터/기간 변경 시 key 변경으로 재진입 애니메이션) */}
+          <div
+            key={`${selectedCrewId ?? 'all'}-${period.start_date}-${period.end_date}`}
+            aria-busy={isLoading}
+            className="flex flex-col gap-4"
+          >
           {isLoading ? (
             <FeedSkeletonList count={3} />
           ) : !hasCrews ? (
@@ -101,6 +110,7 @@ export default function FeedPage() {
               <FeedItem key={item.feed_id} item={item} />
             ))
           )}
+          </div>
         </div>
       </div>
 

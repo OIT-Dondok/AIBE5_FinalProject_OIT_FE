@@ -14,7 +14,8 @@ export function FeedCrewFilter({ crews, selectedCrewId, onSelect }: FeedCrewFilt
       <button
         type="button"
         onClick={() => onSelect(null)}
-        className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 ${
+        aria-pressed={selectedCrewId === null}
+        className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-green/50 ${
           selectedCrewId === null
             ? 'bg-primary-green text-white shadow-sm shadow-primary-green/30'
             : 'bg-card border border-text-secondary/20 text-text-secondary hover:bg-text-secondary/5'
@@ -27,7 +28,8 @@ export function FeedCrewFilter({ crews, selectedCrewId, onSelect }: FeedCrewFilt
           key={crew.crew_id}
           type="button"
           onClick={() => onSelect(crew.crew_id)}
-          className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 whitespace-nowrap ${
+          aria-pressed={selectedCrewId === crew.crew_id}
+          className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-green/50 ${
             selectedCrewId === crew.crew_id
               ? 'bg-primary-green text-white shadow-sm shadow-primary-green/30'
               : 'bg-card border border-text-secondary/20 text-text-secondary hover:bg-text-secondary/5'

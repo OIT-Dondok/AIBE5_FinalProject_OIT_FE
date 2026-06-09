@@ -180,9 +180,10 @@ export function EmojiPicker({ anchorRect, triggerRef, onSelect, onClose }: Emoji
           <button
             key={emoji}
             type="button"
+            aria-label={`${emoji} 반응 추가`}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => onSelect(emoji)}
-            className="aspect-square flex items-center justify-center text-xl rounded-lg hover:bg-text-secondary/10 active:scale-90 transition-all"
+            className="aspect-square flex items-center justify-center text-xl rounded-lg hover:bg-text-secondary/10 active:scale-90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-green/50"
           >
             {emoji}
           </button>

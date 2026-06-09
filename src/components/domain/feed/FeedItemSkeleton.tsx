@@ -5,7 +5,10 @@
  */
 export function FeedItemSkeleton() {
   return (
-    <article className="bg-card rounded-card overflow-hidden border border-text-secondary/10 shadow-card-elevated animate-pulse">
+    <article
+      aria-hidden="true"
+      className="bg-card rounded-card overflow-hidden border border-text-secondary/10 shadow-card-elevated animate-pulse"
+    >
       {/* 상단: 프로필 + 닉네임/메타 + 상태 뱃지 */}
       <div className="px-4 pt-4 pb-3 flex items-center gap-3">
         <div className="w-11 h-11 rounded-full bg-text-secondary/10 flex-shrink-0" />
