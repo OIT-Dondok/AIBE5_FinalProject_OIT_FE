@@ -34,8 +34,7 @@ export const CREW_CATEGORY = {
   EXERCISE: 'EXERCISE',
   STUDY: 'STUDY',
   DIET: 'DIET',
-  MIND: 'MIND',
-  HEALTH: 'HEALTH',
+  ETC: 'ETC',
 } as const;
 export type CrewCategory = (typeof CREW_CATEGORY)[keyof typeof CREW_CATEGORY];
 

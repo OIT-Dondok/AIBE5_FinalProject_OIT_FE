@@ -69,7 +69,7 @@ export function formatCertifiedAt(isoStr: string): string {
   return `${month}/${day} ${ampm} ${displayHours}:${minutes}`;
 }
 
-/** 닉네임 첫 글자(프로필 placeholder용) */
+/** 닉네임 첫 글자(프로필 placeholder용). 비어있거나 공백뿐이면 '?' 반환 */
 export function getInitial(nickname: string): string {
-  return nickname.trim().charAt(0).toUpperCase();
+  return nickname.trim().charAt(0).toUpperCase() || '?';
 }
