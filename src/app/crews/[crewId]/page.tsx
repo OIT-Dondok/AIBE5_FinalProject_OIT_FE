@@ -55,6 +55,7 @@ export default function CrewDetailPage() {
   const [crew, setCrew] = useState<CrewDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     const fetchCrew = async () => {
@@ -65,6 +66,8 @@ export default function CrewDetailPage() {
       } catch (err) {
         if (isAxiosError<ErrorResponse>(err) && err.response?.data?.code === 'CREW_NOT_FOUND') {
           setNotFound(true);
+        } else {
+          setHasError(true);
         }
       } finally {
         setIsLoading(false);
@@ -74,13 +77,15 @@ export default function CrewDetailPage() {
     if (crewId) fetchCrew();
   }, [crewId]);
 
-  if (notFound) {
+  if (notFound || hasError) {
     return (
       <>
         <Header showBackButton />
         <div className="w-full max-w-[430px] mx-auto flex flex-col items-center justify-center min-h-[60vh] gap-4 px-5">
           <p className="text-5xl">🔍</p>
-          <p className="text-base font-bold text-text-primary">크루를 찾을 수 없습니다</p>
+          <p className="text-base font-bold text-text-primary">
+            {notFound ? '크루를 찾을 수 없습니다' : '크루 정보를 불러오지 못했습니다'}
+          </p>
           <button
             type="button"
             onClick={() => router.back()}
