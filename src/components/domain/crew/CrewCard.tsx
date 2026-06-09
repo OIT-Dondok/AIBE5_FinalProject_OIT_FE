@@ -1,5 +1,5 @@
 import { Calendar } from 'lucide-react';
-import type { MockCrew, CrewStatus, CrewCategory } from '@/mocks/data/crews';
+import type { CrewListItem, CrewStatus, CrewCategory } from '@/types/domain';
 
 const CATEGORY_EMOJI: Record<CrewCategory, string> = {
   MORNING: '🌅',
@@ -55,29 +55,24 @@ const STATUS_CONFIG: Record<CrewStatus, StatusConfig> = {
   },
 };
 
-// ✨ 수정 1: 타임존 밀림(하루 전날 표기) 현상 방지
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr);
-  // UTC 시간에 9시간을 더해 강제로 KST(한국 표준시)로 맞춘 후 UTC Getter 사용
   d.setUTCHours(d.getUTCHours() + 9);
   return `${d.getUTCMonth() + 1}.${String(d.getUTCDate()).padStart(2, '0')}`;
 }
 
 interface CrewCardProps {
-  crew: MockCrew;
+  crew: CrewListItem;
 }
 
 export default function CrewCard({ crew }: CrewCardProps) {
-  const emoji = CATEGORY_EMOJI[crew.category];
-  const categoryBg = CATEGORY_BG[crew.category];
+  const category = crew.category as CrewCategory;
+  const emoji = CATEGORY_EMOJI[category] ?? '📌';
+  const categoryBg = CATEGORY_BG[category] ?? 'bg-gray-50';
   const status = STATUS_CONFIG[crew.status];
   const isClosed = crew.status === 'CLOSED' || crew.status === 'CANCELLED';
 
-  // ✨ 수정 2: 0으로 나누기 방지(NaN) 및 0~100 사이 값 고정(Clamping)
-  let fillPercent = 0;
-  if (crew.max_participants > 0) {
-    fillPercent = Math.max(0, Math.min(100, Math.round((crew.current_participants / crew.max_participants) * 100)));
-  }
+  const fillPercent = 0;
 
   return (
       <div className={`bg-card rounded-card p-5 flex flex-col gap-4 border border-text-secondary/10 shadow-card hover:shadow-card-elevated active:scale-[0.985] transition-all duration-200 cursor-pointer ${isClosed ? 'opacity-60' : ''}`}>
@@ -112,9 +107,8 @@ export default function CrewCard({ crew }: CrewCardProps) {
           <div className="flex items-center justify-between">
             <span className="text-[11px] text-text-secondary font-medium">참여 현황</span>
             <span className="text-[11px] font-bold text-text-primary">
-            {crew.current_participants}
-              <span className="text-text-secondary font-normal">/{crew.max_participants}명</span>
-          </span>
+              최소 {crew.min_participants}명 / 최대 {crew.max_participants}명
+            </span>
           </div>
           <div className="w-full h-1.5 bg-text-secondary/10 rounded-full overflow-hidden">
             <div

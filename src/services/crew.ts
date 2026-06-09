@@ -1,19 +1,16 @@
 import { api } from '@/lib/axios';
+import type { CrewListResponse, CreateCrewRequest } from '@/types/domain';
 
-/**
- * 1. 크루 목록 조회 (동적 쿼리 파라미터 매핑)
- * GET /api/crews
- */
-export const getCrews = (status: string, category: string, keyword: string) => {
-    return api.get('/crews', {
-        params: { status, category, keyword }
-    });
+export const getCrews = (params?: {
+  status?: string;
+  category?: string;
+  keyword?: string;
+  cursor?: string;
+  limit?: number;
+}) => {
+  return api.get<CrewListResponse>('/crews', { params });
 };
 
-/**
- * 2. 크루 생성 (유저가 입력한 폼 데이터 전송)
- * POST /api/crews
- */
-export const createCrew = (crewData: any) => {
-    return api.post('/crews', crewData);
+export const createCrew = (crewData: CreateCrewRequest) => {
+  return api.post('/crews', crewData);
 };

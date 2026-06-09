@@ -27,6 +27,18 @@ export const CREW_STATUS = {
 } as const;
 export type CrewStatus = (typeof CREW_STATUS)[keyof typeof CREW_STATUS];
 
+// § 3.1a CrewCategory
+export const CREW_CATEGORY = {
+  MORNING: 'MORNING',
+  READING: 'READING',
+  EXERCISE: 'EXERCISE',
+  STUDY: 'STUDY',
+  DIET: 'DIET',
+  MIND: 'MIND',
+  HEALTH: 'HEALTH',
+} as const;
+export type CrewCategory = (typeof CREW_CATEGORY)[keyof typeof CREW_CATEGORY];
+
 // § 3.2 ParticipantStatus
 export const PARTICIPANT_STATUS = {
   PENDING: 'PENDING',       // 신청 대기, 보증금 reserve 상태
@@ -287,6 +299,7 @@ export interface CrewListItem {
   crew_id: number;
   title: string;
   image_url: string | null;
+  category: string;
   status: CrewStatus;
   deposit_amount: number;
   min_participants: number;
@@ -303,6 +316,7 @@ export interface CrewListItem {
 // GET /api/crews → 200
 export interface CrewListResponse {
   items: CrewListItem[];
+  next_cursor: string | null;
 }
 
 // GET /api/crews/{crewId} → 200
