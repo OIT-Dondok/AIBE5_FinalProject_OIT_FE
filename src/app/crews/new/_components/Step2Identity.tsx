@@ -1,17 +1,15 @@
 'use client';
 
-import { useRef } from 'react';
-import { Camera } from 'lucide-react';
 import { Input } from '@/components/common/Input';
 import { CATEGORY_LABEL, CATEGORY_EMOJI, CATEGORY_GRADIENT } from '@/constants/crew';
+
+// TODO: S3 CORS 설정 완료 후 이미지 업로드 기능 복구
 
 interface Step2IdentityProps {
   title: string;
   category: string;
-  imagePreview: string | null;
   onTitleChange: (v: string) => void;
   onCategoryChange: (v: string) => void;
-  onImageChange: (file: File, preview: string) => void;
   errors: Partial<Record<'title' | 'category', string>>;
 }
 
@@ -20,24 +18,10 @@ const CATEGORIES = Object.keys(CATEGORY_LABEL);
 export default function Step2Identity({
   title,
   category,
-  imagePreview,
   onTitleChange,
   onCategoryChange,
-  onImageChange,
   errors,
 }: Step2IdentityProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      onImageChange(file, reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
-
   const defaultImageGradient = category ? CATEGORY_GRADIENT[category] : 'from-gray-300 to-gray-200';
   const defaultEmoji = category ? CATEGORY_EMOJI[category] : '🏃';
 
@@ -45,52 +29,20 @@ export default function Step2Identity({
     <div className="flex flex-col px-5 pt-4 pb-8 gap-6">
       <div className="flex flex-col gap-1">
         <h2 className="text-xl font-bold text-text-primary">크루의 정체성을 정해주세요</h2>
-        <p className="text-sm text-text-secondary">이름과 카테고리, 대표 이미지를 설정해요.</p>
+        <p className="text-sm text-text-secondary">이름과 카테고리를 설정해요.</p>
       </div>
 
-      {/* 대표 이미지 */}
-      <div className="flex flex-col gap-2">
-        <label className="text-[12px] font-bold text-text-secondary">대표 이미지</label>
-        <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="relative w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 shadow-md"
-          >
-            {imagePreview ? (
-              <img src={imagePreview} alt="크루 이미지" className="w-full h-full object-cover" />
-            ) : (
-              <div className={`w-full h-full bg-gradient-to-br ${defaultImageGradient} flex flex-col items-center justify-center gap-1`}>
-                <span className="text-3xl">{defaultEmoji}</span>
-              </div>
-            )}
-            <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-              <Camera size={20} className="text-white" />
-            </div>
-          </button>
-          <div className="flex flex-col gap-1">
-            <p className="text-xs font-semibold text-text-primary">직접 업로드</p>
-            <p className="text-[11px] text-text-secondary leading-relaxed">
-              카테고리 기본 이미지가 자동 적용돼요.
-              <br />
-              원하는 이미지로 변경도 가능해요.
-            </p>
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="mt-1 text-[11px] text-primary-green font-semibold hover:opacity-75 transition-opacity text-left"
-            >
-              이미지 선택 →
-            </button>
-          </div>
+      {/* 카테고리 기본 이미지 미리보기 (업로드 비활성화 상태) */}
+      <div className="flex items-center gap-4">
+        <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${defaultImageGradient} flex items-center justify-center shadow-md flex-shrink-0`}>
+          <span className="text-3xl">{defaultEmoji}</span>
         </div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          className="hidden"
-          onChange={handleFileChange}
-        />
+        <div className="flex flex-col gap-1">
+          <p className="text-xs font-semibold text-text-primary">대표 이미지</p>
+          <p className="text-[11px] text-text-secondary leading-relaxed">
+            카테고리 선택 시 기본 이미지가 적용돼요.
+          </p>
+        </div>
       </div>
 
       {/* 크루 이름 */}

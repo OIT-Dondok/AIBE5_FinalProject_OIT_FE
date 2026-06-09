@@ -12,7 +12,8 @@ import Step3Mission from './_components/Step3Mission';
 import Step4Info from './_components/Step4Info';
 import Step5Agreement from './_components/Step5Agreement';
 import { createCrew } from '@/services/crew';
-import { getPresignedUrl, uploadToS3 } from '@/services/upload';
+// TODO: S3 CORS 설정 완료 후 이미지 업로드 기능 복구
+// import { getPresignedUrl, uploadToS3 } from '@/services/upload';
 import type {
   DailySettlementType,
   FrequencyType,
@@ -22,9 +23,7 @@ import type {
 interface CrewFormData {
   title: string;
   category: string;
-  imageFile: File | null;
-  imagePreview: string | null;
-  image_s3_key: string | null;
+  // TODO: S3 CORS 설정 완료 후 imageFile, imagePreview, image_s3_key 복구
   daily_settlement_type: DailySettlementType;
   frequency_type: FrequencyType;
   mission_schedule_days: string[];
@@ -47,9 +46,6 @@ const TOTAL_STEPS = 5;
 const initialFormData: CrewFormData = {
   title: '',
   category: '',
-  imageFile: null,
-  imagePreview: null,
-  image_s3_key: null,
   daily_settlement_type: 'B',
   frequency_type: 'DAILY',
   mission_schedule_days: [],
@@ -183,21 +179,8 @@ export default function CrewNewPage() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      let s3Key: string | null = formData.image_s3_key;
-
-      if (formData.imageFile) {
-        try {
-          const presignRes = await getPresignedUrl({
-            purpose: 'CREW_IMAGE',
-            content_type: formData.imageFile.type as 'image/jpeg' | 'image/png' | 'image/webp',
-            content_length: formData.imageFile.size,
-          });
-          await uploadToS3(presignRes.data.upload_url, formData.imageFile);
-          s3Key = presignRes.data.s3_key;
-        } catch {
-          showToast('이미지 업로드에 실패했습니다. 이미지 없이 진행합니다.');
-        }
-      }
+      // TODO: S3 CORS 설정 완료 후 이미지 업로드 로직 복구
+      const s3Key: string | null = null;
 
       const recruitmentDeadline = (() => {
         const d = new Date(formData.start_date);
@@ -260,13 +243,8 @@ export default function CrewNewPage() {
           <Step2Identity
             title={formData.title}
             category={formData.category}
-            imagePreview={formData.imagePreview}
             onTitleChange={(v) => update('title', v)}
             onCategoryChange={(v) => update('category', v)}
-            onImageChange={(file, preview) => {
-              update('imageFile', file);
-              update('imagePreview', preview);
-            }}
             errors={step2Errors}
           />
         );
