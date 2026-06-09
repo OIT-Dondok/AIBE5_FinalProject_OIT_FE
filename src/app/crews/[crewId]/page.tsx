@@ -1,4 +1,7 @@
-import { notFound } from 'next/navigation';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { isAxiosError } from 'axios';
 import { MoreHorizontal } from 'lucide-react';
 import { Header } from '@/components/common/Header';
@@ -14,24 +17,75 @@ import {
   SETTLEMENT_TYPE_LABEL,
 } from '@/constants/crew';
 
-interface PageProps {
-  params: Promise<{ crewId: string }>;
-}
+export default function CrewDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const crewId = Number(params.crewId);
 
-export default async function CrewDetailPage({ params }: PageProps) {
-  const { crewId } = await params;
-  const crewIdNum = Number(crewId);
+  const [crew, setCrew] = useState<CrewDetail | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
-  let crew: CrewDetail;
-  try {
-    const res = await getCrew(crewIdNum);
-    crew = res.data;
-  } catch (err) {
-    if (isAxiosError<ErrorResponse>(err) && err.response?.data?.code === 'CREW_NOT_FOUND') {
-      notFound();
-    }
-    throw err;
+  useEffect(() => {
+    const fetchCrew = async () => {
+      setIsLoading(true);
+      try {
+        const res = await getCrew(crewId);
+        setCrew(res.data);
+      } catch (err) {
+        if (isAxiosError<ErrorResponse>(err) && err.response?.data?.code === 'CREW_NOT_FOUND') {
+          setNotFound(true);
+        } else {
+          setHasError(true);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (crewId) fetchCrew();
+  }, [crewId]);
+
+  if (notFound || hasError) {
+    return (
+      <>
+        <Header showBackButton />
+        <div className="w-full max-w-[430px] mx-auto flex flex-col items-center justify-center min-h-[60vh] gap-4 px-5">
+          <p className="text-5xl">🔍</p>
+          <p className="text-base font-bold text-text-primary">
+            {notFound ? '크루를 찾을 수 없습니다' : '크루 정보를 불러오지 못했습니다'}
+          </p>
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="text-sm text-primary-green font-semibold hover:opacity-75 transition-opacity"
+          >
+            뒤로 가기
+          </button>
+        </div>
+      </>
+    );
   }
+
+  if (isLoading) {
+    return (
+      <>
+        <Header showBackButton />
+        <div className="w-full max-w-[430px] mx-auto">
+          <div className="w-full h-52 bg-text-secondary/10 animate-pulse" />
+          <div className="px-5 py-4 flex flex-col gap-3">
+            <div className="h-5 w-2/3 bg-text-secondary/10 rounded-full animate-pulse" />
+            <div className="h-4 w-1/3 bg-text-secondary/10 rounded-full animate-pulse" />
+            <div className="mt-2 h-px w-full bg-text-secondary/10" />
+            <div className="h-40 w-full bg-text-secondary/10 rounded-card animate-pulse" />
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (!crew) return null;
 
   const emoji = CATEGORY_EMOJI[crew.category] ?? '📌';
   const categoryDisplay = CATEGORY_LABEL[crew.category] ?? crew.category;
@@ -56,11 +110,7 @@ export default async function CrewDetailPage({ params }: PageProps) {
       <div className="w-full max-w-[430px] mx-auto pb-32">
         <div className="w-full h-52 overflow-hidden">
           {crew.image_url ? (
-            <img
-              src={crew.image_url}
-              alt={crew.title}
-              className="w-full h-full object-cover"
-            />
+            <img src={crew.image_url} alt={crew.title} className="w-full h-full object-cover" />
           ) : (
             <div className={`w-full h-full flex items-center justify-center ${categoryBg}`}>
               <span className="text-8xl">{emoji}</span>
