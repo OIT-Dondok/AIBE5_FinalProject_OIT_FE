@@ -38,11 +38,9 @@ export function clearAccessToken(): void {
 // ─── Axios 인스턴스 ───────────────────────────────────────────────────────────
 
 export const api: AxiosInstance = axios.create({
-    // AS-IS: 환경 변수 주소를 다이렉트로 꽂으면 CORS 에러가 터짐
-    // baseURL: BASE_URL,
-
-    // TO-BE: Next.js 프록시 우회 채널을 타기 위해 상대 경로로 변경
-    baseURL: '/api',
+    // 서버사이드(Server Component, SSR): 상대 경로 불가 → BE 직접 절대 URL 사용 (CORS 무관)
+    // 브라우저: CORS 회피를 위해 Next.js rewrite 프록시(/api) 경유
+    baseURL: typeof window === 'undefined' ? `${BASE_URL}/api` : '/api',
 
     timeout: 10_000,
     headers: { 'Content-Type': 'application/json' },

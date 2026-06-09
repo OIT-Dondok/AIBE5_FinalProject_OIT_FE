@@ -6,21 +6,15 @@ import type { MyParticipation } from '@/types/domain';
 interface CrewJoinButtonProps {
   depositAmount: number;
   myParticipation: MyParticipation | null;
-  onJoin: () => void;
-  isLoading?: boolean;
 }
 
-export default function CrewJoinButton({
-  depositAmount,
-  myParticipation,
-  onJoin,
-  isLoading = false,
-}: CrewJoinButtonProps) {
+export default function CrewJoinButton({ depositAmount, myParticipation }: CrewJoinButtonProps) {
   const status = myParticipation?.status ?? null;
 
   if (status === null) {
+    // TODO: 입장 신청 API 연동 (별도 이슈)
     return (
-      <Button variant="primary-green" size="lg" fullWidth onClick={onJoin} isLoading={isLoading}>
+      <Button variant="primary-green" size="lg" fullWidth disabled>
         🔒 입장 신청 · 보증금 {depositAmount.toLocaleString()}원
       </Button>
     );

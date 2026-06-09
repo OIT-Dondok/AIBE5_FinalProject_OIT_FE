@@ -322,6 +322,7 @@ export interface CrewListResponse {
 export interface CrewDetail {
   crew_id: number;
   host_member_uuid: string;
+  host_nickname: string;
   title: string;
   description: string;
   image_url: string | null;
@@ -335,6 +336,7 @@ export interface CrewDetail {
   frequency_count: number | null;
   mission_schedule_days: string[];
   daily_settlement_type: DailySettlementType;
+  current_participants: number;
   host_agreement_version: string;
   host_agreed_at: string;
   recruitment_deadline: string;
