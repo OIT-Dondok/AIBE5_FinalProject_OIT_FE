@@ -13,6 +13,7 @@ export interface FeedItem {
   crew_title: string;
   category: CrewCategory;
   nickname: string;
+  profile_image_url: string | null;
   certified_at: string;
   share_ratio: number;
   certification_status: CertificationStatus;
@@ -27,8 +28,8 @@ export interface FeedPeriod {
 }
 
 export const MOCK_FEED_PERIOD: FeedPeriod = {
-  start_date: '2026-05-15',
-  end_date: '2026-05-19',
+  start_date: '2026-05-19',
+  end_date: '2026-06-01',
 };
 
 export interface MyCrewItem {
@@ -50,6 +51,7 @@ export const MOCK_FEED_ITEMS: FeedItem[] = [
     crew_title: '독서 1챕터',
     category: 'READING',
     nickname: '갓생러',
+    profile_image_url: null,
     certified_at: '2026-05-19T09:23:00+09:00',
     share_ratio: 25.0,
     certification_status: 'SUCCESS',
@@ -66,6 +68,7 @@ export const MOCK_FEED_ITEMS: FeedItem[] = [
     crew_title: '홈트 30분',
     category: 'EXERCISE',
     nickname: '근육맨',
+    profile_image_url: null,
     certified_at: '2026-05-19T07:45:00+09:00',
     share_ratio: 18.5,
     certification_status: 'SUCCESS',
@@ -82,6 +85,7 @@ export const MOCK_FEED_ITEMS: FeedItem[] = [
     crew_title: '독서 1챕터',
     category: 'READING',
     nickname: '책벌레',
+    profile_image_url: null,
     certified_at: '2026-05-19T22:10:00+09:00',
     share_ratio: 12.5,
     certification_status: 'PENDING_REVIEW',
@@ -97,6 +101,7 @@ export const MOCK_FEED_ITEMS: FeedItem[] = [
     crew_title: '갓생 6시 기상',
     category: 'MORNING',
     nickname: '새벽감성',
+    profile_image_url: null,
     certified_at: '2026-05-19T08:15:00+09:00',
     share_ratio: 9.0,
     certification_status: 'FAILED',
@@ -105,6 +110,23 @@ export const MOCK_FEED_ITEMS: FeedItem[] = [
     reactions: [
       { emoji: '😭', count: 6 },
       { emoji: '🫂', count: 3 },
+    ],
+  },
+  {
+    feed_id: 5,
+    crew_id: 1,
+    crew_title: '갓생 6시 기상',
+    category: 'MORNING',
+    nickname: '미라클모닝',
+    profile_image_url: null,
+    certified_at: '2026-06-01T06:05:00+09:00',
+    share_ratio: 15.0,
+    certification_status: 'SUCCESS',
+    image_url: null,
+    caption: '6시 정각 기상 성공! 상쾌한 아침이에요 🌅',
+    reactions: [
+      { emoji: '🔥', count: 7 },
+      { emoji: '👏', count: 4 },
     ],
   },
 ];

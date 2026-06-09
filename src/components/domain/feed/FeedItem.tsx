@@ -1,112 +1,104 @@
-import type { CrewCategory } from '@/mocks/data/crews';
-import type { CertificationStatus, FeedItem as FeedItemType } from '@/mocks/data/feed';
+"use client";
+
+import { useState } from 'react';
+import Image from 'next/image';
+
+import type { FeedItem as FeedItemType } from '@/mocks/data/feed';
 import { FeedReactionBar } from '@/components/domain/feed/FeedReactionBar';
-
-const CATEGORY_EMOJI: Record<CrewCategory, string> = {
-  MORNING: '🌅',
-  READING: '📚',
-  EXERCISE: '💪',
-  STUDY: '📝',
-  DIET: '🥗',
-  MIND: '🧘',
-  HEALTH: '❤️',
-};
-
-const CATEGORY_ICON_BG: Record<CrewCategory, string> = {
-  MORNING: 'bg-orange-100',
-  READING: 'bg-amber-100',
-  EXERCISE: 'bg-blue-100',
-  STUDY: 'bg-violet-100',
-  DIET: 'bg-emerald-100',
-  MIND: 'bg-teal-100',
-  HEALTH: 'bg-rose-100',
-};
-
-const CATEGORY_PLACEHOLDER_BG: Record<CrewCategory, string> = {
-  MORNING: 'bg-gradient-to-br from-orange-200 to-amber-300',
-  READING: 'bg-gradient-to-br from-amber-200 to-yellow-300',
-  EXERCISE: 'bg-gradient-to-br from-sky-200 to-blue-300',
-  STUDY: 'bg-gradient-to-br from-violet-200 to-purple-300',
-  DIET: 'bg-gradient-to-br from-emerald-200 to-green-300',
-  MIND: 'bg-gradient-to-br from-teal-200 to-cyan-300',
-  HEALTH: 'bg-gradient-to-br from-rose-200 to-pink-300',
-};
-
-const STATUS_CONFIG: Record<CertificationStatus, { label: string; className: string }> = {
-  SUCCESS: {
-    label: '성공',
-    className: 'bg-primary-green text-white shadow-sm shadow-primary-green/30',
-  },
-  PENDING_REVIEW: {
-    label: '검토중',
-    className: 'bg-primary-blue text-white shadow-sm shadow-primary-blue/30',
-  },
-  FAILED: {
-    label: '실패',
-    className: 'bg-red-500 text-white shadow-sm shadow-red-500/30',
-  },
-};
-
-function formatCertifiedAt(isoStr: string): string {
-  const d = new Date(isoStr);
-  if (isNaN(d.getTime())) return '-';
-  const kstHours = (d.getUTCHours() + 9) % 24;
-  const ampm = kstHours < 12 ? '오전' : '오후';
-  const displayHours = kstHours % 12 || 12;
-  const minutes = String(d.getUTCMinutes()).padStart(2, '0');
-  return `${ampm} ${displayHours}:${minutes}`;
-}
+import { FeedImageLightbox } from '@/components/domain/feed/FeedImageLightbox';
+import { FeedCertImage } from '@/components/domain/feed/FeedCertImage';
+import {
+  CATEGORY_EMOJI,
+  CATEGORY_ICON_BG,
+  STATUS_CONFIG,
+  formatCertifiedAt,
+  getInitial,
+} from '@/components/domain/feed/feedItemMeta';
 
 interface FeedItemProps {
   item: FeedItemType;
 }
 
 export function FeedItem({ item }: FeedItemProps) {
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+
   const emoji = CATEGORY_EMOJI[item.category];
   const iconBg = CATEGORY_ICON_BG[item.category];
-  const placeholderBg = CATEGORY_PLACEHOLDER_BG[item.category];
   const status = STATUS_CONFIG[item.certification_status];
   const timeStr = formatCertifiedAt(item.certified_at);
+  const initial = getInitial(item.nickname);
 
   return (
-    <article className="bg-card rounded-card overflow-hidden border border-text-secondary/10 shadow-card-elevated">
-      {/* 상단: 카테고리 아이콘 + 크루명 + 상태 뱃지 */}
+    <article className="bg-card rounded-card overflow-hidden border border-text-secondary/10 shadow-card-elevated animate-feed-in">
+      {/* 상단: 사용자 프로필(닉네임 첫 글자) + 크루명 + 상태 뱃지 */}
       <div className="px-4 pt-4 pb-3 flex items-center gap-3">
+        {/* 프로필: 이미지가 있으면 사진, 없으면 닉네임 첫 글자 */}
+        {/* TODO: API 연동 시 next.config.ts images.remotePatterns에 프로필 CDN 호스트 추가 필요 */}
         <div
-          className={`w-11 h-11 flex items-center justify-center ${iconBg} rounded-full flex-shrink-0 text-2xl shadow-sm`}
+          className={`relative w-11 h-11 flex items-center justify-center ${iconBg} rounded-full flex-shrink-0 overflow-hidden text-base font-bold text-text-primary shadow-sm`}
         >
-          {emoji}
+          {initial}
+          {item.profile_image_url && (
+            <Image
+              src={item.profile_image_url}
+              alt={`${item.nickname} 프로필`}
+              fill
+              sizes="44px"
+              className="object-cover"
+            />
+          )}
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-[15px] font-bold text-text-primary leading-tight truncate">
-            {item.crew_title}
+            {item.nickname}
           </p>
           <p className="text-[11px] text-text-secondary mt-0.5 truncate">
-            {emoji} {item.nickname} · {timeStr} · {item.share_ratio}%
+            {timeStr} · {emoji} {item.crew_title} · {item.share_ratio}%
           </p>
         </div>
         <span
-          className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-bold ${status.className}`}
+          className={`flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${status.className}`}
         >
+          <status.Icon size={12} strokeWidth={2.5} />
           {status.label}
         </span>
       </div>
 
-      {/* 이미지 영역: 4:3 그라데이션 placeholder */}
-      <div className={`relative w-full aspect-[4/3] overflow-hidden ${placeholderBg}`}>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-7xl opacity-20 select-none">{emoji}</span>
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-        <p className="absolute bottom-3.5 left-4 right-4 text-white text-xs font-semibold leading-snug line-clamp-2 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
-          {item.caption}
-        </p>
+      {/* 이미지 영역 (실제 이미지가 있을 때만 클릭 확대 활성화) */}
+      <div className="relative">
+        <FeedCertImage
+          category={item.category}
+          imageUrl={item.image_url}
+          alt={`${item.nickname}님의 ${item.crew_title} 인증 이미지`}
+        />
+        {item.image_url && (
+          <button
+            type="button"
+            onClick={() => setIsLightboxOpen(true)}
+            aria-label="인증 이미지 확대 보기"
+            className="absolute inset-0 w-full h-full cursor-zoom-in outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-green/50"
+          />
+        )}
       </div>
 
-      {/* 리액션 바 */}
+      {/* 캡션 (이미지 밖 별도 영역) */}
+      {item.caption && (
+        <div className="px-4 pt-3.5">
+          <p className="text-sm text-text-primary leading-relaxed whitespace-pre-line">
+            {item.caption}
+          </p>
+        </div>
+      )}
+
+      {/* 리액션 바 (feed_id 변경 시 remount되어 로컬 상태 초기화) */}
       <div className="px-4 py-3.5">
-        <FeedReactionBar initialReactions={item.reactions} />
+        <FeedReactionBar key={item.feed_id} initialReactions={item.reactions} />
       </div>
+
+      {/* 이미지 확대 라이트박스 */}
+      {isLightboxOpen && (
+        <FeedImageLightbox item={item} onClose={() => setIsLightboxOpen(false)} />
+      )}
     </article>
   );
 }

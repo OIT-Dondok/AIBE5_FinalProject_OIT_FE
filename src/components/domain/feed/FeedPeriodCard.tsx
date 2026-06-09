@@ -42,7 +42,9 @@ export function FeedPeriodCard({ period, isCalendarOpen, onOpenCalendar }: FeedP
       <button
         type="button"
         onClick={onOpenCalendar}
-        className={`px-3.5 py-1.5 rounded-button text-xs font-semibold border transition-all active:scale-95 ${
+        aria-expanded={isCalendarOpen}
+        aria-label="기간 선택 달력 열기"
+        className={`px-3.5 py-1.5 rounded-button text-xs font-semibold border transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-green/50 ${
           isCalendarOpen
             ? 'bg-primary-green text-white border-primary-green shadow-sm'
             : 'border-text-secondary/30 text-text-secondary hover:bg-text-secondary/5'

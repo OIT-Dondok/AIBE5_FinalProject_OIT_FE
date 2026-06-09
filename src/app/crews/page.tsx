@@ -27,6 +27,7 @@ const CATEGORIES: { label: string; value: CategoryFilter }[] = [
   { label: '💪 운동', value: 'EXERCISE' },
   { label: '📝 공부', value: 'STUDY' },
   { label: '🥗 식단', value: 'DIET' },
+  { label: '📌 기타', value: 'ETC' },
 ];
 
 export default function CrewsPage() {

@@ -34,8 +34,7 @@ export const CREW_CATEGORY = {
   EXERCISE: 'EXERCISE',
   STUDY: 'STUDY',
   DIET: 'DIET',
-  MIND: 'MIND',
-  HEALTH: 'HEALTH',
+  ETC: 'ETC',
 } as const;
 export type CrewCategory = (typeof CREW_CATEGORY)[keyof typeof CREW_CATEGORY];
 
@@ -593,6 +592,7 @@ export interface FeedItem {
   crew_participant_id: number;
   member_uuid: string;
   nickname: string;
+  profile_image_url: string | null;
   image_url: string | null;
   caption: string | null;
   server_time: string;

@@ -13,8 +13,7 @@ const CATEGORY_LABEL: Record<string, string> = {
     EXERCISE: "🏋️ 운동",
     STUDY: "✏️ 학습",
     DIET: "🥗 식단",
-    MIND: "🧘 마음",
-    HEALTH: "💪 건강",
+    ETC: "📌 기타",
 };
 
 interface NavItem {

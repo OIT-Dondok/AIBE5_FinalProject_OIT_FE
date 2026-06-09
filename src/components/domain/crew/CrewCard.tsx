@@ -1,15 +1,6 @@
 import { Calendar } from 'lucide-react';
 import type { CrewListItem, CrewStatus, CrewCategory } from '@/types/domain';
-
-const CATEGORY_EMOJI: Record<CrewCategory, string> = {
-  MORNING: '🌅',
-  READING: '📚',
-  EXERCISE: '💪',
-  STUDY: '📝',
-  DIET: '🥗',
-  MIND: '🧘',
-  HEALTH: '❤️',
-};
+import { CATEGORY_EMOJI } from '@/components/domain/feed/feedItemMeta';
 
 const CATEGORY_BG: Record<CrewCategory, string> = {
   MORNING: 'bg-orange-50',
@@ -17,8 +8,7 @@ const CATEGORY_BG: Record<CrewCategory, string> = {
   EXERCISE: 'bg-blue-50',
   STUDY: 'bg-violet-50',
   DIET: 'bg-green-50',
-  MIND: 'bg-teal-50',
-  HEALTH: 'bg-rose-50',
+  ETC: 'bg-slate-50',
 };
 
 interface StatusConfig {

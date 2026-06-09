@@ -52,6 +52,7 @@ node_modules/
 out/
 
 # 로컬 환경 변수 파일 (보안 민감 정보)
+.env
 .env*.local
 
 # macOS 시스템 찌꺼기 파일
