@@ -27,8 +27,8 @@ export interface FeedPeriod {
 }
 
 export const MOCK_FEED_PERIOD: FeedPeriod = {
-  start_date: '2026-05-15',
-  end_date: '2026-05-19',
+  start_date: '2026-05-19',
+  end_date: '2026-06-01',
 };
 
 export interface MyCrewItem {
@@ -105,6 +105,22 @@ export const MOCK_FEED_ITEMS: FeedItem[] = [
     reactions: [
       { emoji: '😭', count: 6 },
       { emoji: '🫂', count: 3 },
+    ],
+  },
+  {
+    feed_id: 5,
+    crew_id: 1,
+    crew_title: '갓생 6시 기상',
+    category: 'MORNING',
+    nickname: '미라클모닝',
+    certified_at: '2026-06-01T06:05:00+09:00',
+    share_ratio: 15.0,
+    certification_status: 'SUCCESS',
+    image_url: null,
+    caption: '6시 정각 기상 성공! 상쾌한 아침이에요 🌅',
+    reactions: [
+      { emoji: '🔥', count: 7 },
+      { emoji: '👏', count: 4 },
     ],
   },
 ];
