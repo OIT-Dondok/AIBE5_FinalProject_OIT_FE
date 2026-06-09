@@ -1,3 +1,5 @@
+import { Check, Clock, X, type LucideIcon } from 'lucide-react';
+
 import type { CrewCategory } from '@/mocks/data/crews';
 import type { CertificationStatus, FeedItem as FeedItemType } from '@/mocks/data/feed';
 import { FeedReactionBar } from '@/components/domain/feed/FeedReactionBar';
@@ -32,17 +34,23 @@ const CATEGORY_PLACEHOLDER_BG: Record<CrewCategory, string> = {
   HEALTH: 'bg-gradient-to-br from-rose-200 to-pink-300',
 };
 
-const STATUS_CONFIG: Record<CertificationStatus, { label: string; className: string }> = {
+const STATUS_CONFIG: Record<
+  CertificationStatus,
+  { label: string; className: string; Icon: LucideIcon }
+> = {
   SUCCESS: {
     label: '성공',
+    Icon: Check,
     className: 'bg-primary-green text-white shadow-sm shadow-primary-green/30',
   },
   PENDING_REVIEW: {
     label: '검토중',
+    Icon: Clock,
     className: 'bg-primary-blue text-white shadow-sm shadow-primary-blue/30',
   },
   FAILED: {
     label: '실패',
+    Icon: X,
     className: 'bg-red-500 text-white shadow-sm shadow-red-500/30',
   },
 };
@@ -90,8 +98,9 @@ export function FeedItem({ item }: FeedItemProps) {
           </p>
         </div>
         <span
-          className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-bold ${status.className}`}
+          className={`flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${status.className}`}
         >
+          <status.Icon size={12} strokeWidth={2.5} />
           {status.label}
         </span>
       </div>
