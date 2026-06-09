@@ -1,26 +1,5 @@
-import type { CrewDetail, DailySettlementType } from '@/types/domain';
-
-const CATEGORY_LABEL: Record<string, string> = {
-  MORNING: '🌅 기상',
-  READING: '📚 독서',
-  EXERCISE: '💪 운동',
-  STUDY: '📝 공부',
-  DIET: '🥗 식단',
-  MIND: '🧘 마음',
-  HEALTH: '❤️ 건강',
-};
-
-const SETTLEMENT_TYPE_LABEL: Record<DailySettlementType, string> = {
-  A: '아침형',
-  B: '표준형',
-  C: '올빼미형',
-};
-
-const SETTLEMENT_TIMES: Record<DailySettlementType, { deadline: string; settlement: string }> = {
-  A: { deadline: '09:00', settlement: '12:00' },
-  B: { deadline: '21:00', settlement: '00:00' },
-  C: { deadline: '23:59', settlement: '익일 12:00' },
-};
+import type { CrewDetail } from '@/types/domain';
+import { CATEGORY_LABEL, SETTLEMENT_TYPE_LABEL, SETTLEMENT_TIMES } from '@/constants/crew';
 
 interface CrewInfoTableProps {
   crew: CrewDetail;
@@ -32,7 +11,7 @@ export default function CrewInfoTable({ crew }: CrewInfoTableProps) {
   const totalAmount = crew.deposit_amount * crew.max_participants;
 
   const rows: { label: string; value: string }[] = [
-    { label: '방장', value: `${crew.host_member_uuid.slice(0, 8)}...` },
+    { label: '방장', value: crew.host_nickname },
     { label: '카테고리', value: CATEGORY_LABEL[crew.category] ?? crew.category },
     {
       label: '인증 타입',
@@ -41,7 +20,7 @@ export default function CrewInfoTable({ crew }: CrewInfoTableProps) {
     { label: '마감/정산', value: `${times.deadline} / ${times.settlement}` },
     { label: '보증금', value: `${crew.deposit_amount.toLocaleString()}원` },
     { label: '총 금액', value: `${totalAmount.toLocaleString()}원` },
-    { label: '인원', value: `? / ${crew.max_participants}명` },
+    { label: '인원', value: `${crew.current_participants} / ${crew.max_participants}명` },
   ];
 
   return (
