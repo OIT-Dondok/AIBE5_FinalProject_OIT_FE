@@ -11,19 +11,13 @@ interface FeedReactionBarProps {
 }
 
 export function FeedReactionBar({ initialReactions }: FeedReactionBarProps) {
+  // 리액션 로컬 상태는 마운트 시 prop으로 초기화.
+  // 피드(feed_id) 변경 시에는 상위에서 key로 remount하므로 prop→state 동기화 로직이 필요 없다.
   const [reactions, setReactions] = useState<FeedReaction[]>(initialReactions);
   const [activated, setActivated] = useState<Set<string>>(new Set());
   const [open, setOpen] = useState(false);
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
-  const [prevInitial, setPrevInitial] = useState(initialReactions);
   const buttonRef = useRef<HTMLButtonElement>(null);
-
-  // initialReactions(prop)가 바뀌면 로컬 상태를 동기화 (effect 없이 렌더 중 처리)
-  if (prevInitial !== initialReactions) {
-    setPrevInitial(initialReactions);
-    setReactions(initialReactions);
-    setActivated(new Set());
-  }
 
   const handleReactionClick = (emoji: string) => {
     // TODO: API - 리액션 토글 반영 (추가 POST /feeds/{feedId}/reactions, 취소 DELETE)

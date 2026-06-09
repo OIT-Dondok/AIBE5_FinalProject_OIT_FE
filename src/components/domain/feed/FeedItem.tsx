@@ -78,9 +78,9 @@ export function FeedItem({ item }: FeedItemProps) {
         </div>
       )}
 
-      {/* 리액션 바 */}
+      {/* 리액션 바 (feed_id 변경 시 remount되어 로컬 상태 초기화) */}
       <div className="px-4 py-3.5">
-        <FeedReactionBar initialReactions={item.reactions} />
+        <FeedReactionBar key={item.feed_id} initialReactions={item.reactions} />
       </div>
 
       {/* 이미지 확대 라이트박스 */}
