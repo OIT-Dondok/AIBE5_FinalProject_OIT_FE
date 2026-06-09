@@ -757,6 +757,7 @@ export interface AiRecommendationResponse {
     frequency_type: FrequencyType;
     frequency_count: number;
     mission_schedule_days: string[];
+    daily_settlement_type: DailySettlementType;
     deposit_amount: number;
     duration_days: number;
   };
