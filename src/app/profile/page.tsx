@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import type { FormEvent } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CircleAlert, CheckCircle2 } from "lucide-react";
 
 import { Header } from "@/components/common/Header";
@@ -143,9 +143,13 @@ export default function ProfilePage() {
   const [inlineDraft, setInlineDraft] = useState<ProfileFormState>(() =>
     createProfileFormState(null),
   );
+  const isMountedRef = useRef(true);
+  const isInlineEditingRef = useRef(false);
+  const uploadAbortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    let isMounted = true;
+    isMountedRef.current = true;
+    isInlineEditingRef.current = isInlineEditing;
 
     const fetchProfilePageData = async () => {
       setIsLoading(true);
@@ -168,7 +172,7 @@ export default function ProfilePage() {
           }
         }
 
-        if (!isMounted) return;
+        if (!isMountedRef.current) return;
 
         setPageData({
           profile: buildProfileViewModel(
@@ -179,20 +183,26 @@ export default function ProfilePage() {
           activitySummary: activitySummaryResponse.data,
         });
       } catch {
-        if (!isMounted) return;
+        if (!isMountedRef.current) return;
         setLoadErrorMessage("프로필 정보를 불러오지 못했습니다.");
         setPageData(null);
       } finally {
-        if (isMounted) setIsLoading(false);
+        if (isMountedRef.current) setIsLoading(false);
       }
     };
 
     void fetchProfilePageData();
 
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
+      uploadAbortControllerRef.current?.abort();
+      uploadAbortControllerRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    isInlineEditingRef.current = isInlineEditing;
+  }, [isInlineEditing]);
 
   const openInlineEditor = () => {
     setInlineDraft(createProfileFormState(pageData?.profile ?? null));
@@ -224,6 +234,8 @@ export default function ProfilePage() {
     }
 
     setIsUploadingAvatar(true);
+    const uploadAbortController = new AbortController();
+    uploadAbortControllerRef.current = uploadAbortController;
 
     try {
       const presignedUrlResponse = await requestProfileImageUploadUrl({
@@ -238,10 +250,15 @@ export default function ProfilePage() {
           "Content-Type": contentType,
         },
         body: file,
+        signal: uploadAbortController.signal,
       });
 
       if (!uploadResponse.ok) {
         throw new Error(`업로드 요청 실패: ${uploadResponse.status} ${uploadResponse.statusText}`);
+      }
+
+      if (!isMountedRef.current || !isInlineEditingRef.current) {
+        return;
       }
 
       const imagePreviewUrl = URL.createObjectURL(file);
@@ -260,9 +277,18 @@ export default function ProfilePage() {
 
       showFeedbackToast("프로필 이미지 업로드가 완료되었습니다.", "success");
     } catch {
+      if (!isMountedRef.current || !isInlineEditingRef.current) {
+        return;
+      }
+
       const message = "프로필 이미지 업로드에 실패했습니다.";
       showFeedbackToast(message, "error");
     } finally {
+      if (uploadAbortControllerRef.current === uploadAbortController) {
+        uploadAbortControllerRef.current = null;
+      }
+
+      if (!isMountedRef.current) return;
       setIsUploadingAvatar(false);
     }
   };
