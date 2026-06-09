@@ -7,8 +7,7 @@ const CATEGORY_EMOJI: Record<CrewCategory, string> = {
   EXERCISE: '💪',
   STUDY: '📝',
   DIET: '🥗',
-  MIND: '🧘',
-  HEALTH: '❤️',
+  ETC: '📌',
 };
 
 const CATEGORY_BG: Record<CrewCategory, string> = {
@@ -17,8 +16,7 @@ const CATEGORY_BG: Record<CrewCategory, string> = {
   EXERCISE: 'bg-blue-50',
   STUDY: 'bg-violet-50',
   DIET: 'bg-green-50',
-  MIND: 'bg-teal-50',
-  HEALTH: 'bg-rose-50',
+  ETC: 'bg-slate-50',
 };
 
 interface StatusConfig {

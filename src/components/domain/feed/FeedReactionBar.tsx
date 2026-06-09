@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { SmilePlus } from 'lucide-react';
 
 import type { FeedReaction } from '@/mocks/data/feed';
@@ -15,12 +15,15 @@ export function FeedReactionBar({ initialReactions }: FeedReactionBarProps) {
   const [activated, setActivated] = useState<Set<string>>(new Set());
   const [open, setOpen] = useState(false);
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
+  const [prevInitial, setPrevInitial] = useState(initialReactions);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
+  // initialReactions(prop)가 바뀌면 로컬 상태를 동기화 (effect 없이 렌더 중 처리)
+  if (prevInitial !== initialReactions) {
+    setPrevInitial(initialReactions);
     setReactions(initialReactions);
     setActivated(new Set());
-  }, [initialReactions]);
+  }
 
   const handleReactionClick = (emoji: string) => {
     const isActive = activated.has(emoji);

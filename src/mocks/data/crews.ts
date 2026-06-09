@@ -6,8 +6,7 @@ export type CrewCategory =
     | 'EXERCISE'
     | 'STUDY'
     | 'DIET'
-    | 'MIND'
-    | 'HEALTH';
+    | 'ETC';
 
 export interface MockCrew {
     crew_id: number;

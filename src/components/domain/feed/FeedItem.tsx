@@ -1,84 +1,31 @@
-import { Check, Clock, X, type LucideIcon } from 'lucide-react';
+"use client";
 
-import type { CrewCategory } from '@/mocks/data/crews';
-import type { CertificationStatus, FeedItem as FeedItemType } from '@/mocks/data/feed';
+import { useState } from 'react';
+
+import type { FeedItem as FeedItemType } from '@/mocks/data/feed';
 import { FeedReactionBar } from '@/components/domain/feed/FeedReactionBar';
-
-const CATEGORY_EMOJI: Record<CrewCategory, string> = {
-  MORNING: '🌅',
-  READING: '📚',
-  EXERCISE: '💪',
-  STUDY: '📝',
-  DIET: '🥗',
-  MIND: '🧘',
-  HEALTH: '❤️',
-};
-
-const CATEGORY_ICON_BG: Record<CrewCategory, string> = {
-  MORNING: 'bg-orange-100',
-  READING: 'bg-amber-100',
-  EXERCISE: 'bg-blue-100',
-  STUDY: 'bg-violet-100',
-  DIET: 'bg-emerald-100',
-  MIND: 'bg-teal-100',
-  HEALTH: 'bg-rose-100',
-};
-
-const CATEGORY_PLACEHOLDER_BG: Record<CrewCategory, string> = {
-  MORNING: 'bg-gradient-to-br from-orange-200 to-amber-300',
-  READING: 'bg-gradient-to-br from-amber-200 to-yellow-300',
-  EXERCISE: 'bg-gradient-to-br from-sky-200 to-blue-300',
-  STUDY: 'bg-gradient-to-br from-violet-200 to-purple-300',
-  DIET: 'bg-gradient-to-br from-emerald-200 to-green-300',
-  MIND: 'bg-gradient-to-br from-teal-200 to-cyan-300',
-  HEALTH: 'bg-gradient-to-br from-rose-200 to-pink-300',
-};
-
-const STATUS_CONFIG: Record<
-  CertificationStatus,
-  { label: string; className: string; Icon: LucideIcon }
-> = {
-  SUCCESS: {
-    label: '성공',
-    Icon: Check,
-    className: 'bg-primary-green text-white shadow-sm shadow-primary-green/30',
-  },
-  PENDING_REVIEW: {
-    label: '검토중',
-    Icon: Clock,
-    className: 'bg-primary-blue text-white shadow-sm shadow-primary-blue/30',
-  },
-  FAILED: {
-    label: '실패',
-    Icon: X,
-    className: 'bg-red-500 text-white shadow-sm shadow-red-500/30',
-  },
-};
-
-function formatCertifiedAt(isoStr: string): string {
-  const d = new Date(isoStr);
-  if (isNaN(d.getTime())) return '-';
-  const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
-  const month = kst.getUTCMonth() + 1;
-  const day = kst.getUTCDate();
-  const hours = kst.getUTCHours();
-  const ampm = hours < 12 ? '오전' : '오후';
-  const displayHours = hours % 12 || 12;
-  const minutes = String(kst.getUTCMinutes()).padStart(2, '0');
-  return `${month}/${day} ${ampm} ${displayHours}:${minutes}`;
-}
+import { FeedImageLightbox } from '@/components/domain/feed/FeedImageLightbox';
+import { FeedCertImage } from '@/components/domain/feed/FeedCertImage';
+import {
+  CATEGORY_EMOJI,
+  CATEGORY_ICON_BG,
+  STATUS_CONFIG,
+  formatCertifiedAt,
+  getInitial,
+} from '@/components/domain/feed/feedItemMeta';
 
 interface FeedItemProps {
   item: FeedItemType;
 }
 
 export function FeedItem({ item }: FeedItemProps) {
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+
   const emoji = CATEGORY_EMOJI[item.category];
   const iconBg = CATEGORY_ICON_BG[item.category];
-  const placeholderBg = CATEGORY_PLACEHOLDER_BG[item.category];
   const status = STATUS_CONFIG[item.certification_status];
   const timeStr = formatCertifiedAt(item.certified_at);
-  const initial = item.nickname.trim().charAt(0).toUpperCase();
+  const initial = getInitial(item.nickname);
 
   return (
     <article className="bg-card rounded-card overflow-hidden border border-text-secondary/10 shadow-card-elevated">
@@ -105,11 +52,21 @@ export function FeedItem({ item }: FeedItemProps) {
         </span>
       </div>
 
-      {/* 이미지 영역: 4:3 그라데이션 placeholder (크루 인증 이미지) */}
-      <div className={`relative w-full aspect-[4/3] overflow-hidden ${placeholderBg}`}>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-7xl opacity-25 select-none">{emoji}</span>
-        </div>
+      {/* 이미지 영역 (실제 이미지가 있을 때만 클릭 확대 활성화) */}
+      <div className="relative">
+        <FeedCertImage
+          category={item.category}
+          imageUrl={item.image_url}
+          alt={`${item.nickname}님의 ${item.crew_title} 인증 이미지`}
+        />
+        {item.image_url && (
+          <button
+            type="button"
+            onClick={() => setIsLightboxOpen(true)}
+            aria-label="인증 이미지 확대 보기"
+            className="absolute inset-0 w-full h-full cursor-zoom-in outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-green/50"
+          />
+        )}
       </div>
 
       {/* 캡션 (이미지 밖 별도 영역) */}
@@ -125,6 +82,11 @@ export function FeedItem({ item }: FeedItemProps) {
       <div className="px-4 py-3.5">
         <FeedReactionBar initialReactions={item.reactions} />
       </div>
+
+      {/* 이미지 확대 라이트박스 */}
+      {isLightboxOpen && (
+        <FeedImageLightbox item={item} onClose={() => setIsLightboxOpen(false)} />
+      )}
     </article>
   );
 }
