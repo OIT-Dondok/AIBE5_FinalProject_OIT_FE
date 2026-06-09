@@ -1,9 +1,9 @@
 import { ShieldCheck } from "lucide-react";
 
-import type { CrewProfileStat } from "@/mocks/data/profile";
+import type { ProfileStat } from "@/components/domain/profile/profileViewModel";
 
 const statToneStyles: Record<
-  CrewProfileStat["tone"],
+  ProfileStat["tone"],
   { card: string; label: string; value: string; caption: string; glow: string }
 > = {
   gold: {
@@ -44,11 +44,11 @@ const statToneStyles: Record<
 };
 
 interface StatsGridProps {
-  stats: CrewProfileStat[];
+  stats: ProfileStat[];
 }
 
 export function StatsGrid({ stats }: StatsGridProps) {
-  const filledStats: CrewProfileStat[] = stats.length
+  const filledStats: ProfileStat[] = stats.length
     ? stats
     : [
         { label: "참여 크루 수", value: "-", caption: "데이터 없음", tone: "neutral" },

@@ -1,33 +1,31 @@
 "use client";
 
-import type { ChangeEvent, Dispatch, FormEvent, SetStateAction } from "react";
-import { useState } from "react";
-import { Camera, Pencil } from "lucide-react";
+import type {
+  ChangeEvent,
+  Dispatch,
+  FormEvent,
+  PointerEvent,
+  SetStateAction,
+} from "react";
+import { useRef, useState } from "react";
+import { Camera, Crown, Pencil } from "lucide-react";
 
 import { Button } from "@/components/common/Button";
+import {
+  normalizeInitials,
+  type ProfileFormState,
+  type ProfileViewModel,
+} from "@/components/domain/profile/profileViewModel";
 import { HostBadge } from "@/components/common/HostBadge";
 
-import type { CrewProfileFormState, CrewProfileMock } from "@/mocks/data/profile";
-
-export function createProfileFormState(profile: CrewProfileMock | null): CrewProfileFormState {
-  return {
-    initials: profile?.initials ?? "",
-    avatarImageUrl: profile?.avatarImageUrl ?? null,
-    nickname: profile?.nickname ?? "",
-    statusMessage: profile?.statusMessage ?? "",
-  };
-}
-
-export function normalizeInitials(initials: string, fallback: string) {
-  const trimmed = initials.trim();
-  return trimmed ? trimmed.slice(0, 2) : fallback;
-}
-
 interface ProfileCardProps {
-  profile: CrewProfileMock;
+  profile: ProfileViewModel;
   isInlineEditing: boolean;
-  inlineDraft: CrewProfileFormState;
-  onInlineDraftChange: Dispatch<SetStateAction<CrewProfileFormState>>;
+  inlineDraft: ProfileFormState;
+  isSaving?: boolean;
+  errorMessage?: string | null;
+  onInlineDraftChange: Dispatch<SetStateAction<ProfileFormState>>;
+  onProfileImageUpload: (file: File) => Promise<void>;
   onInlineEdit: () => void;
   onInlineCancel: () => void;
   onInlineSave: (event: FormEvent<HTMLFormElement>) => void;
@@ -37,35 +35,43 @@ export function ProfileCard({
   profile,
   isInlineEditing,
   inlineDraft,
+  isSaving = false,
+  errorMessage = null,
   onInlineDraftChange,
+  onProfileImageUpload,
   onInlineEdit,
   onInlineCancel,
   onInlineSave,
 }: ProfileCardProps) {
   const [isIntroExpanded, setIsIntroExpanded] = useState(false);
+  const [isAvatarPressed, setIsAvatarPressed] = useState(false);
+  const avatarImageInputRef = useRef<HTMLInputElement>(null);
   const statusMessage = profile.statusMessage?.trim() || "상태 메시지가 아직 없습니다.";
   const avatarImageUrl = isInlineEditing ? inlineDraft.avatarImageUrl : profile.avatarImageUrl;
-  const avatarInitials = isInlineEditing
-    ? normalizeInitials(inlineDraft.initials, profile.initials)
-    : profile.initials;
+  const avatarInitials = isInlineEditing ? inlineDraft.initials : profile.initials;
+
+  const openAvatarImagePicker = () => {
+    if (!isInlineEditing || isSaving) return;
+    avatarImageInputRef.current?.click();
+  };
 
   const handleAvatarFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
     if (!file) return;
 
-    const reader = new FileReader();
+    void onProfileImageUpload(file);
+    event.currentTarget.value = "";
+  };
 
-    reader.onload = () => {
-      if (typeof reader.result !== "string") return;
+  const handleAvatarPress = () => {
+    if (!isInlineEditing || isSaving) return;
+    setIsAvatarPressed(true);
+  };
 
-      onInlineDraftChange((current) => ({
-        ...current,
-        avatarImageUrl: reader.result as string,
-      }));
-    };
-
-    reader.readAsDataURL(file);
+  const handleAvatarPressRelease = (_: PointerEvent<HTMLDivElement>) => {
+    if (!isInlineEditing || isSaving) return;
+    setIsAvatarPressed(false);
   };
 
   return (
@@ -77,55 +83,56 @@ export function ProfileCard({
     >
       <div className="flex items-center gap-4">
         <div className="relative shrink-0">
-          {isInlineEditing ? (
-            <>
-              <input
-                id="profile-avatar-upload"
-                type="file"
-                accept="image/*"
-                className="sr-only"
-                onChange={handleAvatarFileChange}
-              />
-              <label
-                htmlFor="profile-avatar-upload"
-                className={`relative flex h-20 w-20 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-primary-green/20 bg-success-green bg-cover bg-center text-2xl font-black text-primary-green shadow-inner transition hover:brightness-95 active:scale-95 ${
-                  avatarImageUrl ? "text-transparent" : ""
-                }`}
-                aria-label="프로필 이미지 수정"
-              >
-                {avatarImageUrl ? (
-                  <AvatarImage
-                    src={avatarImageUrl}
-                    alt={`${profile.nickname} 프로필 이미지`}
-                  />
-                ) : (
-                  avatarInitials
-                )}
-              </label>
-              <label
-                htmlFor="profile-avatar-upload"
-                className="absolute -bottom-1 -right-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-card bg-primary-green text-white shadow-md transition active:scale-95"
-                aria-label="프로필 이미지 수정"
-              >
-                <Camera size={15} />
-              </label>
-            </>
-          ) : (
-            <div
-              className={`relative h-20 w-20 overflow-hidden rounded-full bg-success-green border border-primary-green/20 flex items-center justify-center bg-cover bg-center text-2xl font-black text-primary-green shadow-inner ${
-                avatarImageUrl ? "text-transparent" : ""
-              }`}
-            >
-              {avatarImageUrl ? (
-                <AvatarImage
-                  src={avatarImageUrl}
-                  alt={`${profile.nickname} 프로필 이미지`}
-                />
-              ) : (
-                avatarInitials
-              )}
-            </div>
-          )}
+          <input
+            ref={avatarImageInputRef}
+            type="file"
+            accept="image/*"
+            className="sr-only"
+            onChange={handleAvatarFileChange}
+            onClick={(event) => {
+              if (isSaving) event.preventDefault();
+            }}
+            disabled={isSaving}
+            aria-label="프로필 이미지 파일 선택"
+          />
+          <div
+            className={`relative h-20 w-20 rounded-full bg-success-green border border-primary-green/20 flex items-center justify-center bg-cover bg-center text-2xl font-black text-primary-green shadow-inner ${
+              avatarImageUrl ? "text-transparent" : ""
+            } ${isInlineEditing && !isSaving ? "cursor-pointer transition-transform active:scale-95" : ""} ${isAvatarPressed ? "scale-95" : ""}`}
+            onClick={openAvatarImagePicker}
+            onPointerDown={handleAvatarPress}
+            onPointerUp={handleAvatarPressRelease}
+            onPointerLeave={handleAvatarPressRelease}
+            onPointerCancel={handleAvatarPressRelease}
+            role={isInlineEditing ? "button" : undefined}
+            tabIndex={isInlineEditing ? 0 : -1}
+            aria-label={isInlineEditing ? "프로필 이미지 수정" : undefined}
+            aria-disabled={!isInlineEditing || isSaving}
+            onKeyDown={(event) => {
+              if (!isInlineEditing || isSaving) return;
+
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                openAvatarImagePicker();
+              }
+            }}
+          >
+            {avatarImageUrl ? (
+              <div className="absolute inset-0 overflow-hidden rounded-full">
+                <AvatarImage src={avatarImageUrl} alt={`${profile.nickname} 프로필 이미지`} />
+              </div>
+            ) : (
+              avatarInitials
+            )}
+
+            {isInlineEditing && (
+              <div className="absolute -right-1 -bottom-1 rounded-full border-2 border-card bg-card p-[2px] shadow-md">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-green text-white">
+                  <Camera size={13} />
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="min-w-0 flex-1">
@@ -134,15 +141,18 @@ export function ProfileCard({
               aria-label="닉네임"
               value={inlineDraft.nickname}
               onChange={(event) =>
-                onInlineDraftChange({ ...inlineDraft, nickname: event.target.value })
+                onInlineDraftChange({
+                  ...inlineDraft,
+                  nickname: event.target.value,
+                  initials: normalizeInitials(event.target.value, inlineDraft.initials),
+                })
               }
               className="w-full rounded-xl border border-primary-green/20 bg-background/60 px-3 py-2 text-2xl font-black tracking-tight text-text-primary outline-none transition focus:border-primary-green focus:bg-card"
               placeholder={profile.nickname}
+              disabled={isSaving}
             />
           ) : (
-            <h1 className="text-2xl font-black tracking-tight text-text-primary">
-              {profile.nickname}
-            </h1>
+            <h1 className="text-2xl font-black tracking-tight text-text-primary">{profile.nickname}</h1>
           )}
           {profile.isHostEver && (
             <HostBadge count={profile.hostedCrewCount} className="mt-2 shrink-0" />
@@ -153,13 +163,14 @@ export function ProfileCard({
       <div className="mt-5 rounded-2xl bg-background/60 border border-text-secondary/10 px-4 py-3">
         {isInlineEditing ? (
           <textarea
-            aria-label="자기소개"
+            aria-label="상태 메시지"
             value={inlineDraft.statusMessage}
             onChange={(event) =>
               onInlineDraftChange({ ...inlineDraft, statusMessage: event.target.value })
             }
             className="min-h-28 w-full resize-none bg-transparent text-sm leading-relaxed text-text-secondary outline-none placeholder:text-text-secondary/50"
-            placeholder="오늘도 한 걸음씩, 어제보다 조금 더."
+            placeholder="예) 자기소개를 남겨두세요"
+            disabled={isSaving}
           />
         ) : (
           <>
@@ -177,20 +188,26 @@ export function ProfileCard({
               aria-expanded={isIntroExpanded}
               onClick={() => setIsIntroExpanded((current) => !current)}
             >
-              {isIntroExpanded ? "말줄임으로 보기" : "전체 보기"}
+              {isIntroExpanded ? "접기" : "더 보기"}
             </button>
           </>
         )}
       </div>
 
+      {errorMessage && (
+        <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-500">
+          {errorMessage}
+        </p>
+      )}
+
       <div className={isInlineEditing ? "mt-5 grid grid-cols-2 gap-2" : "mt-5"}>
         {isInlineEditing ? (
           <>
-            <Button type="button" variant="outline" onClick={onInlineCancel} fullWidth>
+            <Button type="button" variant="outline" onClick={onInlineCancel} fullWidth disabled={isSaving}>
               취소
             </Button>
-            <Button type="submit" variant="primary-green" fullWidth>
-              저장
+            <Button type="submit" variant="primary-green" fullWidth disabled={isSaving}>
+              {isSaving ? "저장 중" : "저장"}
             </Button>
           </>
         ) : (
@@ -203,7 +220,7 @@ export function ProfileCard({
           >
             <span className="flex items-center justify-center gap-1.5">
               <Pencil size={15} />
-              프로필 편집
+              수정하기
             </span>
           </Button>
         )}
@@ -214,11 +231,7 @@ export function ProfileCard({
 
 function AvatarImage({ src, alt }: { src: string; alt: string }) {
   return (
-    // eslint-disable-next-line @next/next/no-img-element -- 로컬 파일 미리보기 data URL을 즉시 표시합니다.
-    <img
-      src={src}
-      alt={alt}
-      className="absolute inset-0 h-full w-full rounded-full object-cover"
-    />
+    // eslint-disable-next-line @next/next/no-img-element -- Keep current image rendering path for backend-provided profile URLs.
+    <img src={src} alt={alt} className="absolute inset-0 h-full w-full rounded-full object-cover" />
   );
 }
