@@ -8,9 +8,7 @@ import { Chip } from '@/components/common/Chip';
 import { EmptyState } from '@/components/common/EmptyState';
 import CrewCard from '@/components/domain/crew/CrewCard';
 import { getCrews } from '@/services/crew';
-import type { CrewListItem, CrewStatus } from '@/types/domain';
-
-import type { CrewListItem, CrewStatus, CrewCategory } from '`@/types/domain`';
+import type { CrewListItem, CrewStatus, CrewCategory } from '@/types/domain';
 type StatusFilter = CrewStatus | 'ALL';
 type CategoryFilter = CrewCategory | 'ALL';
 
@@ -40,9 +38,6 @@ export default function CrewsPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    setCrews([]);
-    setNextCursor(null);
-
     const fetchCrews = async () => {
       setIsLoading(true);
       try {
@@ -54,7 +49,8 @@ export default function CrewsPage() {
         setCrews(res.data.items);
         setNextCursor(res.data.next_cursor);
       } catch {
-        // axios interceptor handles errors
+        setCrews([]);
+        setNextCursor(null);
       } finally {
         setIsLoading(false);
       }
@@ -158,7 +154,9 @@ export default function CrewsPage() {
 
           {/* 크루 카드 리스트 */}
           <div className="flex flex-col gap-3 px-5 pb-10">
-            {crews.length === 0 && !isLoading ? (
+            {isLoading ? (
+                <p className="py-10 text-center text-sm text-text-secondary">불러오는 중...</p>
+            ) : crews.length === 0 ? (
                 <EmptyState
                     icon="🔍"
                     title="조건에 맞는 크루가 없어요"

@@ -72,10 +72,7 @@ export default function CrewCard({ crew }: CrewCardProps) {
   const status = STATUS_CONFIG[crew.status];
   const isClosed = crew.status === 'CLOSED' || crew.status === 'CANCELLED';
 
-  let fillPercent = 0;
-  if (crew.max_participants > 0) {
-    fillPercent = Math.max(0, Math.min(100, Math.round((crew.min_participants / crew.max_participants) * 100)));
-  }
+  const fillPercent = 0;
 
   return (
       <div className={`bg-card rounded-card p-5 flex flex-col gap-4 border border-text-secondary/10 shadow-card hover:shadow-card-elevated active:scale-[0.985] transition-all duration-200 cursor-pointer ${isClosed ? 'opacity-60' : ''}`}>
@@ -110,9 +107,8 @@ export default function CrewCard({ crew }: CrewCardProps) {
           <div className="flex items-center justify-between">
             <span className="text-[11px] text-text-secondary font-medium">참여 현황</span>
             <span className="text-[11px] font-bold text-text-primary">
-            {crew.min_participants}
-              <span className="text-text-secondary font-normal">/{crew.max_participants}명</span>
-          </span>
+              최소 {crew.min_participants}명 / 최대 {crew.max_participants}명
+            </span>
           </div>
           <div className="w-full h-1.5 bg-text-secondary/10 rounded-full overflow-hidden">
             <div
