@@ -1,5 +1,5 @@
 import { Calendar } from 'lucide-react';
-import type { CrewListItem, CrewCategory, CrewStatus } from '@/types/domain';
+import type { CrewListItem, CrewStatus, CrewCategory } from '@/types/domain';
 
 const CATEGORY_EMOJI: Record<CrewCategory, string> = {
   MORNING: '🌅',
