@@ -41,7 +41,8 @@ export function FeedReactionBar({ initialReactions }: FeedReactionBarProps) {
     // TODO: API - 새 이모지 반응 추가 (POST /feeds/{feedId}/reactions)
     const exists = reactions.some((r) => r.emoji === emoji);
     if (exists) {
-      if (!activated.has(emoji)) handleReactionClick(emoji);
+      // 이미 있는 이모지는 칩 클릭과 동일하게 토글 (활성 → 취소, 비활성 → 추가)
+      handleReactionClick(emoji);
     } else {
       setReactions((prev) => [...prev, { emoji, count: 1 }]);
       setActivated((prev) => {
