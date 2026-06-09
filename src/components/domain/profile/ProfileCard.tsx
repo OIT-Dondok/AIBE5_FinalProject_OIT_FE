@@ -23,7 +23,6 @@ interface ProfileCardProps {
   isInlineEditing: boolean;
   inlineDraft: ProfileFormState;
   isSaving?: boolean;
-  errorMessage?: string | null;
   onInlineDraftChange: Dispatch<SetStateAction<ProfileFormState>>;
   onProfileImageUpload: (file: File) => Promise<void>;
   onInlineEdit: () => void;
@@ -36,7 +35,6 @@ export function ProfileCard({
   isInlineEditing,
   inlineDraft,
   isSaving = false,
-  errorMessage = null,
   onInlineDraftChange,
   onProfileImageUpload,
   onInlineEdit,
@@ -46,7 +44,11 @@ export function ProfileCard({
   const [isIntroExpanded, setIsIntroExpanded] = useState(false);
   const [isAvatarPressed, setIsAvatarPressed] = useState(false);
   const avatarImageInputRef = useRef<HTMLInputElement>(null);
-  const statusMessage = profile.statusMessage?.trim() || "상태 메시지가 아직 없습니다.";
+  const statusMessage = profile.statusMessage;
+  const statusMessageForDisplay =
+    statusMessage && statusMessage.trim().length > 0
+      ? statusMessage
+      : "프로필 상태를 입력해 주세요.";
   const avatarImageUrl = isInlineEditing ? inlineDraft.avatarImageUrl : profile.avatarImageUrl;
   const avatarInitials = isInlineEditing ? inlineDraft.initials : profile.initials;
 
@@ -76,9 +78,8 @@ export function ProfileCard({
 
   return (
     <form
-      className={`max-w-full bg-card rounded-card px-5 py-6 shadow-card border ${
-        isInlineEditing ? "border-primary-green/30" : "border-text-secondary/10"
-      }`}
+      className={`max-w-full bg-card rounded-card px-5 py-6 shadow-card border ${isInlineEditing ? "border-primary-green/30" : "border-text-secondary/10"
+        }`}
       onSubmit={onInlineSave}
     >
       <div className="flex items-center gap-4">
@@ -96,9 +97,8 @@ export function ProfileCard({
             aria-label="프로필 이미지 파일 선택"
           />
           <div
-            className={`relative h-20 w-20 rounded-full bg-success-green border border-primary-green/20 flex items-center justify-center bg-cover bg-center text-2xl font-black text-primary-green shadow-inner ${
-              avatarImageUrl ? "text-transparent" : ""
-            } ${isInlineEditing && !isSaving ? "cursor-pointer transition-transform active:scale-95" : ""} ${isAvatarPressed ? "scale-95" : ""}`}
+            className={`relative h-20 w-20 rounded-full bg-success-green border border-primary-green/20 flex items-center justify-center bg-cover bg-center text-2xl font-black text-primary-green shadow-inner ${avatarImageUrl ? "text-transparent" : ""
+              } ${isInlineEditing && !isSaving ? "cursor-pointer transition-transform active:scale-95" : ""} ${isAvatarPressed ? "scale-95" : ""}`}
             onClick={openAvatarImagePicker}
             onPointerDown={handleAvatarPress}
             onPointerUp={handleAvatarPressRelease}
@@ -175,12 +175,11 @@ export function ProfileCard({
         ) : (
           <>
             <p
-              className={`break-words text-sm leading-relaxed text-text-secondary ${
-                isIntroExpanded ? "" : "line-clamp-2"
-              }`}
-              title={statusMessage}
+              className={`break-words whitespace-pre-wrap text-sm leading-relaxed text-text-secondary ${isIntroExpanded ? "" : "line-clamp-2"
+                }`}
+              title={statusMessageForDisplay}
             >
-              &quot;{statusMessage}&quot;
+              {statusMessageForDisplay}
             </p>
             <button
               type="button"
@@ -193,12 +192,6 @@ export function ProfileCard({
           </>
         )}
       </div>
-
-      {errorMessage && (
-        <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-500">
-          {errorMessage}
-        </p>
-      )}
 
       <div className={isInlineEditing ? "mt-5 grid grid-cols-2 gap-2" : "mt-5"}>
         {isInlineEditing ? (

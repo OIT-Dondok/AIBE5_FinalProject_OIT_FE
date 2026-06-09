@@ -136,7 +136,6 @@ export default function ProfilePage() {
   const [pageData, setPageData] = useState<ProfilePageData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadErrorMessage, setLoadErrorMessage] = useState<string | null>(null);
-  const [saveErrorMessage, setSaveErrorMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isInlineEditing, setIsInlineEditing] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -196,7 +195,6 @@ export default function ProfilePage() {
   }, []);
 
   const openInlineEditor = () => {
-    setSaveErrorMessage(null);
     setInlineDraft(createProfileFormState(pageData?.profile ?? null));
     setIsInlineEditing(true);
   };
@@ -214,7 +212,6 @@ export default function ProfilePage() {
 
     const validateMessage = validateProfileImage(file);
     if (validateMessage) {
-      setSaveErrorMessage(validateMessage);
       showFeedbackToast(validateMessage, "error");
       return;
     }
@@ -222,13 +219,11 @@ export default function ProfilePage() {
     const contentType = resolveProfileImageMimeType(file);
     if (!contentType) {
       const message = "프로필 이미지 형식은 JPG만 지원됩니다.";
-      setSaveErrorMessage(message);
       showFeedbackToast(message, "error");
       return;
     }
 
     setIsUploadingAvatar(true);
-    setSaveErrorMessage(null);
 
     try {
       const presignedUrlResponse = await requestProfileImageUploadUrl({
@@ -266,7 +261,6 @@ export default function ProfilePage() {
       showFeedbackToast("프로필 이미지 업로드가 완료되었습니다.", "success");
     } catch {
       const message = "프로필 이미지 업로드에 실패했습니다.";
-      setSaveErrorMessage(message);
       showFeedbackToast(message, "error");
     } finally {
       setIsUploadingAvatar(false);
@@ -280,13 +274,11 @@ export default function ProfilePage() {
 
     if (!inlineDraft.nickname.trim()) {
       const message = "닉네임을 입력해 주세요.";
-      setSaveErrorMessage(message);
       showFeedbackToast(message, "error");
       return;
     }
 
     setIsSaving(true);
-    setSaveErrorMessage(null);
 
     try {
       const response = await updateMyProfile(createProfileUpdatePayload(inlineDraft));
@@ -302,7 +294,6 @@ export default function ProfilePage() {
       showFeedbackToast("프로필이 저장되었습니다.", "success");
     } catch {
       const message = "프로필 수정에 실패했습니다. 입력 값을 확인해 주세요.";
-      setSaveErrorMessage(message);
       showFeedbackToast(message, "error");
     } finally {
       setIsSaving(false);
@@ -314,7 +305,6 @@ export default function ProfilePage() {
       URL.revokeObjectURL(inlineDraft.avatarImageUrl);
     }
 
-    setSaveErrorMessage(null);
     setInlineDraft(createProfileFormState(pageData?.profile ?? null));
     setIsInlineEditing(false);
   };
@@ -336,7 +326,6 @@ export default function ProfilePage() {
             isInlineEditing={isInlineEditing}
             inlineDraft={inlineDraft}
             isSaving={isSaving || isUploadingAvatar}
-            errorMessage={saveErrorMessage}
             onInlineDraftChange={setInlineDraft}
             onProfileImageUpload={handleProfileImageUpload}
             onInlineEdit={openInlineEditor}
