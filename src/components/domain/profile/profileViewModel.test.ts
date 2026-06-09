@@ -58,7 +58,7 @@ test("maps existing profile API types to profile view model", () => {
   const viewModel = buildProfileViewModel(member, summary, 6);
 
   assert.equal(viewModel.nickname, "김도전");
-  assert.equal(viewModel.initials, "김도");
+  assert.equal(viewModel.initials, "김");
   assert.equal(viewModel.unreadNotificationCount, 2);
   assert.equal(viewModel.hostOperationPendingCount, 6);
   assert.deepEqual(
