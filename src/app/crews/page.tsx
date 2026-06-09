@@ -10,7 +10,7 @@ import CrewCard from '@/components/domain/crew/CrewCard';
 import { getCrews } from '@/services/crew';
 import type { CrewListItem, CrewStatus } from '@/types/domain';
 
-type CrewCategory = 'MORNING' | 'READING' | 'EXERCISE' | 'STUDY' | 'DIET' | 'MIND' | 'HEALTH';
+import type { CrewListItem, CrewStatus, CrewCategory } from '`@/types/domain`';
 type StatusFilter = CrewStatus | 'ALL';
 type CategoryFilter = CrewCategory | 'ALL';
 
