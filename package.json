@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "tsc --noEmit --pretty false"
+    "test": "tsc --noEmit --pretty false && npx -y tsx --test src/**/*.test.ts"
   },
   "dependencies": {
     "@types/dompurify": "^3.0.5",
