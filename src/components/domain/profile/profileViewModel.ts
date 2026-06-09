@@ -29,6 +29,7 @@ export type ProfileViewModel = {
 export type ProfileFormState = {
   initials: string;
   avatarImageUrl: string | null;
+  avatarImageS3Key?: string | null;
   nickname: string;
   statusMessage: string;
 };
@@ -118,8 +119,14 @@ export function createProfileFormState(profile: ProfileViewModel | null): Profil
 }
 
 export function createProfileUpdatePayload(form: ProfileFormState): UpdateProfileRequest {
-  return {
+  const payload: UpdateProfileRequest = {
     nickname: form.nickname.trim(),
     status_message: form.statusMessage.trim() || null,
   };
+
+  if (form.avatarImageS3Key !== undefined) {
+    payload.profile_image_s3_key = form.avatarImageS3Key;
+  }
+
+  return payload;
 }
