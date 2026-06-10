@@ -1,5 +1,12 @@
 import { api } from '@/lib/axios';
-import type { CrewListResponse, CrewDetail, CreateCrewRequest } from '@/types/domain';
+import type {
+  CrewListResponse,
+  CrewDetail,
+  CreateCrewRequest,
+  ParticipantApplyResponse,
+  ParticipantCancelResponse,
+  CrewMembersResponse,
+} from '@/types/domain';
 
 export const getCrews = (params?: {
   status?: string;
@@ -17,4 +24,18 @@ export const getCrew = (crewId: number) => {
 
 export const createCrew = (crewData: CreateCrewRequest) => {
   return api.post('/crews', crewData);
+};
+
+export const joinCrew = (crewId: number) => {
+  return api.post<ParticipantApplyResponse>(`/crews/${crewId}/participants`);
+};
+
+export const cancelJoinCrew = (crewId: number) => {
+  return api.delete<ParticipantCancelResponse>(`/crews/${crewId}/participants/me`);
+};
+
+export const getCrewMembers = (crewId: number, cursor?: string) => {
+  return api.get<CrewMembersResponse>(`/crews/${crewId}/members`, {
+    params: cursor ? { cursor } : undefined,
+  });
 };
