@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { CrewDetail } from '@/types/domain';
 import CrewInfoTable from './CrewInfoTable';
+import CrewMemberList from './CrewMemberList';
 import { EmptyState } from '@/components/common/EmptyState';
 
 const TABS = ['정보', '공지', '멤버'] as const;
@@ -10,9 +11,10 @@ type TabType = (typeof TABS)[number];
 
 interface CrewDetailTabsProps {
   crew: CrewDetail;
+  crewId: number;
 }
 
-export default function CrewDetailTabs({ crew }: CrewDetailTabsProps) {
+export default function CrewDetailTabs({ crew, crewId }: CrewDetailTabsProps) {
   const [activeTab, setActiveTab] = useState<TabType>('정보');
 
   return (
@@ -53,11 +55,7 @@ export default function CrewDetailTabs({ crew }: CrewDetailTabsProps) {
           />
         )}
         {activeTab === '멤버' && (
-          <EmptyState
-            icon="👥"
-            title="멤버 목록 준비 중"
-            description="멤버 목록 기능이 곧 추가됩니다"
-          />
+          <CrewMemberList crewId={crewId} />
         )}
       </div>
     </div>
