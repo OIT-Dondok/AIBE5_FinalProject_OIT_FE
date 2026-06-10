@@ -78,6 +78,7 @@ export type SettlementStatus = (typeof SETTLEMENT_STATUS)[keyof typeof SETTLEMEN
 export const POINT_TRANSACTION_TYPE = {
   POINT_CHARGE: 'POINT_CHARGE',
   CREW_DEPOSIT_RESERVE: 'CREW_DEPOSIT_RESERVE',   // 보증금 예약 (reserve)
+  CREW_DEPOSIT_LOCK: 'CREW_DEPOSIT_LOCK',         // 보증금 예약 확정 (lock)
   CREW_RESERVE_RELEASE: 'CREW_RESERVE_RELEASE',   // 예약 해제 (취소/거절/만료)
   CREW_SETTLEMENT_REFUND: 'CREW_SETTLEMENT_REFUND', // 최종 정산 환급
   POINT_WITHDRAWAL: 'POINT_WITHDRAWAL', // 출금 요청(현재 UI/목데이터)
@@ -804,8 +805,9 @@ export interface PointAccountResponse {
   available_balance: number;
   reserved_balance: number;        // PENDING reserve
   active_locked_amount: number;    // LOCKED, 진행/모집 중
-  settlement_pending_amount: number; // LOCKED, 종료 후 정산 전
-  locked_balance: number;          // active_locked + settlement_pending
+  settlement_pending_amount: number; // unpaid settlement refunds in normal processing/retry states
+  settlement_failed_amount: number; // unpaid settlement refunds requiring failure recovery
+  locked_balance: number;          // persisted locked principal bucket
   total_balance: number;           // available + reserved + locked
   updated_at: string;
 }
@@ -818,9 +820,33 @@ export interface PointHistoryItem {
   transaction_type: PointTransactionType;
   reference_type: PointHistoryReferenceType;
   reference_id: number;
-  reference_meta?: PointHistoryReferenceMeta;
+  reference_meta?: PointHistoryReferenceMeta | null;
   created_at: string;
 }
 
 // GET /api/points/history → 200
 export type PointHistoryResponse = CursorPageResponse<PointHistoryItem>;
+
+export type WalletDisplayType =
+  | 'DODIN_CHARGE'
+  | 'DODIN_DEPOSIT'
+  | 'DODIN_DEPOSIT_REFUND'
+  | 'SETTLEMENT_REFUND';
+
+export type WalletEventStatus = 'COMPLETED' | 'PENDING' | 'CONFIRMED' | 'RELEASED';
+
+// GET /api/points/wallet-history items[]
+export interface WalletHistoryItem {
+  wallet_event_id: string;
+  amount: number;
+  balance_after: number;
+  display_type: WalletDisplayType | (string & {});
+  status: WalletEventStatus;
+  reference_type: PointHistoryReferenceType;
+  reference_id: number;
+  reference_meta?: (PointHistoryReferenceMeta & Record<string, unknown>) | null;
+  created_at: string;
+}
+
+// GET /api/points/wallet-history → 200
+export type WalletHistoryResponse = CursorPageResponse<WalletHistoryItem>;

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { CircleAlert, Info, Loader2, RotateCcw } from "lucide-react";
 
 import { BottomSheet } from "@/components/common/BottomSheet";
+import { formatKrw } from "@/components/domain/point/pointViewModel";
 
 interface ChargeBottomSheetProps {
   isOpen: boolean;
@@ -17,10 +18,6 @@ const MIN_CHARGE_AMOUNT = 1000;
 const CHARGE_STEP_AMOUNT = 1000;
 const MAX_CHARGE_AMOUNT = 1000000;
 const DEFAULT_AMOUNT = QUICK_ADD_AMOUNTS[0];
-
-function formatKrw(value: number) {
-  return `${new Intl.NumberFormat("ko-KR").format(value)}원`;
-}
 
 function formatQuickAdd(value: number) {
   return `+${new Intl.NumberFormat("ko-KR").format(value / 10000)}만`;
@@ -54,12 +51,6 @@ export function ChargeBottomSheet({ isOpen, onClose, currentBalance, initialAmou
   const initialAmountInput = useMemo(() => String(resolveInitialAmount(initialAmount)), [initialAmount]);
   const [amountInput, setAmountInput] = useState(initialAmountInput);
   const [mockStatus, setMockStatus] = useState<"idle" | "pending">("idle");
-
-  useEffect(() => {
-    if (!isOpen) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setAmountInput(String(resolveInitialAmount(initialAmount)));
-  }, [initialAmount, isOpen]);
 
   const amount = useMemo(() => {
     if (!amountInput) return null;
@@ -104,9 +95,7 @@ export function ChargeBottomSheet({ isOpen, onClose, currentBalance, initialAmou
   return (
     <BottomSheet isOpen={isOpen} onClose={handleClose} title="도딘 충전" ariaLabel="도딘 충전 바텀시트">
       <div className="px-5 pb-6 pt-4">
-        {/* 히어로 — 충전 금액 입력 */}
         <div className="relative overflow-hidden rounded-[26px] border border-primary-green/15 bg-primary-green/[0.06] px-5 pb-5 pt-6 duration-300 animate-in fade-in slide-in-from-bottom-2">
-          {/* 도딘 코인 모티프 (배경 지폐 패턴과 동일 D 코인) */}
           <span
             aria-hidden="true"
             className="pointer-events-none absolute -right-6 -top-7 h-28 w-28 rounded-full bg-primary-green/[0.07] blur-[2px]"
@@ -156,22 +145,16 @@ export function ChargeBottomSheet({ isOpen, onClose, currentBalance, initialAmou
           </div>
         </div>
 
-        {/* 헬퍼 / 에러 */}
         <div
           id="charge-amount-helper"
           className={`mt-2.5 flex items-center justify-center gap-1.5 text-xs font-semibold ${
             amountError ? "text-amber-700" : "text-text-secondary"
           }`}
         >
-          {amountError ? (
-            <CircleAlert size={14} aria-hidden="true" />
-          ) : (
-            <Info size={14} aria-hidden="true" />
-          )}
+          {amountError ? <CircleAlert size={14} aria-hidden="true" /> : <Info size={14} aria-hidden="true" />}
           <span>{amountError || "1,000원 단위로 충전할 수 있어요."}</span>
         </div>
 
-        {/* 충전 후 예상 잔액 */}
         {currentBalance != null && (
           <div className="mt-4 flex items-center justify-between gap-3 rounded-[20px] border border-text-secondary/10 bg-card px-4 py-3.5 shadow-sm duration-300 animate-in fade-in slide-in-from-bottom-2 [animation-delay:60ms] [animation-fill-mode:both]">
             <p className="text-xs font-bold text-text-secondary">충전 후 사용가능 도딘</p>
@@ -195,12 +178,11 @@ export function ChargeBottomSheet({ isOpen, onClose, currentBalance, initialAmou
           </div>
         )}
 
-        {/* 결제 연동 예정 안내 */}
         <p className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-semibold text-text-secondary/70">
           <span className="rounded-full bg-success-green/45 px-2 py-0.5 text-[10px] font-extrabold text-primary-green">
             결제 연동 예정
           </span>
-          실제 결제는 TossPayments 연동 후 활성화됩니다.
+          TossPayments 결제 성공 후 충전 확정 API를 호출합니다.
         </p>
 
         {mockStatus === "pending" && (
@@ -208,11 +190,10 @@ export function ChargeBottomSheet({ isOpen, onClose, currentBalance, initialAmou
             className="mt-3 rounded-2xl bg-amber-50 px-4 py-3 text-xs font-semibold leading-relaxed text-amber-800 duration-200 animate-in fade-in"
             aria-live="polite"
           >
-            결제창 연결 지점까지 확인했어요. TossPayments와 BE 충전 확정 API가 붙으면 이 버튼에서 결제창을 열 예정입니다.
+            아직 결제창이 연결되지 않았어요. 실제 충전 확정 API는 Toss 결제 성공 payload가 있을 때만 호출합니다.
           </div>
         )}
 
-        {/* CTA */}
         <div className="mt-6 grid grid-cols-[1fr_2fr] gap-2">
           <button
             type="button"
@@ -227,9 +208,7 @@ export function ChargeBottomSheet({ isOpen, onClose, currentBalance, initialAmou
             disabled={!isValidAmount}
             className="flex h-12 items-center justify-center gap-1.5 rounded-2xl bg-primary-blue text-sm font-extrabold text-white shadow-sm shadow-primary-blue/20 transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-text-secondary/25 disabled:text-text-secondary"
           >
-            {mockStatus === "pending" && (
-              <Loader2 size={15} className="animate-spin" aria-hidden="true" />
-            )}
+            {mockStatus === "pending" && <Loader2 size={15} className="animate-spin" aria-hidden="true" />}
             {isValidAmount && amount != null ? `${formatKrw(amount)} 충전하기` : "충전하기"}
           </button>
         </div>
