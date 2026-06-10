@@ -17,6 +17,11 @@ export type PointHistoryFilter = "ALL" | PointHistoryTypeFilter;
 export type WalletHistoryCategory = PointHistoryTypeFilter | "unknown";
 export type WalletHistoryDisplayType = WalletDisplayType | "UNKNOWN";
 
+export interface MonthFilterOption {
+  label: string;
+  value?: string;
+}
+
 export const POINT_HISTORY_FILTERS: Array<{
   label: string;
   value: PointHistoryFilter;
@@ -130,6 +135,48 @@ export function getWalletHistoryTypeParam(filter: PointHistoryFilter) {
 }
 
 export const getPointHistoryTypeParam = getWalletHistoryTypeParam;
+
+export function formatMonthLabel(value?: string) {
+  if (!value) return "전체 기간";
+
+  const match = /^(\d{4})-(\d{2})$/.exec(value);
+  if (!match) return value;
+
+  const month = Number(match[2]);
+  if (!Number.isInteger(month) || month < 1 || month > 12) return value;
+
+  return `${match[1]}년 ${month}월`;
+}
+
+function getSeoulYearMonth(date: Date) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+  }).formatToParts(date);
+
+  return {
+    year: Number(parts.find((part) => part.type === "year")?.value),
+    month: Number(parts.find((part) => part.type === "month")?.value),
+  };
+}
+
+export function buildRecentMonthOptions(baseDate: Date, count = 12): MonthFilterOption[] {
+  const { year: baseYear, month: baseMonth } = getSeoulYearMonth(baseDate);
+  const months = Array.from({ length: count }, (_, index) => {
+    const monthIndex = baseMonth - 1 - index;
+    const year = baseYear + Math.floor(monthIndex / 12);
+    const month = ((monthIndex % 12) + 12) % 12 + 1;
+    const value = `${year}-${String(month).padStart(2, "0")}`;
+
+    return {
+      label: formatMonthLabel(value),
+      value,
+    };
+  });
+
+  return [{ label: formatMonthLabel(), value: undefined }, ...months];
+}
 
 export function formatKrw(amount: number) {
   return `${new Intl.NumberFormat("ko-KR").format(amount)}원`;

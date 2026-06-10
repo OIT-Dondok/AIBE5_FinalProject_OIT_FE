@@ -45,6 +45,7 @@ export interface WalletHistorySectionProps {
   historyItems: WalletHistoryViewItem[];
   onFilterChange: (filter: HistoryFilter) => void;
   updatedAtLabel: string;
+  activeClassName?: string;
   filters?: HistoryFilterOption[];
   limit?: number;
   fullHistoryHref?: string;
@@ -89,10 +90,11 @@ export function HistoryRow({ item }: { item: WalletHistoryViewItem }) {
 }
 
 export function HistoryFilterTabs({
+  activeClassName = "bg-primary-blue text-white shadow-sm shadow-primary-blue/20",
   activeFilter,
   filters = WALLET_PREVIEW_HISTORY_FILTERS,
   onFilterChange,
-}: Pick<WalletHistorySectionProps, "activeFilter" | "filters" | "onFilterChange">) {
+}: Pick<WalletHistorySectionProps, "activeClassName" | "activeFilter" | "filters" | "onFilterChange">) {
   return (
     <div className="no-scrollbar -mx-4 mt-3 flex gap-1.5 overflow-x-auto px-4">
       {filters.map((filter) => {
@@ -104,9 +106,7 @@ export function HistoryFilterTabs({
             aria-pressed={isActive}
             onClick={() => onFilterChange(filter.value)}
             className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-extrabold transition-colors ${
-              isActive
-                ? "bg-primary-blue text-white shadow-sm shadow-primary-blue/20"
-                : "bg-background text-text-secondary hover:text-text-primary"
+              isActive ? activeClassName : "bg-background text-text-secondary hover:text-text-primary"
             }`}
           >
             {filter.label}

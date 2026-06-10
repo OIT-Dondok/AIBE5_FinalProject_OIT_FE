@@ -6,6 +6,7 @@ import { Header } from "@/components/common/Header";
 import { DodinHistoryList } from "@/components/domain/point/DodinHistoryList";
 import type { HistoryFilter } from "@/components/domain/point/WalletHistorySection";
 import {
+  buildRecentMonthOptions,
   getWalletHistoryTypeParam,
   toWalletHistoryViewItem,
 } from "@/components/domain/point/pointViewModel";
@@ -17,15 +18,27 @@ const INITIAL_CURSOR_KEY = "__initial__";
 
 export default function DodinHistoryPage() {
   const [activeFilter, setActiveFilter] = useState<HistoryFilter>("ALL");
+  const [activeMonth, setActiveMonth] = useState<string | undefined>(undefined);
   const [historyItems, setHistoryItems] = useState<WalletHistoryItem[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [monthOptions] = useState(() => buildRecentMonthOptions(new Date()));
   const requestIdRef = useRef(0);
   const lastRequestedCursorRef = useRef<string | null>(null);
 
   const fetchHistory = useCallback(
-    async ({ cursor, filter, reset }: { cursor?: string; filter: HistoryFilter; reset: boolean }) => {
+    async ({
+      cursor,
+      filter,
+      month,
+      reset,
+    }: {
+      cursor?: string;
+      filter: HistoryFilter;
+      month?: string;
+      reset: boolean;
+    }) => {
       const cursorKey = cursor ?? INITIAL_CURSOR_KEY;
       if (!reset && lastRequestedCursorRef.current === cursorKey) return;
 
@@ -39,6 +52,7 @@ export default function DodinHistoryPage() {
         const { data } = await getWalletHistory({
           cursor,
           limit: HISTORY_PAGE_SIZE,
+          ...(month ? { month } : {}),
           type: getWalletHistoryTypeParam(filter),
         });
 
@@ -63,24 +77,47 @@ export default function DodinHistoryPage() {
     [],
   );
 
+  const resetHistoryQuery = useCallback(() => {
+    requestIdRef.current += 1;
+    lastRequestedCursorRef.current = null;
+    setHistoryItems([]);
+    setNextCursor(null);
+  }, []);
+
   useEffect(() => {
     queueMicrotask(() => {
-      lastRequestedCursorRef.current = null;
-      setHistoryItems([]);
-      setNextCursor(null);
-      void fetchHistory({ filter: activeFilter, reset: true });
+      resetHistoryQuery();
+      void fetchHistory({ filter: activeFilter, month: activeMonth, reset: true });
     });
-  }, [activeFilter, fetchHistory]);
+  }, [activeFilter, activeMonth, fetchHistory, resetHistoryQuery]);
+
+  const handleFilterChange = useCallback(
+    (filter: HistoryFilter) => {
+      if (filter === activeFilter) return;
+      resetHistoryQuery();
+      setActiveFilter(filter);
+    },
+    [activeFilter, resetHistoryQuery],
+  );
+
+  const handleMonthChange = useCallback(
+    (month?: string) => {
+      if (month === activeMonth) return;
+      resetHistoryQuery();
+      setActiveMonth(month);
+    },
+    [activeMonth, resetHistoryQuery],
+  );
 
   const handleLoadMore = useCallback(() => {
     if (isLoading || !nextCursor) return;
-    void fetchHistory({ cursor: nextCursor, filter: activeFilter, reset: false });
-  }, [activeFilter, fetchHistory, isLoading, nextCursor]);
+    void fetchHistory({ cursor: nextCursor, filter: activeFilter, month: activeMonth, reset: false });
+  }, [activeFilter, activeMonth, fetchHistory, isLoading, nextCursor]);
 
   const handleRetry = useCallback(() => {
-    lastRequestedCursorRef.current = null;
-    void fetchHistory({ filter: activeFilter, reset: true });
-  }, [activeFilter, fetchHistory]);
+    resetHistoryQuery();
+    void fetchHistory({ filter: activeFilter, month: activeMonth, reset: true });
+  }, [activeFilter, activeMonth, fetchHistory, resetHistoryQuery]);
 
   const walletHistoryItems = useMemo(
     () => historyItems.map(toWalletHistoryViewItem),
@@ -95,12 +132,15 @@ export default function DodinHistoryPage() {
         <div className="px-5 pt-5">
           <DodinHistoryList
             activeFilter={activeFilter}
+            activeMonth={activeMonth}
             errorMessage={errorMessage}
             hasMore={nextCursor != null}
             historyItems={walletHistoryItems}
             isLoading={isLoading}
-            onFilterChange={setActiveFilter}
+            monthOptions={monthOptions}
+            onFilterChange={handleFilterChange}
             onLoadMore={handleLoadMore}
+            onMonthChange={handleMonthChange}
             onRetry={handleRetry}
           />
         </div>

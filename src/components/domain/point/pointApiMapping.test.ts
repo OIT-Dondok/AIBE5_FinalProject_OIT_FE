@@ -3,7 +3,9 @@ import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 
 import {
+  buildRecentMonthOptions,
   createWalletViewModel,
+  formatMonthLabel,
   getWalletHistoryTypeParam,
   POINT_HISTORY_FILTERS,
   toWalletHistoryViewItem,
@@ -37,6 +39,30 @@ describe("point wallet API mapping", () => {
     );
   });
 
+  it("builds recent month options from a fixed base month without timezone parsing", () => {
+    assert.deepEqual(buildRecentMonthOptions(new Date(2026, 5, 15), 4), [
+      { label: "전체 기간", value: undefined },
+      { label: "2026년 6월", value: "2026-06" },
+      { label: "2026년 5월", value: "2026-05" },
+      { label: "2026년 4월", value: "2026-04" },
+      { label: "2026년 3월", value: "2026-03" },
+    ]);
+  });
+
+  it("builds recent month options by Asia/Seoul month near UTC boundaries", () => {
+    assert.deepEqual(buildRecentMonthOptions(new Date("2026-05-31T15:30:00.000Z"), 1), [
+      { label: "전체 기간", value: undefined },
+      { label: "2026년 6월", value: "2026-06" },
+    ]);
+  });
+
+  it("formats month labels and falls back safely for invalid values", () => {
+    assert.equal(formatMonthLabel(undefined), "전체 기간");
+    assert.equal(formatMonthLabel("2026-06"), "2026년 6월");
+    assert.equal(formatMonthLabel("2026-13"), "2026-13");
+    assert.equal(formatMonthLabel("invalid"), "invalid");
+  });
+
   it("calls the wallet-history endpoint with documented params", async () => {
     const originalGet = api.get;
     const calls: Array<{ url: string; config: unknown }> = [];
@@ -64,6 +90,25 @@ describe("point wallet API mapping", () => {
           type: "deposit",
         },
       });
+    } finally {
+      api.get = originalGet;
+    }
+  });
+
+  it("omits month from wallet-history params for the all-period filter", async () => {
+    const originalGet = api.get;
+    const calls: Array<{ url: string; config: { params?: Record<string, unknown> } }> = [];
+    api.get = ((url: string, config?: { params?: Record<string, unknown> }) => {
+      calls.push({ url, config: config ?? {} });
+      return Promise.resolve({ data: { items: [], next_cursor: null } });
+    }) as typeof api.get;
+
+    try {
+      await getWalletHistory({ limit: 20, type: "deposit" });
+
+      assert.equal(calls.length, 1);
+      assert.equal(calls[0].url, "/points/wallet-history");
+      assert.equal(Object.hasOwn(calls[0].config.params ?? {}, "month"), false);
     } finally {
       api.get = originalGet;
     }
@@ -202,10 +247,29 @@ describe("point wallet API mapping", () => {
 
   it("clears the duplicate cursor guard when paginated history loading fails", () => {
     const source = readFileSync("src/app/my/dodin/history/page.tsx", "utf8");
-    const catchBlock = source.match(/catch\s*\{(?<body>[\s\S]*?)\}\s*finally/)?.groups?.body;
+    const catchBlock = source.match(/catch\s*\{([\s\S]*?)\}\s*finally/)?.[1];
 
     assert.ok(catchBlock);
     assert.match(catchBlock, /lastRequestedCursorRef\.current\s*=\s*null;/);
+  });
+
+  it("threads the selected month through initial fetch, retry, and pagination", () => {
+    const source = readFileSync("src/app/my/dodin/history/page.tsx", "utf8");
+
+    assert.match(source, /activeMonth/);
+    assert.match(source, /month:\s*activeMonth/);
+    assert.match(source, /fetchHistory\(\{\s*filter:\s*activeFilter,\s*month:\s*activeMonth,\s*reset:\s*true\s*\}\)/);
+    assert.match(source, /fetchHistory\(\{\s*cursor:\s*nextCursor,\s*filter:\s*activeFilter,\s*month:\s*activeMonth,\s*reset:\s*false\s*\}\)/);
+    assert.match(source, /\[activeFilter,\s*activeMonth,\s*fetchHistory,\s*resetHistoryQuery\]/);
+  });
+
+  it("keeps month query state robust across no-op changes and stale in-flight requests", () => {
+    const source = readFileSync("src/app/my/dodin/history/page.tsx", "utf8");
+
+    assert.match(source, /if\s*\(filter\s*===\s*activeFilter\)\s*return;/);
+    assert.match(source, /if\s*\(month\s*===\s*activeMonth\)\s*return;/);
+    assert.match(source, /requestIdRef\.current\s*\+=\s*1;/);
+    assert.match(source, /\.\.\.\(month\s*\?\s*\{\s*month\s*\}\s*:\s*\{\s*\}\)/);
   });
 });
 

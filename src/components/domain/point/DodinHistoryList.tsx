@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type RefObject } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 
 import {
   HistoryFilterTabs,
@@ -9,17 +9,24 @@ import {
   type HistoryFilter,
   type HistoryFilterOption,
 } from "@/components/domain/point/WalletHistorySection";
-import type { WalletHistoryViewItem } from "@/components/domain/point/pointViewModel";
+import {
+  formatMonthLabel,
+  type MonthFilterOption,
+  type WalletHistoryViewItem,
+} from "@/components/domain/point/pointViewModel";
 
 interface DodinHistoryListProps {
   activeFilter: HistoryFilter;
+  activeMonth?: string;
   filters?: HistoryFilterOption[];
   hasMore: boolean;
   historyItems: WalletHistoryViewItem[];
   isLoading: boolean;
+  monthOptions: MonthFilterOption[];
   errorMessage?: string;
   onFilterChange: (filter: HistoryFilter) => void;
   onLoadMore: () => void;
+  onMonthChange: (month?: string) => void;
   onRetry: () => void;
 }
 
@@ -75,15 +82,78 @@ function DodinHistoryFooter({
   );
 }
 
+function DodinHistoryMonthFilter({
+  activeMonth,
+  monthOptions,
+  onMonthChange,
+}: {
+  activeMonth?: string;
+  monthOptions: MonthFilterOption[];
+  onMonthChange: (month?: string) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const selectedLabel = formatMonthLabel(activeMonth);
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        aria-expanded={isOpen}
+        aria-controls="dodin-history-month-options"
+        onClick={() => setIsOpen((current) => !current)}
+        className="inline-flex items-center gap-1 rounded-full bg-primary-green px-3.5 py-2 text-xs font-extrabold text-white shadow-sm shadow-primary-green/20 transition-colors hover:bg-primary-green/90"
+      >
+        {selectedLabel}
+        <span aria-hidden="true" className={`transition-transform ${isOpen ? "rotate-180" : ""}`}>
+          ▼
+        </span>
+      </button>
+
+      {isOpen && (
+        <div
+          id="dodin-history-month-options"
+          className="absolute left-0 top-full z-10 mt-2 grid max-h-72 w-36 gap-1 overflow-y-auto rounded-2xl border border-text-secondary/10 bg-card p-2 shadow-card"
+        >
+          {monthOptions.map((option) => {
+            const isActive = option.value === activeMonth || (!option.value && !activeMonth);
+
+            return (
+              <button
+                key={option.value ?? "ALL_PERIOD"}
+                type="button"
+                aria-pressed={isActive}
+                onClick={() => {
+                  onMonthChange(option.value);
+                  setIsOpen(false);
+                }}
+                className={`rounded-xl px-3 py-2 text-left text-xs font-extrabold transition-colors ${
+                  isActive
+                    ? "bg-primary-green text-white shadow-sm shadow-primary-green/20"
+                    : "text-text-secondary hover:bg-background hover:text-text-primary"
+                }`}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function DodinHistoryList({
   activeFilter,
+  activeMonth,
   errorMessage,
   filters = WALLET_PREVIEW_HISTORY_FILTERS,
   hasMore,
   historyItems,
   isLoading,
+  monthOptions,
   onFilterChange,
   onLoadMore,
+  onMonthChange,
   onRetry,
 }: DodinHistoryListProps) {
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -113,7 +183,17 @@ export function DodinHistoryList({
   return (
     <section className="overflow-hidden rounded-[24px] border border-text-secondary/10 bg-card shadow-card">
       <div className="px-4 py-4">
-        <HistoryFilterTabs activeFilter={activeFilter} filters={filters} onFilterChange={onFilterChange} />
+        <DodinHistoryMonthFilter
+          activeMonth={activeMonth}
+          monthOptions={monthOptions}
+          onMonthChange={onMonthChange}
+        />
+        <HistoryFilterTabs
+          activeClassName="bg-primary-green text-white shadow-sm shadow-primary-green/20"
+          activeFilter={activeFilter}
+          filters={filters}
+          onFilterChange={onFilterChange}
+        />
       </div>
 
       {errorMessage && historyItems.length === 0 ? (
