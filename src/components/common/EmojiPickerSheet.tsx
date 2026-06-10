@@ -35,9 +35,9 @@ export function EmojiPickerSheet({
   };
 
   return (
-    <BottomSheet isOpen={isOpen} onClose={onClose} title="이모지 추가" ariaLabel="이모지 선택">
+    <BottomSheet isOpen={isOpen} onClose={onClose} ariaLabel="이모지 선택">
       {/* 카테고리 탭 */}
-      <div className="flex items-center gap-0.5 px-3 pb-2 border-b border-text-secondary/10">
+      <div className="flex items-center gap-0.5 px-3 pt-1 pb-2 border-b border-text-secondary/10">
         {EMOJI_CATEGORIES.map((category) => (
           <button
             key={category.id}
