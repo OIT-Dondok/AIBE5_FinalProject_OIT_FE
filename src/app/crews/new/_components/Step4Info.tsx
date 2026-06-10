@@ -1,6 +1,7 @@
 'use client';
 
 import { Minus, Plus } from 'lucide-react';
+import { calcDurationDays } from '@/utils/date';
 
 interface Step4InfoProps {
   startDate: string;
@@ -20,12 +21,6 @@ const MIN_PARTICIPANTS = 2;
 const MAX_PARTICIPANTS = 15;
 const MIN_DURATION = 7;
 const MAX_DURATION = 90;
-
-function calcDurationDays(start: string, end: string): number | null {
-  if (!start || !end) return null;
-  const diff = (new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60 * 60 * 24);
-  return Math.round(diff);
-}
 
 function getMinStartDate(): string {
   const d = new Date();
@@ -52,7 +47,7 @@ export default function Step4Info({
 
   const adjustMin = (delta: number) => {
     const next = minParticipants + delta;
-    if (next >= 1 && next <= maxParticipants) onMinParticipantsChange(next);
+    if (next >= MIN_PARTICIPANTS && next <= maxParticipants) onMinParticipantsChange(next);
   };
 
   const adjustMax = (delta: number) => {
@@ -124,7 +119,7 @@ export default function Step4Info({
               <button
                 type="button"
                 onClick={() => adjustMin(-1)}
-                disabled={minParticipants <= 1}
+                disabled={minParticipants <= MIN_PARTICIPANTS}
                 className="w-8 h-8 rounded-full bg-background flex items-center justify-center hover:bg-text-secondary/10 transition-colors disabled:opacity-30 disabled:pointer-events-none"
               >
                 <Minus size={14} />

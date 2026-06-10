@@ -23,7 +23,7 @@ export default function StepIndicator({ currentStep, totalSteps }: StepIndicator
           {currentStep} / {totalSteps}단계
         </span>
         <span className="text-xs font-semibold text-primary-green">
-          {STEP_LABELS[currentStep - 1]}
+          {STEP_LABELS[currentStep - 1] ?? ''}
         </span>
       </div>
     </div>

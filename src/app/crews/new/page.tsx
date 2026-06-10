@@ -13,6 +13,7 @@ import Step4Info from './_components/Step4Info';
 import Step5Agreement from './_components/Step5Agreement';
 import { createCrew } from '@/services/crew';
 import { getPresignedUrl, uploadToS3 } from '@/services/upload';
+import { calcDurationDays } from '@/utils/date';
 import type {
   DailySettlementType,
   FrequencyType,
@@ -95,6 +96,9 @@ const initialFormData: CrewFormData = {
 
 // ─── 유효성 검사 ─────────────────────────────────────────────────────────────
 
+const CREW_MIN_PARTICIPANTS = 2;
+const CREW_MAX_PARTICIPANTS = 15;
+
 type Step2Errors = Partial<Record<'title' | 'category', string>>;
 type Step3Errors = Partial<Record<'dailySettlementType' | 'depositAmount' | 'missionScheduleDays', string>>;
 type Step4Errors = Partial<Record<'startDate' | 'endDate' | 'duration' | 'participants' | 'description', string>>;
@@ -122,12 +126,14 @@ function validateStep4(form: CrewFormData): Step4Errors {
   if (!form.start_date) errors.startDate = '시작일을 선택해주세요.';
   if (!form.end_date) errors.endDate = '종료일을 선택해주세요.';
   if (form.start_date && form.end_date) {
-    const days = Math.round(
-      (new Date(form.end_date).getTime() - new Date(form.start_date).getTime()) / (1000 * 60 * 60 * 24)
-    );
-    if (days < 7 || days > 90) errors.duration = '기간은 7~90일이어야 합니다.';
+    const days = calcDurationDays(form.start_date, form.end_date);
+    if (days === null || days < 7 || days > 90) errors.duration = '기간은 7~90일이어야 합니다.';
   }
-  if (form.min_participants > form.max_participants) {
+  if (form.min_participants < CREW_MIN_PARTICIPANTS) {
+    errors.participants = `최소 인원은 ${CREW_MIN_PARTICIPANTS}명 이상이어야 합니다.`;
+  } else if (form.max_participants > CREW_MAX_PARTICIPANTS) {
+    errors.participants = `최대 인원은 ${CREW_MAX_PARTICIPANTS}명 이하여야 합니다.`;
+  } else if (form.min_participants > form.max_participants) {
     errors.participants = '최소 인원은 최대 인원보다 작아야 합니다.';
   }
   if (!form.description.trim()) errors.description = '크루 소개를 입력해주세요.';
@@ -187,7 +193,7 @@ export default function CrewNewPage() {
         content_length: file.size,
       });
 
-      await uploadToS3(presignRes.data.upload_url, file);
+      await uploadToS3(presignRes.data.upload_url, file, contentType);
 
       if (imageBlobUrlRef.current) {
         URL.revokeObjectURL(imageBlobUrlRef.current);
@@ -271,10 +277,10 @@ export default function CrewNewPage() {
     setIsSubmitting(true);
     try {
       const recruitmentDeadline = (() => {
-        const d = new Date(formData.start_date);
-        d.setDate(d.getDate() - 1);
-        d.setHours(23, 59, 59, 0);
-        return d.toISOString();
+        const [y, m, d] = formData.start_date.split('-').map(Number);
+        const prevDay = new Date(Date.UTC(y, m - 1, d - 1));
+        prevDay.setUTCHours(23, 59, 59, 0);
+        return prevDay.toISOString();
       })();
 
       const payload: CreateCrewRequest = {
@@ -305,7 +311,16 @@ export default function CrewNewPage() {
       };
 
       const res = await createCrew(payload);
-      const crewId = (res.data as { crew_id: number }).crew_id;
+      const data: unknown = res.data;
+      if (
+        !data ||
+        typeof data !== 'object' ||
+        !('crew_id' in data) ||
+        typeof (data as Record<string, unknown>).crew_id !== 'number'
+      ) {
+        throw new Error('크루 생성 응답이 올바르지 않습니다.');
+      }
+      const crewId = (data as { crew_id: number }).crew_id;
       router.push(`/crews/${crewId}`);
     } catch (err) {
       const error = err as { response?: { data?: { error_code?: string } } };
