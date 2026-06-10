@@ -35,7 +35,7 @@ export const cancelJoinCrew = (crewId: number) => {
 };
 
 export const getCrewMembers = (crewId: number, cursor?: string) => {
-  return api.get<CrewMembersResponse>(`/crews/${crewId}/members`, {
+  return api.get<CrewMembersResponse>(`/crews/${crewId}/member`, {
     params: cursor ? { cursor } : undefined,
   });
 };
