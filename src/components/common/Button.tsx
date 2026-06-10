@@ -1,4 +1,5 @@
 import { ButtonHTMLAttributes, ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 // 1. 버튼에 주입할 수 있는 가변 속성(Props) 정의
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -36,7 +37,7 @@ export const Button = ({
     // 3. 조건별 클래스 조합
     const baseStyles = "inline-flex items-center justify-center transition-all duration-200 select-none focus:outline-none disabled:opacity-50 disabled:pointer-events-none disabled:scale-100";
     const widthStyle = fullWidth ? "w-full" : "";
-    const combinedClasses = `${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${widthStyle} ${className}`;
+    const combinedClasses = cn(baseStyles, variantStyles[variant], sizeStyles[size], widthStyle, className);
 
     return (
         <button
