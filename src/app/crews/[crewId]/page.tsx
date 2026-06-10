@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { isAxiosError } from 'axios';
 import { MoreHorizontal } from 'lucide-react';
@@ -27,30 +27,30 @@ export default function CrewDetailPage() {
   const [notFound, setNotFound] = useState(false);
   const [hasError, setHasError] = useState(false);
 
-  useEffect(() => {
-    const fetchCrew = async () => {
-      setIsLoading(true);
-      try {
-        const res = await getCrew(crewId);
-        setCrew(res.data);
-      } catch (err) {
-        if (isAxiosError<ErrorResponse>(err) && err.response?.data?.code === 'CREW_NOT_FOUND') {
-          setNotFound(true);
-        } else {
-          setHasError(true);
-        }
-      } finally {
-        setIsLoading(false);
+  const fetchCrew = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const res = await getCrew(crewId);
+      setCrew(res.data);
+    } catch (err) {
+      if (isAxiosError<ErrorResponse>(err) && err.response?.data?.code === 'CREW_NOT_FOUND') {
+        setNotFound(true);
+      } else {
+        setHasError(true);
       }
-    };
+    } finally {
+      setIsLoading(false);
+    }
+  }, [crewId]);
 
+  useEffect(() => {
     if (Number.isFinite(crewId) && crewId > 0) {
       void fetchCrew();
     } else {
       setNotFound(true);
       setIsLoading(false);
     }
-  }, [crewId]);
+  }, [crewId, fetchCrew]);
 
   if (notFound || hasError) {
     return (
@@ -147,14 +147,16 @@ export default function CrewDetailPage() {
           </div>
         </div>
 
-        <CrewDetailTabs crew={crew} />
+        <CrewDetailTabs crew={crew} crewId={crewId} />
       </div>
 
       <div className="fixed bottom-24 left-0 right-0 z-30 flex justify-center px-5">
         <div className="w-full max-w-[430px]">
           <CrewJoinButton
+            crewId={crewId}
             depositAmount={crew.deposit_amount}
             myParticipation={crew.my_participation}
+            onSuccess={() => void fetchCrew()}
           />
         </div>
       </div>
