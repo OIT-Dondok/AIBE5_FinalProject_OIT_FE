@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Minus, Plus } from 'lucide-react';
 import { SETTLEMENT_TYPE_LABEL, SETTLEMENT_TIMES } from '@/constants/crew';
 import type { DailySettlementType, FrequencyType } from '@/types/domain';
@@ -48,6 +49,23 @@ export default function Step3Mission({
   onDepositAmountChange,
   errors,
 }: Step3MissionProps) {
+  const [rawDeposit, setRawDeposit] = useState(String(depositAmount));
+
+  useEffect(() => {
+    setRawDeposit(String(depositAmount));
+  }, [depositAmount]);
+
+  const commitDeposit = (raw: string) => {
+    const parsed = parseInt(raw, 10);
+    if (isNaN(parsed) || parsed < DEPOSIT_MIN) {
+      onDepositAmountChange(DEPOSIT_MIN);
+    } else if (parsed > DEPOSIT_MAX) {
+      onDepositAmountChange(DEPOSIT_MAX);
+    } else {
+      onDepositAmountChange(Math.floor(parsed / DEPOSIT_STEP) * DEPOSIT_STEP || DEPOSIT_MIN);
+    }
+  };
+
   const toggleDay = (day: string) => {
     if (missionScheduleDays.includes(day)) {
       onScheduleDaysChange(missionScheduleDays.filter((d) => d !== day));
@@ -180,10 +198,18 @@ export default function Step3Mission({
           >
             <Minus size={16} className="text-text-primary" />
           </button>
-          <div className="flex flex-col items-center">
-            <span className="text-xl font-bold text-text-primary">
-              {depositAmount.toLocaleString()}원
-            </span>
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex items-baseline gap-1">
+              <input
+                type="text"
+                inputMode="numeric"
+                value={rawDeposit}
+                onChange={(e) => setRawDeposit(e.target.value.replace(/[^0-9]/g, ''))}
+                onBlur={(e) => commitDeposit(e.target.value)}
+                className="w-28 text-center text-xl font-bold text-text-primary bg-transparent border-b-2 border-primary-green/40 focus:border-primary-green outline-none transition-colors"
+              />
+              <span className="text-xl font-bold text-text-primary">원</span>
+            </div>
             <span className="text-[11px] text-text-secondary">1,000 ~ 100,000원 (1,000원 단위)</span>
           </div>
           <button
