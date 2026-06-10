@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CircleAlert, Info, Loader2, RotateCcw } from "lucide-react";
 
 import { BottomSheet } from "@/components/common/BottomSheet";
@@ -39,6 +39,7 @@ export function ChargeBottomSheet({ isOpen, onClose, currentBalance, initialAmou
   const [amountInput, setAmountInput] = useState(initialAmountInput);
   const [paymentStatus, setPaymentStatus] = useState<"idle" | "launching">("idle");
   const [submitError, setSubmitError] = useState("");
+  const submitLockRef = useRef(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -46,6 +47,7 @@ export function ChargeBottomSheet({ isOpen, onClose, currentBalance, initialAmou
       setAmountInput(initialAmountInput);
       setPaymentStatus("idle");
       setSubmitError("");
+      submitLockRef.current = false;
     });
   }, [initialAmountInput, isOpen]);
 
@@ -84,8 +86,9 @@ export function ChargeBottomSheet({ isOpen, onClose, currentBalance, initialAmou
   };
 
   const handleSubmit = async () => {
-    if (!canSubmit || amount == null || !tossConfig.enabled) return;
+    if (!canSubmit || submitLockRef.current || amount == null || !tossConfig.enabled) return;
 
+    submitLockRef.current = true;
     setPaymentStatus("launching");
     setSubmitError("");
 
@@ -111,12 +114,14 @@ export function ChargeBottomSheet({ isOpen, onClose, currentBalance, initialAmou
         request: buildTossPaymentRequest({ amount, failUrl, orderId, successUrl }),
       });
     } catch (error) {
+      submitLockRef.current = false;
       setPaymentStatus("idle");
       setSubmitError(error instanceof Error ? error.message : "결제창을 열지 못했어요. 다시 시도해 주세요.");
     }
   };
 
   const handleClose = () => {
+    submitLockRef.current = false;
     setPaymentStatus("idle");
     setSubmitError("");
     setAmountInput(initialAmountInput);

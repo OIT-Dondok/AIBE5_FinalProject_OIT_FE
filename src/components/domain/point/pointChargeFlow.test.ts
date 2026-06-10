@@ -163,4 +163,23 @@ describe("point charge flow helpers", () => {
     assert.match(source, /retryConfirm/);
     assert.doesNotMatch(source, /다시 시도[\s\S]{0,200}href="\/my\/dodin"/);
   });
+
+  it("keeps reload and back-forward confirm retries idempotent", () => {
+    const source = readFileSync("src/app/my/dodin/charge/success/ChargeSuccessClient.tsx", "utf8");
+
+    assert.equal(shouldConfirmOnRouteEnter("missing"), true);
+    assert.match(source, /chargePoints\(/);
+    assert.match(source, /clearPendingChargeOrder[\s\S]*setState\("confirmed_refreshing"\)/);
+    assert.doesNotMatch(source, /catch\s*\{[\s\S]*clearPendingChargeOrder/);
+  });
+
+  it("uses a synchronous submit lock before launching Toss payment", () => {
+    const source = readFileSync("src/components/domain/point/ChargeBottomSheet.tsx", "utf8");
+
+    assert.match(source, /submitLockRef/);
+    assert.match(source, /if \([^)]*submitLockRef\.current/);
+    assert.match(source, /submitLockRef\.current = true[\s\S]*setPaymentStatus\("launching"\)/);
+    assert.match(source, /catch[\s\S]*submitLockRef\.current = false[\s\S]*setPaymentStatus\("idle"\)/);
+  });
+
 });
