@@ -85,9 +85,16 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
     }
     if (status === 'PENDING') {
       return (
-        <Button variant="outline" size="lg" fullWidth isLoading={isLoading} onClick={handleCancel} className="bg-card">
-          신청 완료 · 승인 대기 중 (취소하기)
-        </Button>
+        <div className="flex flex-col gap-2">
+          <div className="w-full py-3.5 px-6 rounded-button bg-success-green flex items-center justify-center gap-2">
+            <span className="text-primary-green font-bold text-sm">✓ 신청 완료</span>
+            <span className="text-primary-green/40 text-xs">·</span>
+            <span className="text-primary-green/70 text-xs font-medium">승인 대기 중</span>
+          </div>
+          <Button variant="outline" size="md" fullWidth isLoading={isLoading} onClick={handleCancel} className="bg-card">
+            신청 취소하기
+          </Button>
+        </div>
       );
     }
     if (status === 'LOCKED') {
