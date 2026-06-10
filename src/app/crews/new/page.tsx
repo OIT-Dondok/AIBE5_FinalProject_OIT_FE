@@ -174,11 +174,8 @@ export default function CrewNewPage() {
 
     setIsUploadingImage(true);
     try {
-      // 포맷 검증 + HEIC→JPEG 변환 (변환 시 EXIF 소실)
+      // 포맷 검증 + HEIC는 자동으로 JPEG 변환 (크루 이미지는 EXIF 불필요 → 경고 없이 변환)
       const prepared = await prepareImageForUpload(file);
-      if (prepared.converted) {
-        showToast('이 이미지는 EXIF가 소실되어 방장 검토 보조 신호로 활용되지 못할 수 있습니다.');
-      }
 
       const presignRes = await getPresignedUrl({
         purpose: 'CREW_IMAGE',

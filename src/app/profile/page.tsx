@@ -2,7 +2,7 @@
 
 import type { FormEvent } from "react";
 import { useEffect, useRef, useState } from "react";
-import { CircleAlert, CheckCircle2, Info } from "lucide-react";
+import { CircleAlert, CheckCircle2 } from "lucide-react";
 
 import { Header } from "@/components/common/Header";
 import { ProfileCard } from "@/components/domain/profile/ProfileCard";
@@ -29,7 +29,7 @@ import {
 import { prepareImageForUpload, UnsupportedImageError } from "@/lib/prepareImageForUpload";
 import type { MeActivitySummaryResponse } from "@/types/domain";
 
-type FeedbackTone = "success" | "error" | "notice";
+type FeedbackTone = "success" | "error";
 
 type ProfileImageFeedback = {
   message: string;
@@ -83,13 +83,10 @@ function ProfileUploadToast({
   const icon =
     tone === "error" ? (
       <CircleAlert size={18} className="text-red-200 stroke-[2.5]" />
-    ) : tone === "notice" ? (
-      <Info size={18} className="text-sky-100 stroke-[2.5]" />
     ) : (
       <CheckCircle2 size={18} className="text-emerald-100 stroke-[2.5]" />
     );
   const backgroundClass = tone === "error" ? "bg-rose-500/90" : "bg-neutral-900/90";
-  const prefix = tone === "error" ? "실패: " : tone === "success" ? "성공: " : "";
 
   return (
     <div
@@ -104,7 +101,7 @@ function ProfileUploadToast({
       >
         {icon}
         <span className="text-xs font-semibold tracking-tight">
-          {prefix}
+          {tone === "error" ? "실패: " : "성공: "}
           {message}
         </span>
       </div>
@@ -211,14 +208,8 @@ export default function ProfilePage() {
     uploadAbortControllerRef.current = uploadAbortController;
 
     try {
-      // 포맷 검증 + HEIC→JPEG 변환 (변환 시 EXIF 소실)
+      // 포맷 검증 + HEIC는 자동으로 JPEG 변환 (프로필은 EXIF 불필요 → 경고 없이 변환)
       const prepared = await prepareImageForUpload(file);
-      if (prepared.converted) {
-        showFeedbackToast(
-          "이 이미지는 EXIF가 소실되어 방장 검토 보조 신호로 활용되지 못할 수 있습니다.",
-          "notice",
-        );
-      }
 
       const presignedUrlResponse = await requestProfileImageUploadUrl({
         purpose: "PROFILE_IMAGE",
