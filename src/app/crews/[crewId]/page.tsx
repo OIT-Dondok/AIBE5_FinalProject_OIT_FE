@@ -44,7 +44,12 @@ export default function CrewDetailPage() {
       }
     };
 
-    if (crewId) fetchCrew();
+    if (Number.isFinite(crewId) && crewId > 0) {
+      void fetchCrew();
+    } else {
+      setNotFound(true);
+      setIsLoading(false);
+    }
   }, [crewId]);
 
   if (notFound || hasError) {
