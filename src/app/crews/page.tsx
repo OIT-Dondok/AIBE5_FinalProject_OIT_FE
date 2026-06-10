@@ -10,11 +10,10 @@ import { EmptyState } from '@/components/common/EmptyState';
 import CrewCard from '@/components/domain/crew/CrewCard';
 import { getCrews } from '@/services/crew';
 import type { CrewListItem, CrewStatus, CrewCategory } from '@/types/domain';
-type StatusFilter = CrewStatus | 'ALL';
+type StatusFilter = CrewStatus;
 type CategoryFilter = CrewCategory | 'ALL';
 
 const STATUS_TABS: { label: string; value: StatusFilter }[] = [
-  { label: '전체', value: 'ALL' },
   { label: '모집중', value: 'RECRUITING' },
   { label: '진행중', value: 'ACTIVE' },
   { label: '종료됨', value: 'CLOSED' },
@@ -32,7 +31,7 @@ const CATEGORIES: { label: string; value: CategoryFilter }[] = [
 
 export default function CrewsPage() {
   const router = useRouter();
-  const [activeStatus, setActiveStatus] = useState<StatusFilter>('ALL');
+  const [activeStatus, setActiveStatus] = useState<StatusFilter>('RECRUITING');
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [crews, setCrews] = useState<CrewListItem[]>([]);
@@ -44,7 +43,7 @@ export default function CrewsPage() {
       setIsLoading(true);
       try {
         const res = await getCrews({
-          status: activeStatus !== 'ALL' ? activeStatus : undefined,
+          status: activeStatus,
           category: activeCategory !== 'ALL' ? activeCategory : undefined,
           keyword: searchQuery.trim() || undefined,
         });
@@ -66,7 +65,7 @@ export default function CrewsPage() {
     setIsLoading(true);
     try {
       const res = await getCrews({
-        status: activeStatus !== 'ALL' ? activeStatus : undefined,
+        status: activeStatus,
         category: activeCategory !== 'ALL' ? activeCategory : undefined,
         keyword: searchQuery.trim() || undefined,
         cursor: nextCursor,
@@ -139,11 +138,11 @@ export default function CrewsPage() {
             <span className="font-bold text-text-primary">{crews.length}</span>
             개의 크루
           </span>
-            {activeStatus !== 'ALL' || activeCategory !== 'ALL' || searchQuery ? (
+            {activeStatus !== 'RECRUITING' || activeCategory !== 'ALL' || searchQuery ? (
                 <button
                     type="button"
                     onClick={() => {
-                      setActiveStatus('ALL');
+                      setActiveStatus('RECRUITING');
                       setActiveCategory('ALL');
                       setSearchQuery('');
                     }}
