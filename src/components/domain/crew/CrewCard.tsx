@@ -69,8 +69,12 @@ export default function CrewCard({ crew }: CrewCardProps) {
 
         {/* 상단: 이모지 + 크루명/상태 + 보증금 */}
         <div className="flex items-center gap-3.5">
-          <div className={`w-12 h-12 flex items-center justify-center ${categoryBg} rounded-2xl flex-shrink-0 text-2xl shadow-sm`}>
-            {emoji}
+          <div className={`w-12 h-12 rounded-2xl flex-shrink-0 overflow-hidden shadow-sm ${crew.image_url ? '' : `${categoryBg} flex items-center justify-center text-2xl`}`}>
+            {crew.image_url ? (
+              <img src={crew.image_url} alt={crew.title} className="w-full h-full object-cover" />
+            ) : (
+              emoji
+            )}
           </div>
 
           <div className="flex-1 min-w-0">
