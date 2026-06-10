@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { Header } from "@/components/common/Header";
+import { Toast } from "@/components/common/Toast";
 import { ChargeBottomSheet } from "@/components/domain/point/ChargeBottomSheet";
 import {
   WalletHistorySection,
@@ -20,6 +22,7 @@ import type { PointAccountResponse, WalletHistoryItem } from "@/types/domain";
 const RECENT_HISTORY_LIMIT = 5;
 
 export default function DodinWalletPage() {
+  const router = useRouter();
   const [activeFilter, setActiveFilter] = useState<HistoryFilter>("ALL");
   const [account, setAccount] = useState<PointAccountResponse | null>(null);
   const [historyItems, setHistoryItems] = useState<WalletHistoryItem[]>([]);
@@ -27,6 +30,7 @@ export default function DodinWalletPage() {
   const [isHistoryLoading, setIsHistoryLoading] = useState(true);
   const [accountError, setAccountError] = useState("");
   const [historyError, setHistoryError] = useState("");
+  const [isChargeToastOpen, setIsChargeToastOpen] = useState(false);
   const accountRequestIdRef = useRef(0);
   const historyRequestIdRef = useRef(0);
   const {
@@ -96,6 +100,18 @@ export default function DodinWalletPage() {
     [account, historyItems],
   );
 
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get("charge") !== "confirmed") return;
+    if (isAccountLoading) return;
+    if (accountError) return;
+
+    queueMicrotask(() => {
+      setIsChargeToastOpen(true);
+      router.replace("/my/dodin");
+    });
+  }, [accountError, isAccountLoading, router]);
+
   return (
     <main className="min-h-screen w-full overflow-x-hidden bg-transparent">
       <div className="mx-auto flex w-full max-w-[430px] flex-col pb-10">
@@ -138,6 +154,11 @@ export default function DodinWalletPage() {
         onClose={closeChargeBottomSheet}
         initialAmount={chargeInitialAmount}
         currentBalance={account?.available_balance}
+      />
+      <Toast
+        isOpen={isChargeToastOpen}
+        message="도딘 충전이 완료됐어요."
+        onClose={() => setIsChargeToastOpen(false)}
       />
     </main>
   );
