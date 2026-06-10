@@ -93,7 +93,7 @@ export default function Step2Identity({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/jpeg"
+          accept="image/*,.heic,.heif"
           className="hidden"
           onChange={handleFileChange}
         />
