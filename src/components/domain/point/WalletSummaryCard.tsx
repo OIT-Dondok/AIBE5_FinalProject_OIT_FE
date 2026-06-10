@@ -25,7 +25,7 @@ function HoverHint({ text }: { text: string }) {
       <span
         id={tooltipId}
         role="tooltip"
-        className="pointer-events-none absolute left-1/2 top-auto bottom-full z-10 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-white/20 bg-[#0f172a] px-2 py-1 text-[10px] font-semibold leading-snug text-[#F7F1E5] shadow-lg group-hover:block group-focus:block"
+        className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-white/20 bg-[#0f172a] px-2 py-1 text-[10px] font-semibold leading-snug text-[#F7F1E5] shadow-lg group-hover:block group-focus:block"
       >
         {text}
       </span>
@@ -41,7 +41,7 @@ function WalletBreakdownRow({ metric }: { metric: WalletSummaryMetric }) {
         <span>{metric.label}</span>
         <HoverHint text={metric.caption} />
       </p>
-      <p className="text-[13px] font-bold text-[#D9E3CF]/75 tabular-nums">{`−${metric.value}`}</p>
+      <p className="text-[13px] font-bold text-[#D9E3CF]/75 tabular-nums">{metric.value}</p>
     </div>
   );
 }
@@ -112,7 +112,7 @@ export function WalletSummaryCard({ wallet, onOpenCharge }: WalletSummaryCardPro
       </div>
 
       <p className="mt-3 text-[11px] leading-snug text-[#D9E3CF]/70">
-        충전: 카드/계좌로 도딘 충전 · 출금: 사용가능 도딘을 내 계좌로
+        충전은 결제 연동 준비 중이며, 출금 기능은 MVP 범위에서 제공하지 않습니다.
       </p>
     </section>
   );

@@ -6,39 +6,36 @@ import {
   ArrowUp,
   ChevronRight,
   CreditCard,
+  HelpCircle,
+  LockKeyhole,
   RefreshCw,
   Wallet,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import {
-  POINT_TRANSACTION_DISPLAY_DIRECTION,
+  POINT_HISTORY_FILTERS,
+  type PointHistoryFilter,
+  type WalletHistoryCategory,
   type WalletHistoryViewItem,
 } from "@/components/domain/point/pointViewModel";
-import type { PointTransactionType } from "@/types/domain";
 
-export type HistoryFilter = "ALL" | PointTransactionType;
+export type HistoryFilter = PointHistoryFilter;
 
 export interface HistoryFilterOption {
   label: string;
   value: HistoryFilter;
 }
 
-export const WALLET_PREVIEW_HISTORY_FILTERS: HistoryFilterOption[] = [
-  { label: "전체", value: "ALL" },
-  { label: "충전", value: "POINT_CHARGE" },
-  { label: "예치", value: "CREW_DEPOSIT_RESERVE" },
-  { label: "예치 반환", value: "CREW_RESERVE_RELEASE" },
-  { label: "정산", value: "CREW_SETTLEMENT_REFUND" },
-  { label: "출금", value: "POINT_WITHDRAWAL" },
-];
+export const WALLET_PREVIEW_HISTORY_FILTERS: HistoryFilterOption[] = POINT_HISTORY_FILTERS;
 
-const POINT_HISTORY_ICON: Record<PointTransactionType, LucideIcon> = {
-  POINT_CHARGE: CreditCard,
-  CREW_DEPOSIT_RESERVE: ArrowDown,
-  CREW_RESERVE_RELEASE: ArrowUp,
-  CREW_SETTLEMENT_REFUND: RefreshCw,
-  POINT_WITHDRAWAL: Wallet,
+const WALLET_HISTORY_ICON: Record<WalletHistoryCategory, LucideIcon> = {
+  charge: CreditCard,
+  deposit: LockKeyhole,
+  refund: ArrowUp,
+  settlement: RefreshCw,
+  withdrawal: Wallet,
+  unknown: HelpCircle,
 };
 
 const HISTORY_ROW_COUNT = 5;
@@ -51,12 +48,14 @@ export interface WalletHistorySectionProps {
   filters?: HistoryFilterOption[];
   limit?: number;
   fullHistoryHref?: string;
+  isLoading?: boolean;
+  errorMessage?: string;
+  onRetry?: () => void;
 }
 
 function HistoryIcon({ item }: { item: WalletHistoryViewItem }) {
-  const direction = POINT_TRANSACTION_DISPLAY_DIRECTION[item.transactionType];
-  const tone = direction === "inflow" ? "bg-success-green/40 text-primary-green" : "bg-amber-50 text-amber-700";
-  const Icon = POINT_HISTORY_ICON[item.transactionType];
+  const tone = item.direction === "inflow" ? "bg-success-green/40 text-primary-green" : "bg-amber-50 text-amber-700";
+  const Icon = WALLET_HISTORY_ICON[item.category] ?? ArrowDown;
 
   return (
     <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${tone}`}>
@@ -83,7 +82,7 @@ export function HistoryRow({ item }: { item: WalletHistoryViewItem }) {
         <p className={`text-[14px] font-extrabold tabular-nums ${isInflow ? "text-primary-green" : "text-text-primary"}`}>
           {item.displayAmount}
         </p>
-        <p className="mt-0.5 text-[10px] font-semibold text-text-secondary">사용가능 잔액 {item.balanceAfter}</p>
+        <p className="mt-0.5 text-[10px] font-semibold text-text-secondary">사용가능 도딘 {item.balanceAfter}</p>
       </div>
     </li>
   );
@@ -118,30 +117,62 @@ export function HistoryFilterTabs({
   );
 }
 
+function matchesFilter(item: WalletHistoryViewItem, activeFilter: HistoryFilter) {
+  if (activeFilter === "ALL") return true;
+  return item.category === activeFilter;
+}
+
 export function getFilteredHistory(
   historyItems: WalletHistoryViewItem[],
   activeFilter: HistoryFilter,
   options: { limit?: number; supportedFilters?: HistoryFilterOption[] } = {},
 ) {
   const supportedValues = options.supportedFilters?.map((filter) => filter.value);
-  const visibleItems = supportedValues
-    ? historyItems.filter((item) => supportedValues.includes(item.transactionType))
-    : historyItems;
-  const filteredItems = visibleItems.filter((item) => {
-    if (activeFilter === "ALL") return true;
-    return item.transactionType === activeFilter;
-  });
+  const shouldApplyFilter = !supportedValues || supportedValues.includes(activeFilter);
+  const filteredItems = shouldApplyFilter ? historyItems.filter((item) => matchesFilter(item, activeFilter)) : historyItems;
 
   return typeof options.limit === "number" ? filteredItems.slice(0, options.limit) : filteredItems;
 }
 
+function WalletHistoryStatus({
+  errorMessage,
+  isLoading,
+  onRetry,
+}: Pick<WalletHistorySectionProps, "errorMessage" | "isLoading" | "onRetry">) {
+  if (isLoading) {
+    return <p className="px-4 py-8 text-center text-xs font-semibold text-text-secondary">도딘 내역을 불러오는 중...</p>;
+  }
+
+  if (errorMessage) {
+    return (
+      <div className="px-4 py-8 text-center">
+        <p className="text-sm font-extrabold text-text-primary">{errorMessage}</p>
+        {onRetry && (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="mt-3 rounded-full bg-primary-blue px-4 py-2 text-xs font-extrabold text-white"
+          >
+            다시 불러오기
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return <p className="px-4 py-8 text-center text-xs font-semibold text-text-secondary">표시할 도딘 내역이 없어요</p>;
+}
+
 export function WalletHistorySection({
   activeFilter,
+  errorMessage,
   filters = WALLET_PREVIEW_HISTORY_FILTERS,
   fullHistoryHref = "/my/dodin/history",
   historyItems,
+  isLoading = false,
   limit = HISTORY_ROW_COUNT,
   onFilterChange,
+  onRetry,
   updatedAtLabel,
 }: WalletHistorySectionProps) {
   const filteredHistory = getFilteredHistory(historyItems, activeFilter, {
@@ -169,11 +200,15 @@ export function WalletHistorySection({
         <HistoryFilterTabs activeFilter={activeFilter} filters={filters} onFilterChange={onFilterChange} />
       </div>
 
-      <ul className="divide-y divide-text-secondary/[0.08]">
-        {filteredHistory.map((item) => (
-          <HistoryRow key={item.id} item={item} />
-        ))}
-      </ul>
+      {filteredHistory.length > 0 && !errorMessage ? (
+        <ul className="divide-y divide-text-secondary/[0.08]">
+          {filteredHistory.map((item) => (
+            <HistoryRow key={item.id} item={item} />
+          ))}
+        </ul>
+      ) : (
+        <WalletHistoryStatus errorMessage={errorMessage} isLoading={isLoading} onRetry={onRetry} />
+      )}
     </section>
   );
 }
