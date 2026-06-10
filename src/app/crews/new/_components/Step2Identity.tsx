@@ -79,7 +79,7 @@ export default function Step2Identity({
               <br />
               원하는 이미지로 변경도 가능해요.
             </p>
-            <p className="text-[10px] text-text-secondary/70">JPG · PNG · WebP / 최대 5MB</p>
+            <p className="text-[10px] text-text-secondary/70">JPG / 최대 5MB</p>
             <button
               type="button"
               onClick={() => !isUploadingImage && fileInputRef.current?.click()}
@@ -93,7 +93,7 @@ export default function Step2Identity({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp"
+          accept="image/jpeg"
           className="hidden"
           onChange={handleFileChange}
         />

@@ -23,12 +23,10 @@ import type {
 // ─── 이미지 검증 ─────────────────────────────────────────────────────────────
 
 const MAX_CREW_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
-const ALLOWED_CREW_IMAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const ALLOWED_CREW_IMAGE_MIME_TYPES = new Set(['image/jpeg']);
 const CREW_IMAGE_MIME_BY_EXTENSION: Record<string, string> = {
   jpg: 'image/jpeg',
   jpeg: 'image/jpeg',
-  png: 'image/png',
-  webp: 'image/webp',
 };
 
 function resolveCrewImageMimeType(file: File): string | null {
@@ -42,7 +40,7 @@ function validateCrewImage(file: File): string | null {
   if (!file.size) return '선택한 이미지 파일이 비어있습니다.';
   if (file.size > MAX_CREW_IMAGE_SIZE_BYTES)
     return `이미지는 최대 5MB까지 업로드할 수 있습니다. (현재 ${Math.ceil(file.size / 1024 / 1024)}MB)`;
-  if (!resolveCrewImageMimeType(file)) return '이미지 형식은 JPG, PNG, WebP만 지원됩니다.';
+  if (!resolveCrewImageMimeType(file)) return '크루 이미지는 JPG 형식만 지원됩니다.';
   return null;
 }
 
@@ -189,7 +187,7 @@ export default function CrewNewPage() {
     try {
       const presignRes = await getPresignedUrl({
         purpose: 'CREW_IMAGE',
-        content_type: contentType as 'image/jpeg' | 'image/png' | 'image/webp',
+        content_type: contentType as 'image/jpeg',
         content_length: file.size,
       });
 
@@ -207,7 +205,7 @@ export default function CrewNewPage() {
         image_s3_key: presignRes.data.s3_key,
       }));
     } catch {
-      showToast('이미지 업로드에 실패했습니다. 다시 시도해주세요.');
+      showToast('프로필 이미지 업로드에 실패했습니다.');
     } finally {
       setIsUploadingImage(false);
     }
