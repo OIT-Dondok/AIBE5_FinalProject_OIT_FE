@@ -1,10 +1,24 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CircleAlert, Info, Loader2, RotateCcw } from "lucide-react";
 
 import { BottomSheet } from "@/components/common/BottomSheet";
+import {
+  CHARGE_AMOUNT_POLICY,
+  buildTossPaymentRequest,
+  buildTossRedirectUrl,
+  createChargeOrderId,
+  createPendingChargeOrder,
+  formatChargeAmountInput,
+  getChargeAmountError,
+  getTossClientConfigState,
+  parseChargeAmountInput,
+  resolveChargeInitialAmount,
+  writePendingChargeOrder,
+} from "@/components/domain/point/pointChargeFlow";
 import { formatKrw } from "@/components/domain/point/pointViewModel";
+import { requestTossPayment } from "@/components/domain/point/tossPaymentAdapter";
 
 interface ChargeBottomSheetProps {
   isOpen: boolean;
@@ -13,44 +27,27 @@ interface ChargeBottomSheetProps {
   initialAmount?: number;
 }
 
-const QUICK_ADD_AMOUNTS = [10000, 30000, 50000, 100000] as const;
-const MIN_CHARGE_AMOUNT = 1000;
-const CHARGE_STEP_AMOUNT = 1000;
-const MAX_CHARGE_AMOUNT = 1000000;
-const DEFAULT_AMOUNT = QUICK_ADD_AMOUNTS[0];
+const TOSS_CLIENT_KEY = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY;
+const APP_ORIGIN = process.env.NEXT_PUBLIC_APP_ORIGIN;
 
 function formatQuickAdd(value: number) {
   return `+${new Intl.NumberFormat("ko-KR").format(value / 10000)}만`;
 }
 
-function formatInputValue(value: string) {
-  if (!value) return "";
-  return new Intl.NumberFormat("ko-KR").format(Number(value));
-}
-
-function resolveInitialAmount(rawAmount: number | undefined) {
-  if (rawAmount == null) return DEFAULT_AMOUNT;
-  if (!Number.isFinite(rawAmount)) return DEFAULT_AMOUNT;
-  if (rawAmount <= 0) return DEFAULT_AMOUNT;
-
-  const clamped = Math.min(rawAmount, MAX_CHARGE_AMOUNT);
-  const stepAligned = Math.floor(clamped / CHARGE_STEP_AMOUNT) * CHARGE_STEP_AMOUNT;
-
-  return Math.max(MIN_CHARGE_AMOUNT, Math.min(stepAligned, MAX_CHARGE_AMOUNT));
-}
-
-function getAmountError(amount: number | null) {
-  if (amount == null) return "충전 금액을 입력해 주세요.";
-  if (amount < MIN_CHARGE_AMOUNT) return "1,000원 이상부터 충전할 수 있어요.";
-  if (amount % CHARGE_STEP_AMOUNT !== 0) return "1,000원 단위로 입력해 주세요.";
-  if (amount > MAX_CHARGE_AMOUNT) return "한 번에 1,000,000원까지 충전할 수 있어요.";
-  return "";
-}
-
 export function ChargeBottomSheet({ isOpen, onClose, currentBalance, initialAmount }: ChargeBottomSheetProps) {
-  const initialAmountInput = useMemo(() => String(resolveInitialAmount(initialAmount)), [initialAmount]);
+  const initialAmountInput = useMemo(() => String(resolveChargeInitialAmount(initialAmount)), [initialAmount]);
   const [amountInput, setAmountInput] = useState(initialAmountInput);
-  const [mockStatus, setMockStatus] = useState<"idle" | "pending">("idle");
+  const [paymentStatus, setPaymentStatus] = useState<"idle" | "launching">("idle");
+  const [submitError, setSubmitError] = useState("");
+
+  useEffect(() => {
+    if (!isOpen) return;
+    queueMicrotask(() => {
+      setAmountInput(initialAmountInput);
+      setPaymentStatus("idle");
+      setSubmitError("");
+    });
+  }, [initialAmountInput, isOpen]);
 
   const amount = useMemo(() => {
     if (!amountInput) return null;
@@ -58,36 +55,70 @@ export function ChargeBottomSheet({ isOpen, onClose, currentBalance, initialAmou
     return Number.isFinite(numeric) ? numeric : null;
   }, [amountInput]);
 
-  const amountError = getAmountError(amount);
+  const amountError = getChargeAmountError(amount);
+  const tossConfig = getTossClientConfigState(TOSS_CLIENT_KEY);
+  const configError = tossConfig.enabled ? "" : tossConfig.errorMessage;
   const isValidAmount = amountError.length === 0 && amount != null;
+  const canSubmit = isValidAmount && tossConfig.enabled && paymentStatus === "idle";
   const projectedBalance =
     currentBalance != null && isValidAmount && amount != null ? currentBalance + amount : null;
 
   const handleAmountChange = (next: string) => {
-    setMockStatus("idle");
-    const sanitized = next.replace(/[^0-9]/g, "").replace(/^0+(?=\d)/, "").slice(0, 7);
-    setAmountInput(sanitized);
+    setPaymentStatus("idle");
+    setSubmitError("");
+    setAmountInput(parseChargeAmountInput(next).sanitized);
   };
 
   const addAmount = (delta: number) => {
-    setMockStatus("idle");
+    setPaymentStatus("idle");
+    setSubmitError("");
     const base = amount ?? 0;
-    const next = Math.min(base + delta, MAX_CHARGE_AMOUNT);
+    const next = Math.min(base + delta, CHARGE_AMOUNT_POLICY.max);
     setAmountInput(String(next));
   };
 
   const resetAmount = () => {
-    setMockStatus("idle");
+    setPaymentStatus("idle");
+    setSubmitError("");
     setAmountInput("");
   };
 
-  const handleSubmit = () => {
-    if (!isValidAmount) return;
-    setMockStatus("pending");
+  const handleSubmit = async () => {
+    if (!canSubmit || amount == null || !tossConfig.enabled) return;
+
+    setPaymentStatus("launching");
+    setSubmitError("");
+
+    try {
+      const orderId = createChargeOrderId();
+      const pendingOrder = createPendingChargeOrder(orderId, amount);
+      const fallbackOrigin = typeof window === "undefined" ? undefined : window.location.origin;
+      const successUrl = buildTossRedirectUrl({
+        appOrigin: APP_ORIGIN,
+        fallbackOrigin,
+        path: "/my/dodin/charge/success",
+      });
+      const failUrl = buildTossRedirectUrl({
+        appOrigin: APP_ORIGIN,
+        fallbackOrigin,
+        path: "/my/dodin/charge/fail",
+      });
+
+      writePendingChargeOrder(typeof window === "undefined" ? undefined : window.sessionStorage, pendingOrder);
+      await requestTossPayment({
+        clientKey: tossConfig.clientKey,
+        customerKey: orderId,
+        request: buildTossPaymentRequest({ amount, failUrl, orderId, successUrl }),
+      });
+    } catch (error) {
+      setPaymentStatus("idle");
+      setSubmitError(error instanceof Error ? error.message : "결제창을 열지 못했어요. 다시 시도해 주세요.");
+    }
   };
 
   const handleClose = () => {
-    setMockStatus("idle");
+    setPaymentStatus("idle");
+    setSubmitError("");
     setAmountInput(initialAmountInput);
     onClose();
   };
@@ -110,7 +141,7 @@ export function ChargeBottomSheet({ isOpen, onClose, currentBalance, initialAmou
           <label className="mt-3 flex items-baseline justify-center gap-1">
             <input
               type="text"
-              value={formatInputValue(amountInput)}
+              value={formatChargeAmountInput(amountInput)}
               onChange={(event) => handleAmountChange(event.target.value)}
               inputMode="numeric"
               placeholder="0"
@@ -118,18 +149,19 @@ export function ChargeBottomSheet({ isOpen, onClose, currentBalance, initialAmou
               aria-invalid={amountError.length > 0}
               aria-describedby="charge-amount-helper"
               className="w-auto min-w-0 max-w-[220px] bg-transparent text-center text-[40px] font-black leading-none tracking-[-0.05em] tabular-nums text-text-primary caret-primary-blue outline-none placeholder:text-text-secondary/25"
-              size={Math.max(formatInputValue(amountInput).length, 1)}
+              size={Math.max(formatChargeAmountInput(amountInput).length, 1)}
             />
             <span className="text-[22px] font-black tracking-[-0.04em] text-text-primary/55">원</span>
           </label>
 
           <div className="relative mt-4 flex items-center justify-center gap-1.5">
-            {QUICK_ADD_AMOUNTS.map((delta) => (
+            {CHARGE_AMOUNT_POLICY.presets.map((delta) => (
               <button
                 type="button"
                 key={delta}
                 onClick={() => addAmount(delta)}
-                className="rounded-full border border-primary-green/25 bg-card/70 px-3 py-1.5 text-[12px] font-extrabold text-primary-green shadow-sm transition-all hover:border-primary-green/50 active:scale-[0.94]"
+                disabled={paymentStatus === "launching"}
+                className="rounded-full border border-primary-green/25 bg-card/70 px-3 py-1.5 text-[12px] font-extrabold text-primary-green shadow-sm transition-all hover:border-primary-green/50 active:scale-[0.94] disabled:opacity-50"
               >
                 {formatQuickAdd(delta)}
               </button>
@@ -137,8 +169,9 @@ export function ChargeBottomSheet({ isOpen, onClose, currentBalance, initialAmou
             <button
               type="button"
               onClick={resetAmount}
+              disabled={paymentStatus === "launching"}
               aria-label="금액 초기화"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-text-secondary/10 text-text-secondary transition-all hover:bg-text-secondary/15 active:scale-[0.94]"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-text-secondary/10 text-text-secondary transition-all hover:bg-text-secondary/15 active:scale-[0.94] disabled:opacity-50"
             >
               <RotateCcw size={14} strokeWidth={2.4} aria-hidden="true" />
             </button>
@@ -180,17 +213,17 @@ export function ChargeBottomSheet({ isOpen, onClose, currentBalance, initialAmou
 
         <p className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-semibold text-text-secondary/70">
           <span className="rounded-full bg-success-green/45 px-2 py-0.5 text-[10px] font-extrabold text-primary-green">
-            결제 연동 예정
+            결제 연동
           </span>
-          TossPayments 결제 성공 후 충전 확정 API를 호출합니다.
+          TossPayments 결제 후 서버 확인이 완료되어야 도딘이 충전돼요.
         </p>
 
-        {mockStatus === "pending" && (
+        {(submitError || configError) && (
           <div
             className="mt-3 rounded-2xl bg-amber-50 px-4 py-3 text-xs font-semibold leading-relaxed text-amber-800 duration-200 animate-in fade-in"
             aria-live="polite"
           >
-            아직 결제창이 연결되지 않았어요. 실제 충전 확정 API는 Toss 결제 성공 payload가 있을 때만 호출합니다.
+            {submitError || configError}
           </div>
         )}
 
@@ -205,10 +238,10 @@ export function ChargeBottomSheet({ isOpen, onClose, currentBalance, initialAmou
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={!isValidAmount}
+            disabled={!canSubmit}
             className="flex h-12 items-center justify-center gap-1.5 rounded-2xl bg-primary-blue text-sm font-extrabold text-white shadow-sm shadow-primary-blue/20 transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-text-secondary/25 disabled:text-text-secondary"
           >
-            {mockStatus === "pending" && <Loader2 size={15} className="animate-spin" aria-hidden="true" />}
+            {paymentStatus === "launching" && <Loader2 size={15} className="animate-spin" aria-hidden="true" />}
             {isValidAmount && amount != null ? `${formatKrw(amount)} 충전하기` : "충전하기"}
           </button>
         </div>
