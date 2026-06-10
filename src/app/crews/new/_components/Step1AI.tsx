@@ -40,8 +40,7 @@ export default function Step1AI({ onComplete }: Step1AIProps) {
       }
       onComplete(res.data.draft);
     } catch {
-      setWarnings([{ field: 'general', message: 'AI 추천에 실패했습니다. 직접 입력해주세요.' }]);
-      onComplete(null);
+      setWarnings([{ field: 'general', message: 'AI 추천에 실패했습니다. 다시 시도하거나 직접 입력해주세요.' }]);
     } finally {
       setIsLoading(false);
     }

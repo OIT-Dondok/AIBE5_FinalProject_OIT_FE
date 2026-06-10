@@ -223,15 +223,21 @@ export default function CrewNewPage() {
     duration_days: number;
   } | null) => {
     if (draft) {
+      const toLocalDateString = (d: Date) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+      };
       const startDate = (() => {
         const d = new Date();
         d.setDate(d.getDate() + 1);
-        return d.toISOString().split('T')[0];
+        return toLocalDateString(d);
       })();
       const endDate = (() => {
         const d = new Date();
         d.setDate(d.getDate() + 1 + draft.duration_days);
-        return d.toISOString().split('T')[0];
+        return toLocalDateString(d);
       })();
 
       setFormData((prev) => ({
