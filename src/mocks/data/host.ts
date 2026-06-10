@@ -1,4 +1,9 @@
-import type { CertificationStatus, ParticipantStatus, RejectReasonCode } from "@/types/domain";
+import type {
+  CertificationStatus,
+  MissionLogDecisionType,
+  ParticipantStatus,
+  RejectReasonCode,
+} from "@/types/domain";
 import { MOCK_CREWS } from "@/mocks/data/crews";
 
 export type HostReviewBucket = "urgent" | "warning" | "normal";
@@ -31,6 +36,7 @@ export interface HostCertificationMock {
   first_failed: boolean;
   review_bucket: HostReviewBucket;
   certification_status: CertificationStatus;
+  decision_type?: MissionLogDecisionType | null;
   reject_reason_code: RejectReasonCode | null;
 }
 

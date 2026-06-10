@@ -514,6 +514,36 @@ export interface MissionLogListResponse {
   items: MissionLog[];
 }
 
+export type MissionLogReviewBucket = 'urgent' | 'warning' | 'normal';
+export type MissionLogExifRisk = 'NORMAL' | 'MISSING' | 'TIME_INVALID';
+
+export interface ReviewableMissionLog {
+  mission_log_id: number;
+  crew_id: number;
+  crew_participant_id: number;
+  member_uuid: string;
+  nickname: string;
+  profile_image_url: string | null;
+  image_url: string | null;
+  caption: string;
+  server_time: string;
+  captured_at: string | null;
+  exif_risk: MissionLogExifRisk;
+  is_duplicate: boolean;
+  review_bucket: MissionLogReviewBucket;
+  certification_status: CertificationStatus;
+  decision_type: MissionLogDecisionType | null;
+  reject_reason_code: RejectReasonCode | null;
+  host_reviewable_until: string;
+}
+
+export interface ReviewableMissionLogResponse {
+  items: ReviewableMissionLog[];
+  next_cursor: string | null;
+  has_next: boolean;
+  counts: Record<MissionLogReviewBucket, number>;
+}
+
 // GET /api/crews/{crewId}/moderation-logs → 200 [서일현 담당]
 export interface ModerationHistoryItem {
   moderation_history_id: number;

@@ -1,0 +1,14 @@
+{"t":0,"agent":"ab1f67f","agent_type":"unknown","event":"agent_stop","success":true}
+{"t":0,"agent":"system","event":"keyword_detected","keyword":"code-review"}
+{"t":0,"agent":"system","event":"keyword_detected","keyword":"code-review"}
+{"t":0,"agent":"a261b6e","agent_type":"Explore","event":"agent_start","parent_mode":"none"}
+{"t":0,"agent":"a261b6e","agent_type":"Explore","event":"agent_stop","success":true,"duration_ms":44588}
+{"t":0,"agent":"a261b6e","agent_type":"Explore","event":"agent_stop","success":true,"duration_ms":49104}
+{"t":0,"agent":"a261b6e","agent_type":"Explore","event":"agent_stop","success":true,"duration_ms":54095}
+{"t":0,"agent":"a261b6e","agent_type":"Explore","event":"agent_stop","success":true,"duration_ms":59479}
+{"t":0,"agent":"a261b6e","agent_type":"Explore","event":"agent_stop","success":true,"duration_ms":64140}
+{"t":0,"agent":"a261b6e","agent_type":"Explore","event":"agent_stop","success":true,"duration_ms":68637}
+{"t":0,"agent":"a261b6e","agent_type":"Explore","event":"agent_stop","success":true,"duration_ms":72654}
+{"t":0,"agent":"a261b6e","agent_type":"Explore","event":"agent_stop","success":true,"duration_ms":76071}
+{"t":0,"agent":"a261b6e","agent_type":"Explore","event":"agent_stop","success":true,"duration_ms":79998}
+{"t":0,"agent":"a342cef","agent_type":"unknown","event":"agent_stop","success":true}

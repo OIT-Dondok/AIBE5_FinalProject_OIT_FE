@@ -1,0 +1,247 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1781113352653,
+  "projectRoot": "C:\\mch\\programmers\\AIBE5_FinalProject_OIT_FE",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      },
+      {
+        "name": "TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "tsconfig.json"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "next",
+        "version": "16.2.6",
+        "category": "fullstack"
+      },
+      {
+        "name": "react",
+        "version": "19.2.4",
+        "category": "frontend"
+      },
+      {
+        "name": "react-dom",
+        "version": "19.2.4",
+        "category": "frontend"
+      }
+    ],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "npm run build",
+    "testCommand": "npm test",
+    "lintCommand": "npm run lint",
+    "devCommand": "npm run dev",
+    "scripts": {
+      "dev": "next dev",
+      "build": "next build",
+      "start": "next start",
+      "lint": "next lint",
+      "test": "tsc --noEmit --pretty false && npx -y tsx --test src/**/*.test.ts"
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": "type-based"
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs",
+      "public",
+      "src"
+    ],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 1,
+      "lastAccessed": 1781113352569,
+      "keyFiles": [
+        "fe-structure.md"
+      ]
+    },
+    "public": {
+      "path": "public",
+      "purpose": "Public files",
+      "fileCount": 6,
+      "lastAccessed": 1781113352571,
+      "keyFiles": [
+        "file.svg",
+        "globe.svg",
+        "manifest.json",
+        "next.svg",
+        "vercel.svg"
+      ]
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 0,
+      "lastAccessed": 1781113352600,
+      "keyFiles": []
+    },
+    "src\\app": {
+      "path": "src\\app",
+      "purpose": "Application code",
+      "fileCount": 4,
+      "lastAccessed": 1781113352602,
+      "keyFiles": [
+        "favicon.ico",
+        "globals.css",
+        "layout.tsx"
+      ]
+    },
+    "src\\components": {
+      "path": "src\\components",
+      "purpose": "UI components",
+      "fileCount": 0,
+      "lastAccessed": 1781113352603,
+      "keyFiles": []
+    },
+    "src\\lib": {
+      "path": "src\\lib",
+      "purpose": "Library code",
+      "fileCount": 1,
+      "lastAccessed": 1781113352603,
+      "keyFiles": [
+        "axios.ts"
+      ]
+    },
+    "src\\mocks": {
+      "path": "src\\mocks",
+      "purpose": "Mock data",
+      "fileCount": 0,
+      "lastAccessed": 1781113352604,
+      "keyFiles": []
+    },
+    "src\\services": {
+      "path": "src\\services",
+      "purpose": "Business logic services",
+      "fileCount": 5,
+      "lastAccessed": 1781113352605,
+      "keyFiles": [
+        "auth.ts",
+        "crew.ts",
+        "point.ts"
+      ]
+    },
+    "src\\types": {
+      "path": "src\\types",
+      "purpose": "Type definitions",
+      "fileCount": 2,
+      "lastAccessed": 1781113352605,
+      "keyFiles": [
+        "common.ts",
+        "domain.ts"
+      ]
+    },
+    "src\\utils": {
+      "path": "src\\utils",
+      "purpose": "Utility functions",
+      "fileCount": 1,
+      "lastAccessed": 1781113352606,
+      "keyFiles": [
+        "date.ts"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "src",
+      "accessCount": 6,
+      "lastAccessed": 1781114364175,
+      "type": "directory"
+    },
+    {
+      "path": "src\\services\\moderation.ts",
+      "accessCount": 2,
+      "lastAccessed": 1781114429604,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\domain\\host\\verification\\VerificationTab.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1781114430728,
+      "type": "file"
+    },
+    {
+      "path": "src\\types\\domain.ts",
+      "accessCount": 2,
+      "lastAccessed": 1781114430964,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\domain\\host\\verification\\VerificationCard.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1781114431865,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\domain\\host\\verification\\verificationDisplay.ts",
+      "accessCount": 2,
+      "lastAccessed": 1781114432201,
+      "type": "file"
+    },
+    {
+      "path": "src\\lib\\axios.ts",
+      "accessCount": 1,
+      "lastAccessed": 1781113427259,
+      "type": "file"
+    },
+    {
+      "path": "next.config.ts",
+      "accessCount": 1,
+      "lastAccessed": 1781113479430,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\common\\AuthInitializer.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1781113479879,
+      "type": "file"
+    },
+    {
+      "path": "src/components/domain/host",
+      "accessCount": 1,
+      "lastAccessed": 1781114372733,
+      "type": "directory"
+    },
+    {
+      "path": "src\\components\\domain\\host\\common\\HostActionButton.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1781114376219,
+      "type": "file"
+    },
+    {
+      "path": "src\\components\\domain\\host\\common\\HostConfirmDialog.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1781114376786,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}
