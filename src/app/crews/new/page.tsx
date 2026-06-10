@@ -389,7 +389,10 @@ export default function CrewNewPage() {
           <Step5Agreement
             agreements={formData.agreements}
             onAgreementChange={(key, value) =>
-              update('agreements', { ...formData.agreements, [key]: value })
+              setFormData((prev) => ({
+                ...prev,
+                agreements: { ...prev.agreements, [key]: value },
+              }))
             }
             onSubmit={handleSubmit}
             isSubmitting={isSubmitting}
