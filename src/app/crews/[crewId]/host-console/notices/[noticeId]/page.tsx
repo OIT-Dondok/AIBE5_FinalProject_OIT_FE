@@ -277,7 +277,7 @@ export default function HostNoticeDetailPage() {
           isOpen={isEmojiSheetOpen}
           onClose={() => setIsEmojiSheetOpen(false)}
           onSelect={handleReactionClick}
-          selectedEmojis={[...selectedReactions]}
+          selectedEmojis={Array.from(selectedReactions)}
         />
 
         {showDeleteToast && (

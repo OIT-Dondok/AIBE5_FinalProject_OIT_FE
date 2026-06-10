@@ -96,7 +96,7 @@ export function FeedReactionBar({ initialReactions }: FeedReactionBarProps) {
         isOpen={isPickerOpen}
         onClose={() => setIsPickerOpen(false)}
         onSelect={handleSelectEmoji}
-        selectedEmojis={[...activated]}
+        selectedEmojis={Array.from(activated)}
       />
     </div>
   );

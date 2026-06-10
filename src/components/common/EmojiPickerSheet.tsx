@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { BottomSheet } from '@/components/common/BottomSheet';
 import { EMOJI_CATEGORIES } from '@/constants/emojiCategories';
@@ -27,7 +27,7 @@ export function EmojiPickerSheet({
   const [activeId, setActiveId] = useState(EMOJI_CATEGORIES[0].id);
   const activeCategory =
     EMOJI_CATEGORIES.find((c) => c.id === activeId) ?? EMOJI_CATEGORIES[0];
-  const selectedSet = new Set(selectedEmojis);
+  const selectedSet = useMemo(() => new Set(selectedEmojis), [selectedEmojis]);
 
   const handleSelect = (emoji: string) => {
     onSelect(emoji);
