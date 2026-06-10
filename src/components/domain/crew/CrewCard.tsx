@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import { Calendar } from 'lucide-react';
 import type { CrewListItem, CrewStatus, CrewCategory } from '@/types/domain';
 import { CATEGORY_EMOJI } from '@/components/domain/feed/feedItemMeta';
@@ -56,11 +59,13 @@ interface CrewCardProps {
 }
 
 export default function CrewCard({ crew }: CrewCardProps) {
+  const [imgFailed, setImgFailed] = useState(false);
   const category = crew.category as CrewCategory;
   const emoji = CATEGORY_EMOJI[category] ?? '📌';
   const categoryBg = CATEGORY_BG[category] ?? 'bg-gray-50';
   const status = STATUS_CONFIG[crew.status];
   const isClosed = crew.status === 'CLOSED' || crew.status === 'CANCELLED';
+  const showImage = !!crew.image_url && !imgFailed;
 
   const fillPercent = 0;
 
@@ -69,8 +74,17 @@ export default function CrewCard({ crew }: CrewCardProps) {
 
         {/* 상단: 이모지 + 크루명/상태 + 보증금 */}
         <div className="flex items-center gap-3.5">
-          <div className={`w-12 h-12 flex items-center justify-center ${categoryBg} rounded-2xl flex-shrink-0 text-2xl shadow-sm`}>
-            {emoji}
+          <div className={`w-12 h-12 rounded-2xl flex-shrink-0 overflow-hidden shadow-sm ${showImage ? '' : `${categoryBg} flex items-center justify-center text-2xl`}`}>
+            {showImage ? (
+              <img
+                src={crew.image_url!}
+                alt={crew.title}
+                className="w-full h-full object-cover"
+                onError={() => setImgFailed(true)}
+              />
+            ) : (
+              emoji
+            )}
           </div>
 
           <div className="flex-1 min-w-0">

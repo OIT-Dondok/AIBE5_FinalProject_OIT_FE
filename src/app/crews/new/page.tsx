@@ -65,6 +65,7 @@ interface CrewFormData {
     daily_review: boolean;
     policy_acknowledgment: boolean;
     no_personal_bias: boolean;
+    crew_limit_acknowledgment: boolean;
   };
 }
 
@@ -89,6 +90,7 @@ const initialFormData: CrewFormData = {
     daily_review: false,
     policy_acknowledgment: false,
     no_personal_bias: false,
+    crew_limit_acknowledgment: false,
   },
 };
 
@@ -282,9 +284,14 @@ export default function CrewNewPage() {
     try {
       const recruitmentDeadline = (() => {
         const [y, m, d] = formData.start_date.split('-').map(Number);
-        const prevDay = new Date(Date.UTC(y, m - 1, d - 1));
-        prevDay.setUTCHours(23, 59, 59, 0);
-        return prevDay.toISOString();
+        const prevDay = new Date(y, m - 1, d - 1);
+        prevDay.setHours(23, 59, 59, 0);
+        const offset = -prevDay.getTimezoneOffset();
+        const sign = offset >= 0 ? '+' : '-';
+        const pad = (n: number) => String(Math.abs(n)).padStart(2, '0');
+        const hours = Math.floor(Math.abs(offset) / 60);
+        const minutes = Math.abs(offset) % 60;
+        return `${prevDay.getFullYear()}-${pad(prevDay.getMonth() + 1)}-${pad(prevDay.getDate())}T23:59:59${sign}${pad(hours)}:${pad(minutes)}`;
       })();
 
       const payload: CreateCrewRequest = {
@@ -307,6 +314,7 @@ export default function CrewNewPage() {
             { key: 'daily_review', agreed: formData.agreements.daily_review },
             { key: 'policy_acknowledgment', agreed: formData.agreements.policy_acknowledgment },
             { key: 'no_personal_bias', agreed: formData.agreements.no_personal_bias },
+            { key: 'crew_limit_acknowledgment', agreed: formData.agreements.crew_limit_acknowledgment },
           ],
         },
         recruitment_deadline: recruitmentDeadline,

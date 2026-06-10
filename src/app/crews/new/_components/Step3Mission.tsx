@@ -57,13 +57,16 @@ export default function Step3Mission({
 
   const commitDeposit = (raw: string) => {
     const parsed = parseInt(raw, 10);
+    let normalized: number;
     if (isNaN(parsed) || parsed < DEPOSIT_MIN) {
-      onDepositAmountChange(DEPOSIT_MIN);
+      normalized = DEPOSIT_MIN;
     } else if (parsed > DEPOSIT_MAX) {
-      onDepositAmountChange(DEPOSIT_MAX);
+      normalized = DEPOSIT_MAX;
     } else {
-      onDepositAmountChange(Math.floor(parsed / DEPOSIT_STEP) * DEPOSIT_STEP || DEPOSIT_MIN);
+      normalized = Math.floor(parsed / DEPOSIT_STEP) * DEPOSIT_STEP || DEPOSIT_MIN;
     }
+    setRawDeposit(String(normalized));
+    onDepositAmountChange(normalized);
   };
 
   const toggleDay = (day: string) => {
