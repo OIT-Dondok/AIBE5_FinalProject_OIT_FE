@@ -1,14 +1,3 @@
-// src/lib/api/instance.ts
-// JWT Access Token 자동 갱신 인터셉터
-// 문창현 담당 (JWT 인터셉터 최종 완성)
-// 김한비 초안
-//
-// [명세 근거] overview.md §인증
-//   - Access Token: Authorization: Bearer {accessToken} 헤더
-//   - Refresh Token: HttpOnly 쿠키로만 전달 (request body X)
-//   - 재발급: POST /api/auth/refresh → body 없음, 쿠키 자동 전송
-//   - 재발급 응답: { access_token } 만 반환 (refresh token은 Set-Cookie로만)
-
 import axios, {
   AxiosError,
   AxiosInstance,
@@ -16,56 +5,68 @@ import axios, {
 } from 'axios';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8080';
+const apiBaseURL = typeof window === 'undefined' ? `${BASE_URL}/api` : '/api';
 
-const REFRESH_ENDPOINT = '/api/auth/refresh';
+type ApiErrorBody = {
+  code?: string;
+  message?: string;
+};
 
-// ─── Access Token 관리 ────────────────────────────────────────────────────────
-// Refresh Token은 HttpOnly 쿠키로 관리 → JS에서 접근 불가, 서버가 쿠키로 읽음
-// Access Token은 이 모듈의 클로저에서 관리 — Zustand 외부, localStorage 저장 안 함
+function isAuthEndpoint(url?: string) {
+  return (
+    url?.includes('/auth/login') ||
+    url?.includes('/auth/refresh') ||
+    url?.includes('/auth/logout')
+  );
+}
+
+function canRefresh(errorCode?: string) {
+  return (
+    errorCode === 'ACCESS_TOKEN_EXPIRED' ||
+    errorCode === 'ACCESS_TOKEN_INVALID' ||
+    errorCode === 'UNAUTHORIZED'
+  );
+}
 
 let _accessToken: string | null = null;
 
 export function getAccessToken(): string | null {
   return _accessToken;
 }
+
 export function setAccessToken(token: string): void {
   _accessToken = token;
 }
+
 export function clearAccessToken(): void {
   _accessToken = null;
 }
 
-// ─── Axios 인스턴스 ───────────────────────────────────────────────────────────
-
 export const api: AxiosInstance = axios.create({
-    // 서버사이드(Server Component, SSR): 상대 경로 불가 → BE 직접 절대 URL 사용 (CORS 무관)
-    // 브라우저: CORS 회피를 위해 Next.js rewrite 프록시(/api) 경유
-    baseURL: typeof window === 'undefined' ? `${BASE_URL}/api` : '/api',
-
-    timeout: 10_000,
-    headers: { 'Content-Type': 'application/json' },
-    withCredentials: true,
+  baseURL: apiBaseURL,
+  timeout: 10_000,
+  headers: { 'Content-Type': 'application/json' },
+  withCredentials: true,
 });
 
-// ─── 요청 인터셉터: Access Token 자동 주입 ───────────────────────────────────
+const refreshApi = axios.create({
+  baseURL: apiBaseURL,
+  timeout: 10_000,
+  withCredentials: true,
+});
 
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = _accessToken;
+
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
     return config;
   },
   (error) => Promise.reject(error),
 );
-
-// ─── 응답 인터셉터: 401 → 토큰 갱신 재시도 ──────────────────────────────────
-// [명세 근거] overview.md §Access Token 재발급
-//   - POST /api/auth/refresh: body 없음, refreshToken 쿠키 자동 전송
-//   - 응답: { access_token: string } 만 반환
-//   - refresh token rotate 시 Set-Cookie로 자동 갱신 (JS 접근 불가)
-//   - 실패 시 클라이언트가 로그인 화면으로 유도
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -81,19 +82,34 @@ function processQueue(error: unknown, token: string | null) {
   failedQueue = [];
 }
 
+export async function refreshAccessToken(): Promise<string> {
+  const { data } = await refreshApi.post<{ access_token: string }>(
+    '/auth/refresh',
+  );
+
+  setAccessToken(data.access_token);
+  return data.access_token;
+}
+
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     if (!error.config) return Promise.reject(error);
 
-    // SSR 환경에서는 module-level 상태가 모든 유저 요청에 공유됨 → 큐 패턴 사용 금지
+    // This singleton keeps access token in module memory, so do not refresh on SSR.
     if (typeof window === 'undefined') return Promise.reject(error);
 
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
     };
+    const errorCode = (error.response?.data as ApiErrorBody | undefined)?.code;
 
-    if (error.response?.status !== 401 || originalRequest._retry) {
+    if (
+      error.response?.status !== 401 ||
+      originalRequest._retry ||
+      isAuthEndpoint(originalRequest.url) ||
+      !canRefresh(errorCode)
+    ) {
       return Promise.reject(error);
     }
 
@@ -112,27 +128,20 @@ api.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      // body 없음 - refreshToken 쿠키가 withCredentials로 자동 전송됨
-      const { data } = await axios.post<{ access_token: string }>(
-          REFRESH_ENDPOINT,
-        undefined,
-        { withCredentials: true, timeout: 10_000 },
-      );
-
-      const { access_token } = data;
+      const accessToken = await refreshAccessToken();
       isRefreshing = false;
-      setAccessToken(access_token);
-      processQueue(null, access_token);
+      processQueue(null, accessToken);
 
       if (originalRequest.headers) {
-        originalRequest.headers.Authorization = `Bearer ${access_token}`;
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
       }
+
       return api(originalRequest);
     } catch (refreshError) {
       isRefreshing = false;
       processQueue(refreshError, null);
       clearAccessToken();
-      if (typeof window !== 'undefined') window.location.href = '/login';
+      window.location.href = '/login';
       return Promise.reject(refreshError);
     }
   },
