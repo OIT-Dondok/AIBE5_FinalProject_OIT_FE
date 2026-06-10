@@ -101,7 +101,7 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
           className="relative w-full py-4 px-6 rounded-2xl bg-pastel-yellow overflow-hidden shadow-lg shadow-pastel-yellow/40 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none select-none"
         >
           <div className="absolute inset-[6px] rounded-xl border border-dashed border-black/15 pointer-events-none" />
-          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[64px] font-extrabold text-black/[0.06] leading-none select-none pointer-events-none">D</span>
+
           <div className="relative flex items-center justify-center gap-2 text-text-primary font-bold text-base">
             {isLoading ? <><Spinner /><span>처리 중...</span></> : <span>🔒 입장 신청 · 보증금 {depositAmount.toLocaleString()}원</span>}
           </div>
@@ -116,7 +116,7 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
           {/* 상태 표시 */}
           <div className="relative w-full py-3.5 px-6 rounded-2xl bg-success-green overflow-hidden">
             <div className="absolute inset-[5px] rounded-xl border border-dashed border-primary-green/30 pointer-events-none" />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[64px] font-extrabold text-primary-green/10 leading-none select-none pointer-events-none">D</span>
+
             <div className="relative flex items-center justify-center gap-2">
               <span className="text-primary-green font-bold text-sm">✓ 신청 완료</span>
               <span className="text-primary-green/40 text-xs">·</span>
@@ -131,7 +131,7 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
             className="relative w-full py-3 px-6 rounded-2xl bg-card overflow-hidden border border-text-secondary/20 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none select-none"
           >
             <div className="absolute inset-[5px] rounded-xl border border-dashed border-text-secondary/15 pointer-events-none" />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[64px] font-extrabold text-text-secondary/[0.05] leading-none select-none pointer-events-none">D</span>
+
             <div className="relative flex items-center justify-center gap-2 text-text-secondary font-semibold text-sm">
               {isLoading ? <><Spinner /><span>처리 중...</span></> : <span>신청 취소하기</span>}
             </div>
@@ -145,7 +145,7 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
       return (
         <div className="relative w-full py-4 px-6 rounded-2xl bg-primary-green overflow-hidden shadow-lg shadow-primary-green/30 opacity-90 select-none">
           <div className="absolute inset-[6px] rounded-xl border border-dashed border-white/40 pointer-events-none" />
-          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[64px] font-extrabold text-white/10 leading-none select-none pointer-events-none">D</span>
+
           <p className="relative text-center text-base font-bold text-white">✓ 참여 중</p>
         </div>
       );
@@ -155,7 +155,7 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
     return (
       <div className="relative w-full py-4 px-6 rounded-2xl bg-text-secondary/10 overflow-hidden select-none">
         <div className="absolute inset-[6px] rounded-xl border border-dashed border-text-secondary/20 pointer-events-none" />
-        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[64px] font-extrabold text-text-secondary/10 leading-none select-none pointer-events-none">D</span>
+
         <p className="relative text-center text-base font-bold text-text-secondary/50">입장 불가</p>
       </div>
     );
@@ -177,7 +177,7 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
             onClick={(e) => e.stopPropagation()}
           >
             <div className="absolute inset-[8px] rounded-2xl border-2 border-dashed border-white/30 pointer-events-none" />
-            <span className="absolute right-3 bottom-3 text-[100px] font-extrabold text-white/[0.08] leading-none select-none pointer-events-none">D</span>
+
             <div className="relative flex flex-col items-center gap-4 text-center">
               <span className="text-4xl leading-none">🙌</span>
               <div className="flex flex-col gap-1.5">
