@@ -282,9 +282,14 @@ export default function CrewNewPage() {
     try {
       const recruitmentDeadline = (() => {
         const [y, m, d] = formData.start_date.split('-').map(Number);
-        const prevDay = new Date(Date.UTC(y, m - 1, d - 1));
-        prevDay.setUTCHours(23, 59, 59, 0);
-        return prevDay.toISOString();
+        const prevDay = new Date(y, m - 1, d - 1);
+        prevDay.setHours(23, 59, 59, 0);
+        const offset = -prevDay.getTimezoneOffset();
+        const sign = offset >= 0 ? '+' : '-';
+        const pad = (n: number) => String(Math.abs(n)).padStart(2, '0');
+        const hours = Math.floor(Math.abs(offset) / 60);
+        const minutes = Math.abs(offset) % 60;
+        return `${prevDay.getFullYear()}-${pad(prevDay.getMonth() + 1)}-${pad(prevDay.getDate())}T23:59:59${sign}${pad(hours)}:${pad(minutes)}`;
       })();
 
       const payload: CreateCrewRequest = {
