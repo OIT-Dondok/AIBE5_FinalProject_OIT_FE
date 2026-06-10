@@ -31,12 +31,13 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
     setIsLoading(true);
     try {
       await joinCrew(crewId);
+      showToast('신청이 완료되었습니다! 🎉');
       onSuccess?.();
     } catch (err) {
       if (isAxiosError<ErrorResponse>(err)) {
         const code = err.response?.data?.code;
         if (code === 'INSUFFICIENT_BALANCE') {
-          showToast('포인트가 부족합니다.');
+          showToast('포인트가 부족합니다. 충전 후 다시 시도해주세요.');
         } else if (code === 'CAPACITY_FULL') {
           showToast('정원이 가득 찼습니다.');
         } else if (code === 'CREW_NOT_RECRUITING') {
@@ -56,6 +57,7 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
     setIsLoading(true);
     try {
       await cancelJoinCrew(crewId);
+      showToast('신청이 취소되었습니다.');
       onSuccess?.();
     } catch (err) {
       if (isAxiosError<ErrorResponse>(err)) {
@@ -83,7 +85,7 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
     }
     if (status === 'PENDING') {
       return (
-        <Button variant="outline" size="lg" fullWidth isLoading={isLoading} onClick={handleCancel}>
+        <Button variant="outline" size="lg" fullWidth isLoading={isLoading} onClick={handleCancel} className="bg-card">
           신청 완료 · 승인 대기 중 (취소하기)
         </Button>
       );
