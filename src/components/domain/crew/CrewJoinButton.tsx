@@ -78,7 +78,7 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
   const renderButton = () => {
     if (status === null) {
       return (
-        <Button variant="primary-green" size="lg" fullWidth isLoading={isLoading} onClick={handleJoin}>
+        <Button variant="primary-green" size="lg" fullWidth isLoading={isLoading} onClick={handleJoin} className="bg-primary-green/75">
           🔒 입장 신청 · 보증금 {depositAmount.toLocaleString()}원
         </Button>
       );
