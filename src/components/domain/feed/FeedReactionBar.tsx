@@ -1,10 +1,10 @@
 "use client";
 
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { SmilePlus } from 'lucide-react';
 
 import type { FeedReaction } from '@/mocks/data/feed';
-import { EmojiPicker } from '@/components/domain/feed/EmojiPicker';
+import { EmojiPickerSheet } from '@/components/common/EmojiPickerSheet';
 
 interface FeedReactionBarProps {
   initialReactions: FeedReaction[];
@@ -15,9 +15,7 @@ export function FeedReactionBar({ initialReactions }: FeedReactionBarProps) {
   // 피드(feed_id) 변경 시에는 상위에서 key로 remount하므로 prop→state 동기화 로직이 필요 없다.
   const [reactions, setReactions] = useState<FeedReaction[]>(initialReactions);
   const [activated, setActivated] = useState<Set<string>>(new Set());
-  const [open, setOpen] = useState(false);
-  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
 
   const handleReactionClick = (emoji: string) => {
     // TODO: API - 리액션 토글 반영 (추가 POST /feeds/{feedId}/reactions, 취소 DELETE)
@@ -51,18 +49,6 @@ export function FeedReactionBar({ initialReactions }: FeedReactionBarProps) {
         return next;
       });
     }
-    setOpen(false); // 선택 즉시 닫기
-  };
-
-  const closePicker = () => setOpen(false);
-
-  const togglePicker = () => {
-    if (open) {
-      setOpen(false);
-    } else if (buttonRef.current) {
-      setAnchorRect(buttonRef.current.getBoundingClientRect());
-      setOpen(true);
-    }
   };
 
   return (
@@ -91,14 +77,13 @@ export function FeedReactionBar({ initialReactions }: FeedReactionBarProps) {
       })}
 
       <button
-        ref={buttonRef}
         type="button"
-        onClick={togglePicker}
+        onClick={() => setIsPickerOpen(true)}
         aria-label="이모지 추가"
         aria-haspopup="dialog"
-        aria-expanded={open}
+        aria-expanded={isPickerOpen}
         className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-green/50 ${
-          open
+          isPickerOpen
             ? 'bg-primary-green/10 border border-primary-green/30 text-primary-green'
             : 'bg-background border border-text-secondary/15 text-text-secondary hover:bg-text-secondary/5'
         }`}
@@ -107,14 +92,12 @@ export function FeedReactionBar({ initialReactions }: FeedReactionBarProps) {
         이모지
       </button>
 
-      {open && anchorRect && (
-        <EmojiPicker
-          anchorRect={anchorRect}
-          triggerRef={buttonRef}
-          onSelect={handleSelectEmoji}
-          onClose={closePicker}
-        />
-      )}
+      <EmojiPickerSheet
+        isOpen={isPickerOpen}
+        onClose={() => setIsPickerOpen(false)}
+        onSelect={handleSelectEmoji}
+        selectedEmojis={[...activated]}
+      />
     </div>
   );
 }
