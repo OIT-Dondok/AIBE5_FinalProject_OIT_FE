@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { isAxiosError } from 'axios';
-import { Button } from '@/components/common/Button';
 import { Toast } from '@/components/common/Toast';
 import { joinCrew, cancelJoinCrew } from '@/services/crew';
 import type { MyParticipation } from '@/types/domain';
@@ -15,10 +14,26 @@ interface CrewJoinButtonProps {
   onSuccess?: () => void;
 }
 
+function Spinner() {
+  return (
+    <svg className="animate-spin h-4 w-4 text-current" fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+    </svg>
+  );
+}
+
 export default function CrewJoinButton({ crewId, depositAmount, myParticipation, onSuccess }: CrewJoinButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [showBillToast, setShowBillToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isToastOpen, setIsToastOpen] = useState(false);
+
+  useEffect(() => {
+    if (!showBillToast) return;
+    const t = setTimeout(() => setShowBillToast(false), 2800);
+    return () => clearTimeout(t);
+  }, [showBillToast]);
 
   const showToast = useCallback((message: string) => {
     setToastMessage(message);
@@ -31,7 +46,7 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
     setIsLoading(true);
     try {
       await joinCrew(crewId);
-      showToast('신청이 완료되었습니다! 🎉');
+      setShowBillToast(true);
       onSuccess?.();
     } catch (err) {
       if (isAxiosError<ErrorResponse>(err)) {
@@ -76,44 +91,97 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
   };
 
   const renderButton = () => {
+    /* ── 신청 전 ─────────────────────────────────── */
     if (status === null) {
       return (
-        <Button variant="primary-green" size="lg" fullWidth isLoading={isLoading} onClick={handleJoin} className="bg-pastel-yellow text-text-primary shadow-pastel-yellow/40">
-          🔒 입장 신청 · 보증금 {depositAmount.toLocaleString()}원
-        </Button>
+        <button
+          type="button"
+          onClick={handleJoin}
+          disabled={isLoading}
+          className="relative w-full py-4 px-6 rounded-2xl bg-pastel-yellow overflow-hidden shadow-lg shadow-pastel-yellow/40 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none select-none"
+        >
+          <div className="absolute inset-[6px] rounded-xl border border-dashed border-black/15 pointer-events-none" />
+          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[64px] font-extrabold text-black/[0.06] leading-none select-none pointer-events-none">D</span>
+          <div className="relative flex items-center justify-center gap-2 text-text-primary font-bold text-base">
+            {isLoading ? <><Spinner /><span>처리 중...</span></> : <span>🔒 입장 신청 · 보증금 {depositAmount.toLocaleString()}원</span>}
+          </div>
+        </button>
       );
     }
+
+    /* ── 신청 완료 (PENDING) ──────────────────────── */
     if (status === 'PENDING') {
       return (
         <div className="flex flex-col gap-2">
-          <div className="w-full py-3.5 px-6 rounded-button bg-success-green flex items-center justify-center gap-2">
-            <span className="text-primary-green font-bold text-sm">✓ 신청 완료</span>
-            <span className="text-primary-green/40 text-xs">·</span>
-            <span className="text-primary-green/70 text-xs font-medium">승인 대기 중</span>
+          {/* 상태 표시 */}
+          <div className="relative w-full py-3.5 px-6 rounded-2xl bg-success-green overflow-hidden">
+            <div className="absolute inset-[5px] rounded-xl border border-dashed border-primary-green/30 pointer-events-none" />
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[64px] font-extrabold text-primary-green/10 leading-none select-none pointer-events-none">D</span>
+            <div className="relative flex items-center justify-center gap-2">
+              <span className="text-primary-green font-bold text-sm">✓ 신청 완료</span>
+              <span className="text-primary-green/40 text-xs">·</span>
+              <span className="text-primary-green/70 text-xs font-medium">승인 대기 중</span>
+            </div>
           </div>
-          <Button variant="outline" size="md" fullWidth isLoading={isLoading} onClick={handleCancel} className="bg-card">
-            신청 취소하기
-          </Button>
+          {/* 취소 버튼 */}
+          <button
+            type="button"
+            onClick={handleCancel}
+            disabled={isLoading}
+            className="relative w-full py-3 px-6 rounded-2xl bg-card overflow-hidden border border-text-secondary/20 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none select-none"
+          >
+            <div className="absolute inset-[5px] rounded-xl border border-dashed border-text-secondary/15 pointer-events-none" />
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[64px] font-extrabold text-text-secondary/[0.05] leading-none select-none pointer-events-none">D</span>
+            <div className="relative flex items-center justify-center gap-2 text-text-secondary font-semibold text-sm">
+              {isLoading ? <><Spinner /><span>처리 중...</span></> : <span>신청 취소하기</span>}
+            </div>
+          </button>
         </div>
       );
     }
+
+    /* ── 참여 중 (LOCKED) ────────────────────────── */
     if (status === 'LOCKED') {
       return (
-        <Button variant="primary-green" size="lg" fullWidth disabled>
-          ✓ 참여 중
-        </Button>
+        <div className="relative w-full py-4 px-6 rounded-2xl bg-primary-green overflow-hidden shadow-lg shadow-primary-green/30 opacity-90 select-none">
+          <div className="absolute inset-[6px] rounded-xl border border-dashed border-white/40 pointer-events-none" />
+          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[64px] font-extrabold text-white/10 leading-none select-none pointer-events-none">D</span>
+          <p className="relative text-center text-base font-bold text-white">✓ 참여 중</p>
+        </div>
       );
     }
+
+    /* ── 입장 불가 ────────────────────────────────── */
     return (
-      <Button variant="outline" size="lg" fullWidth disabled>
-        입장 불가
-      </Button>
+      <div className="relative w-full py-4 px-6 rounded-2xl bg-text-secondary/10 overflow-hidden select-none">
+        <div className="absolute inset-[6px] rounded-xl border border-dashed border-text-secondary/20 pointer-events-none" />
+        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[64px] font-extrabold text-text-secondary/10 leading-none select-none pointer-events-none">D</span>
+        <p className="relative text-center text-base font-bold text-text-secondary/50">입장 불가</p>
+      </div>
     );
   };
 
   return (
     <>
       {renderButton()}
+
+      {/* 지폐 스타일 신청 완료 토스트 */}
+      {showBillToast && (
+        <div className="fixed bottom-36 left-0 right-0 z-[90] flex justify-center px-6 pointer-events-none">
+          <div className="relative w-full max-w-[320px] bg-primary-green rounded-2xl px-5 py-4 shadow-xl shadow-primary-green/30 overflow-hidden pointer-events-auto animate-feed-in">
+            <div className="absolute inset-[6px] rounded-xl border border-dashed border-white/40 pointer-events-none" />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[72px] font-extrabold text-white/10 leading-none select-none pointer-events-none">D</span>
+            <div className="relative flex items-center gap-3">
+              <span className="text-2xl leading-none">🪙</span>
+              <div className="flex flex-col gap-0.5">
+                <p className="text-sm font-bold text-white leading-snug">신청이 완료되었습니다!</p>
+                <p className="text-xs text-white/70">보증금 {depositAmount.toLocaleString()}원이 예치되었습니다</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Toast
         message={toastMessage}
         isOpen={isToastOpen}
