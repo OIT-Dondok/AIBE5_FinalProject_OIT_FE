@@ -84,6 +84,12 @@
 }
 
 @layer base {
+  /* 스크롤 잠금(모달·바텀시트 오픈) 시 스크롤바가 사라지며 레이아웃이 밀리는 것 방지:
+     스크롤바 자리를 항상 예약 (모바일 오버레이 스크롤바는 영향 없음) */
+  html {
+    scrollbar-gutter: stable;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-text-primary);

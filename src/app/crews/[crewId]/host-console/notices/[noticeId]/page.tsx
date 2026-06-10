@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import DOMPurify from "dompurify";
 import { Pencil, Send, SmilePlus, Trash2, X } from "lucide-react";
 
-import { BottomSheet } from "@/components/common/BottomSheet";
+import { EmojiPickerSheet } from "@/components/common/EmojiPickerSheet";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
 import { HostBadge } from "@/components/common/HostBadge";
@@ -24,41 +24,6 @@ const sanitizeNoticeHtml = (html: string) => {
 const NOTICE_REACTION_LABELS: Record<string, string> = {
   확인: "✅",
 };
-
-const EMOJI_OPTIONS = [
-  "😀",
-  "😄",
-  "😊",
-  "😍",
-  "🥰",
-  "😘",
-  "😎",
-  "🤩",
-  "👍",
-  "👏",
-  "🙌",
-  "💪",
-  "🙏",
-  "👌",
-  "🤝",
-  "🫶",
-  "✅",
-  "🔥",
-  "✨",
-  "💚",
-  "💙",
-  "💛",
-  "❤️",
-  "⭐",
-  "🌈",
-  "☀️",
-  "🌙",
-  "📌",
-  "📣",
-  "🎉",
-  "🏆",
-  "👑",
-];
 
 export default function HostNoticeDetailPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -128,11 +93,6 @@ export default function HostNoticeDetailPage() {
 
       return next;
     });
-  };
-
-  const handleEmojiSelect = (emoji: string) => {
-    handleReactionClick(emoji);
-    setIsEmojiSheetOpen(false);
   };
 
   const handleCommentSubmit = () => {
@@ -313,31 +273,12 @@ export default function HostNoticeDetailPage() {
           </section>
         </div>
 
-        <BottomSheet
+        <EmojiPickerSheet
           isOpen={isEmojiSheetOpen}
           onClose={() => setIsEmojiSheetOpen(false)}
-          title="이모지 추가"
-          showCloseButton={false}
-          showHeaderBorder={false}
-          panelClassName="bg-[#F5F0E6]"
-          ariaLabel="공지 이모지 추가"
-        >
-          <div className="px-5 pb-6 pt-1">
-            <div className="grid grid-cols-8 gap-2">
-              {EMOJI_OPTIONS.map((emoji) => (
-                <button
-                  key={emoji}
-                  type="button"
-                  onClick={() => handleEmojiSelect(emoji)}
-                  className="flex aspect-square items-center justify-center rounded-xl bg-white text-xl shadow-sm transition hover:bg-[#E0E8FA] active:scale-95"
-                  aria-label={`${emoji} 이모지 추가`}
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
-          </div>
-        </BottomSheet>
+          onSelect={handleReactionClick}
+          selectedEmojis={Array.from(selectedReactions)}
+        />
 
         {showDeleteToast && (
           <div className="fixed inset-x-0 bottom-6 z-[90] flex justify-center px-5 pointer-events-none">
