@@ -14,22 +14,51 @@ export type WalletHistoryTypeParam =
   | "withdrawal"
   | "settlement";
 
-export type PointHistoryTypeParam = WalletHistoryTypeParam;
-
 export interface PointHistoryParams {
   limit?: number;
   cursor?: string;
   type?: WalletHistoryTypeParam;
+  /** Wallet history month filter in YYYY-MM format, e.g. 2026-06. */
   month?: string;
 }
 
-export const getPointAccount = () => api.get<PointAccountResponse>("/points");
+interface PointApiClient {
+  get: (url: string, config?: unknown) => Promise<{ data: unknown }>;
+  post: (url: string, payload?: unknown) => Promise<{ data: unknown }>;
+}
 
-export const getPointHistory = (params?: PointHistoryParams) =>
-  api.get<PointHistoryResponse>("/points/history", { params });
+const WALLET_HISTORY_MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
 
-export const getWalletHistory = (params?: PointHistoryParams) =>
-  api.get<WalletHistoryResponse>("/points/wallet-history", { params });
+function assertValidWalletHistoryMonth(month: string | undefined) {
+  if (month == null) return;
+  if (WALLET_HISTORY_MONTH_PATTERN.test(month)) return;
 
-export const chargePoints = (payload: PointChargeRequest) =>
-  api.post<PointChargeResponse>("/points/charges", payload);
+  throw new Error(`wallet history month must be YYYY-MM with month 01-12: ${month}`);
+}
+
+export function createPointService(apiClient: PointApiClient) {
+  return {
+    getPointAccount: () => apiClient.get("/points") as Promise<{ data: PointAccountResponse }>,
+
+    getPointHistory: (params?: PointHistoryParams) =>
+      apiClient.get("/points/history", { params }) as Promise<{ data: PointHistoryResponse }>,
+
+    getWalletHistory: (params?: PointHistoryParams) => {
+      assertValidWalletHistoryMonth(params?.month);
+      return apiClient.get("/points/wallet-history", { params }) as Promise<{ data: WalletHistoryResponse }>;
+    },
+
+    chargePoints: (payload: PointChargeRequest) =>
+      apiClient.post("/points/charges", payload) as Promise<{ data: PointChargeResponse }>,
+  };
+}
+
+const pointService = createPointService(api as unknown as PointApiClient);
+
+export const getPointAccount = pointService.getPointAccount;
+
+export const getPointHistory = pointService.getPointHistory;
+
+export const getWalletHistory = pointService.getWalletHistory;
+
+export const chargePoints = pointService.chargePoints;

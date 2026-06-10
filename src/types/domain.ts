@@ -844,7 +844,7 @@ export interface WalletHistoryItem {
   status: WalletEventStatus;
   reference_type: PointHistoryReferenceType;
   reference_id: number;
-  reference_meta?: Record<string, unknown> | null;
+  reference_meta?: (PointHistoryReferenceMeta & Record<string, unknown>) | null;
   created_at: string;
 }
 

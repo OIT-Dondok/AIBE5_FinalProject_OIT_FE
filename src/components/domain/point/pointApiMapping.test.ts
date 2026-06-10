@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
+import ts from "typescript";
 
 import {
   buildRecentMonthOptions,
@@ -12,8 +12,7 @@ import {
   type PointHistoryFilter,
 } from "@/components/domain/point/pointViewModel";
 import { getFilteredHistory } from "@/components/domain/point/WalletHistorySection";
-import { api } from "@/lib/axios";
-import { getWalletHistory } from "@/services/point";
+import { createPointService } from "@/services/point";
 import type { PointAccountResponse, WalletHistoryItem } from "@/types/domain";
 
 describe("point wallet API mapping", () => {
@@ -64,54 +63,62 @@ describe("point wallet API mapping", () => {
   });
 
   it("calls the wallet-history endpoint with documented params", async () => {
-    const originalGet = api.get;
     const calls: Array<{ url: string; config: unknown }> = [];
-    api.get = ((url: string, config?: unknown) => {
-      calls.push({ url, config });
-      return Promise.resolve({ data: { items: [], next_cursor: "next" } });
-    }) as typeof api.get;
+    const pointService = createPointService({
+      get: (url: string, config?: unknown) => {
+        calls.push({ url, config });
+        return Promise.resolve({ data: { items: [], next_cursor: "next" } });
+      },
+      post: () => Promise.reject(new Error("unused")),
+    });
 
-    try {
-      const response = await getWalletHistory({
+    const response = await pointService.getWalletHistory({
         cursor: "cursor-1",
         limit: 20,
         month: "2026-06",
         type: "deposit",
       });
 
-      assert.equal(response.data.next_cursor, "next");
-      assert.equal(calls.length, 1);
-      assert.equal(calls[0].url, "/points/wallet-history");
-      assert.deepEqual(calls[0].config, {
-        params: {
-          cursor: "cursor-1",
-          limit: 20,
-          month: "2026-06",
-          type: "deposit",
-        },
-      });
-    } finally {
-      api.get = originalGet;
-    }
+    assert.equal(response.data.next_cursor, "next");
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].url, "/points/wallet-history");
+    assert.deepEqual(calls[0].config, {
+      params: {
+        cursor: "cursor-1",
+        limit: 20,
+        month: "2026-06",
+        type: "deposit",
+      },
+    });
   });
 
   it("omits month from wallet-history params for the all-period filter", async () => {
-    const originalGet = api.get;
     const calls: Array<{ url: string; config: { params?: Record<string, unknown> } }> = [];
-    api.get = ((url: string, config?: { params?: Record<string, unknown> }) => {
-      calls.push({ url, config: config ?? {} });
-      return Promise.resolve({ data: { items: [], next_cursor: null } });
-    }) as typeof api.get;
+    const pointService = createPointService({
+      get: (url: string, config?: unknown) => {
+        calls.push({ url, config: (config as { params?: Record<string, unknown> } | undefined) ?? {} });
+        return Promise.resolve({ data: { items: [], next_cursor: null } });
+      },
+      post: () => Promise.reject(new Error("unused")),
+    });
 
-    try {
-      await getWalletHistory({ limit: 20, type: "deposit" });
+    await pointService.getWalletHistory({ limit: 20, type: "deposit" });
 
-      assert.equal(calls.length, 1);
-      assert.equal(calls[0].url, "/points/wallet-history");
-      assert.equal(Object.hasOwn(calls[0].config.params ?? {}, "month"), false);
-    } finally {
-      api.get = originalGet;
-    }
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].url, "/points/wallet-history");
+    assert.equal(Object.hasOwn(calls[0].config.params ?? {}, "month"), false);
+  });
+
+  it("rejects invalid wallet-history month params before calling the API", async () => {
+    const pointService = createPointService({
+      get: () => Promise.resolve({ data: { items: [], next_cursor: null } }),
+      post: () => Promise.reject(new Error("unused")),
+    });
+
+    assert.throws(
+      () => pointService.getWalletHistory({ month: "2026-13" }),
+      /wallet history month must be YYYY-MM/,
+    );
   });
 
   it("maps documented wallet display types to wallet-native view items", () => {
@@ -246,32 +253,79 @@ describe("point wallet API mapping", () => {
   });
 
   it("clears the duplicate cursor guard when paginated history loading fails", () => {
-    const source = readFileSync("src/app/my/dodin/history/page.tsx", "utf8");
-    const catchBlock = source.match(/catch\s*\{([\s\S]*?)\}\s*finally/)?.[1];
+    const sourceFile = readTsSourceFile("src/app/my/dodin/history/page.tsx");
+    const catchClauses = findNodes(sourceFile, ts.isCatchClause);
 
-    assert.ok(catchBlock);
-    assert.match(catchBlock, /lastRequestedCursorRef\.current\s*=\s*null;/);
+    assert.equal(
+      catchClauses.some((catchClause) =>
+        nodeText(catchClause.block, sourceFile).includes("lastRequestedCursorRef.current = null"),
+      ),
+      true,
+    );
   });
 
   it("threads the selected month through initial fetch, retry, and pagination", () => {
-    const source = readFileSync("src/app/my/dodin/history/page.tsx", "utf8");
+    const sourceFile = readTsSourceFile("src/app/my/dodin/history/page.tsx");
+    const fetchHistoryCalls = findCallExpressions(sourceFile, "fetchHistory").map((call) =>
+      nodeText(call, sourceFile),
+    );
 
-    assert.match(source, /activeMonth/);
-    assert.match(source, /month:\s*activeMonth/);
-    assert.match(source, /fetchHistory\(\{\s*filter:\s*activeFilter,\s*month:\s*activeMonth,\s*reset:\s*true\s*\}\)/);
-    assert.match(source, /fetchHistory\(\{\s*cursor:\s*nextCursor,\s*filter:\s*activeFilter,\s*month:\s*activeMonth,\s*reset:\s*false\s*\}\)/);
-    assert.match(source, /\[activeFilter,\s*activeMonth,\s*fetchHistory,\s*resetHistoryQuery\]/);
+    assert.equal(
+      fetchHistoryCalls.some((call) => hasObjectProperties(call, ["filter: activeFilter", "month: activeMonth", "reset: true"])),
+      true,
+    );
+    assert.equal(
+      fetchHistoryCalls.some((call) =>
+        hasObjectProperties(call, ["cursor: nextCursor", "filter: activeFilter", "month: activeMonth", "reset: false"]),
+      ),
+      true,
+    );
   });
 
   it("keeps month query state robust across no-op changes and stale in-flight requests", () => {
-    const source = readFileSync("src/app/my/dodin/history/page.tsx", "utf8");
+    const sourceFile = readTsSourceFile("src/app/my/dodin/history/page.tsx");
+    const sourceText = sourceFile.getFullText();
 
-    assert.match(source, /if\s*\(filter\s*===\s*activeFilter\)\s*return;/);
-    assert.match(source, /if\s*\(month\s*===\s*activeMonth\)\s*return;/);
-    assert.match(source, /requestIdRef\.current\s*\+=\s*1;/);
-    assert.match(source, /\.\.\.\(month\s*\?\s*\{\s*month\s*\}\s*:\s*\{\s*\}\)/);
+    assert.equal(sourceText.includes("if (filter === activeFilter) return;"), true);
+    assert.equal(sourceText.includes("if (month === activeMonth) return;"), true);
+    assert.equal(sourceText.includes("requestIdRef.current += 1;"), true);
+    assert.equal(sourceText.includes("...(month ? { month } : {})"), true);
   });
 });
+
+function readTsSourceFile(path: string) {
+  const host = ts.sys;
+  const source = host.readFile(path);
+  assert.ok(source);
+  return ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+}
+
+function findNodes<T extends ts.Node>(root: ts.Node, predicate: (node: ts.Node) => node is T) {
+  const matches: T[] = [];
+  const visit = (node: ts.Node) => {
+    if (predicate(node)) matches.push(node);
+    ts.forEachChild(node, visit);
+  };
+
+  visit(root);
+  return matches;
+}
+
+function findCallExpressions(sourceFile: ts.SourceFile, functionName: string) {
+  return findNodes(
+    sourceFile,
+    (node): node is ts.CallExpression =>
+      ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === functionName,
+  );
+}
+
+function nodeText(node: ts.Node, sourceFile: ts.SourceFile) {
+  return node.getText(sourceFile);
+}
+
+function hasObjectProperties(callText: string, expectedFragments: string[]) {
+  return expectedFragments.every((fragment) => callText.includes(fragment));
+}
 
 function createHistoryItem(overrides: Partial<WalletHistoryItem> = {}): WalletHistoryItem {
   return {

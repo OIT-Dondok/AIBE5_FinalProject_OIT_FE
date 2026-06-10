@@ -149,24 +149,32 @@ export function formatMonthLabel(value?: string) {
 }
 
 function getSeoulYearMonth(date: Date) {
+  const timeZone = "Asia/Seoul";
   const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Seoul",
+    timeZone,
     year: "numeric",
     month: "2-digit",
   }).formatToParts(date);
+  const yearPart = parts.find((part) => part.type === "year");
+  const monthPart = parts.find((part) => part.type === "month");
+
+  if (!yearPart || !monthPart || !/^\d{4}$/.test(yearPart.value) || !/^\d{2}$/.test(monthPart.value)) {
+    throw new Error(`Unable to resolve ${timeZone} year/month from date: ${String(date)}`);
+  }
 
   return {
-    year: Number(parts.find((part) => part.type === "year")?.value),
-    month: Number(parts.find((part) => part.type === "month")?.value),
+    year: Number(yearPart.value),
+    month: Number(monthPart.value),
   };
 }
 
 export function buildRecentMonthOptions(baseDate: Date, count = 12): MonthFilterOption[] {
   const { year: baseYear, month: baseMonth } = getSeoulYearMonth(baseDate);
+  const totalMonths = baseYear * 12 + (baseMonth - 1);
   const months = Array.from({ length: count }, (_, index) => {
-    const monthIndex = baseMonth - 1 - index;
-    const year = baseYear + Math.floor(monthIndex / 12);
-    const month = ((monthIndex % 12) + 12) % 12 + 1;
+    const currentTotal = totalMonths - index;
+    const year = Math.floor(currentTotal / 12);
+    const month = (currentTotal % 12) + 1;
     const value = `${year}-${String(month).padStart(2, "0")}`;
 
     return {
