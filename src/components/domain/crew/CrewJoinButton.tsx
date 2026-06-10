@@ -25,15 +25,15 @@ function Spinner() {
 
 export default function CrewJoinButton({ crewId, depositAmount, myParticipation, onSuccess }: CrewJoinButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [showBillToast, setShowBillToast] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isToastOpen, setIsToastOpen] = useState(false);
 
   useEffect(() => {
-    if (!showBillToast) return;
-    const t = setTimeout(() => setShowBillToast(false), 2800);
+    if (!showSuccessModal) return;
+    const t = setTimeout(() => setShowSuccessModal(false), 4000);
     return () => clearTimeout(t);
-  }, [showBillToast]);
+  }, [showSuccessModal]);
 
   const showToast = useCallback((message: string) => {
     setToastMessage(message);
@@ -46,7 +46,7 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
     setIsLoading(true);
     try {
       await joinCrew(crewId);
-      setShowBillToast(true);
+      setShowSuccessModal(true);
       onSuccess?.();
     } catch (err) {
       if (isAxiosError<ErrorResponse>(err)) {
@@ -165,18 +165,32 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
     <>
       {renderButton()}
 
-      {/* 지폐 스타일 신청 완료 토스트 */}
-      {showBillToast && (
-        <div className="fixed bottom-36 left-0 right-0 z-[90] flex justify-center px-6 pointer-events-none">
-          <div className="relative w-full max-w-[320px] bg-primary-green rounded-2xl px-5 py-4 shadow-xl shadow-primary-green/30 overflow-hidden pointer-events-auto animate-feed-in">
-            <div className="absolute inset-[6px] rounded-xl border border-dashed border-white/40 pointer-events-none" />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[72px] font-extrabold text-white/10 leading-none select-none pointer-events-none">D</span>
-            <div className="relative flex items-center gap-3">
-              <span className="text-2xl leading-none">🪙</span>
-              <div className="flex flex-col gap-0.5">
-                <p className="text-sm font-bold text-white leading-snug">신청이 완료되었습니다!</p>
-                <p className="text-xs text-white/70">보증금 {depositAmount.toLocaleString()}원이 예치되었습니다</p>
+      {/* 신청 완료 모달 */}
+      {showSuccessModal && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center px-6"
+          onClick={() => setShowSuccessModal(false)}
+        >
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+          <div
+            className="relative w-full max-w-[320px] bg-primary-green rounded-3xl px-6 py-8 shadow-2xl shadow-primary-green/40 overflow-hidden animate-feed-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="absolute inset-[8px] rounded-2xl border-2 border-dashed border-white/30 pointer-events-none" />
+            <span className="absolute right-3 bottom-3 text-[100px] font-extrabold text-white/[0.08] leading-none select-none pointer-events-none">D</span>
+            <div className="relative flex flex-col items-center gap-4 text-center">
+              <span className="text-4xl leading-none">🙌</span>
+              <div className="flex flex-col gap-1.5">
+                <p className="text-lg font-bold text-white">신청이 완료됐어요!</p>
+                <p className="text-sm text-white/75 leading-snug">방장 승인 전까지 취소할 수 있어요</p>
               </div>
+              <button
+                type="button"
+                onClick={() => setShowSuccessModal(false)}
+                className="mt-1 w-full py-2.5 rounded-xl bg-white/20 text-sm font-semibold text-white hover:bg-white/30 active:scale-[0.98] transition-all"
+              >
+                확인
+              </button>
             </div>
           </div>
         </div>
