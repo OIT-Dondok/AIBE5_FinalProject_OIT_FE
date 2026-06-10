@@ -65,6 +65,8 @@ interface CrewFormData {
     daily_review: boolean;
     policy_acknowledgment: boolean;
     no_personal_bias: boolean;
+    immutable_after_creation: boolean;
+    crew_limit_acknowledgment: boolean;
   };
 }
 
@@ -89,6 +91,8 @@ const initialFormData: CrewFormData = {
     daily_review: false,
     policy_acknowledgment: false,
     no_personal_bias: false,
+    immutable_after_creation: false,
+    crew_limit_acknowledgment: false,
   },
 };
 
@@ -312,6 +316,8 @@ export default function CrewNewPage() {
             { key: 'daily_review', agreed: formData.agreements.daily_review },
             { key: 'policy_acknowledgment', agreed: formData.agreements.policy_acknowledgment },
             { key: 'no_personal_bias', agreed: formData.agreements.no_personal_bias },
+            { key: 'immutable_after_creation', agreed: formData.agreements.immutable_after_creation },
+            { key: 'crew_limit_acknowledgment', agreed: formData.agreements.crew_limit_acknowledgment },
           ],
         },
         recruitment_deadline: recruitmentDeadline,

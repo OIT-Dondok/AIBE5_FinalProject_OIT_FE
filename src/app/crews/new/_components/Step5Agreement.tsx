@@ -8,6 +8,8 @@ interface AgreementKeys {
   daily_review: boolean;
   policy_acknowledgment: boolean;
   no_personal_bias: boolean;
+  immutable_after_creation: boolean;
+  crew_limit_acknowledgment: boolean;
 }
 
 interface Step5AgreementProps {
@@ -37,6 +39,16 @@ const PRINCIPLES: Array<{ key: keyof AgreementKeys; title: string; description: 
     key: 'no_personal_bias',
     title: '공정한 운영',
     description: '특정 크루원에 대한 개인적 편향 없이 동일한 기준으로 검증하겠습니다.',
+  },
+  {
+    key: 'immutable_after_creation',
+    title: '크루 수정·삭제 불가',
+    description: '크루 개설 후 수정 및 삭제가 불가능합니다. 신중하게 만들어주세요.',
+  },
+  {
+    key: 'crew_limit_acknowledgment',
+    title: '크루 운영 한도',
+    description: '방장은 최대 5개의 크루를 동시에 운영할 수 있습니다.',
   },
 ];
 
@@ -99,7 +111,7 @@ export default function Step5Agreement({
           {allAgreed && <Check size={11} className="text-white stroke-[3]" />}
         </div>
         <span className={`text-sm font-bold ${allAgreed ? 'text-primary-green' : 'text-text-secondary'}`}>
-          위 4가지 원칙에 모두 동의합니다
+          위 6가지 원칙에 모두 동의합니다
         </span>
       </button>
 
