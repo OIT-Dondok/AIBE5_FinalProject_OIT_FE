@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/common/Header';
 import { Button } from '@/components/common/Button';
@@ -12,18 +12,46 @@ import Step3Mission from './_components/Step3Mission';
 import Step4Info from './_components/Step4Info';
 import Step5Agreement from './_components/Step5Agreement';
 import { createCrew } from '@/services/crew';
-// TODO: S3 CORS 설정 완료 후 이미지 업로드 기능 복구
-// import { getPresignedUrl, uploadToS3 } from '@/services/upload';
+import { getPresignedUrl, uploadToS3 } from '@/services/upload';
 import type {
   DailySettlementType,
   FrequencyType,
   CreateCrewRequest,
 } from '@/types/domain';
 
+// ─── 이미지 검증 ─────────────────────────────────────────────────────────────
+
+const MAX_CREW_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_CREW_IMAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const CREW_IMAGE_MIME_BY_EXTENSION: Record<string, string> = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+};
+
+function resolveCrewImageMimeType(file: File): string | null {
+  if (file.type && ALLOWED_CREW_IMAGE_MIME_TYPES.has(file.type)) return file.type;
+  const ext = file.name.split('.').pop()?.toLowerCase();
+  if (!ext) return null;
+  return CREW_IMAGE_MIME_BY_EXTENSION[ext] ?? null;
+}
+
+function validateCrewImage(file: File): string | null {
+  if (!file.size) return '선택한 이미지 파일이 비어있습니다.';
+  if (file.size > MAX_CREW_IMAGE_SIZE_BYTES)
+    return `이미지는 최대 5MB까지 업로드할 수 있습니다. (현재 ${Math.ceil(file.size / 1024 / 1024)}MB)`;
+  if (!resolveCrewImageMimeType(file)) return '이미지 형식은 JPG, PNG, WebP만 지원됩니다.';
+  return null;
+}
+
+// ─── 폼 타입 ────────────────────────────────────────────────────────────────
+
 interface CrewFormData {
   title: string;
   category: string;
-  // TODO: S3 CORS 설정 완료 후 imageFile, imagePreview, image_s3_key 복구
+  imagePreview: string | null;
+  image_s3_key: string | null;
   daily_settlement_type: DailySettlementType;
   frequency_type: FrequencyType;
   mission_schedule_days: string[];
@@ -46,6 +74,8 @@ const TOTAL_STEPS = 5;
 const initialFormData: CrewFormData = {
   title: '',
   category: '',
+  imagePreview: null,
+  image_s3_key: null,
   daily_settlement_type: 'B',
   frequency_type: 'DAILY',
   mission_schedule_days: [],
@@ -62,6 +92,8 @@ const initialFormData: CrewFormData = {
     no_personal_bias: false,
   },
 };
+
+// ─── 유효성 검사 ─────────────────────────────────────────────────────────────
 
 type Step2Errors = Partial<Record<'title' | 'category', string>>;
 type Step3Errors = Partial<Record<'dailySettlementType' | 'depositAmount' | 'missionScheduleDays', string>>;
@@ -102,6 +134,8 @@ function validateStep4(form: CrewFormData): Step4Errors {
   return errors;
 }
 
+// ─── 페이지 컴포넌트 ─────────────────────────────────────────────────────────
+
 export default function CrewNewPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
@@ -110,8 +144,19 @@ export default function CrewNewPage() {
   const [step3Errors, setStep3Errors] = useState<Step3Errors>({});
   const [step4Errors, setStep4Errors] = useState<Step4Errors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isToastOpen, setIsToastOpen] = useState(false);
+
+  const imageBlobUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (imageBlobUrlRef.current) {
+        URL.revokeObjectURL(imageBlobUrlRef.current);
+      }
+    };
+  }, []);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -121,6 +166,48 @@ export default function CrewNewPage() {
   const update = <K extends keyof CrewFormData>(key: K, value: CrewFormData[K]) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
+
+  // ─── 이미지 업로드 핸들러 ───────────────────────────────────────────────────
+
+  const handleCrewImageUpload = async (file: File) => {
+    const errorMsg = validateCrewImage(file);
+    if (errorMsg) {
+      showToast(errorMsg);
+      return;
+    }
+
+    const contentType = resolveCrewImageMimeType(file);
+    if (!contentType) return;
+
+    setIsUploadingImage(true);
+    try {
+      const presignRes = await getPresignedUrl({
+        purpose: 'CREW_IMAGE',
+        content_type: contentType as 'image/jpeg' | 'image/png' | 'image/webp',
+        content_length: file.size,
+      });
+
+      await uploadToS3(presignRes.data.upload_url, file);
+
+      if (imageBlobUrlRef.current) {
+        URL.revokeObjectURL(imageBlobUrlRef.current);
+      }
+      const previewUrl = URL.createObjectURL(file);
+      imageBlobUrlRef.current = previewUrl;
+
+      setFormData((prev) => ({
+        ...prev,
+        imagePreview: previewUrl,
+        image_s3_key: presignRes.data.s3_key,
+      }));
+    } catch {
+      showToast('이미지 업로드에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  // ─── AI 자동완성 ────────────────────────────────────────────────────────────
 
   const handleAIComplete = (draft: {
     title: string;
@@ -158,6 +245,8 @@ export default function CrewNewPage() {
     setCurrentStep(2);
   };
 
+  // ─── 스텝 이동 ──────────────────────────────────────────────────────────────
+
   const handleNextFromStep2 = () => {
     const errors = validateStep2(formData);
     setStep2Errors(errors);
@@ -176,12 +265,11 @@ export default function CrewNewPage() {
     if (Object.keys(errors).length === 0) setCurrentStep(5);
   };
 
+  // ─── 크루 생성 제출 ─────────────────────────────────────────────────────────
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      // TODO: S3 CORS 설정 완료 후 이미지 업로드 로직 복구
-      const s3Key: string | null = null;
-
       const recruitmentDeadline = (() => {
         const d = new Date(formData.start_date);
         d.setDate(d.getDate() - 1);
@@ -192,7 +280,7 @@ export default function CrewNewPage() {
       const payload: CreateCrewRequest = {
         title: formData.title,
         description: formData.description,
-        image_s3_key: s3Key,
+        image_s3_key: formData.image_s3_key,
         category: formData.category,
         deposit_amount: formData.deposit_amount,
         min_participants: formData.min_participants,
@@ -234,6 +322,8 @@ export default function CrewNewPage() {
     }
   };
 
+  // ─── 렌더링 ─────────────────────────────────────────────────────────────────
+
   const renderStep = () => {
     switch (currentStep) {
       case 1:
@@ -243,8 +333,11 @@ export default function CrewNewPage() {
           <Step2Identity
             title={formData.title}
             category={formData.category}
+            imagePreview={formData.imagePreview}
+            isUploadingImage={isUploadingImage}
             onTitleChange={(v) => update('title', v)}
             onCategoryChange={(v) => update('category', v)}
+            onImageFileSelected={handleCrewImageUpload}
             errors={step2Errors}
           />
         );
