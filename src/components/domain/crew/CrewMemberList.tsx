@@ -107,6 +107,7 @@ export default function CrewMemberList({ crewId }: CrewMemberListProps) {
         {members.map((member) => (
           <li key={member.crew_participant_id} className="flex items-center gap-3 py-3">
             <div className="w-10 h-10 rounded-full shrink-0 overflow-hidden">
+              {/* TODO: BE에서 profile_image_url 포함 필요 — GET /api/crews/{crewId}/members 응답에 null로 내려옴 */}
               {member.profile_image_url ? (
                 <img
                   src={member.profile_image_url}
