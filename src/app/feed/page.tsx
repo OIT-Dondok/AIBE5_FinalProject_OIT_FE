@@ -35,10 +35,13 @@ export default function FeedPage() {
   // 무한 스크롤: 동시 호출 가드 + 옵저버 인스턴스
   const isFetchingMoreRef = useRef(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
+  // 필터 변경(또는 재시도)마다 증가. 응답 도착 시 epoch가 바뀌었으면 stale 응답으로 보고 폐기한다.
+  const requestEpochRef = useRef(0);
 
   // cursor가 있으면 다음 페이지 append, 없으면 첫 페이지 조회
   const fetchFeed = useCallback(
     async (cursor?: string) => {
+      const epoch = requestEpochRef.current;
       try {
         const { data } = await getFeed({
           crew_id: selectedCrewId ?? undefined,
@@ -46,11 +49,15 @@ export default function FeedPage() {
           to: period?.end_date,
           cursor,
         });
+        // 응답 도착 사이 필터가 바뀌었으면(=다른 쿼리) stale 응답이므로 폐기한다.
+        if (epoch !== requestEpochRef.current) return;
         // 서버가 server_time + mission_log_id 기준 최신순 정렬 → 그대로 append
         setItems((prev) => (cursor ? [...prev, ...data.feed_items] : data.feed_items));
-        setAvailableCrews(data.available_crews);
+        // available_crews는 호출자 참여 크루 목록(페이지네이션 중 불변) → 첫 페이지에서만 갱신
+        if (!cursor) setAvailableCrews(data.available_crews);
         setNextCursor(data.next_cursor);
       } catch (err) {
+        if (epoch !== requestEpochRef.current) return;
         // 추가 로딩(cursor) 실패(INVALID_CURSOR 등): 기존 목록은 유지하되,
         // next_cursor를 비워 센티넬을 해제하고 같은 커서로의 재요청 루프를 막는다.
         if (cursor) {
@@ -69,7 +76,8 @@ export default function FeedPage() {
 
   // 크루/기간 필터 변경(또는 재시도) 시 처음부터 다시 조회
   useEffect(() => {
-    let cancelled = false;
+    // epoch를 올려 in-flight 요청(첫 페이지·loadMore 모두)을 무효화한다.
+    const epoch = (requestEpochRef.current += 1);
     const load = async () => {
       setIsLoading(true);
       setAccessDenied(false);
@@ -77,12 +85,9 @@ export default function FeedPage() {
       setItems([]);
       setNextCursor(null);
       await fetchFeed();
-      if (!cancelled) setIsLoading(false);
+      if (epoch === requestEpochRef.current) setIsLoading(false);
     };
     load();
-    return () => {
-      cancelled = true;
-    };
   }, [fetchFeed, reloadKey]);
 
   // 다음 페이지 로드. ref 가드로 옵저버의 연속 콜백에 의한 중복 호출을 막는다.

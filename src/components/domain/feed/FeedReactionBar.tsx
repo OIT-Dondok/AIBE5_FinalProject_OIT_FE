@@ -22,9 +22,9 @@ export function FeedReactionBar({ reactionCounts, myReactions }: FeedReactionBar
   // 리액션 표시 상태는 마운트 시 prop으로 초기화.
   // 아이템(mission_log_id) 변경 시 상위에서 key로 remount하므로 prop→state 동기화가 필요 없다.
   const [reactions, setReactions] = useState<ReactionChip[]>(() =>
-    Object.entries(reactionCounts).map(([emoji, count]) => ({ emoji, count })),
+    Object.entries(reactionCounts ?? {}).map(([emoji, count]) => ({ emoji, count })),
   );
-  const [activated, setActivated] = useState<Set<string>>(() => new Set(myReactions));
+  const [activated, setActivated] = useState<Set<string>>(() => new Set(myReactions ?? []));
   const [isPickerOpen, setIsPickerOpen] = useState(false);
 
   const handleReactionClick = (emoji: string) => {
