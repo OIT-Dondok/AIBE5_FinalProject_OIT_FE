@@ -3,15 +3,13 @@
 import { useState } from 'react';
 import Image from 'next/image';
 
-import type { FeedItem as FeedItemType } from '@/mocks/data/feed';
+import type { FeedItem as FeedItemType } from '@/types/domain';
 import { FeedReactionBar } from '@/components/domain/feed/FeedReactionBar';
 import { FeedImageLightbox } from '@/components/domain/feed/FeedImageLightbox';
 import { FeedCertImage } from '@/components/domain/feed/FeedCertImage';
 import {
-  CATEGORY_EMOJI,
-  CATEGORY_ICON_BG,
   STATUS_CONFIG,
-  formatCertifiedAt,
+  formatServerTime,
   getInitial,
 } from '@/components/domain/feed/feedItemMeta';
 
@@ -22,10 +20,8 @@ interface FeedItemProps {
 export function FeedItem({ item }: FeedItemProps) {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
-  const emoji = CATEGORY_EMOJI[item.category];
-  const iconBg = CATEGORY_ICON_BG[item.category];
   const status = STATUS_CONFIG[item.certification_status];
-  const timeStr = formatCertifiedAt(item.certified_at);
+  const timeStr = formatServerTime(item.server_time);
   const initial = getInitial(item.nickname);
 
   return (
@@ -35,7 +31,7 @@ export function FeedItem({ item }: FeedItemProps) {
         {/* 프로필: 이미지가 있으면 사진, 없으면 닉네임 첫 글자 */}
         {/* TODO: API 연동 시 next.config.ts images.remotePatterns에 프로필 CDN 호스트 추가 필요 */}
         <div
-          className={`relative w-11 h-11 flex items-center justify-center ${iconBg} rounded-full flex-shrink-0 overflow-hidden text-base font-bold text-text-primary shadow-sm`}
+          className="relative w-11 h-11 flex items-center justify-center bg-primary-green/10 rounded-full flex-shrink-0 overflow-hidden text-base font-bold text-text-primary shadow-sm"
         >
           {initial}
           {item.profile_image_url && (
@@ -53,7 +49,7 @@ export function FeedItem({ item }: FeedItemProps) {
             {item.nickname}
           </p>
           <p className="text-[11px] text-text-secondary mt-0.5 truncate">
-            {timeStr} · {emoji} {item.crew_title} · {item.share_ratio}%
+            {timeStr} · {item.crew_name}
           </p>
         </div>
         <span
@@ -67,9 +63,8 @@ export function FeedItem({ item }: FeedItemProps) {
       {/* 이미지 영역 (실제 이미지가 있을 때만 클릭 확대 활성화) */}
       <div className="relative">
         <FeedCertImage
-          category={item.category}
           imageUrl={item.image_url}
-          alt={`${item.nickname}님의 ${item.crew_title} 인증 이미지`}
+          alt={`${item.nickname}님의 ${item.crew_name} 인증 이미지`}
         />
         {item.image_url && (
           <button
@@ -90,9 +85,13 @@ export function FeedItem({ item }: FeedItemProps) {
         </div>
       )}
 
-      {/* 리액션 바 (feed_id 변경 시 remount되어 로컬 상태 초기화) */}
+      {/* 리액션 바 (mission_log_id 변경 시 remount되어 로컬 상태 초기화) */}
       <div className="px-4 py-3.5">
-        <FeedReactionBar key={item.feed_id} initialReactions={item.reactions} />
+        <FeedReactionBar
+          key={item.mission_log_id}
+          reactionCounts={item.reaction_counts}
+          myReactions={item.my_reactions}
+        />
       </div>
 
       {/* 이미지 확대 라이트박스 */}

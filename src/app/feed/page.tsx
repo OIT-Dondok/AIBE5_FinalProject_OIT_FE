@@ -28,12 +28,12 @@ export default function FeedPage() {
   //            아래 필터/정렬(최신순)은 서버 쿼리 파라미터·정렬로 이관 예정.
   const filteredItems = MOCK_FEED_ITEMS.filter((item) => {
     if (selectedCrewId !== null && item.crew_id !== selectedCrewId) return false;
-    const certDate = item.certified_at.substring(0, 10);
+    const certDate = item.server_time.substring(0, 10);
     if (certDate < period.start_date || certDate > period.end_date) return false;
     return true;
   }).sort(
-    // 최신 인증부터 노출 (certified_at 내림차순)
-    (a, b) => b.certified_at.localeCompare(a.certified_at),
+    // 최신 인증부터 노출 (server_time 내림차순)
+    (a, b) => b.server_time.localeCompare(a.server_time),
   );
 
   return (
@@ -107,7 +107,7 @@ export default function FeedPage() {
             )
           ) : (
             filteredItems.map((item) => (
-              <FeedItem key={item.feed_id} item={item} />
+              <FeedItem key={item.mission_log_id} item={item} />
             ))
           )}
           </div>

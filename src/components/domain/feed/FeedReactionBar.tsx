@@ -3,22 +3,33 @@
 import { useState } from 'react';
 import { SmilePlus } from 'lucide-react';
 
-import type { FeedReaction } from '@/mocks/data/feed';
+import type { ReactionCounts } from '@/types/domain';
 import { EmojiPickerSheet } from '@/components/common/EmojiPickerSheet';
 
-interface FeedReactionBarProps {
-  initialReactions: FeedReaction[];
+interface ReactionChip {
+  emoji: string;
+  count: number;
 }
 
-export function FeedReactionBar({ initialReactions }: FeedReactionBarProps) {
-  // 리액션 로컬 상태는 마운트 시 prop으로 초기화.
-  // 피드(feed_id) 변경 시에는 상위에서 key로 remount하므로 prop→state 동기화 로직이 필요 없다.
-  const [reactions, setReactions] = useState<FeedReaction[]>(initialReactions);
-  const [activated, setActivated] = useState<Set<string>>(new Set());
+interface FeedReactionBarProps {
+  /** emoji token → count 맵 (모든 인증 상태에 채워짐) */
+  reactionCounts: ReactionCounts;
+  /** 내가 누른 emoji token 목록 */
+  myReactions: string[];
+}
+
+export function FeedReactionBar({ reactionCounts, myReactions }: FeedReactionBarProps) {
+  // 리액션 표시 상태는 마운트 시 prop으로 초기화.
+  // 아이템(mission_log_id) 변경 시 상위에서 key로 remount하므로 prop→state 동기화가 필요 없다.
+  const [reactions, setReactions] = useState<ReactionChip[]>(() =>
+    Object.entries(reactionCounts).map(([emoji, count]) => ({ emoji, count })),
+  );
+  const [activated, setActivated] = useState<Set<string>>(() => new Set(myReactions));
   const [isPickerOpen, setIsPickerOpen] = useState(false);
 
   const handleReactionClick = (emoji: string) => {
-    // TODO: API - 리액션 토글 반영 (추가 POST /feeds/{feedId}/reactions, 취소 DELETE)
+    // TODO(리액션 연동 이슈): 추가 POST /api/mission-logs/{missionLogId}/reactions,
+    //                        취소 DELETE /api/mission-logs/{missionLogId}/reactions/me 로 교체 (낙관적 업데이트)
     const isActive = activated.has(emoji);
     setActivated((prev) => {
       const next = new Set(prev);
@@ -36,7 +47,7 @@ export function FeedReactionBar({ initialReactions }: FeedReactionBarProps) {
   };
 
   const handleSelectEmoji = (emoji: string) => {
-    // TODO: API - 새 이모지 반응 추가 (POST /feeds/{feedId}/reactions)
+    // TODO(리액션 연동 이슈): POST /api/mission-logs/{missionLogId}/reactions 로 교체
     const exists = reactions.some((r) => r.emoji === emoji);
     if (exists) {
       // 이미 있는 이모지는 칩 클릭과 동일하게 토글 (활성 → 취소, 비활성 → 추가)
