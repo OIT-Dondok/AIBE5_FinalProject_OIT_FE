@@ -463,6 +463,25 @@ export interface CrewMember {
 
 export type CrewMembersResponse = CursorPageResponse<CrewMember>;
 
+// GET /api/crews/{crewId}/notices items[]
+export interface CrewNotice {
+  notice_id: number;
+  crew_id: number;
+  author_member_uuid: string;
+  title: string;
+  content: string;
+  created_at: string;
+}
+
+export type CrewNoticesResponse = CursorPageResponse<CrewNotice>;
+
+// POST/DELETE /api/crews/{crewId}/notices/{noticeId}/reactions → 200
+export interface NoticeReactionResponse {
+  notice_id: number;
+  my_reactions: string[];
+  reaction_counts: ReactionCounts;
+}
+
 
 // ════════════════════════════════════════════════════════════
 // § 5.3 미션 인증

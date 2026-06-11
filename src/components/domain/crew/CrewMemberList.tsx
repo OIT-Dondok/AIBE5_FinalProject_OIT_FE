@@ -12,7 +12,10 @@ interface CrewMemberListProps {
 
 const formatJoinedAt = (isoString: string) => {
   const date = new Date(isoString);
-  return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 참여`;
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}.${m}.${d}`;
 };
 
 export default function CrewMemberList({ crewId }: CrewMemberListProps) {
