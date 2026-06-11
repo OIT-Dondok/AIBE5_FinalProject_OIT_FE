@@ -26,6 +26,7 @@ import {
   requestProfileImageUploadUrl,
   updateMyProfile,
 } from "@/services/profile";
+import { prepareImageForUpload, UnsupportedImageError } from "@/lib/prepareImageForUpload";
 import type { MeActivitySummaryResponse } from "@/types/domain";
 
 type FeedbackTone = "success" | "error";
@@ -41,41 +42,17 @@ type ProfilePageData = {
   activitySummary: MeActivitySummaryResponse;
 };
 
-const MAX_PROFILE_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
-const ALLOWED_PROFILE_IMAGE_MIME_TYPES = new Set(["image/jpeg"]);
-const PROFILE_IMAGE_MIME_BY_EXTENSION: Record<string, string> = {
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-};
+// 명세에 프로필 전용 한도는 없어, 문서화된 유일 이미지 한도(mission 10MB)에 맞춤.
+const MAX_PROFILE_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 
-function normalizeExtension(fileName: string) {
-  const extension = fileName.split(".").pop()?.trim().toLowerCase();
-  return extension ? extension.replace(/[^a-z0-9]/g, "") : null;
-}
-
-function resolveProfileImageMimeType(file: File): string | null {
-  if (file.type && ALLOWED_PROFILE_IMAGE_MIME_TYPES.has(file.type)) {
-    return file.type;
-  }
-
-  const extension = normalizeExtension(file.name);
-  if (!extension) return null;
-
-  return PROFILE_IMAGE_MIME_BY_EXTENSION[extension] ?? null;
-}
-
-function validateProfileImage(file: File): string | null {
+// 포맷 검증·변환은 prepareImageForUpload가 담당. 여기서는 크기만 검증한다.
+function validateProfileImageSize(file: File): string | null {
   if (!file.size) {
     return "선택한 프로필 이미지 파일 크기가 0바이트입니다.";
   }
 
   if (file.size > MAX_PROFILE_IMAGE_SIZE_BYTES) {
-    return `프로필 이미지는 최대 5MB까지만 업로드할 수 있습니다. (현재 ${Math.ceil(file.size / 1024 / 1024)}MB)`;
-  }
-
-  const contentType = resolveProfileImageMimeType(file);
-  if (!contentType) {
-    return "프로필 이미지 형식은 JPG만 지원됩니다.";
+    return `프로필 이미지는 최대 10MB까지만 업로드할 수 있습니다. (현재 ${Math.ceil(file.size / 1024 / 1024)}MB)`;
   }
 
   return null;
@@ -220,16 +197,9 @@ export default function ProfilePage() {
   const handleProfileImageUpload = async (file: File) => {
     if (!isInlineEditing) return;
 
-    const validateMessage = validateProfileImage(file);
+    const validateMessage = validateProfileImageSize(file);
     if (validateMessage) {
       showFeedbackToast(validateMessage, "error");
-      return;
-    }
-
-    const contentType = resolveProfileImageMimeType(file);
-    if (!contentType) {
-      const message = "프로필 이미지 형식은 JPG만 지원됩니다.";
-      showFeedbackToast(message, "error");
       return;
     }
 
@@ -238,18 +208,28 @@ export default function ProfilePage() {
     uploadAbortControllerRef.current = uploadAbortController;
 
     try {
+      // 포맷 검증 + HEIC는 자동으로 JPEG 변환 (프로필은 EXIF 불필요 → 경고 없이 변환)
+      const prepared = await prepareImageForUpload(file);
+
+      // HEIC→JPEG 변환 시 용량이 늘 수 있어, 변환 후 파일 기준으로도 크기를 재검증한다.
+      const convertedSizeError = validateProfileImageSize(prepared.file);
+      if (convertedSizeError) {
+        showFeedbackToast(convertedSizeError, "error");
+        return;
+      }
+
       const presignedUrlResponse = await requestProfileImageUploadUrl({
         purpose: "PROFILE_IMAGE",
-        content_type: contentType,
-        content_length: file.size,
+        content_type: prepared.contentType,
+        content_length: prepared.file.size,
       });
 
       const uploadResponse = await fetch(presignedUrlResponse.data.upload_url, {
         method: "PUT",
         headers: {
-          "Content-Type": contentType,
+          "Content-Type": prepared.contentType,
         },
-        body: file,
+        body: prepared.file,
         signal: uploadAbortController.signal,
       });
 
@@ -261,7 +241,7 @@ export default function ProfilePage() {
         return;
       }
 
-      const imagePreviewUrl = URL.createObjectURL(file);
+      const imagePreviewUrl = URL.createObjectURL(prepared.file);
 
       setInlineDraft((current) => {
         if (current.avatarImageUrl?.startsWith("blob:")) {
@@ -276,12 +256,15 @@ export default function ProfilePage() {
       });
 
       showFeedbackToast("프로필 이미지 업로드가 완료되었습니다.", "success");
-    } catch {
+    } catch (error) {
       if (!isMountedRef.current || !isInlineEditingRef.current) {
         return;
       }
 
-      const message = "프로필 이미지 업로드에 실패했습니다.";
+      const message =
+        error instanceof UnsupportedImageError
+          ? error.message
+          : "프로필 이미지 업로드에 실패했습니다.";
       showFeedbackToast(message, "error");
     } finally {
       if (uploadAbortControllerRef.current === uploadAbortController) {

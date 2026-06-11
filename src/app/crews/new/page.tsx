@@ -13,6 +13,7 @@ import Step4Info from './_components/Step4Info';
 import Step5Agreement from './_components/Step5Agreement';
 import { createCrew } from '@/services/crew';
 import { getPresignedUrl, uploadToS3 } from '@/services/upload';
+import { prepareImageForUpload, UnsupportedImageError } from '@/lib/prepareImageForUpload';
 import { calcDurationDays } from '@/utils/date';
 import type {
   DailySettlementType,
@@ -22,25 +23,14 @@ import type {
 
 // ─── 이미지 검증 ─────────────────────────────────────────────────────────────
 
-const MAX_CREW_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
-const ALLOWED_CREW_IMAGE_MIME_TYPES = new Set(['image/jpeg']);
-const CREW_IMAGE_MIME_BY_EXTENSION: Record<string, string> = {
-  jpg: 'image/jpeg',
-  jpeg: 'image/jpeg',
-};
+// 명세에 크루 이미지 전용 한도는 없어, 문서화된 유일 이미지 한도(mission 10MB)에 맞춤.
+const MAX_CREW_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 
-function resolveCrewImageMimeType(file: File): string | null {
-  if (file.type && ALLOWED_CREW_IMAGE_MIME_TYPES.has(file.type)) return file.type;
-  const ext = file.name.split('.').pop()?.toLowerCase();
-  if (!ext) return null;
-  return CREW_IMAGE_MIME_BY_EXTENSION[ext] ?? null;
-}
-
-function validateCrewImage(file: File): string | null {
+// 포맷 검증·변환은 prepareImageForUpload가 담당. 여기서는 크기만 검증한다.
+function validateCrewImageSize(file: File): string | null {
   if (!file.size) return '선택한 이미지 파일이 비어있습니다.';
   if (file.size > MAX_CREW_IMAGE_SIZE_BYTES)
-    return `이미지는 최대 5MB까지 업로드할 수 있습니다. (현재 ${Math.ceil(file.size / 1024 / 1024)}MB)`;
-  if (!resolveCrewImageMimeType(file)) return '크루 이미지는 JPG 형식만 지원됩니다.';
+    return `이미지는 최대 10MB까지 업로드할 수 있습니다. (현재 ${Math.ceil(file.size / 1024 / 1024)}MB)`;
   return null;
 }
 
@@ -176,29 +166,36 @@ export default function CrewNewPage() {
   // ─── 이미지 업로드 핸들러 ───────────────────────────────────────────────────
 
   const handleCrewImageUpload = async (file: File) => {
-    const errorMsg = validateCrewImage(file);
+    const errorMsg = validateCrewImageSize(file);
     if (errorMsg) {
       showToast(errorMsg);
       return;
     }
 
-    const contentType = resolveCrewImageMimeType(file);
-    if (!contentType) return;
-
     setIsUploadingImage(true);
     try {
+      // 포맷 검증 + HEIC는 자동으로 JPEG 변환 (크루 이미지는 EXIF 불필요 → 경고 없이 변환)
+      const prepared = await prepareImageForUpload(file);
+
+      // HEIC→JPEG 변환 시 용량이 늘 수 있어, 변환 후 파일 기준으로도 크기를 재검증한다.
+      const convertedSizeError = validateCrewImageSize(prepared.file);
+      if (convertedSizeError) {
+        showToast(convertedSizeError);
+        return;
+      }
+
       const presignRes = await getPresignedUrl({
         purpose: 'CREW_IMAGE',
-        content_type: contentType as 'image/jpeg',
-        content_length: file.size,
+        content_type: prepared.contentType,
+        content_length: prepared.file.size,
       });
 
-      await uploadToS3(presignRes.data.upload_url, file, contentType);
+      await uploadToS3(presignRes.data.upload_url, prepared.file, prepared.contentType);
 
       if (imageBlobUrlRef.current) {
         URL.revokeObjectURL(imageBlobUrlRef.current);
       }
-      const previewUrl = URL.createObjectURL(file);
+      const previewUrl = URL.createObjectURL(prepared.file);
       imageBlobUrlRef.current = previewUrl;
 
       setFormData((prev) => ({
@@ -206,8 +203,10 @@ export default function CrewNewPage() {
         imagePreview: previewUrl,
         image_s3_key: presignRes.data.s3_key,
       }));
-    } catch {
-      showToast('프로필 이미지 업로드에 실패했습니다.');
+    } catch (error) {
+      showToast(
+        error instanceof UnsupportedImageError ? error.message : '이미지 업로드에 실패했습니다.',
+      );
     } finally {
       setIsUploadingImage(false);
     }
