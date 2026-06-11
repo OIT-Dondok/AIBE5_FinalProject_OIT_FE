@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { isAxiosError } from 'axios';
+import { Loader2 } from 'lucide-react';
 
 import { Header } from '@/components/common/Header';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -30,6 +31,10 @@ export default function FeedPage() {
   const [accessDenied, setAccessDenied] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+
+  // 무한 스크롤: 하단 센티넬 + 동시 호출 가드
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const isFetchingMoreRef = useRef(false);
 
   // cursor가 있으면 다음 페이지 append, 없으면 첫 페이지 조회
   const fetchFeed = useCallback(
@@ -76,12 +81,29 @@ export default function FeedPage() {
     };
   }, [fetchFeed, reloadKey]);
 
-  const handleLoadMore = async () => {
-    if (!nextCursor || isLoadingMore) return;
+  // 다음 페이지 로드. ref 가드로 옵저버의 연속 콜백에 의한 중복 호출을 막는다.
+  const handleLoadMore = useCallback(async () => {
+    if (!nextCursor || isFetchingMoreRef.current) return;
+    isFetchingMoreRef.current = true;
     setIsLoadingMore(true);
     await fetchFeed(nextCursor);
     setIsLoadingMore(false);
-  };
+    isFetchingMoreRef.current = false;
+  }, [nextCursor, fetchFeed]);
+
+  // 하단 센티넬이 뷰포트에 들어오면 다음 페이지를 당겨온다(rootMargin으로 미리 로드).
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el || !nextCursor) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) handleLoadMore();
+      },
+      { rootMargin: '200px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [nextCursor, handleLoadMore]);
 
   const hasCrews = availableCrews.length > 0;
 
@@ -181,15 +203,17 @@ export default function FeedPage() {
                 {items.map((item) => (
                   <FeedItem key={item.mission_log_id} item={item} />
                 ))}
+                {/* 무한 스크롤 센티넬 (다음 페이지가 있을 때만) */}
                 {nextCursor && (
-                  <button
-                    type="button"
-                    onClick={handleLoadMore}
-                    disabled={isLoadingMore}
-                    className="mt-1 w-full py-2.5 text-sm font-semibold text-text-secondary border border-text-secondary/20 rounded-button hover:bg-text-secondary/5 transition-colors disabled:opacity-50"
+                  <div
+                    ref={loadMoreRef}
+                    aria-hidden="true"
+                    className="py-3 flex items-center justify-center"
                   >
-                    {isLoadingMore ? '불러오는 중...' : '더 보기'}
-                  </button>
+                    {isLoadingMore && (
+                      <Loader2 size={20} className="animate-spin text-text-secondary/60" />
+                    )}
+                  </div>
                 )}
               </>
             )}

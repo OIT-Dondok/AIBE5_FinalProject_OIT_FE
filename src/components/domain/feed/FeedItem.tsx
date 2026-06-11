@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from 'react';
-import Image from 'next/image';
 
 import type { FeedItem as FeedItemType } from '@/types/domain';
 import { FeedReactionBar } from '@/components/domain/feed/FeedReactionBar';
@@ -29,18 +28,14 @@ export function FeedItem({ item }: FeedItemProps) {
       {/* 상단: 사용자 프로필(닉네임 첫 글자) + 크루명 + 상태 뱃지 */}
       <div className="px-4 pt-4 pb-3 flex items-center gap-3">
         {/* 프로필: 이미지가 있으면 사진, 없으면 닉네임 첫 글자 */}
-        {/* TODO: API 연동 시 next.config.ts images.remotePatterns에 프로필 CDN 호스트 추가 필요 */}
-        <div
-          className="relative w-11 h-11 flex items-center justify-center bg-primary-green/10 rounded-full flex-shrink-0 overflow-hidden text-base font-bold text-text-primary shadow-sm"
-        >
+        <div className="relative w-11 h-11 flex items-center justify-center bg-primary-green/10 rounded-full flex-shrink-0 overflow-hidden text-base font-bold text-text-primary shadow-sm">
           {initial}
           {item.profile_image_url && (
-            <Image
+            <img
               src={item.profile_image_url}
               alt={`${item.nickname} 프로필`}
-              fill
-              sizes="44px"
-              className="object-cover"
+              loading="lazy"
+              className="absolute inset-0 w-full h-full object-cover"
             />
           )}
         </div>

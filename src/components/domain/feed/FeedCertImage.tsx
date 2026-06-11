@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { ImageIcon } from 'lucide-react';
 
 interface FeedCertImageProps {
@@ -32,15 +31,13 @@ export function FeedCertImage({
         </div>
       )}
 
-      {/* 실제 이미지 */}
-      {/* TODO: API 연동 시 next.config.ts의 images.remotePatterns에 S3 호스트 추가 필요 */}
+      {/* 실제 이미지 (원격 호스트) */}
       {imageUrl && (
-        <Image
+        <img
           src={imageUrl}
           alt={alt}
-          fill
-          sizes="(max-width: 430px) 100vw, 430px"
-          className="object-cover"
+          loading="lazy"
+          className="absolute inset-0 w-full h-full object-cover"
         />
       )}
     </div>
