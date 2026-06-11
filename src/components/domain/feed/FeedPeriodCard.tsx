@@ -2,10 +2,11 @@
 
 import { CalendarDays } from 'lucide-react';
 
-import type { FeedPeriod } from '@/mocks/data/feed';
+import type { FeedPeriod } from '@/types/domain';
 
 interface FeedPeriodCardProps {
-  period: FeedPeriod;
+  /** 적용된 기간. null이면 전체 기간(필터 없음) */
+  period: FeedPeriod | null;
   isCalendarOpen: boolean;
   onOpenCalendar: () => void;
 }
@@ -25,8 +26,8 @@ function calcDays(start: string, end: string): number {
 }
 
 export function FeedPeriodCard({ period, isCalendarOpen, onOpenCalendar }: FeedPeriodCardProps) {
-  const label = formatPeriodLabel(period.start_date, period.end_date);
-  const days = calcDays(period.start_date, period.end_date);
+  const label = period ? formatPeriodLabel(period.start_date, period.end_date) : '전체 기간';
+  const subLabel = period ? `${calcDays(period.start_date, period.end_date)}일간` : '최신순 전체';
 
   return (
     <div className="bg-card rounded-card px-4 py-3.5 flex items-center justify-between shadow-card border border-text-secondary/10">
@@ -36,7 +37,7 @@ export function FeedPeriodCard({ period, isCalendarOpen, onOpenCalendar }: FeedP
         </div>
         <div>
           <p className="text-sm font-extrabold text-text-primary tracking-tight">{label}</p>
-          <p className="text-[11px] text-text-secondary mt-0.5">{days}일간</p>
+          <p className="text-[11px] text-text-secondary mt-0.5">{subLabel}</p>
         </div>
       </div>
       <button

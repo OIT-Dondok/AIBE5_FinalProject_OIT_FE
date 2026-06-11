@@ -670,6 +670,12 @@ export interface FeedResponse {
   next_cursor: string | null; // 다음 페이지 없으면 null. 형식: {server_time}_{mission_log_id}
 }
 
+// FE 전용: 피드 날짜 필터 범위 (항상 start_date <= end_date). null이면 전체 기간(필터 없음)
+export interface FeedPeriod {
+  start_date: string; // YYYY-MM-DD → GET /api/feed from
+  end_date: string; // YYYY-MM-DD → GET /api/feed to
+}
+
 // POST /api/mission-logs/{missionLogId}/reactions Request
 export interface AddReactionRequest {
   reaction_type: string; // FE-selected emoji grapheme/token string

@@ -3,11 +3,14 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-import type { FeedPeriod } from '@/mocks/data/feed';
+import type { FeedPeriod } from '@/types/domain';
 
 interface FeedCalendarProps {
-  currentPeriod: FeedPeriod;
+  /** 현재 적용된 기간. null이면 전체 기간(필터 없음) */
+  currentPeriod: FeedPeriod | null;
   onApply: (period: FeedPeriod) => void;
+  /** 전체 기간으로 되돌리기(날짜 필터 해제) */
+  onClear: () => void;
   onClose: () => void;
 }
 
@@ -24,13 +27,18 @@ function parseInitialYM(dateStr: string): { year: number; month: number } {
   return { year: Number(parts[0]), month: Number(parts[1]) - 1 };
 }
 
-export function FeedCalendar({ currentPeriod, onApply, onClose }: FeedCalendarProps) {
-  const initial = parseInitialYM(currentPeriod.start_date);
+function todayStr(): string {
+  const d = new Date();
+  return toDateStr(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+export function FeedCalendar({ currentPeriod, onApply, onClear, onClose }: FeedCalendarProps) {
+  const initial = parseInitialYM(currentPeriod?.start_date ?? todayStr());
   const [viewYear, setViewYear] = useState(initial.year);
   const [viewMonth, setViewMonth] = useState(initial.month);
   const [tab, setTab] = useState<Tab>('period');
-  const [selStart, setSelStart] = useState<string | null>(currentPeriod.start_date);
-  const [selEnd, setSelEnd] = useState<string | null>(currentPeriod.end_date);
+  const [selStart, setSelStart] = useState<string | null>(currentPeriod?.start_date ?? null);
+  const [selEnd, setSelEnd] = useState<string | null>(currentPeriod?.end_date ?? null);
   const [pickingEnd, setPickingEnd] = useState(false);
 
   // 캘린더 그리드 계산
@@ -54,15 +62,6 @@ export function FeedCalendar({ currentPeriod, onApply, onClose }: FeedCalendarPr
   const nextMonth = () => {
     if (viewMonth === 11) { setViewYear((y) => y + 1); setViewMonth(0); }
     else setViewMonth((m) => m + 1);
-  };
-
-  const resetSelection = () => {
-    setSelStart(null);
-    setSelEnd(null);
-    setPickingEnd(false);
-    const init = parseInitialYM(currentPeriod.start_date);
-    setViewYear(init.year);
-    setViewMonth(init.month);
   };
 
   const handleTabChange = (nextTab: Tab) => {
@@ -207,10 +206,10 @@ export function FeedCalendar({ currentPeriod, onApply, onClose }: FeedCalendarPr
       <div className="mt-4 grid grid-cols-2 gap-2">
         <button
           type="button"
-          onClick={resetSelection}
+          onClick={onClear}
           className="py-2.5 text-sm font-semibold text-text-secondary border border-text-secondary/20 rounded-button hover:bg-text-secondary/5 active:scale-[0.99] transition-all"
         >
-          초기화
+          전체 기간
         </button>
         <button
           type="button"
