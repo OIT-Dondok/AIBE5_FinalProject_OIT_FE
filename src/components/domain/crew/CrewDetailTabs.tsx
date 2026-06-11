@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { CrewDetail } from '@/types/domain';
 import CrewInfoTable from './CrewInfoTable';
 import CrewMemberList from './CrewMemberList';
-import { EmptyState } from '@/components/common/EmptyState';
+import CrewNoticeList from './CrewNoticeList';
 
 const TABS = ['정보', '공지', '멤버'] as const;
 type TabType = (typeof TABS)[number];
@@ -48,11 +48,7 @@ export default function CrewDetailTabs({ crew, crewId }: CrewDetailTabsProps) {
           </div>
         )}
         {activeTab === '공지' && (
-          <EmptyState
-            icon="📢"
-            title="공지사항이 없어요"
-            description="방장이 공지를 올리면 여기에 표시됩니다"
-          />
+          <CrewNoticeList crewId={crewId} hostMemberUuid={crew.host_member_uuid} />
         )}
         {activeTab === '멤버' && (
           <CrewMemberList crewId={crewId} />

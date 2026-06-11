@@ -6,6 +6,8 @@ import type {
   ParticipantApplyResponse,
   ParticipantCancelResponse,
   CrewMembersResponse,
+  CrewNoticesResponse,
+  NoticeReactionResponse,
 } from '@/types/domain';
 
 export const getCrews = (params?: {
@@ -35,7 +37,43 @@ export const cancelJoinCrew = (crewId: number) => {
 };
 
 export const getCrewMembers = (crewId: number, cursor?: string) => {
-  return api.get<CrewMembersResponse>(`/crews/${crewId}/member`, {
+  return api.get<CrewMembersResponse>(`/crews/${crewId}/members`, {
     params: cursor ? { cursor } : undefined,
   });
+};
+
+export const getCrewNotices = (crewId: number, cursor?: string) => {
+  return api.get<CrewNoticesResponse>(`/crews/${crewId}/notices`, {
+    params: cursor ? { cursor } : undefined,
+  });
+};
+
+export const createCrewNotice = (crewId: number, data: { title: string; content: string }) => {
+  return api.post(`/crews/${crewId}/notices`, data);
+};
+
+export const updateCrewNotice = (
+  crewId: number,
+  noticeId: number,
+  data: { title?: string; content?: string },
+) => {
+  return api.patch(`/crews/${crewId}/notices/${noticeId}`, data);
+};
+
+export const deleteCrewNotice = (crewId: number, noticeId: number) => {
+  return api.delete(`/crews/${crewId}/notices/${noticeId}`);
+};
+
+export const addNoticeReaction = (crewId: number, noticeId: number, reactionType: string) => {
+  return api.post<NoticeReactionResponse>(
+    `/crews/${crewId}/notices/${noticeId}/reactions`,
+    { reaction_type: reactionType },
+  );
+};
+
+export const removeNoticeReaction = (crewId: number, noticeId: number, reactionType: string) => {
+  return api.delete<NoticeReactionResponse>(
+    `/crews/${crewId}/notices/${noticeId}/reactions/me`,
+    { params: { reaction_type: reactionType } },
+  );
 };

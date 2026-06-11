@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { isAxiosError } from 'axios';
+import { UserRound } from 'lucide-react';
 import { getCrewMembers } from '@/services/crew';
 import type { CrewMember } from '@/types/domain';
 import type { ErrorResponse } from '@/types/common';
@@ -12,8 +13,39 @@ interface CrewMemberListProps {
 
 const formatJoinedAt = (isoString: string) => {
   const date = new Date(isoString);
-  return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 참여`;
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}.${m}.${d}`;
 };
+
+function MemberAvatar({ member }: { member: CrewMember }) {
+  const [imgError, setImgError] = useState(false);
+  const isHost = member.role === 'HOST';
+
+  const showImage = member.profile_image_url && !imgError;
+
+  return (
+    <div
+      className={`w-10 h-10 rounded-full shrink-0 overflow-hidden ${
+        isHost ? 'ring-2 ring-yellow-400' : ''
+      }`}
+    >
+      {showImage ? (
+        <img
+          src={member.profile_image_url!}
+          alt={member.nickname}
+          className="w-full h-full object-cover"
+          onError={() => setImgError(true)}
+        />
+      ) : (
+        <div className="w-full h-full bg-neutral-200 flex items-center justify-center">
+          <UserRound size={22} className="text-neutral-400" />
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function CrewMemberList({ crewId }: CrewMemberListProps) {
   const [members, setMembers] = useState<CrewMember[]>([]);
@@ -103,27 +135,21 @@ export default function CrewMemberList({ crewId }: CrewMemberListProps) {
       <ul className="flex flex-col divide-y divide-text-secondary/10">
         {members.map((member) => (
           <li key={member.crew_participant_id} className="flex items-center gap-3 py-3">
-            <div className="w-10 h-10 rounded-full shrink-0 overflow-hidden">
-              {member.profile_image_url ? (
-                <img
-                  src={member.profile_image_url}
-                  alt={member.nickname}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-[var(--color-primary-green)]/20 flex items-center justify-center text-[var(--color-primary-green)] font-bold text-sm">
-                  {member.nickname.charAt(0)}
-                </div>
-              )}
-            </div>
+            <MemberAvatar member={member} />
 
             <div className="flex flex-col gap-0.5 flex-1 min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="text-sm font-semibold text-text-primary truncate">
+                <span
+                  className={`text-sm truncate ${
+                    member.role === 'HOST'
+                      ? 'font-bold text-text-primary'
+                      : 'font-semibold text-text-primary'
+                  }`}
+                >
                   {member.nickname}
                 </span>
                 {member.role === 'HOST' && (
-                  <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--color-primary-green)] text-white leading-none">
+                  <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-yellow-100 text-yellow-700 border border-yellow-300 leading-none">
                     방장
                   </span>
                 )}
