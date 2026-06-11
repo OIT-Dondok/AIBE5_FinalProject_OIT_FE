@@ -308,7 +308,12 @@ export const PENDING_CHARGE_ORDER_KEY = "dondok:point-charge:pending-order:v1";
 
 function normalizeOrigin(origin: string | undefined) {
   if (!origin?.trim()) return undefined;
-  return new URL(origin).origin;
+
+  try {
+    return new URL(origin).origin;
+  } catch {
+    return undefined;
+  }
 }
 
 function resolveLocalFallbackOrigin(origin: string | undefined) {

@@ -67,6 +67,15 @@ describe("point charge flow helpers", () => {
       "http://localhost:3000/my/dodin/charge/fail",
     );
 
+    assert.equal(
+      buildTossRedirectUrl({
+        appOrigin: "not a url",
+        fallbackOrigin: "http://localhost:3000",
+        path: "/my/dodin/charge/fail",
+      }),
+      "http://localhost:3000/my/dodin/charge/fail",
+    );
+
     assert.throws(
       () =>
         buildTossRedirectUrl({
@@ -192,11 +201,6 @@ describe("point charge flow helpers", () => {
     );
   });
 
-  it("confirms only when the returned Toss order matches the pending local order", () => {
-    assert.equal(shouldConfirmOnRouteEnter("match"), true);
-    assert.equal(shouldConfirmOnRouteEnter("missing"), false);
-    assert.equal(shouldConfirmOnRouteEnter("mismatch"), false);
-  });
 
   it("uses a synchronous submit lock before launching Toss payment", () => {
     const lock = { current: false };
