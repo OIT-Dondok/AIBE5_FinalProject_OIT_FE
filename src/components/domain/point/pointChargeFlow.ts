@@ -154,7 +154,7 @@ export function classifyPendingOrder(
 }
 
 export function shouldConfirmOnRouteEnter(status: PendingOrderStatus) {
-  return status !== "mismatch";
+  return status === "match";
 }
 
 export function shouldOpenChargeConfirmedToast(params: URLSearchParams) {

@@ -122,8 +122,9 @@ describe("point charge flow helpers", () => {
       classifyPendingOrder(pending, { amount: 50000, orderId: "dodin-1" }).status,
       "mismatch",
     );
+    assert.equal(shouldConfirmOnRouteEnter("match"), true);
     assert.equal(shouldConfirmOnRouteEnter("mismatch"), false);
-    assert.equal(shouldConfirmOnRouteEnter("missing"), true);
+    assert.equal(shouldConfirmOnRouteEnter("missing"), false);
   });
 
   it("keeps the backend payload snake_case", () => {
@@ -191,9 +192,9 @@ describe("point charge flow helpers", () => {
     );
   });
 
-  it("keeps route-enter confirm retries idempotent with pending-order status", () => {
-    assert.equal(shouldConfirmOnRouteEnter("missing"), true);
+  it("confirms only when the returned Toss order matches the pending local order", () => {
     assert.equal(shouldConfirmOnRouteEnter("match"), true);
+    assert.equal(shouldConfirmOnRouteEnter("missing"), false);
     assert.equal(shouldConfirmOnRouteEnter("mismatch"), false);
   });
 
