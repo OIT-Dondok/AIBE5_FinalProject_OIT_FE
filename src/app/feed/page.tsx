@@ -32,9 +32,9 @@ export default function FeedPage() {
   const [hasError, setHasError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
-  // 무한 스크롤: 하단 센티넬 + 동시 호출 가드
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  // 무한 스크롤: 동시 호출 가드 + 옵저버 인스턴스
   const isFetchingMoreRef = useRef(false);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   // cursor가 있으면 다음 페이지 append, 없으면 첫 페이지 조회
   const fetchFeed = useCallback(
@@ -51,8 +51,12 @@ export default function FeedPage() {
         setAvailableCrews(data.available_crews);
         setNextCursor(data.next_cursor);
       } catch (err) {
-        // 추가 로딩(cursor) 실패는 기존 목록을 유지한 채 중단한다.
-        if (cursor) return;
+        // 추가 로딩(cursor) 실패(INVALID_CURSOR 등): 기존 목록은 유지하되,
+        // next_cursor를 비워 센티넬을 해제하고 같은 커서로의 재요청 루프를 막는다.
+        if (cursor) {
+          setNextCursor(null);
+          return;
+        }
         if (isAxiosError<ErrorResponse>(err) && err.response?.data?.code === 'CREW_ACCESS_DENIED') {
           setAccessDenied(true);
         } else {
@@ -91,19 +95,27 @@ export default function FeedPage() {
     isFetchingMoreRef.current = false;
   }, [nextCursor, fetchFeed]);
 
-  // 하단 센티넬이 뷰포트에 들어오면 다음 페이지를 당겨온다(rootMargin으로 미리 로드).
+  // 콜백 ref가 stale 클로저를 잡지 않도록 항상 최신 handleLoadMore를 가리킨다.
+  const handleLoadMoreRef = useRef(handleLoadMore);
   useEffect(() => {
-    const el = loadMoreRef.current;
-    if (!el || !nextCursor) return;
-    const observer = new IntersectionObserver(
+    handleLoadMoreRef.current = handleLoadMore;
+  }, [handleLoadMore]);
+
+  // 하단 센티넬 DOM이 마운트되는 시점에 옵저버를 부착한다(콜백 ref).
+  // useEffect 방식은 소프트 내비게이션 시 노드 부착/effect 실행 타이밍이 어긋나 옵저버가
+  // 안 붙는 경우가 있어, 노드 생명주기에 직접 묶이는 콜백 ref로 부착한다.
+  const sentinelRef = useCallback((node: HTMLDivElement | null) => {
+    observerRef.current?.disconnect();
+    observerRef.current = null;
+    if (!node) return;
+    observerRef.current = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) handleLoadMore();
+        if (entries[0].isIntersecting) handleLoadMoreRef.current();
       },
       { rootMargin: '200px' },
     );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [nextCursor, handleLoadMore]);
+    observerRef.current.observe(node);
+  }, []);
 
   const hasCrews = availableCrews.length > 0;
 
@@ -206,7 +218,7 @@ export default function FeedPage() {
                 {/* 무한 스크롤 센티넬 (다음 페이지가 있을 때만) */}
                 {nextCursor && (
                   <div
-                    ref={loadMoreRef}
+                    ref={sentinelRef}
                     aria-hidden="true"
                     className="py-3 flex items-center justify-center"
                   >
