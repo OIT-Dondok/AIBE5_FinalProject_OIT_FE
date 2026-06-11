@@ -636,48 +636,38 @@ export type VerificationHistoryResponse = CursorPageResponse<VerificationHistory
 
 // reaction_counts: emoji grapheme → count 동적 map
 // 예: { "👏": 2, "🔥": 1 }
+// 모든 certification_status(SUCCESS/PENDING_REVIEW/FAILED) 아이템에 채워진다.
 export type ReactionCounts = Record<string, number>;
 
-// GET /api/crews/{crewId}/feed feed_items[]
+// GET /api/feed available_crews[] — 호출자 참여 크루 목록(필터 칩 구성용)
+// "전체 크루" 칩은 클라이언트가 구성한다.
+export interface AvailableCrew {
+  crew_id: number;
+  crew_name: string;
+}
+
+// GET /api/feed feed_items[]
 export interface FeedItem {
   mission_log_id: number;
+  crew_id: number; // cross-crew 피드에서 아이템의 소속 크루
+  crew_name: string;
   crew_participant_id: number;
   member_uuid: string;
   nickname: string;
-  profile_image_url: string | null;
+  profile_image_url: string | null; // 없으면 null
   image_url: string | null;
   caption: string | null;
-  server_time: string;
-  created_at: string;
-  certification_status: CertificationStatus;
-  reject_reason_code: RejectReasonCode | null;
-  reaction_counts: ReactionCounts; // SUCCESS만 리액션 허용. FAILED/PENDING_REVIEW는 빈 map {}
-  my_reactions: string[]; // 내가 누른 emoji token 목록. FAILED/PENDING_REVIEW는 빈 list []
+  server_time: string; // 표시 시각·날짜 필터·정렬/커서 기준
+  certification_status: CertificationStatus; // 상태 뱃지 표시용 (필터는 제공 X)
+  reaction_counts: ReactionCounts; // 모든 상태에 대해 채워짐
+  my_reactions: string[]; // 내가 누른 emoji token 목록
 }
 
-// GET /api/crews/{crewId}/feed day_statuses[]
-export interface DayStatus {
-  date: string; // YYYY-MM-DD
-  status: CertificationStatus | 'NOT_SUBMITTED';
-  representative_mission_log_id: number | null;
-}
-
-// GET /api/crews/{crewId}/feed participant_day_slots[]
-export interface ParticipantDaySlot {
-  crew_participant_id: number;
-  member_uuid: string;
-  date: string;
-  status: CertificationStatus | 'NOT_SUBMITTED';
-  representative_mission_log_id: number | null;
-}
-
-// GET /api/crews/{crewId}/feed → 200
+// GET /api/feed → 200
 export interface FeedResponse {
-  crew_id: number;
+  available_crews: AvailableCrew[];
   feed_items: FeedItem[];
-  next_cursor: string | null;
-  day_statuses: DayStatus[];
-  participant_day_slots: ParticipantDaySlot[];
+  next_cursor: string | null; // 다음 페이지 없으면 null. 형식: {server_time}_{mission_log_id}
 }
 
 // POST /api/mission-logs/{missionLogId}/reactions Request
