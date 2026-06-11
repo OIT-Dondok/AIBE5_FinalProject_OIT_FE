@@ -211,6 +211,13 @@ export default function ProfilePage() {
       // 포맷 검증 + HEIC는 자동으로 JPEG 변환 (프로필은 EXIF 불필요 → 경고 없이 변환)
       const prepared = await prepareImageForUpload(file);
 
+      // HEIC→JPEG 변환 시 용량이 늘 수 있어, 변환 후 파일 기준으로도 크기를 재검증한다.
+      const convertedSizeError = validateProfileImageSize(prepared.file);
+      if (convertedSizeError) {
+        showFeedbackToast(convertedSizeError, "error");
+        return;
+      }
+
       const presignedUrlResponse = await requestProfileImageUploadUrl({
         purpose: "PROFILE_IMAGE",
         content_type: prepared.contentType,

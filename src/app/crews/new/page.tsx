@@ -177,6 +177,13 @@ export default function CrewNewPage() {
       // 포맷 검증 + HEIC는 자동으로 JPEG 변환 (크루 이미지는 EXIF 불필요 → 경고 없이 변환)
       const prepared = await prepareImageForUpload(file);
 
+      // HEIC→JPEG 변환 시 용량이 늘 수 있어, 변환 후 파일 기준으로도 크기를 재검증한다.
+      const convertedSizeError = validateCrewImageSize(prepared.file);
+      if (convertedSizeError) {
+        showToast(convertedSizeError);
+        return;
+      }
+
       const presignRes = await getPresignedUrl({
         purpose: 'CREW_IMAGE',
         content_type: prepared.contentType,
