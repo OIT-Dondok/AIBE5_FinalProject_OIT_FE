@@ -6,10 +6,12 @@ import { CircleAlert, Info, Loader2, RotateCcw } from "lucide-react";
 import { BottomSheet } from "@/components/common/BottomSheet";
 import {
   CHARGE_AMOUNT_POLICY,
+  beginChargeSubmitLaunch,
   buildTossPaymentRequest,
   buildTossRedirectUrl,
   createChargeOrderId,
   createPendingChargeOrder,
+  failChargeSubmitLaunch,
   formatChargeAmountInput,
   getChargeAmountError,
   getTossClientConfigState,
@@ -66,12 +68,16 @@ export function ChargeBottomSheet({ isOpen, onClose, currentBalance, initialAmou
     currentBalance != null && isValidAmount && amount != null ? currentBalance + amount : null;
 
   const handleAmountChange = (next: string) => {
+    if (submitLockRef.current) return;
+
     setPaymentStatus("idle");
     setSubmitError("");
     setAmountInput(parseChargeAmountInput(next).sanitized);
   };
 
   const addAmount = (delta: number) => {
+    if (submitLockRef.current) return;
+
     setPaymentStatus("idle");
     setSubmitError("");
     const base = amount ?? 0;
@@ -80,17 +86,16 @@ export function ChargeBottomSheet({ isOpen, onClose, currentBalance, initialAmou
   };
 
   const resetAmount = () => {
+    if (submitLockRef.current) return;
+
     setPaymentStatus("idle");
     setSubmitError("");
     setAmountInput("");
   };
 
   const handleSubmit = async () => {
-    if (!canSubmit || submitLockRef.current || amount == null || !tossConfig.enabled) return;
-
-    submitLockRef.current = true;
-    setPaymentStatus("launching");
-    setSubmitError("");
+    if (!canSubmit || amount == null || !tossConfig.enabled) return;
+    if (!beginChargeSubmitLaunch(submitLockRef, setPaymentStatus, setSubmitError)) return;
 
     try {
       const orderId = createChargeOrderId();
@@ -114,9 +119,12 @@ export function ChargeBottomSheet({ isOpen, onClose, currentBalance, initialAmou
         request: buildTossPaymentRequest({ amount, failUrl, orderId, successUrl }),
       });
     } catch (error) {
-      submitLockRef.current = false;
-      setPaymentStatus("idle");
-      setSubmitError(error instanceof Error ? error.message : "결제창을 열지 못했어요. 다시 시도해 주세요.");
+      failChargeSubmitLaunch(
+        submitLockRef,
+        setPaymentStatus,
+        setSubmitError,
+        error instanceof Error ? error.message : "결제창을 열지 못했어요. 다시 시도해 주세요.",
+      );
     }
   };
 
@@ -148,6 +156,7 @@ export function ChargeBottomSheet({ isOpen, onClose, currentBalance, initialAmou
               type="text"
               value={formatChargeAmountInput(amountInput)}
               onChange={(event) => handleAmountChange(event.target.value)}
+              disabled={paymentStatus === "launching"}
               inputMode="numeric"
               placeholder="0"
               aria-label="충전 금액"

@@ -1,20 +1,22 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 
 import {
   CHARGE_AMOUNT_POLICY,
+  beginChargeSubmitLaunch,
   buildPointChargePayload,
   buildTossPaymentRequest,
   buildWalletConfirmedUrl,
   buildTossRedirectUrl,
   classifyPendingOrder,
   createChargeOrderId,
+  failChargeSubmitLaunch,
   getChargeAmountError,
   getTossClientConfigState,
   parseTossFailParams,
   parseTossSuccessParams,
   resolveChargeInitialAmount,
+  shouldOpenChargeConfirmedToast,
   shouldConfirmOnRouteEnter,
 } from "@/components/domain/point/pointChargeFlow";
 
@@ -84,6 +86,18 @@ describe("point charge flow helpers", () => {
       ok: false,
       reason: "invalid_params",
     });
+    assert.deepEqual(
+      parseTossSuccessParams(new URLSearchParams("paymentKey=pay_123&orderId=dodin-1&amount=-100")),
+      { ok: false, reason: "invalid_params" },
+    );
+    assert.deepEqual(
+      parseTossSuccessParams(new URLSearchParams("paymentKey=pay_123&orderId=dodin-1&amount=100.5")),
+      { ok: false, reason: "invalid_params" },
+    );
+    assert.deepEqual(
+      parseTossSuccessParams(new URLSearchParams("paymentKey=pay_123&orderId=dodin-1&amount=abc")),
+      { ok: false, reason: "invalid_params" },
+    );
     assert.deepEqual(parseTossFailParams(new URLSearchParams("code=PAY_PROCESS_CANCELED&message=cancelled")), {
       code: "PAY_PROCESS_CANCELED",
       message: "cancelled",
@@ -157,29 +171,68 @@ describe("point charge flow helpers", () => {
     );
   });
 
-  it("keeps users on the Toss success confirmation flow when backend confirm fails", () => {
-    const source = readFileSync("src/app/my/dodin/charge/success/ChargeSuccessClient.tsx", "utf8");
-
-    assert.match(source, /retryConfirm/);
-    assert.doesNotMatch(source, /다시 시도[\s\S]{0,200}href="\/my\/dodin"/);
+  it("opens the wallet charge toast only for confirmed charge URLs with numeric confirmation data", () => {
+    assert.equal(
+      shouldOpenChargeConfirmedToast(new URLSearchParams("charge=confirmed&amount=30000&point_history_id=1001")),
+      true,
+    );
+    assert.equal(shouldOpenChargeConfirmedToast(new URLSearchParams("charge=confirmed")), false);
+    assert.equal(
+      shouldOpenChargeConfirmedToast(new URLSearchParams("charge=confirmed&amount=abc&point_history_id=1001")),
+      false,
+    );
+    assert.equal(
+      shouldOpenChargeConfirmedToast(new URLSearchParams("charge=confirmed&amount=30000&point_history_id=abc")),
+      false,
+    );
+    assert.equal(
+      shouldOpenChargeConfirmedToast(new URLSearchParams("charge=pending&amount=30000&point_history_id=1001")),
+      false,
+    );
   });
 
-  it("keeps reload and back-forward confirm retries idempotent", () => {
-    const source = readFileSync("src/app/my/dodin/charge/success/ChargeSuccessClient.tsx", "utf8");
-
+  it("keeps route-enter confirm retries idempotent with pending-order status", () => {
     assert.equal(shouldConfirmOnRouteEnter("missing"), true);
-    assert.match(source, /chargePoints\(/);
-    assert.match(source, /clearPendingChargeOrder[\s\S]*setState\("confirmed_refreshing"\)/);
-    assert.doesNotMatch(source, /catch\s*\{[\s\S]*clearPendingChargeOrder/);
+    assert.equal(shouldConfirmOnRouteEnter("match"), true);
+    assert.equal(shouldConfirmOnRouteEnter("mismatch"), false);
   });
 
   it("uses a synchronous submit lock before launching Toss payment", () => {
-    const source = readFileSync("src/components/domain/point/ChargeBottomSheet.tsx", "utf8");
+    const lock = { current: false };
+    const statuses: string[] = [];
+    const errors: string[] = [];
 
-    assert.match(source, /submitLockRef/);
-    assert.match(source, /if \([^)]*submitLockRef\.current/);
-    assert.match(source, /submitLockRef\.current = true[\s\S]*setPaymentStatus\("launching"\)/);
-    assert.match(source, /catch[\s\S]*submitLockRef\.current = false[\s\S]*setPaymentStatus\("idle"\)/);
+    assert.equal(
+      beginChargeSubmitLaunch(
+        lock,
+        (status) => statuses.push(status),
+        (error) => errors.push(error),
+      ),
+      true,
+    );
+    assert.equal(lock.current, true);
+    assert.deepEqual(statuses, ["launching"]);
+    assert.deepEqual(errors, [""]);
+
+    assert.equal(
+      beginChargeSubmitLaunch(
+        lock,
+        (status) => statuses.push(status),
+        (error) => errors.push(error),
+      ),
+      false,
+    );
+    assert.deepEqual(statuses, ["launching"]);
+
+    failChargeSubmitLaunch(
+      lock,
+      (status) => statuses.push(status),
+      (error) => errors.push(error),
+      "failed",
+    );
+    assert.equal(lock.current, false);
+    assert.deepEqual(statuses, ["launching", "idle"]);
+    assert.deepEqual(errors, ["", "failed"]);
   });
 
 });

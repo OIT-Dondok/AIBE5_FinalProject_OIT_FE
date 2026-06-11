@@ -15,6 +15,7 @@ import {
   createWalletViewModel,
   getWalletHistoryTypeParam,
 } from "@/components/domain/point/pointViewModel";
+import { shouldOpenChargeConfirmedToast } from "@/components/domain/point/pointChargeFlow";
 import { useChargeBottomSheet } from "@/components/domain/point/useChargeBottomSheet";
 import { getPointAccount, getWalletHistory } from "@/services/point";
 import type { PointAccountResponse, WalletHistoryItem } from "@/types/domain";
@@ -102,7 +103,7 @@ export default function DodinWalletPage() {
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
-    if (searchParams.get("charge") !== "confirmed") return;
+    if (!shouldOpenChargeConfirmedToast(searchParams)) return;
     if (isAccountLoading) return;
     if (accountError) return;
 

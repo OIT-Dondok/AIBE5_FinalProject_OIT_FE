@@ -17,6 +17,7 @@ export interface PendingChargeOrder {
 }
 
 export type PendingOrderStatus = "match" | "missing" | "mismatch";
+export type ChargePaymentStatus = "idle" | "launching";
 
 export type TossSuccessParams =
   | {
@@ -154,6 +155,43 @@ export function classifyPendingOrder(
 
 export function shouldConfirmOnRouteEnter(status: PendingOrderStatus) {
   return status !== "mismatch";
+}
+
+export function shouldOpenChargeConfirmedToast(params: URLSearchParams) {
+  if (params.get("charge") !== "confirmed") return false;
+
+  const amountParam = params.get("amount");
+  const pointHistoryIdParam = params.get("point_history_id");
+  if (amountParam == null || pointHistoryIdParam == null) return false;
+
+  const amount = Number(amountParam);
+  const pointHistoryId = Number(pointHistoryIdParam);
+
+  return Number.isFinite(amount) && Number.isFinite(pointHistoryId);
+}
+
+export function beginChargeSubmitLaunch(
+  lock: { current: boolean },
+  setPaymentStatus: (status: ChargePaymentStatus) => void,
+  setSubmitError: (message: string) => void,
+) {
+  if (lock.current) return false;
+
+  lock.current = true;
+  setPaymentStatus("launching");
+  setSubmitError("");
+  return true;
+}
+
+export function failChargeSubmitLaunch(
+  lock: { current: boolean },
+  setPaymentStatus: (status: ChargePaymentStatus) => void,
+  setSubmitError: (message: string) => void,
+  message: string,
+) {
+  lock.current = false;
+  setPaymentStatus("idle");
+  setSubmitError(message);
 }
 
 export function buildPointChargePayload({
