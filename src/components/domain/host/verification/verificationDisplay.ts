@@ -1,12 +1,14 @@
-import type { HostExifStatus, HostReviewBucket } from "@/mocks/data/host";
+import type { MissionLogReviewBucket } from "@/types/domain";
 
-export const REVIEW_FILTERS: Array<{ value: HostReviewBucket; label: string }> = [
-  { value: "urgent", label: "긴급 검토" },
-  { value: "warning", label: "주의 검토" },
-  { value: "normal", label: "일반 검토" },
+type VerificationExifStatus = "NORMAL" | "MISSING" | "FAILED";
+
+export const REVIEW_FILTERS: Array<{ value: MissionLogReviewBucket; label: string }> = [
+  { value: "urgent", label: "긴급 검수" },
+  { value: "warning", label: "주의 검수" },
+  { value: "normal", label: "일반 검수" },
 ];
 
-export const REVIEW_FILTER_STYLES: Record<HostReviewBucket, { active: string; inactive: string }> = {
+export const REVIEW_FILTER_STYLES: Record<MissionLogReviewBucket, { active: string; inactive: string }> = {
   urgent: {
     active: "bg-[#D9534C] text-white shadow-sm shadow-[#FCEDEC]/70",
     inactive: "bg-[#FCEDEC] text-[#D9534C] hover:bg-[#F8DEDC]",
@@ -21,25 +23,25 @@ export const REVIEW_FILTER_STYLES: Record<HostReviewBucket, { active: string; in
   },
 };
 
-export const exifSummaryLabel: Record<HostExifStatus, string> = {
-  NORMAL: "✓ 정상",
-  MISSING: "⚠ 없음",
-  FAILED: "✕ 실패",
+export const exifSummaryLabel: Record<VerificationExifStatus, string> = {
+  NORMAL: "정상",
+  MISSING: "없음",
+  FAILED: "시간 이상",
 };
 
-export const exifDetailLabel: Record<HostExifStatus, string> = {
-  NORMAL: "✓ 성공",
-  MISSING: "⚠ 메타데이터 없음",
-  FAILED: "✕ 실패",
+export const exifDetailLabel: Record<VerificationExifStatus, string> = {
+  NORMAL: "검증 성공",
+  MISSING: "메타데이터 없음",
+  FAILED: "촬영 시간 확인 필요",
 };
 
-export const exifDetailStyle: Record<HostExifStatus, string> = {
+export const exifDetailStyle: Record<VerificationExifStatus, string> = {
   NORMAL: "text-primary-green",
   MISSING: "text-[#D89B4D]",
   FAILED: "text-[#DB5C55]",
 };
 
-export const exifBadgeStyle: Record<HostExifStatus, string> = {
+export const exifBadgeStyle: Record<VerificationExifStatus, string> = {
   NORMAL: "bg-success-green/65 text-primary-green",
   MISSING: "bg-amber-50 text-[#D89B4D]",
   FAILED: "bg-[#FCEDEC] text-[#DB5C55]",

@@ -17,10 +17,8 @@ import { NoticesTab } from "@/components/domain/host/notices/NoticesTab";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { SectionCard } from "@/components/domain/host/SectionCard";
 import { VerificationTab } from "@/components/domain/host/verification/VerificationTab";
-import type { VerificationModerationResult } from "@/components/domain/host/verification/VerificationCard";
 import {
   getCrewApplications,
-  getHostCertifications,
   getHostCrewDetail,
   getHostNotices,
 } from "@/mocks/data/host";
@@ -35,9 +33,7 @@ export default function HostConsoleClient() {
       ? tabParam
       : "verification"
   );
-  const [verificationModerationResults, setVerificationModerationResults] = useState<
-    Record<number, VerificationModerationResult>
-  >({});
+  const [pendingReviewCount, setPendingReviewCount] = useState(0);
   const [applicationDecisions, setApplicationDecisions] = useState<Record<number, ApplicationDecision>>({});
 
   if (crewId === null) {
@@ -60,13 +56,9 @@ export default function HostConsoleClient() {
   }
 
   const crewDetail = getHostCrewDetail(crewId);
-  const certifications = getHostCertifications(crewId);
   const applications = getCrewApplications(crewId);
   const notices = getHostNotices(crewId);
 
-  const pendingReviewCount = certifications.filter(
-    (item) => item.certification_status === "PENDING_REVIEW" && !verificationModerationResults[item.mission_log_id],
-  ).length;
   const pendingApplicationCount = applications.filter(
     (item) =>
       item.status !== "CANCELLED" &&
@@ -109,10 +101,7 @@ export default function HostConsoleClient() {
           />
 
           {activeTab === "verification" && (
-            <VerificationTab
-              moderationResults={verificationModerationResults}
-              onModerationResultsChange={setVerificationModerationResults}
-            />
+            <VerificationTab onPendingCountChange={setPendingReviewCount} />
           )}
           {activeTab === "applications" && (
             <ApplicationsTab
