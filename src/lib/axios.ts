@@ -92,33 +92,28 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// 동시에 여러 요청이 401을 받으면 refresh를 한 번만 수행하고,
-// 나머지 요청은 큐에 넣었다가 새 access token으로 재시도한다.
-let isRefreshing = false;
-let failedQueue: Array<{
-  resolve: (token: string) => void;
-  reject: (err: unknown) => void;
-}> = [];
-
-function processQueue(error: unknown, token: string | null) {
-  failedQueue.forEach(({ resolve, reject }) => {
-    if (token) resolve(token);
-    else reject(error);
-  });
-  failedQueue = [];
-}
-
 // Access Token 재발급
 // - request body 없음
 // - refreshToken은 HttpOnly Cookie이므로 withCredentials 설정으로 자동 전송
 // - 응답 body의 access_token만 메모리에 저장
-export async function refreshAccessToken(): Promise<string> {
-  const { data } = await refreshApi.post<{ access_token: string }>(
-    '/auth/refresh',
-  );
+// - AuthInitializer와 401 interceptor가 같은 pending refresh promise를 공유한다.
+// - 새 refresh 호출부도 이 singleton을 import해야 rotation race를 피할 수 있다.
+let pendingRefresh: Promise<string> | null = null;
 
-  setAccessToken(data.access_token);
-  return data.access_token;
+export function refreshAccessToken(): Promise<string> {
+  if (pendingRefresh) return pendingRefresh;
+
+  pendingRefresh = refreshApi
+    .post<{ access_token: string }>('/auth/refresh')
+    .then(({ data }) => {
+      setAccessToken(data.access_token);
+      return data.access_token;
+    })
+    .finally(() => {
+      pendingRefresh = null;
+    });
+
+  return pendingRefresh;
 }
 
 // 응답 인터셉터
@@ -146,27 +141,10 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // 이미 refresh 중이면 새 refresh 요청을 만들지 않고 큐에서 대기한다.
-    if (isRefreshing) {
-      return new Promise((resolve, reject) => {
-        failedQueue.push({ resolve, reject });
-      }).then((token) => {
-        if (originalRequest.headers) {
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-        }
-        return api(originalRequest);
-      });
-    }
-
     originalRequest._retry = true;
-    isRefreshing = true;
-
     try {
-      // refresh 성공 시 새 access token으로 대기 중인 요청과 원래 요청을 재시도한다.
+      // refresh 성공 시 새 access token으로 원래 요청을 재시도한다.
       const accessToken = await refreshAccessToken();
-      isRefreshing = false;
-      processQueue(null, accessToken);
-
       if (originalRequest.headers) {
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
       }
@@ -175,8 +153,6 @@ api.interceptors.response.use(
     } catch (refreshError) {
       // refreshToken이 없거나 만료/위조/rotation 이후 재사용이면 복구 불가.
       // access token을 비우고 로그인 화면으로 보낸다.
-      isRefreshing = false;
-      processQueue(refreshError, null);
       clearAccessToken();
       window.location.href = '/login';
       return Promise.reject(refreshError);
