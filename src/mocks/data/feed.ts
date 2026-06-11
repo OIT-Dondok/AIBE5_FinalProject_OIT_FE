@@ -1,5 +1,4 @@
-import type { CrewCategory } from '@/mocks/data/crews';
-import type { FeedItem } from '@/types/domain';
+import type { AvailableCrew, FeedItem } from '@/types/domain';
 
 export interface FeedPeriod {
   start_date: string;
@@ -11,16 +10,10 @@ export const MOCK_FEED_PERIOD: FeedPeriod = {
   end_date: '2026-06-01',
 };
 
-export interface MyCrewItem {
-  crew_id: number;
-  crew_title: string;
-  category: CrewCategory;
-}
-
-export const MOCK_MY_CREWS: MyCrewItem[] = [
-  { crew_id: 1, crew_title: '갓생 6시 기상', category: 'MORNING' },
-  { crew_id: 2, crew_title: '독서 1챕터', category: 'READING' },
-  { crew_id: 3, crew_title: '홈트 30분', category: 'EXERCISE' },
+export const MOCK_AVAILABLE_CREWS: AvailableCrew[] = [
+  { crew_id: 1, crew_name: '갓생 6시 기상' },
+  { crew_id: 2, crew_name: '독서 1챕터' },
+  { crew_id: 3, crew_name: '홈트 30분' },
 ];
 
 export const MOCK_FEED_ITEMS: FeedItem[] = [

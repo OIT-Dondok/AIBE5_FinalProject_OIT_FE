@@ -10,7 +10,7 @@ import { FeedCrewFilter } from '@/components/domain/feed/FeedCrewFilter';
 import { FeedItem } from '@/components/domain/feed/FeedItem';
 import { FeedSkeletonList } from '@/components/domain/feed/FeedItemSkeleton';
 import { FeedPeriodCard } from '@/components/domain/feed/FeedPeriodCard';
-import { MOCK_FEED_ITEMS, MOCK_FEED_PERIOD, MOCK_MY_CREWS } from '@/mocks/data/feed';
+import { MOCK_FEED_ITEMS, MOCK_FEED_PERIOD, MOCK_AVAILABLE_CREWS } from '@/mocks/data/feed';
 import type { FeedPeriod } from '@/mocks/data/feed';
 
 export default function FeedPage() {
@@ -21,8 +21,8 @@ export default function FeedPage() {
   // TODO: API - 피드 fetch 로딩 상태로 교체 (true면 스켈레톤 노출)
   const isLoading = false;
 
-  // TODO: API - 내 가입 크루 목록을 GET /me/crews 응답으로 교체 (필터 칩 + 가입 여부 판단)
-  const hasCrews = MOCK_MY_CREWS.length > 0;
+  // TODO: API - GET /api/feed 응답의 available_crews로 교체 (필터 칩 + 가입 여부 판단)
+  const hasCrews = MOCK_AVAILABLE_CREWS.length > 0;
 
   // TODO: API - MOCK_FEED_ITEMS를 GET /feeds?crewId={selectedCrewId}&startDate={}&endDate={} 응답으로 교체.
   //            아래 필터/정렬(최신순)은 서버 쿼리 파라미터·정렬로 이관 예정.
@@ -43,7 +43,7 @@ export default function FeedPage() {
 
         {/* 크루 필터 칩 */}
         <FeedCrewFilter
-          crews={MOCK_MY_CREWS}
+          crews={MOCK_AVAILABLE_CREWS}
           selectedCrewId={selectedCrewId}
           onSelect={setSelectedCrewId}
         />
