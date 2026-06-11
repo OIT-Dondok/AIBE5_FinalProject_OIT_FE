@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { isAxiosError } from 'axios';
-import { Plus, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, SmilePlus } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { Button } from '@/components/common/Button';
 import { EmptyState } from '@/components/common/EmptyState';
+import { EmojiPickerSheet } from '@/components/common/EmojiPickerSheet';
 import { useAuthStore } from '@/store/authStore';
 import {
   getCrewNotices,
@@ -15,15 +16,8 @@ import {
   addNoticeReaction,
   removeNoticeReaction,
 } from '@/services/crew';
-import type { CrewNotice, ReactionCounts } from '@/types/domain';
+import type { CrewNotice } from '@/types/domain';
 import type { ErrorResponse } from '@/types/common';
-
-const PRESET_REACTIONS = ['👍', '❤️', '😊', '🔥', '👏'];
-
-interface NoticeState extends CrewNotice {
-  my_reactions: string[];
-  reaction_counts: ReactionCounts;
-}
 
 interface CrewNoticeListProps {
   crewId: number;
@@ -42,7 +36,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
   const user = useAuthStore((s) => s.user);
   const isHost = !!user && user.member_uuid === hostMemberUuid;
 
-  const [notices, setNotices] = useState<NoticeState[]>([]);
+  const [notices, setNotices] = useState<CrewNotice[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -50,7 +44,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
   const [accessDenied, setAccessDenied] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<NoticeState | null>(null);
+  const [editTarget, setEditTarget] = useState<CrewNotice | null>(null);
   const [formTitle, setFormTitle] = useState('');
   const [formContent, setFormContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,17 +52,16 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // EmojiPickerSheet: 어느 공지에 대해 열려 있는지 추적
+  const [pickerTarget, setPickerTarget] = useState<number | null>(null);
+
   const fetchNotices = useCallback(
     async (cursor?: string) => {
       try {
         const res = await getCrewNotices(crewId, cursor);
         const { items, next_cursor } = res.data;
-        const withReactions: NoticeState[] = items.map((n) => ({
-          ...n,
-          my_reactions: [],
-          reaction_counts: {},
-        }));
-        setNotices((prev) => (cursor ? [...prev, ...withReactions] : withReactions));
+        // 서버 응답의 my_reactions, reaction_counts를 그대로 초기 상태로 사용
+        setNotices((prev) => (cursor ? [...prev, ...items] : items));
         setNextCursor(next_cursor);
       } catch (err) {
         if (
@@ -107,7 +100,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
     setModalOpen(true);
   };
 
-  const openEditModal = (notice: NoticeState) => {
+  const openEditModal = (notice: CrewNotice) => {
     setEditTarget(notice);
     setFormTitle(notice.title);
     setFormContent(notice.content);
@@ -172,6 +165,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
     if (!notice) return;
     const isReacted = notice.my_reactions.includes(emoji);
     try {
+      // 서버 응답으로 상태 업데이트 (로컬 낙관적 업데이트 없이 서버 기준)
       const res = isReacted
         ? await removeNoticeReaction(crewId, noticeId, emoji)
         : await addNoticeReaction(crewId, noticeId, emoji);
@@ -220,6 +214,8 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
       </div>
     );
   }
+
+  const pickerNotice = notices.find((n) => n.notice_id === pickerTarget) ?? null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -279,25 +275,37 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
 
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 flex-wrap">
-              {PRESET_REACTIONS.map((emoji) => {
-                const count = notice.reaction_counts[emoji] ?? 0;
-                const isReacted = notice.my_reactions.includes(emoji);
-                return (
-                  <button
-                    key={emoji}
-                    type="button"
-                    onClick={() => handleReaction(notice.notice_id, emoji)}
-                    className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs border transition-colors ${
-                      isReacted
-                        ? 'bg-primary-green/10 border-primary-green/30 text-text-primary'
-                        : 'bg-transparent border-text-secondary/20 text-text-secondary hover:bg-text-secondary/5'
-                    }`}
-                  >
-                    <span>{emoji}</span>
-                    {count > 0 && <span className="font-semibold">{count}</span>}
-                  </button>
-                );
-              })}
+              {/* 리액션이 있는 이모지 pills — 클릭 시 토글 */}
+              {Object.entries(notice.reaction_counts)
+                .filter(([, count]) => count > 0)
+                .map(([emoji, count]) => {
+                  const isReacted = notice.my_reactions.includes(emoji);
+                  return (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => handleReaction(notice.notice_id, emoji)}
+                      className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs border transition-colors ${
+                        isReacted
+                          ? 'bg-primary-green/10 border-primary-green/30 text-text-primary'
+                          : 'bg-transparent border-text-secondary/20 text-text-secondary hover:bg-text-secondary/5'
+                      }`}
+                    >
+                      <span>{emoji}</span>
+                      <span className="font-semibold">{count}</span>
+                    </button>
+                  );
+                })}
+
+              {/* 이모지 추가 버튼 → EmojiPickerSheet 열기 */}
+              <button
+                type="button"
+                onClick={() => setPickerTarget(notice.notice_id)}
+                className="flex items-center justify-center w-7 h-7 rounded-full border border-text-secondary/20 text-text-secondary hover:bg-text-secondary/5 transition-colors"
+                aria-label="리액션 추가"
+              >
+                <SmilePlus size={14} />
+              </button>
             </div>
             <span className="text-xs text-text-secondary shrink-0">
               {formatDate(notice.created_at)}
@@ -317,6 +325,17 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
         </button>
       )}
 
+      {/* EmojiPickerSheet — 이미 반응한 이모지는 시각적으로 강조 */}
+      <EmojiPickerSheet
+        isOpen={pickerTarget !== null}
+        onClose={() => setPickerTarget(null)}
+        onSelect={(emoji) => {
+          if (pickerTarget !== null) void handleReaction(pickerTarget, emoji);
+        }}
+        selectedEmojis={pickerNotice?.my_reactions ?? []}
+      />
+
+      {/* 공지 작성 / 수정 모달 */}
       <Modal
         isOpen={modalOpen}
         onClose={closeModal}
@@ -376,6 +395,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
         </div>
       </Modal>
 
+      {/* 공지 삭제 확인 모달 */}
       <Modal
         isOpen={deleteTarget !== null}
         onClose={() => setDeleteTarget(null)}
