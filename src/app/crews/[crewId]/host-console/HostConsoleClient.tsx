@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { Bell, ShieldCheck } from "lucide-react";
 
@@ -20,8 +20,8 @@ import { VerificationTab } from "@/components/domain/host/verification/Verificat
 import {
   getCrewApplications,
   getHostCrewDetail,
-  getHostNotices,
 } from "@/mocks/data/host";
+import { getCrewNotices } from "@/services/crew";
 
 export default function HostConsoleClient() {
   const params = useParams<{ crewId: string }>();
@@ -35,6 +35,14 @@ export default function HostConsoleClient() {
   );
   const [pendingReviewCount, setPendingReviewCount] = useState(0);
   const [applicationDecisions, setApplicationDecisions] = useState<Record<number, ApplicationDecision>>({});
+  const [noticeCount, setNoticeCount] = useState(0);
+
+  useEffect(() => {
+    if (crewId === null) return;
+    getCrewNotices(crewId)
+      .then((res) => setNoticeCount(res.data.items.length))
+      .catch(() => {});
+  }, [crewId]);
 
   if (crewId === null) {
     return (
@@ -57,7 +65,6 @@ export default function HostConsoleClient() {
 
   const crewDetail = getHostCrewDetail(crewId);
   const applications = getCrewApplications(crewId);
-  const notices = getHostNotices(crewId);
 
   const pendingApplicationCount = applications.filter(
     (item) =>
@@ -96,7 +103,7 @@ export default function HostConsoleClient() {
             activeTab={activeTab}
             pendingReviewCount={pendingReviewCount}
             pendingApplicationCount={pendingApplicationCount}
-            noticeCount={notices.length}
+            noticeCount={noticeCount}
             onTabChange={setActiveTab}
           />
 
