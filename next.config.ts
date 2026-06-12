@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
                 protocol: 'https',
                 hostname: 'dondok-s3.s3.ap-northeast-2.amazonaws.com',
             },
+            {
+                protocol: 'https',
+                hostname: 'images.unsplash.com',
+            },
         ],
     },
     async rewrites() {
