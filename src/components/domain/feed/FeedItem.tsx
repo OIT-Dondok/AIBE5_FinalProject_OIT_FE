@@ -14,9 +14,11 @@ import {
 
 interface FeedItemProps {
   item: FeedItemType;
+  /** 인증 로그가 더 이상 존재하지 않을 때 상위 목록에서 이 아이템을 제거한다. */
+  onRemove?: (missionLogId: number) => void;
 }
 
-export function FeedItem({ item }: FeedItemProps) {
+export function FeedItem({ item, onRemove }: FeedItemProps) {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   const status = STATUS_CONFIG[item.certification_status];
@@ -84,8 +86,10 @@ export function FeedItem({ item }: FeedItemProps) {
       <div className="px-4 py-3.5">
         <FeedReactionBar
           key={item.mission_log_id}
+          missionLogId={item.mission_log_id}
           reactionCounts={item.reaction_counts}
           myReactions={item.my_reactions}
+          onMissingLog={() => onRemove?.(item.mission_log_id)}
         />
       </div>
 

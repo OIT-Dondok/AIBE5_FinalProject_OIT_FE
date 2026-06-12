@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { isAxiosError } from 'axios';
 import { Plus, Edit2, Trash2, SmilePlus } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { Button } from '@/components/common/Button';
 import { EmptyState } from '@/components/common/EmptyState';
 import { EmojiPickerSheet } from '@/components/common/EmojiPickerSheet';
+import { Toast } from '@/components/common/Toast';
 import { useAuthStore } from '@/store/authStore';
 import {
   getCrewNotices,
@@ -16,7 +17,8 @@ import {
   addNoticeReaction,
   removeNoticeReaction,
 } from '@/services/crew';
-import type { CrewNotice } from '@/types/domain';
+import type { CrewNotice, ReactionCounts } from '@/types/domain';
+import { ERROR_CODE } from '@/types/common';
 import type { ErrorResponse } from '@/types/common';
 
 interface CrewNoticeListProps {
@@ -48,12 +50,28 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
   const [formTitle, setFormTitle] = useState('');
   const [formContent, setFormContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // 저장 실패 시 모달 내부에 노출하는 에러(모달은 열려 있어 toast가 가려지므로 인라인 처리).
+  const [formError, setFormError] = useState('');
 
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // EmojiPickerSheet: 어느 공지에 대해 열려 있는지 추적
   const [pickerTarget, setPickerTarget] = useState<number | null>(null);
+
+  // 리액션 안내 토스트 (에러코드별 메시지)
+  const [toastMessage, setToastMessage] = useState('');
+  const [isToastOpen, setIsToastOpen] = useState(false);
+  // 같은 공지·이모지에 대한 추가/삭제 요청이 겹치지 않도록 (noticeId:emoji) 단위로 in-flight를 잠근다.
+  const reactionInFlightRef = useRef<Set<string>>(new Set());
+  // 공지(noticeId) 단위로 요청을 직렬화한다. 같은 공지에서 서로 다른 이모지를 동시에 눌러도
+  // 응답이 발신 순서대로 반영되어, 늦게 도착한 오래된 응답이 최신 상태를 덮어쓰는 race를 막는다.
+  const reactionQueueRef = useRef<Map<number, Promise<void>>>(new Map());
+
+  const showToast = useCallback((message: string) => {
+    setToastMessage(message);
+    setIsToastOpen(true);
+  }, []);
 
   const fetchNotices = useCallback(
     async (cursor?: string) => {
@@ -97,6 +115,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
     setEditTarget(null);
     setFormTitle('');
     setFormContent('');
+    setFormError('');
     setModalOpen(true);
   };
 
@@ -104,6 +123,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
     setEditTarget(notice);
     setFormTitle(notice.title);
     setFormContent(notice.content);
+    setFormError('');
     setModalOpen(true);
   };
 
@@ -112,11 +132,13 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
     setEditTarget(null);
     setFormTitle('');
     setFormContent('');
+    setFormError('');
   };
 
   const handleSubmit = async () => {
     if (!formTitle.trim() || !formContent.trim() || isSubmitting) return;
     setIsSubmitting(true);
+    setFormError('');
     try {
       if (editTarget) {
         await updateCrewNotice(crewId, editTarget.notice_id, {
@@ -141,7 +163,12 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
       }
       closeModal();
     } catch {
-      // 에러 처리는 axios 인터셉터(toast)가 담당
+      // 모달은 닫지 않아 입력값을 유지하고, 모달 내부에 인라인 에러를 노출한다.
+      setFormError(
+        editTarget
+          ? '공지를 수정하지 못했어요. 잠시 후 다시 시도해주세요.'
+          : '공지를 등록하지 못했어요. 잠시 후 다시 시도해주세요.',
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -152,32 +179,87 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
     try {
       await deleteCrewNotice(crewId, noticeId);
       setNotices((prev) => prev.filter((n) => n.notice_id !== noticeId));
-      setDeleteTarget(null);
     } catch {
-      // 에러 처리는 axios 인터셉터(toast)가 담당
+      // 실패 시 안내. 성공/실패 모두 모달을 닫아 toast(z-90)가 모달 백드롭(z-100)에 가리지 않게 한다.
+      showToast('공지를 삭제하지 못했어요. 잠시 후 다시 시도해주세요.');
     } finally {
+      // 성공이든 실패든 삭제 확인 모달은 닫는다.
+      setDeleteTarget(null);
       setIsDeleting(false);
     }
   };
 
-  const handleReaction = async (noticeId: number, emoji: string) => {
+  // 특정 공지의 리액션 상태를 dir만큼 변경(낙관적 업데이트/롤백 공용).
+  // dir=+1 추가, dir=-1 삭제. count가 0 이하가 되면 칩을 제거한다(서버 truth와 동일).
+  const applyReactionDelta = (noticeId: number, emoji: string, dir: 1 | -1) => {
+    setNotices((prev) =>
+      prev.map((n) => {
+        if (n.notice_id !== noticeId) return n;
+        const my_reactions =
+          dir === 1
+            ? n.my_reactions.includes(emoji)
+              ? n.my_reactions
+              : [...n.my_reactions, emoji]
+            : n.my_reactions.filter((e) => e !== emoji);
+        const reaction_counts: ReactionCounts = { ...n.reaction_counts };
+        const value = (reaction_counts[emoji] ?? 0) + dir;
+        if (value <= 0) delete reaction_counts[emoji];
+        else reaction_counts[emoji] = value;
+        return { ...n, my_reactions, reaction_counts };
+      }),
+    );
+  };
+
+  // 서버 응답으로 해당 공지의 리액션 최종 상태를 덮어쓴다.
+  const syncNoticeReaction = (
+    noticeId: number,
+    my_reactions: string[],
+    reaction_counts: ReactionCounts,
+  ) => {
+    setNotices((prev) =>
+      prev.map((n) =>
+        n.notice_id === noticeId ? { ...n, my_reactions, reaction_counts } : n,
+      ),
+    );
+  };
+
+  const handleReaction = (noticeId: number, emoji: string) => {
     const notice = notices.find((n) => n.notice_id === noticeId);
     if (!notice) return;
+    const key = `${noticeId}:${emoji}`;
+    if (reactionInFlightRef.current.has(key)) return;
     const isReacted = notice.my_reactions.includes(emoji);
-    try {
-      // 서버 응답으로 상태 업데이트 (로컬 낙관적 업데이트 없이 서버 기준)
-      const res = isReacted
-        ? await removeNoticeReaction(crewId, noticeId, emoji)
-        : await addNoticeReaction(crewId, noticeId, emoji);
-      const { my_reactions, reaction_counts } = res.data;
-      setNotices((prev) =>
-        prev.map((n) =>
-          n.notice_id === noticeId ? { ...n, my_reactions, reaction_counts } : n,
-        ),
-      );
-    } catch {
-      // 에러 처리는 axios 인터셉터(toast)가 담당
-    }
+    const dir: 1 | -1 = isReacted ? -1 : 1;
+
+    // 낙관적 업데이트는 즉시 반영(응답성), 실제 네트워크 요청은 공지 단위 직렬 큐에 태운다.
+    applyReactionDelta(noticeId, emoji, dir);
+    reactionInFlightRef.current.add(key);
+    const run = async () => {
+      try {
+        // 삭제 시 이미 없는 리액션이어도 서버는 200 + 현재 상태를 응답하므로 동기화로 자연 처리된다.
+        const res = isReacted
+          ? await removeNoticeReaction(crewId, noticeId, emoji)
+          : await addNoticeReaction(crewId, noticeId, emoji);
+        const { my_reactions, reaction_counts } = res.data;
+        syncNoticeReaction(noticeId, my_reactions, reaction_counts);
+      } catch (err) {
+        // 실패 시 적용한 델타를 그대로 되돌린다(롤백).
+        applyReactionDelta(noticeId, emoji, dir === 1 ? -1 : 1);
+        const code = isAxiosError<ErrorResponse>(err) ? err.response?.data?.code : undefined;
+        if (code === ERROR_CODE.REACTION_NOT_ALLOWED) {
+          showToast('이 공지에는 리액션을 남길 수 없어요.');
+        } else if (code === ERROR_CODE.INVALID_REACTION_TYPE) {
+          showToast('사용할 수 없는 이모지예요.');
+        } else {
+          showToast('리액션 처리에 실패했어요. 잠시 후 다시 시도해주세요.');
+        }
+      } finally {
+        reactionInFlightRef.current.delete(key);
+      }
+    };
+    // 같은 공지의 직전 요청이 끝난 뒤 실행(성공·실패 모두 다음으로 진행).
+    const prev = reactionQueueRef.current.get(noticeId) ?? Promise.resolve();
+    reactionQueueRef.current.set(noticeId, prev.then(run, run));
   };
 
   if (isLoading) {
@@ -285,6 +367,8 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
                       key={emoji}
                       type="button"
                       onClick={() => handleReaction(notice.notice_id, emoji)}
+                      aria-pressed={isReacted}
+                      aria-label={`${emoji} 반응 ${count}개`}
                       className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs border transition-colors ${
                         isReacted
                           ? 'bg-primary-green/10 border-primary-green/30 text-text-primary'
@@ -335,6 +419,13 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
         selectedEmojis={pickerNotice?.my_reactions ?? []}
       />
 
+      {/* 리액션 에러 안내 토스트 */}
+      <Toast
+        message={toastMessage}
+        isOpen={isToastOpen}
+        onClose={() => setIsToastOpen(false)}
+      />
+
       {/* 공지 작성 / 수정 모달 */}
       <Modal
         isOpen={modalOpen}
@@ -377,6 +468,11 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
               className="w-full px-3 py-2 text-sm border border-text-secondary/20 rounded-button focus:outline-none focus:border-primary-green bg-transparent text-text-primary placeholder:text-text-secondary/50 resize-none"
             />
           </div>
+          {formError && (
+            <p role="alert" className="text-xs font-medium text-red-500">
+              {formError}
+            </p>
+          )}
           <div className="flex gap-2">
             <Button variant="outline" size="md" onClick={closeModal} fullWidth>
               취소
