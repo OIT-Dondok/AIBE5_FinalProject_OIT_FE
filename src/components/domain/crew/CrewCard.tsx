@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Calendar } from 'lucide-react';
 import type { CrewListItem, CrewStatus, CrewCategory } from '@/types/domain';
-import { CATEGORY_EMOJI } from '@/components/domain/feed/feedItemMeta';
+import { CATEGORY_EMOJI } from '@/constants/crew';
 
 const CATEGORY_BG: Record<CrewCategory, string> = {
   MORNING: 'bg-orange-50',

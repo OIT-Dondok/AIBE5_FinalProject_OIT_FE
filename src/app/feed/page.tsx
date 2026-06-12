@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { isAxiosError } from 'axios';
+import { Loader2 } from 'lucide-react';
 
 import { Header } from '@/components/common/Header';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -10,31 +12,122 @@ import { FeedCrewFilter } from '@/components/domain/feed/FeedCrewFilter';
 import { FeedItem } from '@/components/domain/feed/FeedItem';
 import { FeedSkeletonList } from '@/components/domain/feed/FeedItemSkeleton';
 import { FeedPeriodCard } from '@/components/domain/feed/FeedPeriodCard';
-import { MOCK_FEED_ITEMS, MOCK_FEED_PERIOD, MOCK_MY_CREWS } from '@/mocks/data/feed';
-import type { FeedPeriod } from '@/mocks/data/feed';
+import { getFeed } from '@/services/feed';
+import type { AvailableCrew, FeedItem as FeedItemType, FeedPeriod } from '@/types/domain';
+import { ERROR_CODE } from '@/types/common';
+import type { ErrorResponse } from '@/types/common';
 
 export default function FeedPage() {
   const router = useRouter();
   const [selectedCrewId, setSelectedCrewId] = useState<number | null>(null);
-  const [period, setPeriod] = useState<FeedPeriod>(MOCK_FEED_PERIOD);
+  // null = 전체 기간(날짜 필터 없음). 달력에서 선택 시 from/to 적용
+  const [period, setPeriod] = useState<FeedPeriod | null>(null);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  // TODO: API - 피드 fetch 로딩 상태로 교체 (true면 스켈레톤 노출)
-  const isLoading = false;
 
-  // TODO: API - 내 가입 크루 목록을 GET /me/crews 응답으로 교체 (필터 칩 + 가입 여부 판단)
-  const hasCrews = MOCK_MY_CREWS.length > 0;
+  const [items, setItems] = useState<FeedItemType[]>([]);
+  const [availableCrews, setAvailableCrews] = useState<AvailableCrew[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [accessDenied, setAccessDenied] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
-  // TODO: API - MOCK_FEED_ITEMS를 GET /feeds?crewId={selectedCrewId}&startDate={}&endDate={} 응답으로 교체.
-  //            아래 필터/정렬(최신순)은 서버 쿼리 파라미터·정렬로 이관 예정.
-  const filteredItems = MOCK_FEED_ITEMS.filter((item) => {
-    if (selectedCrewId !== null && item.crew_id !== selectedCrewId) return false;
-    const certDate = item.certified_at.substring(0, 10);
-    if (certDate < period.start_date || certDate > period.end_date) return false;
-    return true;
-  }).sort(
-    // 최신 인증부터 노출 (certified_at 내림차순)
-    (a, b) => b.certified_at.localeCompare(a.certified_at),
+  // 무한 스크롤: 동시 호출 가드 + 옵저버 인스턴스
+  const isFetchingMoreRef = useRef(false);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  // 필터 변경(또는 재시도)마다 증가. 응답 도착 시 epoch가 바뀌었으면 stale 응답으로 보고 폐기한다.
+  const requestEpochRef = useRef(0);
+
+  // cursor가 있으면 다음 페이지 append, 없으면 첫 페이지 조회
+  const fetchFeed = useCallback(
+    async (cursor?: string) => {
+      const epoch = requestEpochRef.current;
+      try {
+        const { data } = await getFeed({
+          crew_id: selectedCrewId ?? undefined,
+          from: period?.start_date,
+          to: period?.end_date,
+          cursor,
+        });
+        // 응답 도착 사이 필터가 바뀌었으면(=다른 쿼리) stale 응답이므로 폐기한다.
+        if (epoch !== requestEpochRef.current) return;
+        // 서버가 server_time + mission_log_id 기준 최신순 정렬 → 그대로 append
+        setItems((prev) => (cursor ? [...prev, ...data.feed_items] : data.feed_items));
+        // available_crews는 호출자 참여 크루 목록(페이지네이션 중 불변) → 첫 페이지에서만 갱신
+        if (!cursor) setAvailableCrews(data.available_crews);
+        setNextCursor(data.next_cursor);
+      } catch (err) {
+        if (epoch !== requestEpochRef.current) return;
+        const code = isAxiosError<ErrorResponse>(err) ? err.response?.data?.code : undefined;
+        if (cursor) {
+          // 추가 로딩(cursor) 실패. 기존 목록은 그대로 유지한다.
+          // INVALID_CURSOR는 커서 자체가 무효이므로 next_cursor를 비워
+          // 센티넬을 해제하고 같은 커서로의 재요청 루프를 막는다(=페이지네이션 종료).
+          // 그 외(네트워크 일시 오류·5xx 등)는 재시도 가능하므로 커서를 유지해,
+          // 다음 스크롤로 센티넬이 재진입하면 같은 커서로 다시 시도한다.
+          if (code === ERROR_CODE.INVALID_CURSOR) setNextCursor(null);
+          return;
+        }
+        if (code === ERROR_CODE.CREW_ACCESS_DENIED) {
+          setAccessDenied(true);
+        } else {
+          setHasError(true);
+        }
+      }
+    },
+    [selectedCrewId, period],
   );
+
+  // 크루/기간 필터 변경(또는 재시도) 시 처음부터 다시 조회
+  useEffect(() => {
+    // epoch를 올려 in-flight 요청(첫 페이지·loadMore 모두)을 무효화한다.
+    const epoch = (requestEpochRef.current += 1);
+    const load = async () => {
+      setIsLoading(true);
+      setAccessDenied(false);
+      setHasError(false);
+      setItems([]);
+      setNextCursor(null);
+      await fetchFeed();
+      if (epoch === requestEpochRef.current) setIsLoading(false);
+    };
+    load();
+  }, [fetchFeed, reloadKey]);
+
+  // 다음 페이지 로드. ref 가드로 옵저버의 연속 콜백에 의한 중복 호출을 막는다.
+  const handleLoadMore = useCallback(async () => {
+    if (!nextCursor || isFetchingMoreRef.current) return;
+    isFetchingMoreRef.current = true;
+    setIsLoadingMore(true);
+    await fetchFeed(nextCursor);
+    setIsLoadingMore(false);
+    isFetchingMoreRef.current = false;
+  }, [nextCursor, fetchFeed]);
+
+  // 콜백 ref가 stale 클로저를 잡지 않도록 항상 최신 handleLoadMore를 가리킨다.
+  const handleLoadMoreRef = useRef(handleLoadMore);
+  useEffect(() => {
+    handleLoadMoreRef.current = handleLoadMore;
+  }, [handleLoadMore]);
+
+  // 하단 센티넬 DOM이 마운트되는 시점에 옵저버를 부착한다(콜백 ref).
+  // useEffect 방식은 소프트 내비게이션 시 노드 부착/effect 실행 타이밍이 어긋나 옵저버가
+  // 안 붙는 경우가 있어, 노드 생명주기에 직접 묶이는 콜백 ref로 부착한다.
+  const sentinelRef = useCallback((node: HTMLDivElement | null) => {
+    observerRef.current?.disconnect();
+    observerRef.current = null;
+    if (!node) return;
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) handleLoadMoreRef.current();
+      },
+      { rootMargin: '200px' },
+    );
+    observerRef.current.observe(node);
+  }, []);
+
+  const hasCrews = availableCrews.length > 0;
 
   return (
     <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
@@ -43,7 +136,7 @@ export default function FeedPage() {
 
         {/* 크루 필터 칩 */}
         <FeedCrewFilter
-          crews={MOCK_MY_CREWS}
+          crews={availableCrews}
           selectedCrewId={selectedCrewId}
           onSelect={setSelectedCrewId}
         />
@@ -64,56 +157,91 @@ export default function FeedPage() {
                 setPeriod(newPeriod);
                 setIsCalendarOpen(false);
               }}
+              onClear={() => {
+                setPeriod(null);
+                setIsCalendarOpen(false);
+              }}
               onClose={() => setIsCalendarOpen(false)}
             />
           )}
 
           {/* 피드 목록 (필터/기간 변경 시 key 변경으로 재진입 애니메이션) */}
           <div
-            key={`${selectedCrewId ?? 'all'}-${period.start_date}-${period.end_date}`}
+            key={`${selectedCrewId ?? 'all'}-${period?.start_date ?? ''}-${period?.end_date ?? ''}`}
             aria-busy={isLoading}
             className="flex flex-col gap-4"
           >
-          {isLoading ? (
-            <FeedSkeletonList count={3} />
-          ) : !hasCrews ? (
-            // 케이스 1: 가입한 크루가 없음
-            <EmptyState
-              icon="🫥"
-              title="아직 가입한 크루가 없어요"
-              description="크루에 가입하고 인증을 시작해보세요"
-              actionButtonText="크루 둘러보기"
-              onActionClick={() => router.push('/crews')}
-            />
-          ) : filteredItems.length === 0 ? (
-            selectedCrewId !== null ? (
-              // 케이스 2: 특정 크루 필터인데 이 기간에 결과 없음
+            {isLoading ? (
+              <FeedSkeletonList count={3} />
+            ) : hasError ? (
+              // 조회 실패
               <EmptyState
-                icon="📭"
-                title="이 크루는 이 기간에 인증 내역이 없어요"
-                description="다른 크루를 보거나 기간을 바꿔보세요"
+                icon="⚠️"
+                title="피드를 불러오지 못했어요"
+                description="잠시 후 다시 시도해주세요"
+                actionButtonText="다시 시도"
+                onActionClick={() => setReloadKey((k) => k + 1)}
+              />
+            ) : accessDenied ? (
+              // 참여하지 않는 크루를 필터링한 경우
+              <EmptyState
+                icon="🔒"
+                title="이 크루의 피드는 볼 수 없어요"
+                description="참여 중인 크루의 인증만 조회할 수 있어요"
                 actionButtonText="전체 크루 보기"
                 onActionClick={() => setSelectedCrewId(null)}
               />
-            ) : (
-              // 케이스 3: 전체 크루인데 이 기간에 결과 없음
+            ) : !hasCrews ? (
+              // 가입한 크루가 없음
               <EmptyState
-                icon="📭"
-                title="이 기간에 인증 내역이 없어요"
-                description="기간을 바꿔서 다시 확인해보세요"
-                actionButtonText="기간 변경"
-                onActionClick={() => setIsCalendarOpen(true)}
+                icon="🫥"
+                title="아직 가입한 크루가 없어요"
+                description="크루에 가입하고 인증을 시작해보세요"
+                actionButtonText="크루 둘러보기"
+                onActionClick={() => router.push('/crews')}
               />
-            )
-          ) : (
-            filteredItems.map((item) => (
-              <FeedItem key={item.feed_id} item={item} />
-            ))
-          )}
+            ) : items.length === 0 ? (
+              selectedCrewId !== null ? (
+                // 특정 크루 필터인데 결과 없음
+                <EmptyState
+                  icon="📭"
+                  title="이 크루는 인증 내역이 없어요"
+                  description="다른 크루를 보거나 기간을 바꿔보세요"
+                  actionButtonText="전체 크루 보기"
+                  onActionClick={() => setSelectedCrewId(null)}
+                />
+              ) : (
+                // 전체 크루인데 결과 없음
+                <EmptyState
+                  icon="📭"
+                  title="아직 인증 내역이 없어요"
+                  description="기간을 바꿔서 다시 확인해보세요"
+                  actionButtonText="기간 변경"
+                  onActionClick={() => setIsCalendarOpen(true)}
+                />
+              )
+            ) : (
+              <>
+                {items.map((item) => (
+                  <FeedItem key={item.mission_log_id} item={item} />
+                ))}
+                {/* 무한 스크롤 센티넬 (다음 페이지가 있을 때만) */}
+                {nextCursor && (
+                  <div
+                    ref={sentinelRef}
+                    aria-hidden="true"
+                    className="py-3 flex items-center justify-center"
+                  >
+                    {isLoadingMore && (
+                      <Loader2 size={20} className="animate-spin text-text-secondary/60" />
+                    )}
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
-
     </main>
   );
 }

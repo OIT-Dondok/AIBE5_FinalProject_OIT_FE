@@ -1,9 +1,10 @@
 "use client";
 
-import type { MyCrewItem } from '@/mocks/data/feed';
+import type { AvailableCrew } from '@/types/domain';
 
 interface FeedCrewFilterProps {
-  crews: MyCrewItem[];
+  /** 호출자 참여 크루 목록 (GET /api/feed available_crews). "전체 크루" 칩은 이 컴포넌트가 구성 */
+  crews: AvailableCrew[];
   selectedCrewId: number | null;
   onSelect: (crewId: number | null) => void;
 }
@@ -35,7 +36,7 @@ export function FeedCrewFilter({ crews, selectedCrewId, onSelect }: FeedCrewFilt
               : 'bg-card border border-text-secondary/20 text-text-secondary hover:bg-text-secondary/5'
           }`}
         >
-          {crew.crew_title}
+          {crew.crew_name}
         </button>
       ))}
     </div>

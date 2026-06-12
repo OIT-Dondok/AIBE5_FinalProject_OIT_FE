@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
-import type { FeedItem as FeedItemType } from '@/mocks/data/feed';
+import type { FeedItem as FeedItemType } from '@/types/domain';
 import { FeedCertImage } from '@/components/domain/feed/FeedCertImage';
 
 interface FeedImageLightboxProps {
@@ -49,9 +49,8 @@ export function FeedImageLightbox({ item, onClose }: FeedImageLightboxProps) {
       {/* 확대 이미지 — 카드와 동일한 FeedCertImage 사용 */}
       <div onClick={(e) => e.stopPropagation()} className="w-full max-w-[400px]">
         <FeedCertImage
-          category={item.category}
           imageUrl={item.image_url}
-          alt={`${item.nickname}님의 ${item.crew_title} 인증 이미지`}
+          alt={`${item.nickname}님의 ${item.crew_name} 인증 이미지`}
           className="shadow-2xl"
         />
       </div>
