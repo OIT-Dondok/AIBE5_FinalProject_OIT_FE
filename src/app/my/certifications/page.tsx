@@ -37,13 +37,6 @@ const STATUS_CONFIG: Record<CertificationStatus, StatusMeta> = {
 
 type StatusFilter = "ALL" | "APPROVED" | "REJECTED" | "PENDING";
 
-const STATUS_TABS: { label: string; value: StatusFilter }[] = [
-  { label: "전체", value: "ALL" },
-  { label: "승인", value: "APPROVED" },
-  { label: "거절", value: "REJECTED" },
-  { label: "검토중", value: "PENDING" },
-];
-
 function matchesStatusFilter(status: CertificationStatus, filter: StatusFilter): boolean {
   if (filter === "ALL") return true;
   if (filter === "APPROVED") return status === "SUCCESS";
@@ -118,10 +111,9 @@ function StatusBadge({ status }: { status: CertificationStatus }) {
 }
 
 function CrewAvatar({ crewName, crewId }: { crewName: string; crewId: number }) {
-  const initial = crewName.charAt(0);
   return (
     <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${getAvatarClass(crewId)}`}>
-      {initial}
+      {crewName.charAt(0)}
     </div>
   );
 }
@@ -130,10 +122,7 @@ function CertificationCard({ item }: { item: FeedItem }) {
   const { description } = STATUS_CONFIG[item.certification_status];
   return (
     <div className="flex items-center gap-3 bg-card rounded-card shadow-card border border-text-secondary/10 px-4 py-3 animate-feed-in">
-      {/* 왼쪽: 크루명 이니셜 아바타 */}
       <CrewAvatar crewName={item.crew_name} crewId={item.crew_id} />
-
-      {/* 중앙: 닉네임·크루명 / 시간·상태 설명 */}
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
         <p className="text-sm font-semibold text-text-primary truncate leading-snug">
           {item.nickname}
@@ -149,8 +138,6 @@ function CertificationCard({ item }: { item: FeedItem }) {
           <p className="text-xs text-text-secondary line-clamp-1 mt-0.5">{item.caption}</p>
         )}
       </div>
-
-      {/* 오른쪽: 상태 배지 */}
       <StatusBadge status={item.certification_status} />
     </div>
   );
@@ -185,70 +172,80 @@ function CardSkeleton() {
   );
 }
 
-// ─── 요약 카드 ────────────────────────────────────────────────
+// ─── 필터 겸 요약 카드 ────────────────────────────────────────
 
-interface SummaryCardItem {
+interface FilterCardDef {
+  filter: StatusFilter;
   label: string;
   count: number;
-  bgClass: string;
+  normalClass: string;
+  activeClass: string;
   countClass: string;
 }
 
-function SummaryCards({ items }: { items: FeedItem[] }) {
+function FilterSummaryCards({
+  items,
+  activeFilter,
+  onSelect,
+}: {
+  items: FeedItem[];
+  activeFilter: StatusFilter;
+  onSelect: (f: StatusFilter) => void;
+}) {
   const approvedCount = items.filter((i) => i.certification_status === "SUCCESS").length;
   const rejectedCount = items.filter((i) => i.certification_status === "FAILED").length;
   const pendingCount = items.filter((i) => i.certification_status === "PENDING_REVIEW").length;
 
-  // TODO: FeedItem에 decision_type 필드 추가 후 자동 승인 카운트 구현 예정
-  // 현재 피드 API 응답에 decision_type 없음 → 자동/수동 구분 불가
-  const autoCount = 0;
-
-  const cards: SummaryCardItem[] = [
+  const cards: FilterCardDef[] = [
     {
+      filter: "ALL",
       label: "전체",
       count: items.length,
-      bgClass: "bg-card border border-text-secondary/10",
+      normalClass: "bg-card border border-text-secondary/10",
+      activeClass: "bg-card border-2 border-text-primary/40",
       countClass: "text-text-primary",
     },
     {
+      filter: "APPROVED",
       label: "승인",
       count: approvedCount,
-      bgClass: "bg-green-50",
+      normalClass: "bg-green-50",
+      activeClass: "bg-green-100 ring-2 ring-green-400",
       countClass: "text-green-600",
     },
     {
+      filter: "REJECTED",
       label: "거절",
       count: rejectedCount,
-      bgClass: "bg-rose-50",
+      normalClass: "bg-rose-50",
+      activeClass: "bg-rose-100 ring-2 ring-rose-400",
       countClass: "text-rose-500",
     },
     {
-      label: "자동",
-      count: autoCount,
-      bgClass: "bg-violet-50",
-      countClass: "text-violet-400",
+      filter: "PENDING",
+      label: "검토중",
+      count: pendingCount,
+      normalClass: "bg-amber-50",
+      activeClass: "bg-amber-100 ring-2 ring-amber-400",
+      countClass: "text-amber-600",
     },
   ];
 
-  // pendingCount가 있으면 전체 카드 아래 작은 텍스트로 표시
   return (
-    <div className="flex flex-col gap-1.5">
-      <div className="grid grid-cols-4 gap-2">
-        {cards.map((card) => (
-          <div
-            key={card.label}
-            className={`flex flex-col items-center justify-center py-3 rounded-xl ${card.bgClass}`}
-          >
-            <span className="text-[10px] text-text-secondary font-medium mb-0.5">{card.label}</span>
-            <span className={`text-xl font-bold leading-none ${card.countClass}`}>{card.count}</span>
-          </div>
-        ))}
-      </div>
-      {pendingCount > 0 && (
-        <p className="text-[11px] text-amber-600 text-center">
-          검토 중 {pendingCount}건은 결과 확정 후 반영돼요
-        </p>
-      )}
+    <div className="grid grid-cols-4 gap-2">
+      {cards.map((card) => (
+        <button
+          key={card.filter}
+          type="button"
+          onClick={() => onSelect(card.filter)}
+          className={`flex flex-col items-center justify-center py-3 rounded-xl transition-all ${
+            activeFilter === card.filter ? card.activeClass : card.normalClass
+          }`}
+        >
+          <span className="text-[10px] text-text-secondary font-medium mb-0.5">{card.label}</span>
+          <span className={`text-xl font-bold leading-none ${card.countClass}`}>{card.count}</span>
+        </button>
+      ))}
     </div>
   );
 }
@@ -262,6 +259,11 @@ const ALL_CREW_ID = -1;
 export default function CertificationsPage() {
   const user = useAuthStore((state) => state.user);
 
+  // Zustand persist는 hydration 이후 localStorage에서 값을 복원한다.
+  // isAuthReady가 true가 되기 전(마운트 전)에 API를 호출하면 user가 null이어서
+  // member_uuid 필터링이 동작하지 않으므로, 마운트 후 ready 상태가 된 뒤 호출한다.
+  const [isAuthReady, setIsAuthReady] = useState(false);
+
   const [availableCrews, setAvailableCrews] = useState<AvailableCrew[]>([]);
   const [items, setItems] = useState<FeedItem[]>([]);
   const [selectedCrewId, setSelectedCrewId] = useState<number>(ALL_CREW_ID);
@@ -270,6 +272,10 @@ export default function CertificationsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setIsAuthReady(true);
+  }, []);
 
   const loadInitial = useCallback(
     async (crewId: number) => {
@@ -305,9 +311,11 @@ export default function CertificationsPage() {
     [user],
   );
 
+  // isAuthReady가 true가 된 후에만 API 호출 — user가 확정된 상태에서 필터링
   useEffect(() => {
+    if (!isAuthReady) return;
     void loadInitial(selectedCrewId);
-  }, [selectedCrewId, loadInitial]);
+  }, [isAuthReady, selectedCrewId, loadInitial]);
 
   const handleCrewChange = (crewId: number) => {
     setSelectedCrewId(crewId);
@@ -354,33 +362,14 @@ export default function CertificationsPage() {
       <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-28">
         <Header title="인증 이력" showBackButton />
 
-        {/* 필터 영역 — sticky */}
-        <div className="sticky top-16 z-30 bg-background/90 backdrop-blur-sm border-b border-text-secondary/5">
-          {/* 상태 필터 탭 */}
-          <div className="flex gap-1.5 px-4 pt-3 pb-2">
-            {STATUS_TABS.map((tab) => (
-              <button
-                key={tab.value}
-                type="button"
-                onClick={() => setStatusFilter(tab.value)}
-                className={`shrink-0 px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
-                  statusFilter === tab.value
-                    ? "bg-text-primary text-white"
-                    : "bg-card text-text-secondary border border-text-secondary/15 hover:bg-text-secondary/5"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* 크루 필터 탭 */}
-          {availableCrews.length > 0 && (
-            <div className="flex gap-2 px-4 pb-3 overflow-x-auto no-scrollbar">
+        {/* 크루 필터 — sticky (데이터 로드 후 표시) */}
+        {availableCrews.length > 0 && (
+          <div className="sticky top-16 z-30 bg-background/90 backdrop-blur-sm border-b border-text-secondary/5">
+            <div className="flex gap-2 px-4 py-3 overflow-x-auto no-scrollbar">
               <button
                 type="button"
                 onClick={() => handleCrewChange(ALL_CREW_ID)}
-                className={`shrink-0 px-3.5 py-1 rounded-full text-xs font-semibold transition-colors ${
+                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
                   selectedCrewId === ALL_CREW_ID
                     ? "bg-primary-green text-white"
                     : "bg-card text-text-secondary border border-text-secondary/15"
@@ -393,7 +382,7 @@ export default function CertificationsPage() {
                   key={crew.crew_id}
                   type="button"
                   onClick={() => handleCrewChange(crew.crew_id)}
-                  className={`shrink-0 px-3.5 py-1 rounded-full text-xs font-semibold transition-colors ${
+                  className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
                     selectedCrewId === crew.crew_id
                       ? "bg-primary-green text-white"
                       : "bg-card text-text-secondary border border-text-secondary/15"
@@ -403,40 +392,58 @@ export default function CertificationsPage() {
                 </button>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* 콘텐츠 */}
         <div className="px-4 pt-4 flex flex-col gap-4">
-          {/* 요약 카드 — 로딩 완료 후 표시 */}
-          {!isLoading && !errorMessage && <SummaryCards items={items} />}
-
           {isLoading ? (
-            Array.from({ length: 5 }).map((_, i) => <CardSkeleton key={i} />)
+            <>
+              {/* 요약 카드 스켈레톤 */}
+              <div className="grid grid-cols-4 gap-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-16 rounded-xl" />
+                ))}
+              </div>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <CardSkeleton key={i} />
+              ))}
+            </>
           ) : errorMessage ? (
             <div className="mt-20 flex flex-col items-center gap-2 text-text-secondary">
               <ClipboardCheck size={40} className="opacity-30" />
               <p className="text-sm">{errorMessage}</p>
             </div>
-          ) : filteredCount === 0 ? (
-            <div className="mt-20 flex flex-col items-center gap-2 text-text-secondary">
-              <ClipboardCheck size={40} className="opacity-30" />
-              <p className="text-sm font-medium">인증 이력이 없어요</p>
-            </div>
           ) : (
             <>
-              {filteredGroups.map((group) => (
-                <DateGroupSection key={group.dateKey} group={group} />
-              ))}
-              {nextCursor && (
-                <button
-                  type="button"
-                  onClick={handleLoadMore}
-                  disabled={isLoadingMore}
-                  className="w-full py-3 rounded-button text-sm font-semibold text-text-secondary bg-card border border-text-secondary/15 hover:bg-text-secondary/5 active:bg-text-secondary/10 disabled:opacity-50 transition-colors"
-                >
-                  {isLoadingMore ? "불러오는 중..." : "더 보기"}
-                </button>
+              {/* 필터 겸 요약 카드 */}
+              <FilterSummaryCards
+                items={items}
+                activeFilter={statusFilter}
+                onSelect={setStatusFilter}
+              />
+
+              {filteredCount === 0 ? (
+                <div className="mt-12 flex flex-col items-center gap-2 text-text-secondary">
+                  <ClipboardCheck size={40} className="opacity-30" />
+                  <p className="text-sm font-medium">인증 이력이 없어요</p>
+                </div>
+              ) : (
+                <>
+                  {filteredGroups.map((group) => (
+                    <DateGroupSection key={group.dateKey} group={group} />
+                  ))}
+                  {nextCursor && (
+                    <button
+                      type="button"
+                      onClick={handleLoadMore}
+                      disabled={isLoadingMore}
+                      className="w-full py-3 rounded-button text-sm font-semibold text-text-secondary bg-card border border-text-secondary/15 hover:bg-text-secondary/5 active:bg-text-secondary/10 disabled:opacity-50 transition-colors"
+                    >
+                      {isLoadingMore ? "불러오는 중..." : "더 보기"}
+                    </button>
+                  )}
+                </>
               )}
             </>
           )}
