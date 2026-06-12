@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar } from 'lucide-react';
+import { Calendar, ChevronDown } from 'lucide-react';
 import { Header } from '@/components/common/Header';
 import { Chip } from '@/components/common/Chip';
 import { Skeleton } from '@/components/common/Skeleton';
@@ -32,6 +32,20 @@ const TAB_TO_MY_STATUS: Record<TabFilter, MyStatusParam> = {
 function applyTabFilter(items: MyCrew[], tab: TabFilter): MyCrew[] {
   if (tab === 'ACTIVE') return items.filter((c) => c.status === 'ACTIVE');
   if (tab === 'CLOSED') return items.filter((c) => c.status === 'CLOSED' || c.status === 'CANCELLED');
+  return items;
+}
+
+type RoleFilter = 'ALL' | 'HOST' | 'MEMBER';
+
+const ROLE_OPTIONS: { label: string; value: RoleFilter }[] = [
+  { label: '전체', value: 'ALL' },
+  { label: '방장', value: 'HOST' },
+  { label: '크루원', value: 'MEMBER' },
+];
+
+function applyRoleFilter(items: MyCrew[], role: RoleFilter): MyCrew[] {
+  if (role === 'HOST') return items.filter((c) => c.my_role === 'HOST');
+  if (role === 'MEMBER') return items.filter((c) => c.my_role === 'MEMBER');
   return items;
 }
 
@@ -149,6 +163,7 @@ function MyCrewCardSkeleton() {
 
 export default function MyCrewsPage() {
   const [activeTab, setActiveTab] = useState<TabFilter>('ALL');
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>('ALL');
   const [crews, setCrews] = useState<MyCrew[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -207,17 +222,40 @@ export default function MyCrewsPage() {
           ))}
         </div>
 
+        {/* 카운트 + 역할 드롭다운 */}
+        <div className="px-5 pb-2 flex items-center justify-between">
+          <span className="text-xs text-text-secondary">
+            총 <span className="font-bold text-text-primary">{applyRoleFilter(crews, roleFilter).length}</span>개의 크루
+          </span>
+          <div className="relative">
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value as RoleFilter)}
+              className="appearance-none text-xs font-semibold text-text-primary bg-card border border-text-secondary/20 rounded-xl pl-3 pr-7 py-1.5 cursor-pointer focus:outline-none focus:border-primary-green transition-colors"
+            >
+              {ROLE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+            <ChevronDown
+              size={12}
+              strokeWidth={2.5}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none"
+            />
+          </div>
+        </div>
+
         {/* 목록 */}
         <div className="px-5 flex flex-col gap-3">
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => <MyCrewCardSkeleton key={i} />)
-          ) : crews.length === 0 ? (
+          ) : applyRoleFilter(crews, roleFilter).length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
               <span className="text-4xl">🫂</span>
               <p className="text-sm text-text-secondary font-medium">참여 중인 크루가 없어요</p>
             </div>
           ) : (
-            crews.map((crew) => <MyCrewCard key={crew.crew_id} crew={crew} />)
+            applyRoleFilter(crews, roleFilter).map((crew) => <MyCrewCard key={crew.crew_id} crew={crew} />)
           )}
         </div>
 
