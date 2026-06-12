@@ -484,6 +484,18 @@ export interface NoticeReactionResponse {
   reaction_counts: ReactionCounts;
 }
 
+// GET /api/crews/{crewId}/notices/{noticeId}/comments items[]
+export interface NoticeComment {
+  comment_id: number;
+  notice_id: number;
+  author_member_uuid: string;
+  author_nickname: string;
+  content: string;
+  created_at: string;
+}
+
+export type NoticeCommentsResponse = CursorPageResponse<NoticeComment>;
+
 
 // ════════════════════════════════════════════════════════════
 // § 5.3 미션 인증

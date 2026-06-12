@@ -6,8 +6,11 @@ import type {
   ParticipantApplyResponse,
   ParticipantCancelResponse,
   CrewMembersResponse,
+  CrewNotice,
   CrewNoticesResponse,
   NoticeReactionResponse,
+  NoticeComment,
+  NoticeCommentsResponse,
   MyCrewsResponse,
 } from '@/types/domain';
 
@@ -78,6 +81,15 @@ export const removeNoticeReaction = (crewId: number, noticeId: number, reactionT
     { params: { reaction_type: reactionType } },
   );
 };
+
+export const getCrewNoticeDetail = (crewId: number, noticeId: number) =>
+  api.get<CrewNotice>(`/crews/${crewId}/notices/${noticeId}`);
+
+export const getNoticeComments = (crewId: number, noticeId: number) =>
+  api.get<NoticeCommentsResponse>(`/crews/${crewId}/notices/${noticeId}/comments`);
+
+export const createNoticeComment = (crewId: number, noticeId: number, data: { content: string }) =>
+  api.post<NoticeComment>(`/crews/${crewId}/notices/${noticeId}/comments`, data);
 
 export const getMyCrew = (myStatus?: 'PENDING' | 'LOCKED' | 'ALL', cursor?: string, signal?: AbortSignal) => {
   return api.get<MyCrewsResponse>('/me/crews', {
