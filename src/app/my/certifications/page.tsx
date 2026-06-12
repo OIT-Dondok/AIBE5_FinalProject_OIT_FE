@@ -185,6 +185,74 @@ function CardSkeleton() {
   );
 }
 
+// ─── 요약 카드 ────────────────────────────────────────────────
+
+interface SummaryCardItem {
+  label: string;
+  count: number;
+  bgClass: string;
+  countClass: string;
+}
+
+function SummaryCards({ items }: { items: FeedItem[] }) {
+  const approvedCount = items.filter((i) => i.certification_status === "SUCCESS").length;
+  const rejectedCount = items.filter((i) => i.certification_status === "FAILED").length;
+  const pendingCount = items.filter((i) => i.certification_status === "PENDING_REVIEW").length;
+
+  // TODO: FeedItem에 decision_type 필드 추가 후 자동 승인 카운트 구현 예정
+  // 현재 피드 API 응답에 decision_type 없음 → 자동/수동 구분 불가
+  const autoCount = 0;
+
+  const cards: SummaryCardItem[] = [
+    {
+      label: "전체",
+      count: items.length,
+      bgClass: "bg-card border border-text-secondary/10",
+      countClass: "text-text-primary",
+    },
+    {
+      label: "승인",
+      count: approvedCount,
+      bgClass: "bg-green-50",
+      countClass: "text-green-600",
+    },
+    {
+      label: "거절",
+      count: rejectedCount,
+      bgClass: "bg-rose-50",
+      countClass: "text-rose-500",
+    },
+    {
+      label: "자동",
+      count: autoCount,
+      bgClass: "bg-violet-50",
+      countClass: "text-violet-400",
+    },
+  ];
+
+  // pendingCount가 있으면 전체 카드 아래 작은 텍스트로 표시
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="grid grid-cols-4 gap-2">
+        {cards.map((card) => (
+          <div
+            key={card.label}
+            className={`flex flex-col items-center justify-center py-3 rounded-xl ${card.bgClass}`}
+          >
+            <span className="text-[10px] text-text-secondary font-medium mb-0.5">{card.label}</span>
+            <span className={`text-xl font-bold leading-none ${card.countClass}`}>{card.count}</span>
+          </div>
+        ))}
+      </div>
+      {pendingCount > 0 && (
+        <p className="text-[11px] text-amber-600 text-center">
+          검토 중 {pendingCount}건은 결과 확정 후 반영돼요
+        </p>
+      )}
+    </div>
+  );
+}
+
 // ─── 상수 ────────────────────────────────────────────────────
 
 const ALL_CREW_ID = -1;
@@ -340,6 +408,9 @@ export default function CertificationsPage() {
 
         {/* 콘텐츠 */}
         <div className="px-4 pt-4 flex flex-col gap-4">
+          {/* 요약 카드 — 로딩 완료 후 표시 */}
+          {!isLoading && !errorMessage && <SummaryCards items={items} />}
+
           {isLoading ? (
             Array.from({ length: 5 }).map((_, i) => <CardSkeleton key={i} />)
           ) : errorMessage ? (
