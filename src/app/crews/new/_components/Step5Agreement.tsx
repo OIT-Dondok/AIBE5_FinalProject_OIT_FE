@@ -17,6 +17,7 @@ interface Step5AgreementProps {
   agreements: AgreementKeys;
   onAgreementChange: (key: keyof AgreementKeys, value: boolean) => void;
   onSubmit: () => void;
+  onBack: () => void;
   isSubmitting: boolean;
 }
 
@@ -52,6 +53,7 @@ export default function Step5Agreement({
   agreements,
   onAgreementChange,
   onSubmit,
+  onBack,
   isSubmitting,
 }: Step5AgreementProps) {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -119,16 +121,27 @@ export default function Step5Agreement({
         </span>
       </button>
 
-      <Button
-        variant="primary-green"
-        size="lg"
-        fullWidth
-        onClick={handleSubmitClick}
-        disabled={!allAgreed}
-        isLoading={isSubmitting}
-      >
-        크루 생성하기
-      </Button>
+      <div className="flex gap-3">
+        <Button
+          variant="outline"
+          size="lg"
+          onClick={onBack}
+          disabled={isSubmitting}
+          className="w-24"
+        >
+          이전
+        </Button>
+        <Button
+          variant="primary-green"
+          size="lg"
+          fullWidth
+          onClick={handleSubmitClick}
+          disabled={!allAgreed}
+          isLoading={isSubmitting}
+        >
+          크루 생성하기
+        </Button>
+      </div>
 
       <Modal
         isOpen={isConfirmOpen}

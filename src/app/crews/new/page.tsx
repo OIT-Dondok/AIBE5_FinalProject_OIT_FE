@@ -442,6 +442,7 @@ export default function CrewNewPage() {
               }))
             }
             onSubmit={handleSubmit}
+            onBack={() => setCurrentStep(4)}
             isSubmitting={isSubmitting}
           />
         );
