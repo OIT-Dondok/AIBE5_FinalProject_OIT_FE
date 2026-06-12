@@ -65,12 +65,12 @@ export function ProfileSettingsSheet() {
 
         try {
             await logout();
+        } catch {
+            alert("로그아웃에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+        } finally {
             clearAuth();
             close();
             router.replace("/login");
-        } catch {
-            alert("로그아웃에 실패했습니다. 잠시 후 다시 시도해 주세요.");
-            setIsLoggingOut(false);
         }
     };
 
