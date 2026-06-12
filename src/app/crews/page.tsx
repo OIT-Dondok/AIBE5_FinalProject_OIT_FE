@@ -169,6 +169,7 @@ export default function CrewsPage() {
           </span>
           <div className="relative">
             <select
+              aria-label="크루 상태 필터"
               value={activeStatus}
               onChange={(e) => setActiveStatus(e.target.value as StatusFilter)}
               className="appearance-none text-xs font-semibold text-text-primary bg-card border border-text-secondary/20 rounded-xl pl-3 pr-7 py-1.5 cursor-pointer focus:outline-none focus:border-primary-green transition-colors"

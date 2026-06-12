@@ -169,9 +169,9 @@ export default function MyCrewsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  const fetchCrews = useCallback(async (tab: TabFilter, cursor?: string) => {
+  const fetchCrews = useCallback(async (tab: TabFilter, cursor?: string, signal?: AbortSignal) => {
     try {
-      const res = await getMyCrew(TAB_TO_MY_STATUS[tab], cursor);
+      const res = await getMyCrew(TAB_TO_MY_STATUS[tab], cursor, signal);
       return res.data;
     } catch {
       return null;
@@ -179,17 +179,24 @@ export default function MyCrewsPage() {
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     setIsLoading(true);
     setCrews([]);
     setNextCursor(null);
 
-    void fetchCrews(activeTab).then((data) => {
+    void fetchCrews(activeTab, undefined, controller.signal).then((data) => {
+      if (controller.signal.aborted) return;
       if (data) {
         setCrews(applyTabFilter(data.items, activeTab));
         setNextCursor(data.next_cursor);
       }
       setIsLoading(false);
     });
+
+    return () => {
+      controller.abort();
+    };
   }, [activeTab, fetchCrews]);
 
   const handleLoadMore = async () => {
