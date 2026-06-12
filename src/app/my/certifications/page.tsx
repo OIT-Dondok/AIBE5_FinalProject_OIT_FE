@@ -136,9 +136,10 @@ function StatusBadge({ status }: { status: CertificationStatus }) {
 }
 
 function NicknameAvatar({ nickname, crewId }: { nickname: string; crewId: number }) {
+  const displayChar = (nickname && nickname.charAt(0).toUpperCase()) || "?";
   return (
     <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${getAvatarClass(crewId)}`}>
-      {nickname.charAt(0)}
+      {displayChar}
     </div>
   );
 }
@@ -362,6 +363,7 @@ interface InlineFilterBarProps {
   onCrewChange: (crewId: number | null) => void;
   showMyOnly: boolean;
   onToggleMyOnly: () => void;
+  myMemberUuid: string | undefined;
   period: FeedPeriod | null;
   isCalendarOpen: boolean;
   onToggleCalendar: () => void;
@@ -373,6 +375,7 @@ function InlineFilterBar({
   onCrewChange,
   showMyOnly,
   onToggleMyOnly,
+  myMemberUuid,
   period,
   isCalendarOpen,
   onToggleCalendar,
@@ -392,7 +395,8 @@ function InlineFilterBar({
       <button
         type="button"
         onClick={onToggleMyOnly}
-        className={`shrink-0 flex items-center gap-1 h-8 px-3 rounded-lg text-xs font-semibold transition-colors ${
+        disabled={!myMemberUuid}
+        className={`shrink-0 flex items-center gap-1 h-8 px-3 rounded-lg text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
           showMyOnly
             ? "bg-[var(--color-primary-green)] text-white"
             : "bg-card border border-text-secondary/20 text-text-secondary"
@@ -506,13 +510,11 @@ export default function CertificationsPage() {
   };
 
   // 내 인증만 토글 → 상태 필터 → 날짜 그룹핑
-  const baseItems = useMemo(
-    () =>
-      showMyOnly && myMemberUuid
-        ? items.filter((i) => i.member_uuid === myMemberUuid)
-        : items,
-    [items, showMyOnly, myMemberUuid],
-  );
+  const baseItems = useMemo(() => {
+    if (showMyOnly && !myMemberUuid) return [];
+    if (showMyOnly && myMemberUuid) return items.filter((i) => i.member_uuid === myMemberUuid);
+    return items;
+  }, [items, showMyOnly, myMemberUuid]);
 
   const filteredGroups = useMemo(() => {
     const filtered = baseItems.filter((item) =>
@@ -565,6 +567,7 @@ export default function CertificationsPage() {
                 onCrewChange={handleCrewChange}
                 showMyOnly={showMyOnly}
                 onToggleMyOnly={() => setShowMyOnly((v) => !v)}
+                myMemberUuid={myMemberUuid}
                 period={period}
                 isCalendarOpen={isCalendarOpen}
                 onToggleCalendar={() => setIsCalendarOpen((v) => !v)}
