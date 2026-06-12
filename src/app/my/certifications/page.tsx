@@ -87,7 +87,9 @@ function getAvatarClass(crewId: number): string {
 
 function getDateKey(isoString: string): string {
   const d = new Date(isoString);
-  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${day}`;
 }
 
 function formatDateHeader(isoString: string): string {
