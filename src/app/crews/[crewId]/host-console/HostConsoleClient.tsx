@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { Bell, ShieldCheck } from "lucide-react";
 
@@ -33,6 +33,13 @@ export default function HostConsoleClient() {
       ? tabParam
       : "verification"
   );
+
+  useEffect(() => {
+    if (tabParam === "verification" || tabParam === "applications" || tabParam === "notices") {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
+
   const [pendingReviewCount, setPendingReviewCount] = useState(0);
   const [applicationDecisions, setApplicationDecisions] = useState<Record<number, ApplicationDecision>>({});
 
