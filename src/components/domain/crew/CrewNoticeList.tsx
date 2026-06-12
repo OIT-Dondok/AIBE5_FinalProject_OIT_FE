@@ -176,12 +176,12 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
     try {
       await deleteCrewNotice(crewId, noticeId);
       setNotices((prev) => prev.filter((n) => n.notice_id !== noticeId));
-      setDeleteTarget(null);
     } catch {
-      // 모달을 닫아야 toast(z-90)가 모달 백드롭(z-100)에 가리지 않는다.
-      setDeleteTarget(null);
+      // 실패 시 안내. 성공/실패 모두 모달을 닫아 toast(z-90)가 모달 백드롭(z-100)에 가리지 않게 한다.
       showToast('공지를 삭제하지 못했어요. 잠시 후 다시 시도해주세요.');
     } finally {
+      // 성공이든 실패든 삭제 확인 모달은 닫는다.
+      setDeleteTarget(null);
       setIsDeleting(false);
     }
   };
@@ -359,6 +359,8 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
                       key={emoji}
                       type="button"
                       onClick={() => handleReaction(notice.notice_id, emoji)}
+                      aria-pressed={isReacted}
+                      aria-label={`${emoji} 반응 ${count}개`}
                       className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs border transition-colors ${
                         isReacted
                           ? 'bg-primary-green/10 border-primary-green/30 text-text-primary'
