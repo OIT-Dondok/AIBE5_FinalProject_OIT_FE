@@ -168,14 +168,13 @@ export default function MyCrewsPage() {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [crewsError, setCrewsError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
+  // 에러를 caller로 전파 — null 반환 제거
   const fetchCrews = useCallback(async (tab: TabFilter, cursor?: string, signal?: AbortSignal) => {
-    try {
-      const res = await getMyCrew(TAB_TO_MY_STATUS[tab], cursor, signal);
-      return res.data;
-    } catch {
-      return null;
-    }
+    const res = await getMyCrew(TAB_TO_MY_STATUS[tab], cursor, signal);
+    return res.data;
   }, []);
 
   useEffect(() => {
@@ -184,30 +183,39 @@ export default function MyCrewsPage() {
     setIsLoading(true);
     setCrews([]);
     setNextCursor(null);
+    setCrewsError(false);
 
-    void fetchCrews(activeTab, undefined, controller.signal).then((data) => {
-      if (controller.signal.aborted) return;
-      if (data) {
+    void (async () => {
+      try {
+        const data = await fetchCrews(activeTab, undefined, controller.signal);
+        if (controller.signal.aborted) return;
         setCrews(applyTabFilter(data.items, activeTab));
         setNextCursor(data.next_cursor);
+      } catch {
+        if (controller.signal.aborted) return;
+        setCrewsError(true);
+      } finally {
+        if (!controller.signal.aborted) setIsLoading(false);
       }
-      setIsLoading(false);
-    });
+    })();
 
     return () => {
       controller.abort();
     };
-  }, [activeTab, fetchCrews]);
+  }, [activeTab, fetchCrews, retryCount]);
 
   const handleLoadMore = async () => {
     if (!nextCursor || isLoadingMore) return;
     setIsLoadingMore(true);
-    const data = await fetchCrews(activeTab, nextCursor);
-    if (data) {
+    try {
+      const data = await fetchCrews(activeTab, nextCursor);
       setCrews((prev) => [...prev, ...applyTabFilter(data.items, activeTab)]);
       setNextCursor(data.next_cursor);
+    } catch {
+      // load-more 실패는 기존 목록 유지
+    } finally {
+      setIsLoadingMore(false);
     }
-    setIsLoadingMore(false);
   };
 
   return (
@@ -256,6 +264,18 @@ export default function MyCrewsPage() {
         <div className="px-5 flex flex-col gap-3">
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => <MyCrewCardSkeleton key={i} />)
+          ) : crewsError ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-3">
+              <span className="text-4xl">⚠️</span>
+              <p className="text-sm text-text-secondary font-medium text-center">크루 목록을 불러오지 못했어요</p>
+              <button
+                type="button"
+                onClick={() => setRetryCount((c) => c + 1)}
+                className="text-sm font-semibold text-primary-green hover:opacity-75 transition-opacity"
+              >
+                다시 시도
+              </button>
+            </div>
           ) : applyRoleFilter(crews, roleFilter).length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
               <span className="text-4xl">🫂</span>
