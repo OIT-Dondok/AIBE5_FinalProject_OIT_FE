@@ -168,7 +168,7 @@ export function ProfileMenuSections({
           icon: Settings,
           iconBg: "bg-slate-100",
           iconColor: "text-slate-500",
-          title: "호스트 콘솔",
+          title: "방장 운영 콘솔",
           subtitle: "호스트 권한이 있는 크루의 운영 콘솔로 이동",
           badge: hostOperationPendingCount,
           onClick: () => router.push(hostCrewId ? `/crews/${hostCrewId}/host-console` : "/my"),
