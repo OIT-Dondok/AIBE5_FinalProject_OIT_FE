@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar } from 'lucide-react';
 import { Header } from '@/components/common/Header';
+import { Chip } from '@/components/common/Chip';
 import { Skeleton } from '@/components/common/Skeleton';
 import { getMyCrew } from '@/services/crew';
 import { CATEGORY_EMOJI, CATEGORY_BG } from '@/constants/crew';
 import type { MyCrew, CrewStatus } from '@/types/domain';
-import { useEffect } from 'react';
 
 type RoleFilter = 'ALL' | 'HOST' | 'MEMBER';
 
@@ -41,7 +41,7 @@ function MyCrewCard({ crew }: { crew: MyCrew }) {
       onKeyDown={(e) => { if (e.key === 'Enter') router.push(`/crews/${crew.crew_id}`); }}
       className={`bg-card rounded-card p-4 flex flex-col gap-3 border border-text-secondary/10 shadow-card hover:shadow-card-elevated active:scale-[0.985] transition-all duration-200 cursor-pointer ${isClosed ? 'opacity-60' : ''}`}
     >
-      {/* 상단: 썸네일 + 크루명/상태 + 보증금 */}
+      {/* 상단: 썸네일 + 크루명 + 상태/역할 배지 */}
       <div className="flex items-center gap-3">
         <div className={`w-11 h-11 rounded-2xl flex-shrink-0 overflow-hidden shadow-sm ${showImage ? '' : `${categoryBg} flex items-center justify-center text-2xl`}`}>
           {showImage ? (
@@ -57,14 +57,13 @@ function MyCrewCard({ crew }: { crew: MyCrew }) {
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className="text-[15px] font-bold text-text-primary leading-tight truncate mb-1">
+          <p className="text-[15px] font-bold text-text-primary leading-tight truncate mb-1.5">
             {crew.title}
           </p>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1">
-              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${status.dot}`} />
-              <span className={`text-xs font-semibold ${status.text}`}>{status.label}</span>
-            </div>
+          <div className="flex items-center gap-1.5">
+            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${status.dot}`} />
+            <span className={`text-[11px] font-semibold ${status.text}`}>{status.label}</span>
+            <span className="text-text-secondary/30 text-[10px]">·</span>
             <span
               className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
                 crew.my_role === 'HOST'
@@ -76,22 +75,20 @@ function MyCrewCard({ crew }: { crew: MyCrew }) {
             </span>
           </div>
         </div>
-
-        <div className="text-right flex-shrink-0">
-          <p className="text-[15px] font-extrabold text-primary-green leading-tight">
-            {crew.deposit_amount.toLocaleString()}
-            <span className="text-xs font-semibold ml-0.5">원</span>
-          </p>
-          <p className="text-[10px] text-text-secondary mt-0.5 tracking-tight">보증금</p>
-        </div>
       </div>
 
-      {/* 하단: 기간 */}
+      {/* 하단: 기간 + 보증금 */}
       {/* TODO: 정산 API 완료 후 지분율/예상 수익 추가 예정 */}
-      <div className="flex items-center gap-1.5 pt-2.5 border-t border-text-secondary/10">
-        <Calendar size={11} strokeWidth={2} className="text-text-secondary/70" />
-        <span className="text-[11px] text-text-secondary">
-          {formatDate(crew.start_at)} ~ {formatDate(crew.end_at)}
+      <div className="flex items-center justify-between pt-2.5 border-t border-text-secondary/10">
+        <div className="flex items-center gap-1.5">
+          <Calendar size={11} strokeWidth={2} className="text-text-secondary/70" />
+          <span className="text-[11px] text-text-secondary">
+            {formatDate(crew.start_at)} ~ {formatDate(crew.end_at)}
+          </span>
+        </div>
+        <span className="text-[12px] font-bold text-primary-green">
+          {crew.deposit_amount.toLocaleString()}
+          <span className="text-[10px] font-semibold ml-0.5">원</span>
         </span>
       </div>
     </div>
@@ -167,20 +164,16 @@ export default function MyCrewsPage() {
         <Header title="내 크루" showBackButton />
 
         {/* 탭 */}
-        <div className="flex gap-2 px-5 py-4">
+        <div className="mx-5 mt-4 mb-3 flex items-center bg-text-secondary/8 rounded-2xl p-1.5 gap-1">
           {TABS.map((tab) => (
-            <button
+            <Chip
               key={tab.value}
-              type="button"
+              label={tab.label}
+              chipType="status"
+              isActive={activeTab === tab.value}
               onClick={() => setActiveTab(tab.value)}
-              className={`flex-1 py-2 rounded-[var(--radius-button)] text-sm font-semibold transition-all ${
-                activeTab === tab.value
-                  ? 'bg-primary-green text-white shadow-sm'
-                  : 'bg-card text-text-secondary border border-text-secondary/15 hover:bg-text-secondary/5'
-              }`}
-            >
-              {tab.label}
-            </button>
+              className="flex-1 justify-center text-[13px]"
+            />
           ))}
         </div>
 
