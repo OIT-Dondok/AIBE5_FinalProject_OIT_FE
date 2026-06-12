@@ -8,7 +8,7 @@ export const login = (email: string, password: string) =>
     member: { member_uuid: string; email: string; nickname: string };
   }>('/auth/login', { email, password });
 
-export const logout = () => api.post('/auth/logout');
+export const logout = () => api.post<void>('/auth/logout');
 
 export const signup = (email: string, password: string, nickname: string) =>
   api.post<{
