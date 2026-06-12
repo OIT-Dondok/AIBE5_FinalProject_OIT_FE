@@ -14,7 +14,7 @@ import Step5Agreement from './_components/Step5Agreement';
 import { createCrew } from '@/services/crew';
 import { getPresignedUrl, uploadToS3 } from '@/services/upload';
 import { prepareImageForUpload, UnsupportedImageError } from '@/lib/prepareImageForUpload';
-import { calcDurationDays } from '@/utils/date';
+import { calcDurationDays, snapToScheduledDay } from '@/utils/date';
 import type {
   DailySettlementType,
   FrequencyType,
@@ -163,6 +163,30 @@ export default function CrewNewPage() {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
+  // ─── 미션 날짜 보정 (특정 요일 크루) ──────────────────────────────────────────
+  // 특정 요일 인증이면 시작일은 이후 첫 인증 요일, 종료일은 이전 마지막 인증 요일로 스냅한다.
+  // 매일(DAILY) 크루는 보정하지 않는다.
+
+  const handleStartDateChange = (value: string) => {
+    if (formData.frequency_type !== 'SPECIFIC_DAYS') {
+      update('start_date', value);
+      return;
+    }
+    const snapped = snapToScheduledDay(value, formData.mission_schedule_days, 'forward');
+    update('start_date', snapped);
+    if (snapped !== value) showToast('인증 요일에 맞춰 시작일을 조정했어요.');
+  };
+
+  const handleEndDateChange = (value: string) => {
+    if (formData.frequency_type !== 'SPECIFIC_DAYS') {
+      update('end_date', value);
+      return;
+    }
+    const snapped = snapToScheduledDay(value, formData.mission_schedule_days, 'backward');
+    update('end_date', snapped);
+    if (snapped !== value) showToast('인증 요일에 맞춰 종료일을 조정했어요.');
+  };
+
   // ─── 이미지 업로드 핸들러 ───────────────────────────────────────────────────
 
   const handleCrewImageUpload = async (file: File) => {
@@ -267,7 +291,17 @@ export default function CrewNewPage() {
   const handleNextFromStep3 = () => {
     const errors = validateStep3(formData);
     setStep3Errors(errors);
-    if (Object.keys(errors).length === 0) setCurrentStep(4);
+    if (Object.keys(errors).length !== 0) return;
+    // 특정 요일이면 이미 입력/AI 프리필된 시작·종료일을 (변경됐을 수 있는) 요일 기준으로 재보정한다.
+    // snap은 멱등이라 이미 인증 요일이면 그대로 유지된다.
+    if (formData.frequency_type === 'SPECIFIC_DAYS') {
+      setFormData((prev) => ({
+        ...prev,
+        start_date: snapToScheduledDay(prev.start_date, prev.mission_schedule_days, 'forward'),
+        end_date: snapToScheduledDay(prev.end_date, prev.mission_schedule_days, 'backward'),
+      }));
+    }
+    setCurrentStep(4);
   };
 
   const handleNextFromStep4 = () => {
@@ -389,8 +423,8 @@ export default function CrewNewPage() {
             minParticipants={formData.min_participants}
             maxParticipants={formData.max_participants}
             description={formData.description}
-            onStartDateChange={(v) => update('start_date', v)}
-            onEndDateChange={(v) => update('end_date', v)}
+            onStartDateChange={handleStartDateChange}
+            onEndDateChange={handleEndDateChange}
             onMinParticipantsChange={(v) => update('min_participants', v)}
             onMaxParticipantsChange={(v) => update('max_participants', v)}
             onDescriptionChange={(v) => update('description', v)}
