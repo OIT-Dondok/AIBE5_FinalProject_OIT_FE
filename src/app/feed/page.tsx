@@ -14,6 +14,7 @@ import { FeedSkeletonList } from '@/components/domain/feed/FeedItemSkeleton';
 import { FeedPeriodCard } from '@/components/domain/feed/FeedPeriodCard';
 import { getFeed } from '@/services/feed';
 import type { AvailableCrew, FeedItem as FeedItemType, FeedPeriod } from '@/types/domain';
+import { ERROR_CODE } from '@/types/common';
 import type { ErrorResponse } from '@/types/common';
 
 export default function FeedPage() {
@@ -58,13 +59,17 @@ export default function FeedPage() {
         setNextCursor(data.next_cursor);
       } catch (err) {
         if (epoch !== requestEpochRef.current) return;
-        // 추가 로딩(cursor) 실패(INVALID_CURSOR 등): 기존 목록은 유지하되,
-        // next_cursor를 비워 센티넬을 해제하고 같은 커서로의 재요청 루프를 막는다.
+        const code = isAxiosError<ErrorResponse>(err) ? err.response?.data?.code : undefined;
         if (cursor) {
-          setNextCursor(null);
+          // 추가 로딩(cursor) 실패. 기존 목록은 그대로 유지한다.
+          // INVALID_CURSOR는 커서 자체가 무효이므로 next_cursor를 비워
+          // 센티넬을 해제하고 같은 커서로의 재요청 루프를 막는다(=페이지네이션 종료).
+          // 그 외(네트워크 일시 오류·5xx 등)는 재시도 가능하므로 커서를 유지해,
+          // 다음 스크롤로 센티넬이 재진입하면 같은 커서로 다시 시도한다.
+          if (code === ERROR_CODE.INVALID_CURSOR) setNextCursor(null);
           return;
         }
-        if (isAxiosError<ErrorResponse>(err) && err.response?.data?.code === 'CREW_ACCESS_DENIED') {
+        if (code === ERROR_CODE.CREW_ACCESS_DENIED) {
           setAccessDenied(true);
         } else {
           setHasError(true);
