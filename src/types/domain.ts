@@ -901,3 +901,28 @@ export interface WalletHistoryItem {
 
 // GET /api/points/wallet-history → 200
 export type WalletHistoryResponse = CursorPageResponse<WalletHistoryItem>;
+
+
+// ════════════════════════════════════════════════════════════
+// § 5.9 내 크루
+// ════════════════════════════════════════════════════════════
+
+// GET /api/me/crews items[]
+export interface MyCrew {
+  crew_id: number;
+  title: string;
+  image_url: string | null;
+  category: CrewCategory;
+  status: CrewStatus;
+  deposit_amount: number;
+  my_role: 'HOST' | 'MEMBER';
+  my_status: 'LOCKED';
+  start_at: string;
+  end_at: string;
+}
+
+// GET /api/me/crews → 200
+export interface MyCrewsResponse {
+  items: MyCrew[];
+  next_cursor: string | null;
+}
