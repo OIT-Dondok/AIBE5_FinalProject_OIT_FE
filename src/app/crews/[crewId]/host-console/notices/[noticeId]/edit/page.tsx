@@ -9,7 +9,8 @@ import { Header } from "@/components/common/Header";
 import { HostActionButton } from "@/components/domain/host/common/HostActionButton";
 import { HostToast } from "@/components/domain/host/common/HostToast";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
-import { getHostCrewDetail, getHostNotice, updateHostNotice } from "@/mocks/data/host";
+import { getHostCrewDetail, getHostNotice } from "@/mocks/data/host";
+import { updateCrewNotice } from "@/services/crew";
 
 export default function HostNoticeEditPage() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function HostNoticeEditPage() {
   const [title, setTitle] = useState(notice?.title ?? "");
   const [contentHtml, setContentHtml] = useState((notice?.content_html ?? "").replace(/<br\s*\/?>/gi, "\n"));
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const isTitleReady = title.trim().length > 0;
 
   useEffect(() => {
@@ -33,18 +35,24 @@ export default function HostNoticeEditPage() {
     return () => window.clearTimeout(timeoutId);
   }, [toastMessage]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (crewId === null || !notice) return;
     if (!isTitleReady) {
       setToastMessage("제목을 작성해주세요");
       return;
     }
-
-    updateHostNotice(crewId, notice.notice_id, {
-      title,
-      content_html: contentHtml.replace(/\n/g, "<br>"),
-    });
-    router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}`);
+    setIsSubmitting(true);
+    try {
+      await updateCrewNotice(crewId, notice.notice_id, {
+        title,
+        content: contentHtml.trim(),
+      });
+      router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}`);
+    } catch {
+      // 에러 처리는 axios 인터셉터(toast)가 담당
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (crewId === null || noticeId === null || !notice) {
@@ -107,8 +115,8 @@ export default function HostNoticeEditPage() {
               취소
             </HostActionButton>
             <HostActionButton
-              variant={isTitleReady ? "primary" : "primaryDisabled"}
-              onClick={handleSubmit}
+              variant={isTitleReady && !isSubmitting ? "primary" : "primaryDisabled"}
+              onClick={() => void handleSubmit()}
             >
               수정 완료
             </HostActionButton>
