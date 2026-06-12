@@ -36,6 +36,7 @@ interface ProfileMenuSectionsProps {
   unreadNotificationCount: number;
   showHostSection: boolean;
   hostOperationPendingCount: number;
+  hostCrewId?: number | null;
 }
 
 function NumberBadge({ count }: { count: number }) {
@@ -98,6 +99,7 @@ export function ProfileMenuSections({
   unreadNotificationCount,
   showHostSection,
   hostOperationPendingCount,
+  hostCrewId,
 }: ProfileMenuSectionsProps) {
   const router = useRouter();
 
@@ -169,7 +171,7 @@ export function ProfileMenuSections({
           title: "호스트 콘솔",
           subtitle: "호스트 권한이 있는 크루의 운영 콘솔로 이동",
           badge: hostOperationPendingCount,
-          onClick: () => router.push("/crews"),
+          onClick: () => router.push(hostCrewId ? `/crews/${hostCrewId}/host-console` : "/my"),
         },
       ],
     });
