@@ -143,16 +143,16 @@ export default function ProfilePage() {
         let hostOperationPendingCount = 0;
 
         if (profileResponse.data.is_host_ever) {
-          try {
-            const [hostSummaryResponse, myCrewsResponse] = await Promise.all([
-              getMyHostOperationSummary(),
-              getMyCrew(),
-            ]);
-            hostOperationPendingCount = hostSummaryResponse.data.total_pending_count;
-            const hostCrew = myCrewsResponse.data.items.find((c) => c.my_role === "HOST");
-            if (hostCrew && isMountedRef.current) setHostCrewId(hostCrew.crew_id);
-          } catch {
-            hostOperationPendingCount = 0;
+          const [hostSummaryResult, myCrewsResult] = await Promise.allSettled([
+            getMyHostOperationSummary(),
+            getMyCrew(),
+          ]);
+          if (hostSummaryResult.status === "fulfilled") {
+            hostOperationPendingCount = hostSummaryResult.value.data.total_pending_count;
+          }
+          if (myCrewsResult.status === "fulfilled" && isMountedRef.current) {
+            const hostCrew = myCrewsResult.value.data.items.find((c) => c.my_role === "HOST");
+            if (hostCrew) setHostCrewId(hostCrew.crew_id);
           }
         }
 
