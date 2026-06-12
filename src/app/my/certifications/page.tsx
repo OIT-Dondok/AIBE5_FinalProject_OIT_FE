@@ -5,34 +5,23 @@ import { ClipboardCheck } from "lucide-react";
 
 import { Header } from "@/components/common/Header";
 import { Skeleton } from "@/components/common/Skeleton";
+import { FeedCalendar } from "@/components/domain/feed/FeedCalendar";
+import { FeedCrewFilter } from "@/components/domain/feed/FeedCrewFilter";
+import { FeedPeriodCard } from "@/components/domain/feed/FeedPeriodCard";
 import { getFeed } from "@/services/feed";
-import { useAuthStore } from "@/store/authStore";
-import type { AvailableCrew, CertificationStatus, FeedItem } from "@/types/domain";
+import type { AvailableCrew, CertificationStatus, FeedItem, FeedPeriod } from "@/types/domain";
 
 // ─── 상태 설정 ────────────────────────────────────────────────
 
 interface StatusMeta {
   badge: string;
   badgeClass: string;
-  description: string;
 }
 
 const STATUS_CONFIG: Record<CertificationStatus, StatusMeta> = {
-  PENDING_REVIEW: {
-    badge: "검토중",
-    badgeClass: "bg-amber-100 text-amber-700",
-    description: "검토 대기 중",
-  },
-  SUCCESS: {
-    badge: "승인",
-    badgeClass: "bg-green-100 text-green-700",
-    description: "인증이 승인되었어요",
-  },
-  FAILED: {
-    badge: "거절",
-    badgeClass: "bg-red-100 text-red-600",
-    description: "인증이 반려되었어요",
-  },
+  PENDING_REVIEW: { badge: "검토중", badgeClass: "bg-amber-100 text-amber-700" },
+  SUCCESS: { badge: "승인", badgeClass: "bg-green-100 text-green-700" },
+  FAILED: { badge: "거절", badgeClass: "bg-red-100 text-red-600" },
 };
 
 type StatusFilter = "ALL" | "APPROVED" | "REJECTED" | "PENDING";
@@ -42,6 +31,30 @@ function matchesStatusFilter(status: CertificationStatus, filter: StatusFilter):
   if (filter === "APPROVED") return status === "SUCCESS";
   if (filter === "REJECTED") return status === "FAILED";
   return status === "PENDING_REVIEW";
+}
+
+// ─── 거절 사유 / 검수 유형 한국어 변환 ────────────────────────
+
+const REJECT_REASON_LABEL: Record<string, string> = {
+  TIME_VIOLATION: "시간 위반",
+  IMAGE_UNRELATED: "무관한 이미지",
+};
+
+const DECISION_TYPE_LABEL: Record<string, string> = {
+  MANUAL_APPROVE: "수동 승인",
+  MANUAL_REJECT: "수동 거절",
+  AUTO_APPROVE: "자동 승인",
+  AUTO_REJECT: "자동 거절",
+};
+
+function formatRejectReason(code: string | null | undefined): string | null {
+  if (!code) return null;
+  return REJECT_REASON_LABEL[code] ?? code;
+}
+
+function formatDecisionType(type: string | null | undefined): string | null {
+  if (!type) return null;
+  return DECISION_TYPE_LABEL[type] ?? null;
 }
 
 // ─── 아바타 색상 (crew_id 기준 고정 배정) ──────────────────────
@@ -110,34 +123,41 @@ function StatusBadge({ status }: { status: CertificationStatus }) {
   );
 }
 
-function CrewAvatar({ crewName, crewId }: { crewName: string; crewId: number }) {
+function NicknameAvatar({ nickname, crewId }: { nickname: string; crewId: number }) {
   return (
     <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${getAvatarClass(crewId)}`}>
-      {crewName.charAt(0)}
+      {nickname.charAt(0)}
     </div>
   );
 }
 
 function CertificationCard({ item }: { item: FeedItem }) {
-  const { description } = STATUS_CONFIG[item.certification_status];
+  const rejectReason = formatRejectReason(item.reject_reason_code);
+  const decisionType = formatDecisionType(item.decision_type);
+
+  const detailParts = [formatTime(item.server_time), rejectReason, decisionType].filter(Boolean);
+
   return (
     <div className="flex items-center gap-3 bg-card rounded-card shadow-card border border-text-secondary/10 px-4 py-3 animate-feed-in">
-      <CrewAvatar crewName={item.crew_name} crewId={item.crew_id} />
+      {/* 왼쪽: 닉네임 이니셜 아바타 (배경색 크루별 고정색) */}
+      <NicknameAvatar nickname={item.nickname} crewId={item.crew_id} />
+
+      {/* 중앙: 닉네임·크루명 / 시간·사유·유형 */}
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
         <p className="text-sm font-semibold text-text-primary truncate leading-snug">
           {item.nickname}
           <span className="font-normal text-text-secondary mx-1">·</span>
           {item.crew_name}
         </p>
-        <p className="text-xs text-text-secondary/70">
-          {formatTime(item.server_time)}
-          <span className="mx-1">·</span>
-          {description}
+        <p className="text-xs text-text-secondary/70 truncate">
+          {detailParts.join(" · ")}
         </p>
         {item.caption && (
           <p className="text-xs text-text-secondary line-clamp-1 mt-0.5">{item.caption}</p>
         )}
       </div>
+
+      {/* 오른쪽: 상태 배지 */}
       <StatusBadge status={item.certification_status} />
     </div>
   );
@@ -250,35 +270,22 @@ function FilterSummaryCards({
   );
 }
 
-// ─── 상수 ────────────────────────────────────────────────────
-
-const ALL_CREW_ID = -1;
-
 // ─── 페이지 ────────────────────────────────────────────────────
 
 export default function CertificationsPage() {
-  const user = useAuthStore((state) => state.user);
-
-  // Zustand persist는 hydration 이후 localStorage에서 값을 복원한다.
-  // isAuthReady가 true가 되기 전(마운트 전)에 API를 호출하면 user가 null이어서
-  // member_uuid 필터링이 동작하지 않으므로, 마운트 후 ready 상태가 된 뒤 호출한다.
-  const [isAuthReady, setIsAuthReady] = useState(false);
-
   const [availableCrews, setAvailableCrews] = useState<AvailableCrew[]>([]);
   const [items, setItems] = useState<FeedItem[]>([]);
-  const [selectedCrewId, setSelectedCrewId] = useState<number>(ALL_CREW_ID);
+  const [selectedCrewId, setSelectedCrewId] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [period, setPeriod] = useState<FeedPeriod | null>(null);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    setIsAuthReady(true);
-  }, []);
-
   const loadInitial = useCallback(
-    async (crewId: number) => {
+    async (crewId: number | null, currentPeriod: FeedPeriod | null) => {
       setIsLoading(true);
       setErrorMessage(null);
       setItems([]);
@@ -286,21 +293,14 @@ export default function CertificationsPage() {
 
       try {
         const { data } = await getFeed({
-          crew_id: crewId === ALL_CREW_ID ? undefined : crewId,
+          crew_id: crewId ?? undefined,
+          from: currentPeriod?.start_date,
+          to: currentPeriod?.end_date,
           limit: 20,
         });
 
         setAvailableCrews(data.available_crews);
-
-        // TODO: BE에서 my_only 파라미터 추가 후 member_uuid 필터링 제거 예정
-        console.log("[인증이력] authStore member_uuid:", user?.member_uuid);
-        console.log("[인증이력] feed_items member_uuid 목록:", data.feed_items.map((i) => i.member_uuid));
-
-        const myItems = user
-          ? data.feed_items.filter((item) => item.member_uuid === user.member_uuid)
-          : data.feed_items;
-
-        setItems(myItems);
+        setItems(data.feed_items);
         setNextCursor(data.next_cursor);
       } catch {
         setErrorMessage("인증 이력을 불러오지 못했어요.");
@@ -308,18 +308,27 @@ export default function CertificationsPage() {
         setIsLoading(false);
       }
     },
-    [user],
+    [],
   );
 
-  // isAuthReady가 true가 된 후에만 API 호출 — user가 확정된 상태에서 필터링
   useEffect(() => {
-    if (!isAuthReady) return;
-    void loadInitial(selectedCrewId);
-  }, [isAuthReady, selectedCrewId, loadInitial]);
+    void loadInitial(selectedCrewId, period);
+  }, [selectedCrewId, period, loadInitial]);
 
-  const handleCrewChange = (crewId: number) => {
+  const handleCrewChange = (crewId: number | null) => {
     setSelectedCrewId(crewId);
     setStatusFilter("ALL");
+  };
+
+  const handlePeriodApply = (newPeriod: FeedPeriod) => {
+    setPeriod(newPeriod);
+    setIsCalendarOpen(false);
+    setStatusFilter("ALL");
+  };
+
+  const handlePeriodClear = () => {
+    setPeriod(null);
+    setIsCalendarOpen(false);
   };
 
   const handleLoadMore = async () => {
@@ -328,17 +337,14 @@ export default function CertificationsPage() {
 
     try {
       const { data } = await getFeed({
-        crew_id: selectedCrewId === ALL_CREW_ID ? undefined : selectedCrewId,
+        crew_id: selectedCrewId ?? undefined,
+        from: period?.start_date,
+        to: period?.end_date,
         cursor: nextCursor,
         limit: 20,
       });
 
-      // TODO: BE에서 my_only 파라미터 추가 후 개선 예정 — member_uuid 필터링 후 빈 페이지가 나올 수 있음
-      const myItems = user
-        ? data.feed_items.filter((item) => item.member_uuid === user.member_uuid)
-        : data.feed_items;
-
-      setItems((prev) => [...prev, ...myItems]);
+      setItems((prev) => [...prev, ...data.feed_items]);
       setNextCursor(data.next_cursor);
     } catch {
       setErrorMessage("추가 데이터를 불러오지 못했어요.");
@@ -362,52 +368,20 @@ export default function CertificationsPage() {
       <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-28">
         <Header title="인증 이력" showBackButton />
 
-        {/* 크루 필터 — sticky (데이터 로드 후 표시) */}
-        {availableCrews.length > 0 && (
-          <div className="sticky top-16 z-30 bg-background/90 backdrop-blur-sm border-b border-text-secondary/5">
-            <div className="flex gap-2 px-4 py-3 overflow-x-auto no-scrollbar">
-              <button
-                type="button"
-                onClick={() => handleCrewChange(ALL_CREW_ID)}
-                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                  selectedCrewId === ALL_CREW_ID
-                    ? "bg-primary-green text-white"
-                    : "bg-card text-text-secondary border border-text-secondary/15"
-                }`}
-              >
-                전체
-              </button>
-              {availableCrews.map((crew) => (
-                <button
-                  key={crew.crew_id}
-                  type="button"
-                  onClick={() => handleCrewChange(crew.crew_id)}
-                  className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                    selectedCrewId === crew.crew_id
-                      ? "bg-primary-green text-white"
-                      : "bg-card text-text-secondary border border-text-secondary/15"
-                  }`}
-                >
-                  {crew.crew_name}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 콘텐츠 */}
-        <div className="px-4 pt-4 flex flex-col gap-4">
+        <div className="flex flex-col gap-4 pt-4">
           {isLoading ? (
             <>
               {/* 요약 카드 스켈레톤 */}
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-4 gap-2 px-4">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <Skeleton key={i} className="h-16 rounded-xl" />
                 ))}
               </div>
-              {Array.from({ length: 5 }).map((_, i) => (
-                <CardSkeleton key={i} />
-              ))}
+              <div className="px-4 flex flex-col gap-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <CardSkeleton key={i} />
+                ))}
+              </div>
             </>
           ) : errorMessage ? (
             <div className="mt-20 flex flex-col items-center gap-2 text-text-secondary">
@@ -416,35 +390,64 @@ export default function CertificationsPage() {
             </div>
           ) : (
             <>
-              {/* 필터 겸 요약 카드 */}
-              <FilterSummaryCards
-                items={items}
-                activeFilter={statusFilter}
-                onSelect={setStatusFilter}
+              {/* 1. 필터 겸 요약 카드 */}
+              <div className="px-4">
+                <FilterSummaryCards
+                  items={items}
+                  activeFilter={statusFilter}
+                  onSelect={setStatusFilter}
+                />
+              </div>
+
+              {/* 2. 크루 칩 필터 — FeedCrewFilter 재사용 */}
+              <FeedCrewFilter
+                crews={availableCrews}
+                selectedCrewId={selectedCrewId}
+                onSelect={handleCrewChange}
               />
 
-              {filteredCount === 0 ? (
-                <div className="mt-12 flex flex-col items-center gap-2 text-text-secondary">
-                  <ClipboardCheck size={40} className="opacity-30" />
-                  <p className="text-sm font-medium">인증 이력이 없어요</p>
-                </div>
-              ) : (
-                <>
-                  {filteredGroups.map((group) => (
-                    <DateGroupSection key={group.dateKey} group={group} />
-                  ))}
-                  {nextCursor && (
-                    <button
-                      type="button"
-                      onClick={handleLoadMore}
-                      disabled={isLoadingMore}
-                      className="w-full py-3 rounded-button text-sm font-semibold text-text-secondary bg-card border border-text-secondary/15 hover:bg-text-secondary/5 active:bg-text-secondary/10 disabled:opacity-50 transition-colors"
-                    >
-                      {isLoadingMore ? "불러오는 중..." : "더 보기"}
-                    </button>
-                  )}
-                </>
-              )}
+              {/* 3. 날짜 필터 — FeedPeriodCard + FeedCalendar 재사용 */}
+              <div className="px-4 flex flex-col gap-3">
+                <FeedPeriodCard
+                  period={period}
+                  isCalendarOpen={isCalendarOpen}
+                  onOpenCalendar={() => setIsCalendarOpen((v) => !v)}
+                />
+                {isCalendarOpen && (
+                  <FeedCalendar
+                    currentPeriod={period}
+                    onApply={handlePeriodApply}
+                    onClear={handlePeriodClear}
+                    onClose={() => setIsCalendarOpen(false)}
+                  />
+                )}
+              </div>
+
+              {/* 4. 인증 리스트 */}
+              <div className="px-4 flex flex-col gap-4 pb-4">
+                {filteredCount === 0 ? (
+                  <div className="mt-12 flex flex-col items-center gap-2 text-text-secondary">
+                    <ClipboardCheck size={40} className="opacity-30" />
+                    <p className="text-sm font-medium">인증 이력이 없어요</p>
+                  </div>
+                ) : (
+                  <>
+                    {filteredGroups.map((group) => (
+                      <DateGroupSection key={group.dateKey} group={group} />
+                    ))}
+                    {nextCursor && (
+                      <button
+                        type="button"
+                        onClick={handleLoadMore}
+                        disabled={isLoadingMore}
+                        className="w-full py-3 rounded-button text-sm font-semibold text-text-secondary bg-card border border-text-secondary/15 hover:bg-text-secondary/5 active:bg-text-secondary/10 disabled:opacity-50 transition-colors"
+                      >
+                        {isLoadingMore ? "불러오는 중..." : "더 보기"}
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
             </>
           )}
         </div>
