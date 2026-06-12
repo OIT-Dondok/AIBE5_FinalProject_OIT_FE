@@ -148,6 +148,9 @@ export default function CrewNewPage() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const imageBlobUrlRef = useRef<string | null>(null);
+  // 비멱등 생성 API 중복 호출 방지용 재진입 가드.
+  // isSubmitting state는 비동기 갱신이라 빠른 연속 클릭을 막지 못하므로 ref로 즉시 차단한다.
+  const isSubmittingRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -316,6 +319,9 @@ export default function CrewNewPage() {
   // ─── 크루 생성 제출 ─────────────────────────────────────────────────────────
 
   const handleSubmit = async () => {
+    // 이미 제출 중이면 즉시 차단 (중복 createCrew 호출 방지)
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
     try {
       const recruitmentDeadline = (() => {
@@ -381,6 +387,7 @@ export default function CrewNewPage() {
         showToast('크루 생성에 실패했습니다. 다시 시도해주세요.');
       }
     } finally {
+      isSubmittingRef.current = false;
       setIsSubmitting(false);
     }
   };
