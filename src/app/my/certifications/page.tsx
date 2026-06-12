@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ChevronDown, ClipboardCheck, User } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Check, ChevronDown, ClipboardCheck, User } from "lucide-react";
 
 import { Header } from "@/components/common/Header";
 import { Skeleton } from "@/components/common/Skeleton";
@@ -272,6 +272,86 @@ function FilterSummaryCards({
   );
 }
 
+// ─── 크루 커스텀 드롭다운 ─────────────────────────────────────
+
+interface CrewDropdownProps {
+  availableCrews: AvailableCrew[];
+  selectedCrewId: number | null;
+  onSelect: (crewId: number | null) => void;
+}
+
+function CrewDropdown({ availableCrews, selectedCrewId, onSelect }: CrewDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [isOpen]);
+
+  const selectedLabel =
+    selectedCrewId === null
+      ? "전체 크루"
+      : (availableCrews.find((c) => c.crew_id === selectedCrewId)?.crew_name ?? "전체 크루");
+
+  const options: { id: number | null; label: string }[] = [
+    { id: null, label: "전체 크루" },
+    ...availableCrews.map((c) => ({ id: c.crew_id, label: c.crew_name })),
+  ];
+
+  return (
+    <div ref={ref} className="relative flex-1 min-w-0">
+      <button
+        type="button"
+        onClick={() => setIsOpen((v) => !v)}
+        className={`w-full h-8 pl-3 pr-2 flex items-center justify-between gap-1 text-xs font-medium rounded-lg border transition-colors ${
+          selectedCrewId !== null
+            ? "bg-[var(--color-primary-green)]/10 border-[var(--color-primary-green)] text-[var(--color-primary-green)]"
+            : "bg-card border-text-secondary/20 text-text-primary"
+        }`}
+      >
+        <span className="truncate">{selectedLabel}</span>
+        <ChevronDown
+          size={12}
+          className={`shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-0 top-[calc(100%+4px)] z-50 w-full min-w-[120px] bg-card border border-text-secondary/15 rounded-xl shadow-lg overflow-hidden">
+          {options.map((opt) => {
+            const isSelected = opt.id === selectedCrewId;
+            return (
+              <button
+                key={opt.id ?? "all"}
+                type="button"
+                onClick={() => {
+                  onSelect(opt.id);
+                  setIsOpen(false);
+                }}
+                className={`w-full flex items-center justify-between px-3 py-2.5 text-xs font-medium text-left transition-colors hover:bg-text-secondary/5 active:bg-text-secondary/10 ${
+                  isSelected ? "text-[var(--color-primary-green)]" : "text-text-primary"
+                }`}
+              >
+                <span className="truncate">{opt.label}</span>
+                {isSelected && (
+                  <Check size={12} className="shrink-0 text-[var(--color-primary-green)]" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── 인라인 필터 바 ───────────────────────────────────────────
 
 interface InlineFilterBarProps {
@@ -299,28 +379,12 @@ function InlineFilterBar({
 
   return (
     <div className="px-4 flex items-center gap-2">
-      {/* 크루 선택 드롭다운 */}
-      <div className="relative flex-1 min-w-0">
-        <select
-          value={selectedCrewId ?? ""}
-          onChange={(e) => {
-            const val = e.target.value;
-            onCrewChange(val === "" ? null : Number(val));
-          }}
-          className="w-full h-8 pl-2 pr-6 text-xs font-medium rounded-lg bg-card border border-text-secondary/20 text-text-primary appearance-none cursor-pointer truncate"
-        >
-          <option value="">전체 크루</option>
-          {availableCrews.map((crew) => (
-            <option key={crew.crew_id} value={crew.crew_id}>
-              {crew.crew_name}
-            </option>
-          ))}
-        </select>
-        <ChevronDown
-          size={12}
-          className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-text-secondary/60"
-        />
-      </div>
+      {/* 크루 커스텀 드롭다운 */}
+      <CrewDropdown
+        availableCrews={availableCrews}
+        selectedCrewId={selectedCrewId}
+        onSelect={onCrewChange}
+      />
 
       {/* 내 인증만 토글 */}
       <button
