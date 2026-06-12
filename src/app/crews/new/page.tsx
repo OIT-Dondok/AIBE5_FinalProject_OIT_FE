@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/common/Header';
 import { Button } from '@/components/common/Button';
+import { Modal } from '@/components/common/Modal';
 import { Toast } from '@/components/common/Toast';
 import StepIndicator from './_components/StepIndicator';
 import Step1AI from './_components/Step1AI';
@@ -143,6 +144,8 @@ export default function CrewNewPage() {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isToastOpen, setIsToastOpen] = useState(false);
+  // 5단계 크루 생성 확인 모달
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const imageBlobUrlRef = useRef<string | null>(null);
 
@@ -441,9 +444,6 @@ export default function CrewNewPage() {
                 agreements: { ...prev.agreements, [key]: value },
               }))
             }
-            onSubmit={handleSubmit}
-            onBack={() => setCurrentStep(4)}
-            isSubmitting={isSubmitting}
           />
         );
       default:
@@ -452,7 +452,11 @@ export default function CrewNewPage() {
   };
 
   const renderBottomNav = () => {
-    if (currentStep === 1 || currentStep === 5) return null;
+    if (currentStep === 1) return null;
+
+    const isLastStep = currentStep === 5;
+    // 5단계 제출 가능 여부: 5개 운영원칙 전체 동의
+    const allAgreed = Object.values(formData.agreements).every(Boolean);
 
     const handleNext = () => {
       if (currentStep === 2) handleNextFromStep2();
@@ -466,13 +470,27 @@ export default function CrewNewPage() {
           variant="outline"
           size="lg"
           onClick={() => setCurrentStep((s) => s - 1)}
+          disabled={isLastStep && isSubmitting}
           className="w-24"
         >
           이전
         </Button>
-        <Button variant="primary-green" size="lg" fullWidth onClick={handleNext}>
-          다음
-        </Button>
+        {isLastStep ? (
+          <Button
+            variant="primary-green"
+            size="lg"
+            fullWidth
+            onClick={() => setIsConfirmOpen(true)}
+            disabled={!allAgreed}
+            isLoading={isSubmitting}
+          >
+            크루 생성하기
+          </Button>
+        ) : (
+          <Button variant="primary-green" size="lg" fullWidth onClick={handleNext}>
+            다음
+          </Button>
+        )}
       </div>
     );
   };
@@ -500,6 +518,43 @@ export default function CrewNewPage() {
         onClose={() => setIsToastOpen(false)}
         message={toastMessage}
       />
+
+      <Modal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        ariaLabel="크루 생성 확인"
+      >
+        <div className="flex flex-col gap-4 p-6">
+          <div className="flex flex-col gap-2">
+            <h3 className="text-base font-bold text-text-primary">크루 생성 전 확인해주세요</h3>
+            <p className="text-sm text-text-secondary leading-relaxed">
+              크루 개설 후 수정 및 삭제가 불가능합니다.{'\n'}신중하게 만들어주세요.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="md"
+              fullWidth
+              onClick={() => setIsConfirmOpen(false)}
+            >
+              다시 확인
+            </Button>
+            <Button
+              variant="primary-green"
+              size="md"
+              fullWidth
+              onClick={() => {
+                setIsConfirmOpen(false);
+                void handleSubmit();
+              }}
+              isLoading={isSubmitting}
+            >
+              생성하기
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
