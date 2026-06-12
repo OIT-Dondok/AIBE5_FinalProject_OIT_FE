@@ -126,8 +126,8 @@ export function ProfileMenuSections({
           iconBg: "bg-violet-50",
           iconColor: "text-violet-500",
           title: "인증 이력",
-          subtitle: "추후 안내",
-          isDisabled: true,
+          subtitle: `인증 ${totalVerificationCount}건`,
+          onClick: () => router.push("/my/certifications"),
         },
         {
           icon: Wallet,
