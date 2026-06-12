@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, Search } from 'lucide-react';
+import { ChevronDown, Plus, Search } from 'lucide-react';
 import { Header } from '@/components/common/Header';
-import { Chip } from '@/components/common/Chip';
 import { EmptyState } from '@/components/common/EmptyState';
 import CrewCard from '@/components/domain/crew/CrewCard';
 import { getCrews } from '@/services/crew';
@@ -14,7 +13,7 @@ import type { CrewListItem, CrewStatus, CrewCategory } from '@/types/domain';
 type StatusFilter = CrewStatus | 'ALL';
 type CategoryFilter = CrewCategory | 'ALL';
 
-const STATUS_TABS: { label: string; value: StatusFilter }[] = [
+const STATUS_OPTIONS: { label: string; value: StatusFilter }[] = [
   { label: '전체', value: 'ALL' },
   { label: '모집중', value: 'RECRUITING' },
   { label: '진행중', value: 'ACTIVE' },
@@ -125,17 +124,21 @@ export default function CrewsPage() {
 
       <div className="w-full max-w-[430px] mx-auto flex flex-col">
 
-        {/* 상태 탭 */}
-        <div className="mx-5 mt-5 flex items-center bg-text-secondary/8 rounded-2xl p-1.5 gap-1">
-          {STATUS_TABS.map((tab) => (
-            <Chip
-              key={tab.value}
-              label={tab.label}
-              chipType="status"
-              isActive={activeStatus === tab.value}
-              onClick={() => setActiveStatus(tab.value)}
-              className="flex-1 justify-center text-[13px]"
-            />
+        {/* 카테고리 탭 (가로 스크롤, underline 스타일) */}
+        <div className="flex overflow-x-auto no-scrollbar border-b border-text-secondary/10 mt-1">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat.value}
+              type="button"
+              onClick={() => setActiveCategory(cat.value)}
+              className={`flex-shrink-0 px-4 py-3 text-sm whitespace-nowrap transition-colors ${
+                activeCategory === cat.value
+                  ? 'text-primary-green font-semibold border-b-2 border-primary-green -mb-px'
+                  : 'text-text-secondary font-medium hover:text-text-primary'
+              }`}
+            >
+              {cat.label}
+            </button>
           ))}
         </div>
 
@@ -157,40 +160,30 @@ export default function CrewsPage() {
           </div>
         </div>
 
-        {/* 카테고리 칩 필터 */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar px-5 pt-3 pb-1">
-          {CATEGORIES.map((cat) => (
-            <Chip
-              key={cat.value}
-              label={cat.label}
-              chipType="category"
-              isActive={activeCategory === cat.value}
-              onClick={() => setActiveCategory(cat.value)}
-              className="whitespace-nowrap flex-shrink-0"
-            />
-          ))}
-        </div>
-
-        {/* 결과 카운트 */}
-        <div className="px-5 pt-4 pb-2 flex items-center justify-between">
+        {/* 결과 카운트 + 상태 드롭다운 */}
+        <div className="px-5 pt-3 pb-2 flex items-center justify-between">
           <span className="text-xs text-text-secondary">
             총{' '}
             <span className="font-bold text-text-primary">{totalCount}</span>
             개의 크루
           </span>
-          {activeStatus !== 'ALL' || activeCategory !== 'ALL' || searchQuery ? (
-            <button
-              type="button"
-              onClick={() => {
-                setActiveStatus('ALL');
-                setActiveCategory('ALL');
-                setSearchQuery('');
-              }}
-              className="text-[11px] text-primary-green font-semibold hover:opacity-75 transition-opacity"
+          <div className="relative">
+            <select
+              aria-label="크루 상태 필터"
+              value={activeStatus}
+              onChange={(e) => setActiveStatus(e.target.value as StatusFilter)}
+              className="appearance-none text-xs font-semibold text-text-primary bg-card border border-text-secondary/20 rounded-xl pl-3 pr-7 py-1.5 cursor-pointer focus:outline-none focus:border-primary-green transition-colors"
             >
-              필터 초기화
-            </button>
-          ) : null}
+              {STATUS_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+            <ChevronDown
+              size={12}
+              strokeWidth={2.5}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none"
+            />
+          </div>
         </div>
 
         {/* 크루 카드 리스트 */}

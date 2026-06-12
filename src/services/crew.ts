@@ -8,6 +8,7 @@ import type {
   CrewMembersResponse,
   CrewNoticesResponse,
   NoticeReactionResponse,
+  MyCrewsResponse,
 } from '@/types/domain';
 
 export const getCrews = (params?: {
@@ -76,4 +77,14 @@ export const removeNoticeReaction = (crewId: number, noticeId: number, reactionT
     `/crews/${crewId}/notices/${noticeId}/reactions/me`,
     { params: { reaction_type: reactionType } },
   );
+};
+
+export const getMyCrew = (myStatus?: 'PENDING' | 'LOCKED' | 'ALL', cursor?: string, signal?: AbortSignal) => {
+  return api.get<MyCrewsResponse>('/me/crews', {
+    params: {
+      ...(myStatus && myStatus !== 'ALL' ? { my_status: myStatus } : {}),
+      ...(cursor ? { cursor } : {}),
+    },
+    signal,
+  });
 };

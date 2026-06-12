@@ -111,7 +111,7 @@ export function ProfileMenuSections({
           iconColor: "text-primary-green",
           title: "내 크루",
           subtitle: `활성 ${activeCrewCount}개 · 종료 ${completedCrewCount}개`,
-          onClick: () => router.push("/crews"),
+          onClick: () => router.push("/my/crews"),
         },
         {
           icon: BarChart3,
