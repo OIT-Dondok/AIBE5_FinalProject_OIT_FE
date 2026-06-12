@@ -1,13 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ClipboardCheck, User } from "lucide-react";
+import { ChevronDown, ClipboardCheck, User } from "lucide-react";
 
 import { Header } from "@/components/common/Header";
 import { Skeleton } from "@/components/common/Skeleton";
 import { FeedCalendar } from "@/components/domain/feed/FeedCalendar";
-import { FeedCrewFilter } from "@/components/domain/feed/FeedCrewFilter";
-import { FeedPeriodCard } from "@/components/domain/feed/FeedPeriodCard";
 import { getFeed } from "@/services/feed";
 import { useAuthStore } from "@/store/authStore";
 import type { AvailableCrew, CertificationStatus, FeedItem, FeedPeriod } from "@/types/domain";
@@ -56,6 +54,17 @@ function formatRejectReason(code: string | null | undefined): string | null {
 function formatDecisionType(type: string | null | undefined): string | null {
   if (!type) return null;
   return DECISION_TYPE_LABEL[type] ?? null;
+}
+
+// ─── 기간 버튼 레이블 ──────────────────────────────────────────
+
+function formatPeriodLabel(period: FeedPeriod | null): string {
+  if (!period) return "기간";
+  const fmt = (d: string) => {
+    const parts = d.split("-");
+    return `${Number(parts[1])}/${Number(parts[2])}`;
+  };
+  return `${fmt(period.start_date)}~${fmt(period.end_date)}`;
 }
 
 // ─── 아바타 색상 (crew_id 기준 고정 배정) ──────────────────────
@@ -113,7 +122,7 @@ function groupByDate(items: FeedItem[]): DateGroup[] {
   return Array.from(map.values());
 }
 
-// ─── 컴포넌트 ────────────────────────────────────────────────
+// ─── 서브 컴포넌트 ────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: CertificationStatus }) {
   const { badge, badgeClass } = STATUS_CONFIG[status];
@@ -135,7 +144,6 @@ function NicknameAvatar({ nickname, crewId }: { nickname: string; crewId: number
 function CertificationCard({ item }: { item: FeedItem }) {
   const rejectReason = formatRejectReason(item.reject_reason_code);
   const decisionType = formatDecisionType(item.decision_type);
-
   const detailParts = [formatTime(item.server_time), rejectReason, decisionType].filter(Boolean);
 
   return (
@@ -147,9 +155,7 @@ function CertificationCard({ item }: { item: FeedItem }) {
           <span className="font-normal text-text-secondary mx-1">·</span>
           {item.crew_name}
         </p>
-        <p className="text-xs text-text-secondary/70 truncate">
-          {detailParts.join(" · ")}
-        </p>
+        <p className="text-xs text-text-secondary/70 truncate">{detailParts.join(" · ")}</p>
         {item.caption && (
           <p className="text-xs text-text-secondary line-clamp-1 mt-0.5">{item.caption}</p>
         )}
@@ -262,6 +268,87 @@ function FilterSummaryCards({
           <span className={`text-xl font-bold leading-none ${card.countClass}`}>{card.count}</span>
         </button>
       ))}
+    </div>
+  );
+}
+
+// ─── 인라인 필터 바 ───────────────────────────────────────────
+
+interface InlineFilterBarProps {
+  availableCrews: AvailableCrew[];
+  selectedCrewId: number | null;
+  onCrewChange: (crewId: number | null) => void;
+  showMyOnly: boolean;
+  onToggleMyOnly: () => void;
+  period: FeedPeriod | null;
+  isCalendarOpen: boolean;
+  onToggleCalendar: () => void;
+}
+
+function InlineFilterBar({
+  availableCrews,
+  selectedCrewId,
+  onCrewChange,
+  showMyOnly,
+  onToggleMyOnly,
+  period,
+  isCalendarOpen,
+  onToggleCalendar,
+}: InlineFilterBarProps) {
+  const periodActive = period !== null;
+
+  return (
+    <div className="px-4 flex items-center gap-2">
+      {/* 크루 선택 드롭다운 */}
+      <div className="relative flex-1 min-w-0">
+        <select
+          value={selectedCrewId ?? ""}
+          onChange={(e) => {
+            const val = e.target.value;
+            onCrewChange(val === "" ? null : Number(val));
+          }}
+          className="w-full h-8 pl-2 pr-6 text-xs font-medium rounded-lg bg-card border border-text-secondary/20 text-text-primary appearance-none cursor-pointer truncate"
+        >
+          <option value="">전체 크루</option>
+          {availableCrews.map((crew) => (
+            <option key={crew.crew_id} value={crew.crew_id}>
+              {crew.crew_name}
+            </option>
+          ))}
+        </select>
+        <ChevronDown
+          size={12}
+          className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-text-secondary/60"
+        />
+      </div>
+
+      {/* 내 인증만 토글 */}
+      <button
+        type="button"
+        onClick={onToggleMyOnly}
+        className={`shrink-0 flex items-center gap-1 h-8 px-3 rounded-lg text-xs font-semibold transition-colors ${
+          showMyOnly
+            ? "bg-[var(--color-primary-green)] text-white"
+            : "bg-card border border-text-secondary/20 text-text-secondary"
+        }`}
+      >
+        <User size={11} />
+        내 인증만
+      </button>
+
+      {/* 기간 버튼 */}
+      <button
+        type="button"
+        onClick={onToggleCalendar}
+        className={`shrink-0 flex items-center gap-1 h-8 px-3 rounded-lg text-xs font-semibold transition-colors ${
+          periodActive || isCalendarOpen
+            ? "bg-[var(--color-primary-green)]/10 border border-[var(--color-primary-green)] text-[var(--color-primary-green)]"
+            : "bg-card border border-text-secondary/20 text-text-secondary"
+        }`}
+      >
+        {formatPeriodLabel(period)}
+        <ChevronDown size={11} />
+      </button>
     </div>
   );
 }
@@ -405,45 +492,29 @@ export default function CertificationsPage() {
                 />
               </div>
 
-              {/* 2. 크루 칩 필터 + 내 인증만 토글 */}
-              <FeedCrewFilter
-                crews={availableCrews}
+              {/* 2. 한 줄 필터 바: 크루 ▼ / 내 인증만 / 기간 ▼ */}
+              <InlineFilterBar
+                availableCrews={availableCrews}
                 selectedCrewId={selectedCrewId}
-                onSelect={handleCrewChange}
+                onCrewChange={handleCrewChange}
+                showMyOnly={showMyOnly}
+                onToggleMyOnly={() => setShowMyOnly((v) => !v)}
+                period={period}
+                isCalendarOpen={isCalendarOpen}
+                onToggleCalendar={() => setIsCalendarOpen((v) => !v)}
               />
-              <div className="px-5 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setShowMyOnly((v) => !v)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                    showMyOnly
-                      ? "bg-[var(--color-primary-green)] text-white"
-                      : "bg-card border border-text-secondary/20 text-text-secondary"
-                  }`}
-                >
-                  <User size={12} />
-                  내 인증만
-                </button>
-              </div>
-
-              {/* 3. 날짜 필터 — FeedPeriodCard + FeedCalendar 재사용 */}
-              <div className="px-4 flex flex-col gap-3">
-                <FeedPeriodCard
-                  period={period}
-                  isCalendarOpen={isCalendarOpen}
-                  onOpenCalendar={() => setIsCalendarOpen((v) => !v)}
-                />
-                {isCalendarOpen && (
+              {isCalendarOpen && (
+                <div className="px-4">
                   <FeedCalendar
                     currentPeriod={period}
                     onApply={handlePeriodApply}
                     onClear={handlePeriodClear}
                     onClose={() => setIsCalendarOpen(false)}
                   />
-                )}
-              </div>
+                </div>
+              )}
 
-              {/* 4. 인증 리스트 */}
+              {/* 3. 인증 리스트 */}
               <div className="px-4 flex flex-col gap-4 pb-4">
                 {filteredCount === 0 ? (
                   <div className="mt-12 flex flex-col items-center gap-2 text-text-secondary">
