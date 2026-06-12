@@ -50,6 +50,8 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
   const [formTitle, setFormTitle] = useState('');
   const [formContent, setFormContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // 저장 실패 시 모달 내부에 노출하는 에러(모달은 열려 있어 toast가 가려지므로 인라인 처리).
+  const [formError, setFormError] = useState('');
 
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -110,6 +112,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
     setEditTarget(null);
     setFormTitle('');
     setFormContent('');
+    setFormError('');
     setModalOpen(true);
   };
 
@@ -117,6 +120,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
     setEditTarget(notice);
     setFormTitle(notice.title);
     setFormContent(notice.content);
+    setFormError('');
     setModalOpen(true);
   };
 
@@ -125,11 +129,13 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
     setEditTarget(null);
     setFormTitle('');
     setFormContent('');
+    setFormError('');
   };
 
   const handleSubmit = async () => {
     if (!formTitle.trim() || !formContent.trim() || isSubmitting) return;
     setIsSubmitting(true);
+    setFormError('');
     try {
       if (editTarget) {
         await updateCrewNotice(crewId, editTarget.notice_id, {
@@ -154,7 +160,12 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
       }
       closeModal();
     } catch {
-      // 에러 처리는 axios 인터셉터(toast)가 담당
+      // 모달은 닫지 않아 입력값을 유지하고, 모달 내부에 인라인 에러를 노출한다.
+      setFormError(
+        editTarget
+          ? '공지를 수정하지 못했어요. 잠시 후 다시 시도해주세요.'
+          : '공지를 등록하지 못했어요. 잠시 후 다시 시도해주세요.',
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -167,7 +178,9 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
       setNotices((prev) => prev.filter((n) => n.notice_id !== noticeId));
       setDeleteTarget(null);
     } catch {
-      // 에러 처리는 axios 인터셉터(toast)가 담당
+      // 모달을 닫아야 toast(z-90)가 모달 백드롭(z-100)에 가리지 않는다.
+      setDeleteTarget(null);
+      showToast('공지를 삭제하지 못했어요. 잠시 후 다시 시도해주세요.');
     } finally {
       setIsDeleting(false);
     }
@@ -445,6 +458,11 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
               className="w-full px-3 py-2 text-sm border border-text-secondary/20 rounded-button focus:outline-none focus:border-primary-green bg-transparent text-text-primary placeholder:text-text-secondary/50 resize-none"
             />
           </div>
+          {formError && (
+            <p role="alert" className="text-xs font-medium text-red-500">
+              {formError}
+            </p>
+          )}
           <div className="flex gap-2">
             <Button variant="outline" size="md" onClick={closeModal} fullWidth>
               취소
