@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 import { ClipboardCheck } from "lucide-react";
 
 import { Header } from "@/components/common/Header";
@@ -12,10 +11,28 @@ import type { AvailableCrew, CertificationStatus, FeedItem } from "@/types/domai
 
 // ─── 상태 설정 ────────────────────────────────────────────────
 
-const STATUS_CONFIG: Record<CertificationStatus, { label: string; className: string }> = {
-  PENDING_REVIEW: { label: "검토중", className: "bg-amber-100 text-amber-700" },
-  SUCCESS: { label: "인증 완료", className: "bg-green-100 text-green-700" },
-  FAILED: { label: "반려됨", className: "bg-red-100 text-red-600" },
+interface StatusMeta {
+  badge: string;
+  badgeClass: string;
+  description: string;
+}
+
+const STATUS_CONFIG: Record<CertificationStatus, StatusMeta> = {
+  PENDING_REVIEW: {
+    badge: "검토중",
+    badgeClass: "bg-amber-100 text-amber-700",
+    description: "검토 대기 중",
+  },
+  SUCCESS: {
+    badge: "승인",
+    badgeClass: "bg-green-100 text-green-700",
+    description: "인증이 승인되었어요",
+  },
+  FAILED: {
+    badge: "거절",
+    badgeClass: "bg-red-100 text-red-600",
+    description: "인증이 반려되었어요",
+  },
 };
 
 type StatusFilter = "ALL" | "APPROVED" | "REJECTED" | "PENDING";
@@ -32,6 +49,22 @@ function matchesStatusFilter(status: CertificationStatus, filter: StatusFilter):
   if (filter === "APPROVED") return status === "SUCCESS";
   if (filter === "REJECTED") return status === "FAILED";
   return status === "PENDING_REVIEW";
+}
+
+// ─── 아바타 색상 (crew_id 기준 고정 배정) ──────────────────────
+
+const AVATAR_PALETTE = [
+  "bg-emerald-100 text-emerald-700",
+  "bg-blue-100 text-blue-700",
+  "bg-violet-100 text-violet-700",
+  "bg-amber-100 text-amber-700",
+  "bg-rose-100 text-rose-600",
+  "bg-sky-100 text-sky-700",
+  "bg-teal-100 text-teal-700",
+];
+
+function getAvatarClass(crewId: number): string {
+  return AVATAR_PALETTE[crewId % AVATAR_PALETTE.length];
 }
 
 // ─── 날짜 헬퍼 ────────────────────────────────────────────────
@@ -67,11 +100,7 @@ function groupByDate(items: FeedItem[]): DateGroup[] {
     if (existing) {
       existing.items.push(item);
     } else {
-      map.set(key, {
-        dateKey: key,
-        dateLabel: formatDateHeader(item.server_time),
-        items: [item],
-      });
+      map.set(key, { dateKey: key, dateLabel: formatDateHeader(item.server_time), items: [item] });
     }
   }
   return Array.from(map.values());
@@ -80,52 +109,57 @@ function groupByDate(items: FeedItem[]): DateGroup[] {
 // ─── 컴포넌트 ────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: CertificationStatus }) {
-  const { label, className } = STATUS_CONFIG[status];
+  const { badge, badgeClass } = STATUS_CONFIG[status];
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0 ${className}`}>
-      {label}
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0 ${badgeClass}`}>
+      {badge}
     </span>
   );
 }
 
-function CertificationCard({ item }: { item: FeedItem }) {
+function CrewAvatar({ crewName, crewId }: { crewName: string; crewId: number }) {
+  const initial = crewName.charAt(0);
   return (
-    <div className="flex items-start gap-3 bg-card rounded-card shadow-card border border-text-secondary/10 p-3 animate-feed-in">
-      <div className="shrink-0 w-[72px] h-[72px] rounded-xl overflow-hidden bg-text-secondary/8 flex items-center justify-center">
-        {item.image_url ? (
-          <div className="relative w-full h-full">
-            <Image
-              src={item.image_url}
-              alt="인증 이미지"
-              fill
-              sizes="72px"
-              className="object-cover"
-            />
-          </div>
-        ) : (
-          <ClipboardCheck size={26} className="text-text-secondary/25" />
-        )}
-      </div>
-      <div className="flex-1 min-w-0 flex flex-col gap-1 pt-0.5">
-        <div className="flex items-start justify-between gap-2">
-          <span className="text-sm font-semibold text-text-primary truncate leading-tight">
-            {item.crew_name}
-          </span>
-          <StatusBadge status={item.certification_status} />
-        </div>
-        <span className="text-[11px] text-text-secondary/60">{formatTime(item.server_time)}</span>
+    <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${getAvatarClass(crewId)}`}>
+      {initial}
+    </div>
+  );
+}
+
+function CertificationCard({ item }: { item: FeedItem }) {
+  const { description } = STATUS_CONFIG[item.certification_status];
+  return (
+    <div className="flex items-center gap-3 bg-card rounded-card shadow-card border border-text-secondary/10 px-4 py-3 animate-feed-in">
+      {/* 왼쪽: 크루명 이니셜 아바타 */}
+      <CrewAvatar crewName={item.crew_name} crewId={item.crew_id} />
+
+      {/* 중앙: 닉네임·크루명 / 시간·상태 설명 */}
+      <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+        <p className="text-sm font-semibold text-text-primary truncate leading-snug">
+          {item.nickname}
+          <span className="font-normal text-text-secondary mx-1">·</span>
+          {item.crew_name}
+        </p>
+        <p className="text-xs text-text-secondary/70">
+          {formatTime(item.server_time)}
+          <span className="mx-1">·</span>
+          {description}
+        </p>
         {item.caption && (
-          <p className="text-xs text-text-secondary line-clamp-2 mt-0.5">{item.caption}</p>
+          <p className="text-xs text-text-secondary line-clamp-1 mt-0.5">{item.caption}</p>
         )}
       </div>
+
+      {/* 오른쪽: 상태 배지 */}
+      <StatusBadge status={item.certification_status} />
     </div>
   );
 }
 
 function DateGroupSection({ group }: { group: DateGroup }) {
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center gap-2 px-1">
         <span className="text-xs font-bold text-text-secondary whitespace-nowrap">
           {group.dateLabel} · {group.items.length}건
         </span>
@@ -140,16 +174,13 @@ function DateGroupSection({ group }: { group: DateGroup }) {
 
 function CardSkeleton() {
   return (
-    <div className="flex items-start gap-3 bg-card rounded-card shadow-card border border-text-secondary/10 p-3">
-      <Skeleton className="w-[72px] h-[72px] rounded-xl shrink-0" />
-      <div className="flex-1 flex flex-col gap-2 pt-0.5">
-        <div className="flex items-center justify-between gap-2">
-          <Skeleton className="w-20 h-4 rounded" />
-          <Skeleton className="w-14 h-[18px] rounded-full" />
-        </div>
-        <Skeleton className="w-10 h-3 rounded" />
-        <Skeleton className="w-full h-3 rounded" />
+    <div className="flex items-center gap-3 bg-card rounded-card shadow-card border border-text-secondary/10 px-4 py-3">
+      <Skeleton className="w-10 h-10 rounded-xl shrink-0" />
+      <div className="flex-1 flex flex-col gap-2">
+        <Skeleton className="w-36 h-4 rounded" />
+        <Skeleton className="w-24 h-3 rounded" />
       </div>
+      <Skeleton className="w-12 h-[18px] rounded-full shrink-0" />
     </div>
   );
 }
@@ -188,6 +219,9 @@ export default function CertificationsPage() {
         setAvailableCrews(data.available_crews);
 
         // TODO: BE에서 my_only 파라미터 추가 후 member_uuid 필터링 제거 예정
+        console.log("[인증이력] authStore member_uuid:", user?.member_uuid);
+        console.log("[인증이력] feed_items member_uuid 목록:", data.feed_items.map((i) => i.member_uuid));
+
         const myItems = user
           ? data.feed_items.filter((item) => item.member_uuid === user.member_uuid)
           : data.feed_items;
@@ -307,7 +341,7 @@ export default function CertificationsPage() {
         {/* 콘텐츠 */}
         <div className="px-4 pt-4 flex flex-col gap-4">
           {isLoading ? (
-            Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)
+            Array.from({ length: 5 }).map((_, i) => <CardSkeleton key={i} />)
           ) : errorMessage ? (
             <div className="mt-20 flex flex-col items-center gap-2 text-text-secondary">
               <ClipboardCheck size={40} className="opacity-30" />
