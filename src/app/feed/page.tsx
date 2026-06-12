@@ -105,6 +105,11 @@ export default function FeedPage() {
     isFetchingMoreRef.current = false;
   }, [nextCursor, fetchFeed]);
 
+  // 리액션 시 인증 로그가 사라진 경우(MISSION_LOG_NOT_FOUND) 해당 아이템을 목록에서 제거한다.
+  const handleRemoveItem = useCallback((missionLogId: number) => {
+    setItems((prev) => prev.filter((it) => it.mission_log_id !== missionLogId));
+  }, []);
+
   // 콜백 ref가 stale 클로저를 잡지 않도록 항상 최신 handleLoadMore를 가리킨다.
   const handleLoadMoreRef = useRef(handleLoadMore);
   useEffect(() => {
@@ -223,7 +228,7 @@ export default function FeedPage() {
             ) : (
               <>
                 {items.map((item) => (
-                  <FeedItem key={item.mission_log_id} item={item} />
+                  <FeedItem key={item.mission_log_id} item={item} onRemove={handleRemoveItem} />
                 ))}
                 {/* 무한 스크롤 센티넬 (다음 페이지가 있을 때만) */}
                 {nextCursor && (

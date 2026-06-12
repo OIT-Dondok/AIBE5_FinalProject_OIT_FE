@@ -1,11 +1,15 @@
 "use client";
 
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
+import { isAxiosError } from 'axios';
 import { SmilePlus } from 'lucide-react';
 
 import type { ReactionCounts, ReactionResponse } from '@/types/domain';
+import { ERROR_CODE } from '@/types/common';
+import type { ErrorResponse } from '@/types/common';
 import { addReaction, removeReaction } from '@/services/feed';
 import { EmojiPickerSheet } from '@/components/common/EmojiPickerSheet';
+import { Toast } from '@/components/common/Toast';
 
 interface FeedReactionBarProps {
   /** 리액션 대상 인증 로그 id */
@@ -14,18 +18,32 @@ interface FeedReactionBarProps {
   reactionCounts: ReactionCounts;
   /** 내가 누른 emoji token 목록 */
   myReactions: string[];
+  /** 인증 로그가 더 이상 존재하지 않을 때(MISSION_LOG_NOT_FOUND) 상위에 알린다(목록에서 제거용). */
+  onMissingLog?: () => void;
 }
 
-export function FeedReactionBar({ missionLogId, reactionCounts, myReactions }: FeedReactionBarProps) {
+export function FeedReactionBar({
+  missionLogId,
+  reactionCounts,
+  myReactions,
+  onMissingLog,
+}: FeedReactionBarProps) {
   // 리액션 표시 상태는 마운트 시 prop으로 초기화. API 응답 형태(counts map + mine 배열)를
   // 그대로 들고 있어 서버 응답으로의 동기화가 단순하다.
   // 아이템(mission_log_id) 변경 시 상위에서 key로 remount하므로 prop→state 동기화가 필요 없다.
   const [counts, setCounts] = useState<ReactionCounts>(() => reactionCounts ?? {});
   const [mine, setMine] = useState<string[]>(() => myReactions ?? []);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [isToastOpen, setIsToastOpen] = useState(false);
 
   // 같은 이모지에 대한 추가/삭제 요청이 겹치지 않도록 emoji 단위로 in-flight를 잠근다.
   const inFlightRef = useRef<Set<string>>(new Set());
+
+  const showToast = useCallback((message: string) => {
+    setToastMessage(message);
+    setIsToastOpen(true);
+  }, []);
 
   // dir=+1 추가, dir=-1 삭제. count가 0 이하가 되면 칩을 제거한다(서버 truth와 동일).
   const applyDelta = (emoji: string, dir: 1 | -1) => {
@@ -60,14 +78,26 @@ export function FeedReactionBar({ missionLogId, reactionCounts, myReactions }: F
     applyDelta(emoji, dir);
     inFlightRef.current.add(emoji);
     try {
+      // 삭제 시 이미 없는 리액션이어도 서버는 200 + 현재 상태를 응답하므로 동기화로 자연 처리된다.
       const res = isActive
         ? await removeReaction(missionLogId, emoji)
         : await addReaction(missionLogId, emoji);
       syncFromResponse(res.data);
-    } catch {
+    } catch (err) {
       // 실패 시 적용한 델타를 그대로 되돌린다(롤백).
-      // TODO(Step 3): 에러코드별 안내(REACTION_NOT_ALLOWED / INVALID_REACTION_TYPE / MISSION_LOG_NOT_FOUND)
       applyDelta(emoji, dir === 1 ? -1 : 1);
+      const code = isAxiosError<ErrorResponse>(err) ? err.response?.data?.code : undefined;
+      if (code === ERROR_CODE.MISSION_LOG_NOT_FOUND) {
+        // 인증 로그 자체가 사라짐 → 상위에 알려 목록에서 제거하게 한다.
+        showToast('삭제된 인증이에요.');
+        onMissingLog?.();
+      } else if (code === ERROR_CODE.REACTION_NOT_ALLOWED) {
+        showToast('이 인증에는 리액션을 남길 수 없어요.');
+      } else if (code === ERROR_CODE.INVALID_REACTION_TYPE) {
+        showToast('사용할 수 없는 이모지예요.');
+      } else {
+        showToast('리액션 처리에 실패했어요. 잠시 후 다시 시도해주세요.');
+      }
     } finally {
       inFlightRef.current.delete(emoji);
     }
@@ -126,6 +156,12 @@ export function FeedReactionBar({ missionLogId, reactionCounts, myReactions }: F
         onClose={() => setIsPickerOpen(false)}
         onSelect={handleSelectEmoji}
         selectedEmojis={mine}
+      />
+
+      <Toast
+        message={toastMessage}
+        isOpen={isToastOpen}
+        onClose={() => setIsToastOpen(false)}
       />
     </div>
   );
