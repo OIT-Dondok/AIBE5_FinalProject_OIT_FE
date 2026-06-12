@@ -916,7 +916,7 @@ export interface MyCrew {
   status: CrewStatus;
   deposit_amount: number;
   my_role: 'HOST' | 'MEMBER';
-  my_status: 'LOCKED';
+  my_status: 'PENDING' | 'LOCKED';
   start_at: string;
   end_at: string;
 }

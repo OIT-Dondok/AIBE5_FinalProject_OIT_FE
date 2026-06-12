@@ -10,7 +10,32 @@ import { getMyCrew } from '@/services/crew';
 import { CATEGORY_EMOJI, CATEGORY_BG } from '@/constants/crew';
 import type { MyCrew, CrewStatus } from '@/types/domain';
 
-type RoleFilter = 'ALL' | 'HOST' | 'MEMBER';
+// ─── 탭 정의 ────────────────────────────────────────────────
+
+type TabFilter = 'ALL' | 'PENDING' | 'ACTIVE' | 'CLOSED';
+type MyStatusParam = 'ALL' | 'PENDING' | 'LOCKED';
+
+const TABS: { label: string; value: TabFilter }[] = [
+  { label: '전체', value: 'ALL' },
+  { label: '승인 대기', value: 'PENDING' },
+  { label: '참여중', value: 'ACTIVE' },
+  { label: '종료됨', value: 'CLOSED' },
+];
+
+const TAB_TO_MY_STATUS: Record<TabFilter, MyStatusParam> = {
+  ALL: 'ALL',
+  PENDING: 'PENDING',
+  ACTIVE: 'LOCKED',
+  CLOSED: 'LOCKED',
+};
+
+function applyTabFilter(items: MyCrew[], tab: TabFilter): MyCrew[] {
+  if (tab === 'ACTIVE') return items.filter((c) => c.status === 'ACTIVE');
+  if (tab === 'CLOSED') return items.filter((c) => c.status === 'CLOSED' || c.status === 'CANCELLED');
+  return items;
+}
+
+// ─── 상수 ────────────────────────────────────────────────────
 
 const STATUS_CONFIG: Record<CrewStatus, { dot: string; text: string; label: string }> = {
   RECRUITING: { dot: 'bg-primary-blue', text: 'text-primary-blue', label: '모집중' },
@@ -24,6 +49,8 @@ function formatDate(dateStr: string): string {
   return `${d.getMonth() + 1}.${String(d.getDate()).padStart(2, '0')}`;
 }
 
+// ─── 카드 ────────────────────────────────────────────────────
+
 function MyCrewCard({ crew }: { crew: MyCrew }) {
   const router = useRouter();
   const [imgFailed, setImgFailed] = useState(false);
@@ -31,6 +58,7 @@ function MyCrewCard({ crew }: { crew: MyCrew }) {
   const emoji = CATEGORY_EMOJI[crew.category] ?? '📌';
   const categoryBg = CATEGORY_BG[crew.category] ?? 'bg-slate-100';
   const status = STATUS_CONFIG[crew.status];
+  const isPending = crew.my_status === 'PENDING';
   const isClosed = crew.status === 'CLOSED' || crew.status === 'CANCELLED';
 
   return (
@@ -61,18 +89,22 @@ function MyCrewCard({ crew }: { crew: MyCrew }) {
             {crew.title}
           </p>
           <div className="flex items-center gap-1.5">
-            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${status.dot}`} />
-            <span className={`text-[11px] font-semibold ${status.text}`}>{status.label}</span>
-            <span className="text-text-secondary/30 text-[10px]">·</span>
-            <span
-              className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                crew.my_role === 'HOST'
-                  ? 'bg-amber-100 text-amber-700'
-                  : 'bg-slate-100 text-slate-500'
-              }`}
-            >
-              {crew.my_role === 'HOST' ? '방장' : '멤버'}
-            </span>
+            {isPending ? (
+              <span className="text-[11px] font-semibold text-amber-600">승인 대기 중</span>
+            ) : (
+              <>
+                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${status.dot}`} />
+                <span className={`text-[11px] font-semibold ${status.text}`}>{status.label}</span>
+              </>
+            )}
+            {crew.my_role === 'HOST' && (
+              <>
+                <span className="text-text-secondary/30 text-[10px]">·</span>
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                  방장
+                </span>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -104,29 +136,27 @@ function MyCrewCardSkeleton() {
           <Skeleton variant="text" height={16} className="w-3/4" />
           <Skeleton variant="text" height={12} className="w-1/3" />
         </div>
-        <Skeleton variant="text" width={56} height={20} />
       </div>
-      <Skeleton variant="text" height={12} className="w-1/2" />
+      <div className="flex items-center justify-between pt-2.5 border-t border-text-secondary/10">
+        <Skeleton variant="text" height={12} className="w-1/3" />
+        <Skeleton variant="text" width={56} height={14} />
+      </div>
     </div>
   );
 }
 
-const TABS: { label: string; value: RoleFilter }[] = [
-  { label: '전체', value: 'ALL' },
-  { label: '방장', value: 'HOST' },
-  { label: '참여중', value: 'MEMBER' },
-];
+// ─── 페이지 ──────────────────────────────────────────────────
 
 export default function MyCrewsPage() {
-  const [activeTab, setActiveTab] = useState<RoleFilter>('ALL');
+  const [activeTab, setActiveTab] = useState<TabFilter>('ALL');
   const [crews, setCrews] = useState<MyCrew[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  const fetchCrews = useCallback(async (role: RoleFilter, cursor?: string) => {
+  const fetchCrews = useCallback(async (tab: TabFilter, cursor?: string) => {
     try {
-      const res = await getMyCrew(role, cursor);
+      const res = await getMyCrew(TAB_TO_MY_STATUS[tab], cursor);
       return res.data;
     } catch {
       return null;
@@ -140,7 +170,7 @@ export default function MyCrewsPage() {
 
     void fetchCrews(activeTab).then((data) => {
       if (data) {
-        setCrews(data.items);
+        setCrews(applyTabFilter(data.items, activeTab));
         setNextCursor(data.next_cursor);
       }
       setIsLoading(false);
@@ -152,7 +182,7 @@ export default function MyCrewsPage() {
     setIsLoadingMore(true);
     const data = await fetchCrews(activeTab, nextCursor);
     if (data) {
-      setCrews((prev) => [...prev, ...data.items]);
+      setCrews((prev) => [...prev, ...applyTabFilter(data.items, activeTab)]);
       setNextCursor(data.next_cursor);
     }
     setIsLoadingMore(false);

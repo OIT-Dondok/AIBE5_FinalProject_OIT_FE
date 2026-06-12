@@ -79,10 +79,10 @@ export const removeNoticeReaction = (crewId: number, noticeId: number, reactionT
   );
 };
 
-export const getMyCrew = (role?: 'HOST' | 'MEMBER' | 'ALL', cursor?: string) => {
+export const getMyCrew = (myStatus?: 'PENDING' | 'LOCKED' | 'ALL', cursor?: string) => {
   return api.get<MyCrewsResponse>('/me/crews', {
     params: {
-      ...(role && role !== 'ALL' ? { role } : {}),
+      ...(myStatus && myStatus !== 'ALL' ? { my_status: myStatus } : {}),
       ...(cursor ? { cursor } : {}),
     },
   });
