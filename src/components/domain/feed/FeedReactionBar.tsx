@@ -39,6 +39,9 @@ export function FeedReactionBar({
 
   // 같은 이모지에 대한 추가/삭제 요청이 겹치지 않도록 emoji 단위로 in-flight를 잠근다.
   const inFlightRef = useRef<Set<string>>(new Set());
+  // 아이템 단위로 네트워크 요청을 직렬화한다. 서로 다른 이모지를 동시에 눌러도 응답이
+  // 발신 순서대로 반영되어, 늦게 도착한 오래된 응답이 최신 상태를 덮어쓰는 race를 막는다.
+  const requestQueueRef = useRef<Promise<void>>(Promise.resolve());
 
   const showToast = useCallback((message: string) => {
     setToastMessage(message);
@@ -69,43 +72,47 @@ export function FeedReactionBar({
     setMine(data.my_reactions ?? []);
   };
 
-  const toggleReaction = async (emoji: string) => {
+  const toggleReaction = (emoji: string) => {
     if (inFlightRef.current.has(emoji)) return;
     const isActive = mine.includes(emoji);
     const dir: 1 | -1 = isActive ? -1 : 1;
 
-    // 낙관적 업데이트
+    // 낙관적 업데이트는 즉시 반영(응답성), 실제 네트워크 요청은 직렬 큐에 태운다.
     applyDelta(emoji, dir);
     inFlightRef.current.add(emoji);
-    try {
-      // 삭제 시 이미 없는 리액션이어도 서버는 200 + 현재 상태를 응답하므로 동기화로 자연 처리된다.
-      const res = isActive
-        ? await removeReaction(missionLogId, emoji)
-        : await addReaction(missionLogId, emoji);
-      syncFromResponse(res.data);
-    } catch (err) {
-      // 실패 시 적용한 델타를 그대로 되돌린다(롤백).
-      applyDelta(emoji, dir === 1 ? -1 : 1);
-      const code = isAxiosError<ErrorResponse>(err) ? err.response?.data?.code : undefined;
-      if (code === ERROR_CODE.MISSION_LOG_NOT_FOUND) {
-        // 인증 로그 자체가 사라짐 → 상위에 알려 목록에서 제거하게 한다.
-        showToast('삭제된 인증이에요.');
-        onMissingLog?.();
-      } else if (code === ERROR_CODE.REACTION_NOT_ALLOWED) {
-        showToast('이 인증에는 리액션을 남길 수 없어요.');
-      } else if (code === ERROR_CODE.INVALID_REACTION_TYPE) {
-        showToast('사용할 수 없는 이모지예요.');
-      } else {
-        showToast('리액션 처리에 실패했어요. 잠시 후 다시 시도해주세요.');
+    const run = async () => {
+      try {
+        // 삭제 시 이미 없는 리액션이어도 서버는 200 + 현재 상태를 응답하므로 동기화로 자연 처리된다.
+        const res = isActive
+          ? await removeReaction(missionLogId, emoji)
+          : await addReaction(missionLogId, emoji);
+        syncFromResponse(res.data);
+      } catch (err) {
+        // 실패 시 적용한 델타를 그대로 되돌린다(롤백).
+        applyDelta(emoji, dir === 1 ? -1 : 1);
+        const code = isAxiosError<ErrorResponse>(err) ? err.response?.data?.code : undefined;
+        if (code === ERROR_CODE.MISSION_LOG_NOT_FOUND) {
+          // 인증 로그가 사라짐 → 상위에 알려 목록에서 제거한다. 안내 토스트는 상위(페이지)에서
+          // 띄운다. 제거 즉시 이 컴포넌트가 언마운트되어 로컬 토스트는 보이지 않기 때문.
+          onMissingLog?.();
+        } else if (code === ERROR_CODE.REACTION_NOT_ALLOWED) {
+          showToast('이 인증에는 리액션을 남길 수 없어요.');
+        } else if (code === ERROR_CODE.INVALID_REACTION_TYPE) {
+          showToast('사용할 수 없는 이모지예요.');
+        } else {
+          showToast('리액션 처리에 실패했어요. 잠시 후 다시 시도해주세요.');
+        }
+      } finally {
+        inFlightRef.current.delete(emoji);
       }
-    } finally {
-      inFlightRef.current.delete(emoji);
-    }
+    };
+    // 직전 요청이 끝난 뒤 실행(성공·실패 모두 다음으로 진행).
+    requestQueueRef.current = requestQueueRef.current.then(run, run);
   };
 
   const handleSelectEmoji = (emoji: string) => {
     // 피커 선택도 토글과 동일 의미: 이미 누른 이모지면 삭제, 아니면 추가.
-    void toggleReaction(emoji);
+    toggleReaction(emoji);
   };
 
   const chips = Object.entries(counts);
@@ -118,7 +125,7 @@ export function FeedReactionBar({
           <button
             key={emoji}
             type="button"
-            onClick={() => void toggleReaction(emoji)}
+            onClick={() => toggleReaction(emoji)}
             aria-pressed={isActive}
             aria-label={`${emoji} 반응 ${count}개`}
             className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-green/50 ${

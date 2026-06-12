@@ -12,6 +12,7 @@ import { FeedCrewFilter } from '@/components/domain/feed/FeedCrewFilter';
 import { FeedItem } from '@/components/domain/feed/FeedItem';
 import { FeedSkeletonList } from '@/components/domain/feed/FeedItemSkeleton';
 import { FeedPeriodCard } from '@/components/domain/feed/FeedPeriodCard';
+import { Toast } from '@/components/common/Toast';
 import { getFeed } from '@/services/feed';
 import type { AvailableCrew, FeedItem as FeedItemType, FeedPeriod } from '@/types/domain';
 import { ERROR_CODE } from '@/types/common';
@@ -32,6 +33,9 @@ export default function FeedPage() {
   const [accessDenied, setAccessDenied] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  // 페이지 레벨 토스트: 아이템 제거처럼 하위 컴포넌트가 언마운트되는 경우의 안내를 여기서 띄운다.
+  const [toastMessage, setToastMessage] = useState('');
+  const [isToastOpen, setIsToastOpen] = useState(false);
 
   // 무한 스크롤: 동시 호출 가드 + 옵저버 인스턴스
   const isFetchingMoreRef = useRef(false);
@@ -106,8 +110,12 @@ export default function FeedPage() {
   }, [nextCursor, fetchFeed]);
 
   // 리액션 시 인증 로그가 사라진 경우(MISSION_LOG_NOT_FOUND) 해당 아이템을 목록에서 제거한다.
+  // 안내 토스트는 페이지 레벨에서 띄운다. FeedReactionBar에서 띄우면 이 제거로 즉시 언마운트되어
+  // 토스트가 보이지 않기 때문이다.
   const handleRemoveItem = useCallback((missionLogId: number) => {
     setItems((prev) => prev.filter((it) => it.mission_log_id !== missionLogId));
+    setToastMessage('삭제된 인증이에요.');
+    setIsToastOpen(true);
   }, []);
 
   // 콜백 ref가 stale 클로저를 잡지 않도록 항상 최신 handleLoadMore를 가리킨다.
@@ -247,6 +255,12 @@ export default function FeedPage() {
           </div>
         </div>
       </div>
+
+      <Toast
+        message={toastMessage}
+        isOpen={isToastOpen}
+        onClose={() => setIsToastOpen(false)}
+      />
     </main>
   );
 }

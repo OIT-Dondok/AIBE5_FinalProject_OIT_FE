@@ -64,6 +64,9 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
   const [isToastOpen, setIsToastOpen] = useState(false);
   // 같은 공지·이모지에 대한 추가/삭제 요청이 겹치지 않도록 (noticeId:emoji) 단위로 in-flight를 잠근다.
   const reactionInFlightRef = useRef<Set<string>>(new Set());
+  // 공지(noticeId) 단위로 요청을 직렬화한다. 같은 공지에서 서로 다른 이모지를 동시에 눌러도
+  // 응답이 발신 순서대로 반영되어, 늦게 도착한 오래된 응답이 최신 상태를 덮어쓰는 race를 막는다.
+  const reactionQueueRef = useRef<Map<number, Promise<void>>>(new Map());
 
   const showToast = useCallback((message: string) => {
     setToastMessage(message);
@@ -220,7 +223,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
     );
   };
 
-  const handleReaction = async (noticeId: number, emoji: string) => {
+  const handleReaction = (noticeId: number, emoji: string) => {
     const notice = notices.find((n) => n.notice_id === noticeId);
     if (!notice) return;
     const key = `${noticeId}:${emoji}`;
@@ -228,30 +231,35 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
     const isReacted = notice.my_reactions.includes(emoji);
     const dir: 1 | -1 = isReacted ? -1 : 1;
 
-    // 낙관적 업데이트
+    // 낙관적 업데이트는 즉시 반영(응답성), 실제 네트워크 요청은 공지 단위 직렬 큐에 태운다.
     applyReactionDelta(noticeId, emoji, dir);
     reactionInFlightRef.current.add(key);
-    try {
-      // 삭제 시 이미 없는 리액션이어도 서버는 200 + 현재 상태를 응답하므로 동기화로 자연 처리된다.
-      const res = isReacted
-        ? await removeNoticeReaction(crewId, noticeId, emoji)
-        : await addNoticeReaction(crewId, noticeId, emoji);
-      const { my_reactions, reaction_counts } = res.data;
-      syncNoticeReaction(noticeId, my_reactions, reaction_counts);
-    } catch (err) {
-      // 실패 시 적용한 델타를 그대로 되돌린다(롤백).
-      applyReactionDelta(noticeId, emoji, dir === 1 ? -1 : 1);
-      const code = isAxiosError<ErrorResponse>(err) ? err.response?.data?.code : undefined;
-      if (code === ERROR_CODE.REACTION_NOT_ALLOWED) {
-        showToast('이 공지에는 리액션을 남길 수 없어요.');
-      } else if (code === ERROR_CODE.INVALID_REACTION_TYPE) {
-        showToast('사용할 수 없는 이모지예요.');
-      } else {
-        showToast('리액션 처리에 실패했어요. 잠시 후 다시 시도해주세요.');
+    const run = async () => {
+      try {
+        // 삭제 시 이미 없는 리액션이어도 서버는 200 + 현재 상태를 응답하므로 동기화로 자연 처리된다.
+        const res = isReacted
+          ? await removeNoticeReaction(crewId, noticeId, emoji)
+          : await addNoticeReaction(crewId, noticeId, emoji);
+        const { my_reactions, reaction_counts } = res.data;
+        syncNoticeReaction(noticeId, my_reactions, reaction_counts);
+      } catch (err) {
+        // 실패 시 적용한 델타를 그대로 되돌린다(롤백).
+        applyReactionDelta(noticeId, emoji, dir === 1 ? -1 : 1);
+        const code = isAxiosError<ErrorResponse>(err) ? err.response?.data?.code : undefined;
+        if (code === ERROR_CODE.REACTION_NOT_ALLOWED) {
+          showToast('이 공지에는 리액션을 남길 수 없어요.');
+        } else if (code === ERROR_CODE.INVALID_REACTION_TYPE) {
+          showToast('사용할 수 없는 이모지예요.');
+        } else {
+          showToast('리액션 처리에 실패했어요. 잠시 후 다시 시도해주세요.');
+        }
+      } finally {
+        reactionInFlightRef.current.delete(key);
       }
-    } finally {
-      reactionInFlightRef.current.delete(key);
-    }
+    };
+    // 같은 공지의 직전 요청이 끝난 뒤 실행(성공·실패 모두 다음으로 진행).
+    const prev = reactionQueueRef.current.get(noticeId) ?? Promise.resolve();
+    reactionQueueRef.current.set(noticeId, prev.then(run, run));
   };
 
   if (isLoading) {
