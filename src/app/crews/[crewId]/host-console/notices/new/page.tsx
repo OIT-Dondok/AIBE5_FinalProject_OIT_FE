@@ -9,7 +9,8 @@ import { Header } from "@/components/common/Header";
 import { HostActionButton } from "@/components/domain/host/common/HostActionButton";
 import { HostToast } from "@/components/domain/host/common/HostToast";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
-import { createHostNotice, getHostCrewDetail } from "@/mocks/data/host";
+import { getHostCrewDetail } from "@/mocks/data/host";
+import { createCrewNotice } from "@/services/crew";
 
 export default function HostNoticeNewPage() {
   const router = useRouter();
@@ -18,6 +19,7 @@ export default function HostNoticeNewPage() {
   const [title, setTitle] = useState("");
   const [contentHtml, setContentHtml] = useState("");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const crewDetail = crewId !== null ? getHostCrewDetail(crewId) : null;
   const isTitleReady = title.trim().length > 0;
 
@@ -46,17 +48,20 @@ export default function HostNoticeNewPage() {
     );
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!isTitleReady) {
       setToastMessage("제목을 작성해주세요");
       return;
     }
-
-    const createdNotice = createHostNotice(crewId, {
-      title,
-      content_html: contentHtml.replace(/\n/g, "<br>"),
-    });
-    router.push(`/crews/${crewId}/host-console/notices/${createdNotice.notice_id}`);
+    setIsSubmitting(true);
+    try {
+      await createCrewNotice(crewId, { title, content: contentHtml.trim() });
+      router.push(`/crews/${crewId}/host-console?tab=notices`);
+    } catch {
+      // 에러 처리는 axios 인터셉터(toast)가 담당
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -101,8 +106,8 @@ export default function HostNoticeNewPage() {
               취소
             </HostActionButton>
             <HostActionButton
-              variant={isTitleReady ? "primary" : "primaryDisabled"}
-              onClick={handleSubmit}
+              variant={isTitleReady && !isSubmitting ? "primary" : "primaryDisabled"}
+              onClick={() => void handleSubmit()}
             >
               공지 등록
             </HostActionButton>
