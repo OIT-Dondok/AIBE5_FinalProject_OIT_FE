@@ -162,14 +162,14 @@ export function ProfileMenuSections({
 
   if (showHostSection) {
     sections.push({
-      sectionTitle: "호스트 기능",
+      sectionTitle: "방장 영역",
       items: [
         {
           icon: Settings,
           iconBg: "bg-slate-100",
           iconColor: "text-slate-500",
-          title: "방장 운영 콘솔",
-          subtitle: "호스트 권한이 있는 크루의 운영 콘솔로 이동",
+          title: "운영 콘솔",
+          subtitle: "검증 · 공지 · 가입 관리",
           badge: hostOperationPendingCount,
           onClick: () => router.push(hostCrewId ? `/crews/${hostCrewId}/host-console` : "/my"),
         },
