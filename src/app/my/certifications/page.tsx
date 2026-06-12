@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ClipboardCheck } from "lucide-react";
+import { ClipboardCheck, User } from "lucide-react";
 
 import { Header } from "@/components/common/Header";
 import { Skeleton } from "@/components/common/Skeleton";
@@ -9,6 +9,7 @@ import { FeedCalendar } from "@/components/domain/feed/FeedCalendar";
 import { FeedCrewFilter } from "@/components/domain/feed/FeedCrewFilter";
 import { FeedPeriodCard } from "@/components/domain/feed/FeedPeriodCard";
 import { getFeed } from "@/services/feed";
+import { useAuthStore } from "@/store/authStore";
 import type { AvailableCrew, CertificationStatus, FeedItem, FeedPeriod } from "@/types/domain";
 
 // ─── 상태 설정 ────────────────────────────────────────────────
@@ -139,10 +140,7 @@ function CertificationCard({ item }: { item: FeedItem }) {
 
   return (
     <div className="flex items-center gap-3 bg-card rounded-card shadow-card border border-text-secondary/10 px-4 py-3 animate-feed-in">
-      {/* 왼쪽: 닉네임 이니셜 아바타 (배경색 크루별 고정색) */}
       <NicknameAvatar nickname={item.nickname} crewId={item.crew_id} />
-
-      {/* 중앙: 닉네임·크루명 / 시간·사유·유형 */}
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
         <p className="text-sm font-semibold text-text-primary truncate leading-snug">
           {item.nickname}
@@ -156,8 +154,6 @@ function CertificationCard({ item }: { item: FeedItem }) {
           <p className="text-xs text-text-secondary line-clamp-1 mt-0.5">{item.caption}</p>
         )}
       </div>
-
-      {/* 오른쪽: 상태 배지 */}
       <StatusBadge status={item.certification_status} />
     </div>
   );
@@ -273,10 +269,13 @@ function FilterSummaryCards({
 // ─── 페이지 ────────────────────────────────────────────────────
 
 export default function CertificationsPage() {
+  const myMemberUuid = useAuthStore((s) => s.user?.member_uuid);
+
   const [availableCrews, setAvailableCrews] = useState<AvailableCrew[]>([]);
   const [items, setItems] = useState<FeedItem[]>([]);
   const [selectedCrewId, setSelectedCrewId] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [showMyOnly, setShowMyOnly] = useState(false);
   const [period, setPeriod] = useState<FeedPeriod | null>(null);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -353,13 +352,21 @@ export default function CertificationsPage() {
     }
   };
 
-  // 클라이언트 사이드 상태 필터 + 날짜 그룹핑
+  // 내 인증만 토글 → 상태 필터 → 날짜 그룹핑
+  const baseItems = useMemo(
+    () =>
+      showMyOnly && myMemberUuid
+        ? items.filter((i) => i.member_uuid === myMemberUuid)
+        : items,
+    [items, showMyOnly, myMemberUuid],
+  );
+
   const filteredGroups = useMemo(() => {
-    const filtered = items.filter((item) =>
+    const filtered = baseItems.filter((item) =>
       matchesStatusFilter(item.certification_status, statusFilter),
     );
     return groupByDate(filtered);
-  }, [items, statusFilter]);
+  }, [baseItems, statusFilter]);
 
   const filteredCount = filteredGroups.reduce((sum, g) => sum + g.items.length, 0);
 
@@ -371,7 +378,6 @@ export default function CertificationsPage() {
         <div className="flex flex-col gap-4 pt-4">
           {isLoading ? (
             <>
-              {/* 요약 카드 스켈레톤 */}
               <div className="grid grid-cols-4 gap-2 px-4">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <Skeleton key={i} className="h-16 rounded-xl" />
@@ -393,18 +399,32 @@ export default function CertificationsPage() {
               {/* 1. 필터 겸 요약 카드 */}
               <div className="px-4">
                 <FilterSummaryCards
-                  items={items}
+                  items={baseItems}
                   activeFilter={statusFilter}
                   onSelect={setStatusFilter}
                 />
               </div>
 
-              {/* 2. 크루 칩 필터 — FeedCrewFilter 재사용 */}
+              {/* 2. 크루 칩 필터 + 내 인증만 토글 */}
               <FeedCrewFilter
                 crews={availableCrews}
                 selectedCrewId={selectedCrewId}
                 onSelect={handleCrewChange}
               />
+              <div className="px-5 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowMyOnly((v) => !v)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                    showMyOnly
+                      ? "bg-[var(--color-primary-green)] text-white"
+                      : "bg-card border border-text-secondary/20 text-text-secondary"
+                  }`}
+                >
+                  <User size={12} />
+                  내 인증만
+                </button>
+              </div>
 
               {/* 3. 날짜 필터 — FeedPeriodCard + FeedCalendar 재사용 */}
               <div className="px-4 flex flex-col gap-3">
