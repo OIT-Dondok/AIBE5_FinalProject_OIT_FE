@@ -84,6 +84,7 @@ export function FeedItem({ item }: FeedItemProps) {
       <div className="px-4 py-3.5">
         <FeedReactionBar
           key={item.mission_log_id}
+          missionLogId={item.mission_log_id}
           reactionCounts={item.reaction_counts}
           myReactions={item.my_reactions}
         />
