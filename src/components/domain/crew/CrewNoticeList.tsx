@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { isAxiosError } from 'axios';
 import { Plus, Edit2, Trash2, SmilePlus } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { Button } from '@/components/common/Button';
 import { EmptyState } from '@/components/common/EmptyState';
 import { EmojiPickerSheet } from '@/components/common/EmojiPickerSheet';
+import { Toast } from '@/components/common/Toast';
 import { useAuthStore } from '@/store/authStore';
 import {
   getCrewNotices,
@@ -16,7 +17,8 @@ import {
   addNoticeReaction,
   removeNoticeReaction,
 } from '@/services/crew';
-import type { CrewNotice } from '@/types/domain';
+import type { CrewNotice, ReactionCounts } from '@/types/domain';
+import { ERROR_CODE } from '@/types/common';
 import type { ErrorResponse } from '@/types/common';
 
 interface CrewNoticeListProps {
@@ -54,6 +56,17 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
 
   // EmojiPickerSheet: 어느 공지에 대해 열려 있는지 추적
   const [pickerTarget, setPickerTarget] = useState<number | null>(null);
+
+  // 리액션 안내 토스트 (에러코드별 메시지)
+  const [toastMessage, setToastMessage] = useState('');
+  const [isToastOpen, setIsToastOpen] = useState(false);
+  // 같은 공지·이모지에 대한 추가/삭제 요청이 겹치지 않도록 (noticeId:emoji) 단위로 in-flight를 잠근다.
+  const reactionInFlightRef = useRef<Set<string>>(new Set());
+
+  const showToast = useCallback((message: string) => {
+    setToastMessage(message);
+    setIsToastOpen(true);
+  }, []);
 
   const fetchNotices = useCallback(
     async (cursor?: string) => {
@@ -160,23 +173,71 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
     }
   };
 
+  // 특정 공지의 리액션 상태를 dir만큼 변경(낙관적 업데이트/롤백 공용).
+  // dir=+1 추가, dir=-1 삭제. count가 0 이하가 되면 칩을 제거한다(서버 truth와 동일).
+  const applyReactionDelta = (noticeId: number, emoji: string, dir: 1 | -1) => {
+    setNotices((prev) =>
+      prev.map((n) => {
+        if (n.notice_id !== noticeId) return n;
+        const my_reactions =
+          dir === 1
+            ? n.my_reactions.includes(emoji)
+              ? n.my_reactions
+              : [...n.my_reactions, emoji]
+            : n.my_reactions.filter((e) => e !== emoji);
+        const reaction_counts: ReactionCounts = { ...n.reaction_counts };
+        const value = (reaction_counts[emoji] ?? 0) + dir;
+        if (value <= 0) delete reaction_counts[emoji];
+        else reaction_counts[emoji] = value;
+        return { ...n, my_reactions, reaction_counts };
+      }),
+    );
+  };
+
+  // 서버 응답으로 해당 공지의 리액션 최종 상태를 덮어쓴다.
+  const syncNoticeReaction = (
+    noticeId: number,
+    my_reactions: string[],
+    reaction_counts: ReactionCounts,
+  ) => {
+    setNotices((prev) =>
+      prev.map((n) =>
+        n.notice_id === noticeId ? { ...n, my_reactions, reaction_counts } : n,
+      ),
+    );
+  };
+
   const handleReaction = async (noticeId: number, emoji: string) => {
     const notice = notices.find((n) => n.notice_id === noticeId);
     if (!notice) return;
+    const key = `${noticeId}:${emoji}`;
+    if (reactionInFlightRef.current.has(key)) return;
     const isReacted = notice.my_reactions.includes(emoji);
+    const dir: 1 | -1 = isReacted ? -1 : 1;
+
+    // 낙관적 업데이트
+    applyReactionDelta(noticeId, emoji, dir);
+    reactionInFlightRef.current.add(key);
     try {
-      // 서버 응답으로 상태 업데이트 (로컬 낙관적 업데이트 없이 서버 기준)
+      // 삭제 시 이미 없는 리액션이어도 서버는 200 + 현재 상태를 응답하므로 동기화로 자연 처리된다.
       const res = isReacted
         ? await removeNoticeReaction(crewId, noticeId, emoji)
         : await addNoticeReaction(crewId, noticeId, emoji);
       const { my_reactions, reaction_counts } = res.data;
-      setNotices((prev) =>
-        prev.map((n) =>
-          n.notice_id === noticeId ? { ...n, my_reactions, reaction_counts } : n,
-        ),
-      );
-    } catch {
-      // 에러 처리는 axios 인터셉터(toast)가 담당
+      syncNoticeReaction(noticeId, my_reactions, reaction_counts);
+    } catch (err) {
+      // 실패 시 적용한 델타를 그대로 되돌린다(롤백).
+      applyReactionDelta(noticeId, emoji, dir === 1 ? -1 : 1);
+      const code = isAxiosError<ErrorResponse>(err) ? err.response?.data?.code : undefined;
+      if (code === ERROR_CODE.REACTION_NOT_ALLOWED) {
+        showToast('이 공지에는 리액션을 남길 수 없어요.');
+      } else if (code === ERROR_CODE.INVALID_REACTION_TYPE) {
+        showToast('사용할 수 없는 이모지예요.');
+      } else {
+        showToast('리액션 처리에 실패했어요. 잠시 후 다시 시도해주세요.');
+      }
+    } finally {
+      reactionInFlightRef.current.delete(key);
     }
   };
 
@@ -333,6 +394,13 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
           if (pickerTarget !== null) void handleReaction(pickerTarget, emoji);
         }}
         selectedEmojis={pickerNotice?.my_reactions ?? []}
+      />
+
+      {/* 리액션 에러 안내 토스트 */}
+      <Toast
+        message={toastMessage}
+        isOpen={isToastOpen}
+        onClose={() => setIsToastOpen(false)}
       />
 
       {/* 공지 작성 / 수정 모달 */}
