@@ -26,6 +26,7 @@ import {
   requestProfileImageUploadUrl,
   updateMyProfile,
 } from "@/services/profile";
+import { getMyCrew } from "@/services/crew";
 import { prepareImageForUpload, UnsupportedImageError } from "@/lib/prepareImageForUpload";
 import type { MeActivitySummaryResponse } from "@/types/domain";
 
@@ -117,6 +118,7 @@ export default function ProfilePage() {
   const [isInlineEditing, setIsInlineEditing] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [feedbackToast, setFeedbackToast] = useState<ProfileImageFeedback | null>(null);
+  const [hostCrewId, setHostCrewId] = useState<number | null>(null);
   const [inlineDraft, setInlineDraft] = useState<ProfileFormState>(() =>
     createProfileFormState(null),
   );
@@ -141,11 +143,16 @@ export default function ProfilePage() {
         let hostOperationPendingCount = 0;
 
         if (profileResponse.data.is_host_ever) {
-          try {
-            const hostSummaryResponse = await getMyHostOperationSummary();
-            hostOperationPendingCount = hostSummaryResponse.data.total_pending_count;
-          } catch {
-            hostOperationPendingCount = 0;
+          const [hostSummaryResult, myCrewsResult] = await Promise.allSettled([
+            getMyHostOperationSummary(),
+            getMyCrew(),
+          ]);
+          if (hostSummaryResult.status === "fulfilled") {
+            hostOperationPendingCount = hostSummaryResult.value.data.total_pending_count;
+          }
+          if (myCrewsResult.status === "fulfilled" && isMountedRef.current) {
+            const hostCrew = myCrewsResult.value.data.items.find((c) => c.my_role === "HOST");
+            if (hostCrew) setHostCrewId(hostCrew.crew_id);
           }
         }
 
@@ -349,6 +356,7 @@ export default function ProfilePage() {
             unreadNotificationCount={profile.unreadNotificationCount}
             showHostSection={profile.isHostEver}
             hostOperationPendingCount={profile.hostOperationPendingCount}
+            hostCrewId={hostCrewId}
           />
         </div>
 

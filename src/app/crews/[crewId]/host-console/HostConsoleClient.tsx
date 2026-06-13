@@ -33,6 +33,13 @@ export default function HostConsoleClient() {
       ? tabParam
       : "verification"
   );
+
+  useEffect(() => {
+    if (tabParam === "verification" || tabParam === "applications" || tabParam === "notices") {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
+
   const [pendingReviewCount, setPendingReviewCount] = useState(0);
   const [applicationDecisions, setApplicationDecisions] = useState<Record<number, ApplicationDecision>>({});
   const [noticeCount, setNoticeCount] = useState(0);
