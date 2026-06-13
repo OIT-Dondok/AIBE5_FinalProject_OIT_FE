@@ -60,5 +60,12 @@ export function snapToScheduledDay(
     }
     cursor.setUTCDate(cursor.getUTCDate() + step);
   }
-  return date;
+
+  // 7회 탐색 후에도 매칭이 없으면 scheduleDays에 유효한 요일 토큰이 하나도 없는 경우다.
+  // 정상 흐름에서는 도달할 수 없는 상태이므로, 조용히 넘어가지 않고 예외를 던져 원인을 드러낸다.
+  throw new Error(
+    `[snapToScheduledDay] 유효한 요일 토큰을 찾지 못했습니다. scheduleDays=${JSON.stringify(
+      scheduleDays,
+    )}`,
+  );
 }
