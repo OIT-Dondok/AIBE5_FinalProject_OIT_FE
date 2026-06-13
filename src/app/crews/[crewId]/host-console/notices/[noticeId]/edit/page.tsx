@@ -59,7 +59,7 @@ export default function HostNoticeEditPage() {
       });
       router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}`);
     } catch {
-      // 에러 처리는 axios 인터셉터(toast)가 담당
+      setToastMessage("공지 수정에 실패했어요");
     } finally {
       setIsSubmitting(false);
     }

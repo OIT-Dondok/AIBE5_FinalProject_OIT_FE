@@ -58,7 +58,7 @@ export default function HostNoticeNewPage() {
       await createCrewNotice(crewId, { title, content: contentHtml.trim() });
       router.push(`/crews/${crewId}/host-console?tab=notices`);
     } catch {
-      // 에러 처리는 axios 인터셉터(toast)가 담당
+      setToastMessage("공지 등록에 실패했어요");
     } finally {
       setIsSubmitting(false);
     }

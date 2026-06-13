@@ -10,6 +10,7 @@ import { Header } from "@/components/common/Header";
 import { HostBadge } from "@/components/common/HostBadge";
 import { HostConfirmDialog } from "@/components/domain/host/common/HostConfirmDialog";
 import { HostMoreMenu } from "@/components/domain/host/common/HostMoreMenu";
+import { HostToast } from "@/components/domain/host/common/HostToast";
 import { formatDateMinute } from "@/components/domain/host/hostFormatters";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import {
@@ -35,6 +36,7 @@ export default function HostNoticeDetailPage() {
   const [isNoticeMenuOpen, setIsNoticeMenuOpen] = useState(false);
   const [commentInput, setCommentInput] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const deleteToastTimerRef = useRef<number | null>(null);
   const deleteNavTimerRef = useRef<number | null>(null);
   const router = useRouter();
@@ -66,6 +68,12 @@ export default function HostNoticeDetailPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timeoutId = window.setTimeout(() => setToastMessage(null), 2200);
+    return () => window.clearTimeout(timeoutId);
+  }, [toastMessage]);
+
   const handleDeleteNotice = async () => {
     if (crewId === null || noticeId === null) return;
     setIsDeleting(true);
@@ -78,7 +86,7 @@ export default function HostNoticeDetailPage() {
         router.push(`/crews/${crewId}/host-console?tab=notices`);
       }, 2000);
     } catch {
-      // 에러 처리는 axios 인터셉터(toast)가 담당
+      setToastMessage("공지 삭제에 실패했어요");
     } finally {
       setIsDeleting(false);
     }
@@ -97,7 +105,7 @@ export default function HostNoticeDetailPage() {
           : prev,
       );
     } catch {
-      // 에러 처리는 axios 인터셉터(toast)가 담당
+      setToastMessage("리액션 처리에 실패했어요");
     }
   };
 
@@ -110,7 +118,7 @@ export default function HostNoticeDetailPage() {
       setComments((prev) => [...prev, res.data]);
       setCommentInput("");
     } catch {
-      // 에러 처리는 axios 인터셉터(toast)가 담당
+      setToastMessage("댓글 등록에 실패했어요");
     } finally {
       setIsSubmittingComment(false);
     }
@@ -328,6 +336,8 @@ export default function HostNoticeDetailPage() {
             </div>
           </div>
         )}
+
+        {toastMessage && <HostToast message={toastMessage} />}
 
         {isDeleteModalOpen && (
           <HostConfirmDialog

@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { HostActionButton } from "@/components/domain/host/common/HostActionButton";
 import { HostConfirmDialog } from "@/components/domain/host/common/HostConfirmDialog";
 import { HostMoreMenu } from "@/components/domain/host/common/HostMoreMenu";
+import { HostToast } from "@/components/domain/host/common/HostToast";
 import { formatDate, formatTime } from "@/components/domain/host/hostFormatters";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { SectionCard } from "@/components/domain/host/SectionCard";
@@ -24,6 +25,7 @@ export function NoticesTab() {
   const [deleteTargetNoticeId, setDeleteTargetNoticeId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteToast, setShowDeleteToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const deleteToastTimerRef = useRef<number | null>(null);
   const deleteNavTimerRef = useRef<number | null>(null);
   const params = useParams<{ crewId: string }>();
@@ -52,6 +54,12 @@ export function NoticesTab() {
       if (deleteNavTimerRef.current !== null) clearTimeout(deleteNavTimerRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timeoutId = window.setTimeout(() => setToastMessage(null), 2200);
+    return () => window.clearTimeout(timeoutId);
+  }, [toastMessage]);
 
   if (crewId === null) {
     return (
@@ -97,7 +105,7 @@ export function NoticesTab() {
         router.push(`/crews/${crewId}/host-console?tab=notices`);
       }, 2000);
     } catch {
-      // 에러 처리는 axios 인터셉터(toast)가 담당
+      setToastMessage("공지 삭제에 실패했어요");
     } finally {
       setIsDeleting(false);
     }
@@ -224,6 +232,8 @@ export function NoticesTab() {
           </div>
         </div>
       )}
+
+      {toastMessage && <HostToast message={toastMessage} />}
 
       {deleteTargetNoticeId !== null && (
         <HostConfirmDialog
