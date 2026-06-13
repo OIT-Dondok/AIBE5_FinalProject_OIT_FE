@@ -46,6 +46,7 @@ export default function HostNoticeEditPage() {
   }, [toastMessage]);
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
     if (crewId === null || !notice) return;
     if (!isTitleReady) {
       setToastMessage("제목을 작성해주세요");
