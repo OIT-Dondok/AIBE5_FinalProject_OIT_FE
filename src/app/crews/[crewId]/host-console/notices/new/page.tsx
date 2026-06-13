@@ -9,7 +9,7 @@ import { Header } from "@/components/common/Header";
 import { HostActionButton } from "@/components/domain/host/common/HostActionButton";
 import { HostToast } from "@/components/domain/host/common/HostToast";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
-import { createHostNotice, getHostCrewDetail } from "@/mocks/data/host";
+import { createCrewNotice, getCrew } from "@/services/crew";
 
 export default function HostNoticeNewPage() {
   const router = useRouter();
@@ -18,7 +18,8 @@ export default function HostNoticeNewPage() {
   const [title, setTitle] = useState("");
   const [contentHtml, setContentHtml] = useState("");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const crewDetail = crewId !== null ? getHostCrewDetail(crewId) : null;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [crewName, setCrewName] = useState<string | null>(null);
   const isTitleReady = title.trim().length > 0;
 
   useEffect(() => {
@@ -30,6 +31,11 @@ export default function HostNoticeNewPage() {
 
     return () => window.clearTimeout(timeoutId);
   }, [toastMessage]);
+
+  useEffect(() => {
+    if (crewId === null) return;
+    getCrew(crewId).then((res) => setCrewName(res.data.title)).catch(() => {});
+  }, [crewId]);
 
   if (crewId === null) {
     return (
@@ -46,17 +52,21 @@ export default function HostNoticeNewPage() {
     );
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (isSubmitting) return;
     if (!isTitleReady) {
       setToastMessage("제목을 작성해주세요");
       return;
     }
-
-    const createdNotice = createHostNotice(crewId, {
-      title,
-      content_html: contentHtml.replace(/\n/g, "<br>"),
-    });
-    router.push(`/crews/${crewId}/host-console/notices/${createdNotice.notice_id}`);
+    setIsSubmitting(true);
+    try {
+      await createCrewNotice(crewId, { title, content: contentHtml.trim() });
+      router.push(`/crews/${crewId}/host-console?tab=notices`);
+    } catch {
+      setToastMessage("공지 등록에 실패했어요");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -68,7 +78,7 @@ export default function HostNoticeNewPage() {
           <div className="px-1">
             <p className="mb-3 flex items-center gap-1.5 text-xs font-medium text-text-secondary">
               <Megaphone size={14} strokeWidth={2.3} className="text-[#4C73D9]" />
-              <span className="font-extrabold text-text-primary">{crewDetail?.title}</span> 크루에 공지를 올립니다
+              {crewName && <span className="font-extrabold text-text-primary">{crewName}</span>}{crewName ? " 크루에 공지를 올립니다" : "공지를 올립니다"}
             </p>
             <label className="block text-[12px] font-bold text-text-primary" htmlFor="notice-title">
               제목
@@ -101,8 +111,8 @@ export default function HostNoticeNewPage() {
               취소
             </HostActionButton>
             <HostActionButton
-              variant={isTitleReady ? "primary" : "primaryDisabled"}
-              onClick={handleSubmit}
+              variant={isTitleReady && !isSubmitting ? "primary" : "primaryDisabled"}
+              onClick={() => void handleSubmit()}
             >
               공지 등록
             </HostActionButton>
