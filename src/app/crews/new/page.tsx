@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/common/Header';
 import { Button } from '@/components/common/Button';
+import { Modal } from '@/components/common/Modal';
 import { Toast } from '@/components/common/Toast';
 import StepIndicator from './_components/StepIndicator';
 import Step1AI from './_components/Step1AI';
@@ -14,7 +15,7 @@ import Step5Agreement from './_components/Step5Agreement';
 import { createCrew } from '@/services/crew';
 import { getPresignedUrl, uploadToS3 } from '@/services/upload';
 import { prepareImageForUpload, UnsupportedImageError } from '@/lib/prepareImageForUpload';
-import { calcDurationDays } from '@/utils/date';
+import { calcDurationDays, snapToScheduledDay } from '@/utils/date';
 import type {
   DailySettlementType,
   FrequencyType,
@@ -143,8 +144,13 @@ export default function CrewNewPage() {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isToastOpen, setIsToastOpen] = useState(false);
+  // 5단계 크루 생성 확인 모달
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const imageBlobUrlRef = useRef<string | null>(null);
+  // 비멱등 생성 API 중복 호출 방지용 재진입 가드.
+  // isSubmitting state는 비동기 갱신이라 빠른 연속 클릭을 막지 못하므로 ref로 즉시 차단한다.
+  const isSubmittingRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -161,6 +167,30 @@ export default function CrewNewPage() {
 
   const update = <K extends keyof CrewFormData>(key: K, value: CrewFormData[K]) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
+  };
+
+  // ─── 미션 날짜 보정 (특정 요일 크루) ──────────────────────────────────────────
+  // 특정 요일 인증이면 시작일은 이후 첫 인증 요일, 종료일은 이전 마지막 인증 요일로 스냅한다.
+  // 매일(DAILY) 크루는 보정하지 않는다.
+
+  const handleStartDateChange = (value: string) => {
+    if (formData.frequency_type !== 'SPECIFIC_DAYS') {
+      update('start_date', value);
+      return;
+    }
+    const snapped = snapToScheduledDay(value, formData.mission_schedule_days, 'forward');
+    update('start_date', snapped);
+    if (snapped !== value) showToast('인증 요일에 맞춰 시작일을 조정했어요.');
+  };
+
+  const handleEndDateChange = (value: string) => {
+    if (formData.frequency_type !== 'SPECIFIC_DAYS') {
+      update('end_date', value);
+      return;
+    }
+    const snapped = snapToScheduledDay(value, formData.mission_schedule_days, 'backward');
+    update('end_date', snapped);
+    if (snapped !== value) showToast('인증 요일에 맞춰 종료일을 조정했어요.');
   };
 
   // ─── 이미지 업로드 핸들러 ───────────────────────────────────────────────────
@@ -267,7 +297,17 @@ export default function CrewNewPage() {
   const handleNextFromStep3 = () => {
     const errors = validateStep3(formData);
     setStep3Errors(errors);
-    if (Object.keys(errors).length === 0) setCurrentStep(4);
+    if (Object.keys(errors).length !== 0) return;
+    // 특정 요일이면 이미 입력/AI 프리필된 시작·종료일을 (변경됐을 수 있는) 요일 기준으로 재보정한다.
+    // snap은 멱등이라 이미 인증 요일이면 그대로 유지된다.
+    if (formData.frequency_type === 'SPECIFIC_DAYS') {
+      setFormData((prev) => ({
+        ...prev,
+        start_date: snapToScheduledDay(prev.start_date, prev.mission_schedule_days, 'forward'),
+        end_date: snapToScheduledDay(prev.end_date, prev.mission_schedule_days, 'backward'),
+      }));
+    }
+    setCurrentStep(4);
   };
 
   const handleNextFromStep4 = () => {
@@ -279,6 +319,9 @@ export default function CrewNewPage() {
   // ─── 크루 생성 제출 ─────────────────────────────────────────────────────────
 
   const handleSubmit = async () => {
+    // 이미 제출 중이면 즉시 차단 (중복 createCrew 호출 방지)
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
     try {
       const recruitmentDeadline = (() => {
@@ -344,6 +387,7 @@ export default function CrewNewPage() {
         showToast('크루 생성에 실패했습니다. 다시 시도해주세요.');
       }
     } finally {
+      isSubmittingRef.current = false;
       setIsSubmitting(false);
     }
   };
@@ -389,8 +433,8 @@ export default function CrewNewPage() {
             minParticipants={formData.min_participants}
             maxParticipants={formData.max_participants}
             description={formData.description}
-            onStartDateChange={(v) => update('start_date', v)}
-            onEndDateChange={(v) => update('end_date', v)}
+            onStartDateChange={handleStartDateChange}
+            onEndDateChange={handleEndDateChange}
             onMinParticipantsChange={(v) => update('min_participants', v)}
             onMaxParticipantsChange={(v) => update('max_participants', v)}
             onDescriptionChange={(v) => update('description', v)}
@@ -407,8 +451,6 @@ export default function CrewNewPage() {
                 agreements: { ...prev.agreements, [key]: value },
               }))
             }
-            onSubmit={handleSubmit}
-            isSubmitting={isSubmitting}
           />
         );
       default:
@@ -417,7 +459,11 @@ export default function CrewNewPage() {
   };
 
   const renderBottomNav = () => {
-    if (currentStep === 1 || currentStep === 5) return null;
+    if (currentStep === 1) return null;
+
+    const isLastStep = currentStep === 5;
+    // 5단계 제출 가능 여부: 5개 운영원칙 전체 동의
+    const allAgreed = Object.values(formData.agreements).every(Boolean);
 
     const handleNext = () => {
       if (currentStep === 2) handleNextFromStep2();
@@ -431,13 +477,27 @@ export default function CrewNewPage() {
           variant="outline"
           size="lg"
           onClick={() => setCurrentStep((s) => s - 1)}
+          disabled={isLastStep && isSubmitting}
           className="w-24"
         >
           이전
         </Button>
-        <Button variant="primary-green" size="lg" fullWidth onClick={handleNext}>
-          다음
-        </Button>
+        {isLastStep ? (
+          <Button
+            variant="primary-green"
+            size="lg"
+            fullWidth
+            onClick={() => setIsConfirmOpen(true)}
+            disabled={!allAgreed}
+            isLoading={isSubmitting}
+          >
+            크루 생성하기
+          </Button>
+        ) : (
+          <Button variant="primary-green" size="lg" fullWidth onClick={handleNext}>
+            다음
+          </Button>
+        )}
       </div>
     );
   };
@@ -465,6 +525,43 @@ export default function CrewNewPage() {
         onClose={() => setIsToastOpen(false)}
         message={toastMessage}
       />
+
+      <Modal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        ariaLabel="크루 생성 확인"
+      >
+        <div className="flex flex-col gap-4 p-6">
+          <div className="flex flex-col gap-2">
+            <h3 className="text-base font-bold text-text-primary">크루 생성 전 확인해주세요</h3>
+            <p className="text-sm text-text-secondary leading-relaxed">
+              크루 개설 후 수정 및 삭제가 불가능합니다.{'\n'}신중하게 만들어주세요.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="md"
+              fullWidth
+              onClick={() => setIsConfirmOpen(false)}
+            >
+              다시 확인
+            </Button>
+            <Button
+              variant="primary-green"
+              size="md"
+              fullWidth
+              onClick={() => {
+                setIsConfirmOpen(false);
+                void handleSubmit();
+              }}
+              isLoading={isSubmitting}
+            >
+              생성하기
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

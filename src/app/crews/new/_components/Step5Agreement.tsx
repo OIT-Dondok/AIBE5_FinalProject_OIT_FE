@@ -1,9 +1,6 @@
 'use client';
 
-import { useState } from 'react';
 import { Check } from 'lucide-react';
-import { Button } from '@/components/common/Button';
-import { Modal } from '@/components/common/Modal';
 
 interface AgreementKeys {
   honest_verification: boolean;
@@ -16,8 +13,6 @@ interface AgreementKeys {
 interface Step5AgreementProps {
   agreements: AgreementKeys;
   onAgreementChange: (key: keyof AgreementKeys, value: boolean) => void;
-  onSubmit: () => void;
-  isSubmitting: boolean;
 }
 
 const PRINCIPLES: Array<{ key: keyof AgreementKeys; title: string; description: string }> = [
@@ -51,22 +46,12 @@ const PRINCIPLES: Array<{ key: keyof AgreementKeys; title: string; description: 
 export default function Step5Agreement({
   agreements,
   onAgreementChange,
-  onSubmit,
-  isSubmitting,
 }: Step5AgreementProps) {
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const allAgreed = PRINCIPLES.every(({ key }) => agreements[key]);
 
   const handleToggleAll = () => {
     const next = !allAgreed;
     PRINCIPLES.forEach(({ key }) => onAgreementChange(key, next));
-  };
-
-  const handleSubmitClick = () => setIsConfirmOpen(true);
-
-  const handleConfirm = () => {
-    setIsConfirmOpen(false);
-    onSubmit();
   };
 
   return (
@@ -118,51 +103,6 @@ export default function Step5Agreement({
           위 5가지 원칙에 모두 동의합니다
         </span>
       </button>
-
-      <Button
-        variant="primary-green"
-        size="lg"
-        fullWidth
-        onClick={handleSubmitClick}
-        disabled={!allAgreed}
-        isLoading={isSubmitting}
-      >
-        크루 생성하기
-      </Button>
-
-      <Modal
-        isOpen={isConfirmOpen}
-        onClose={() => setIsConfirmOpen(false)}
-        ariaLabel="크루 생성 확인"
-      >
-        <div className="flex flex-col gap-4 p-6">
-          <div className="flex flex-col gap-2">
-            <h3 className="text-base font-bold text-text-primary">크루 생성 전 확인해주세요</h3>
-            <p className="text-sm text-text-secondary leading-relaxed">
-              크루 개설 후 수정 및 삭제가 불가능합니다.{'\n'}신중하게 만들어주세요.
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="md"
-              fullWidth
-              onClick={() => setIsConfirmOpen(false)}
-            >
-              다시 확인
-            </Button>
-            <Button
-              variant="primary-green"
-              size="md"
-              fullWidth
-              onClick={handleConfirm}
-              isLoading={isSubmitting}
-            >
-              생성하기
-            </Button>
-          </div>
-        </div>
-      </Modal>
     </div>
   );
 }

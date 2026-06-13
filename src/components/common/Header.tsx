@@ -27,7 +27,7 @@ export const Header = ({
             <div className="w-full max-w-[430px] h-16 px-5 flex items-center justify-between border-b border-text-secondary/5">
 
                 {/* 1. 좌측 구역: 로고 혹은 뒤로가기 */}
-                <div className="flex-[1.5] flex items-center">
+                <div className="flex-1 flex items-center">
                     {showBackButton ? (
                         /* 📌 피드백 반영: type="button"과 aria-label 추가로 폼 제출 버그 방어 및 접근성 확보 */
                         <button
