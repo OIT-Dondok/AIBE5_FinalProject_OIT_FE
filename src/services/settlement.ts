@@ -1,10 +1,27 @@
 import { api } from '@/lib/axios';
-import type { CrewSettlementSummary, SettlementDetail } from '@/types/domain';
+import type { CrewSettlementSummary, SettlementDetail, SettlementMe } from '@/types/domain';
 
-export const getCrewSettlementSummary = (crewId: number) => {
-  return api.get<CrewSettlementSummary>(`/crews/${crewId}/settlement`);
-};
+interface SettlementApiClient {
+  get: (url: string) => Promise<{ data: unknown }>;
+}
 
-export const getSettlementDetail = (settlementId: number) => {
-  return api.get<SettlementDetail>(`/settlements/${settlementId}`);
-};
+export function createSettlementService(apiClient: SettlementApiClient) {
+  return {
+    getCrewSettlementSummary: (crewId: number) =>
+      apiClient.get(`/crews/${crewId}/settlement`) as Promise<{ data: CrewSettlementSummary }>,
+
+    getSettlementDetail: (settlementId: number) =>
+      apiClient.get(`/settlements/${settlementId}`) as Promise<{ data: SettlementDetail }>,
+
+    getSettlementMe: (settlementId: number) =>
+      apiClient.get(`/settlements/${settlementId}/me`) as Promise<{ data: SettlementMe }>,
+  };
+}
+
+const settlementService = createSettlementService(api as unknown as SettlementApiClient);
+
+export const getCrewSettlementSummary = settlementService.getCrewSettlementSummary;
+
+export const getSettlementDetail = settlementService.getSettlementDetail;
+
+export const getSettlementMe = settlementService.getSettlementMe;

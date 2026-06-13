@@ -752,6 +752,19 @@ export interface SettlementDetail {
   items: SettlementItem[];
 }
 
+// GET /api/settlements/{settlementId}/me 200
+export interface SettlementMe {
+  settlement_id: number;
+  crew_id: number;
+  status: SettlementStatus;
+  retry_count: number;
+  failure_code: SettlementFailureCode | null;
+  failure_message: string | null;
+  started_at: string;
+  finished_at: string | null;
+  my_item: SettlementItem | null;
+}
+
 export interface SettlementItem {
   settlement_item_id: number;
   crew_participant_id: number;
