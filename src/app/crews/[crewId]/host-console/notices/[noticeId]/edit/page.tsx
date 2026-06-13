@@ -9,29 +9,39 @@ import { Header } from "@/components/common/Header";
 import { HostActionButton } from "@/components/domain/host/common/HostActionButton";
 import { HostToast } from "@/components/domain/host/common/HostToast";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
-import { getHostCrewDetail, getHostNotice } from "@/mocks/data/host";
-import { updateCrewNotice } from "@/services/crew";
+import { getCrewNoticeDetail, updateCrewNotice } from "@/services/crew";
+import type { CrewNotice } from "@/types/domain";
 
 export default function HostNoticeEditPage() {
   const router = useRouter();
   const params = useParams<{ crewId: string; noticeId: string }>();
   const crewId = parseRouteNumber(params.crewId);
   const noticeId = parseRouteNumber(params.noticeId);
-  const notice = crewId !== null && noticeId !== null ? getHostNotice(crewId, noticeId) : null;
-  const crewDetail = crewId !== null ? getHostCrewDetail(crewId) : null;
-  const [title, setTitle] = useState(notice?.title ?? "");
-  const [contentHtml, setContentHtml] = useState((notice?.content_html ?? "").replace(/<br\s*\/?>/gi, "\n"));
+
+  const [notice, setNotice] = useState<CrewNotice | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isTitleReady = title.trim().length > 0;
 
   useEffect(() => {
+    if (crewId === null || noticeId === null) return;
+    getCrewNoticeDetail(crewId, noticeId)
+      .then((res) => {
+        setNotice(res.data);
+        setTitle(res.data.title);
+        setContent(res.data.content);
+      })
+      .catch(() => setHasError(true))
+      .finally(() => setIsLoading(false));
+  }, [crewId, noticeId]);
+
+  useEffect(() => {
     if (!toastMessage) return;
-
-    const timeoutId = window.setTimeout(() => {
-      setToastMessage(null);
-    }, 2200);
-
+    const timeoutId = window.setTimeout(() => setToastMessage(null), 2200);
     return () => window.clearTimeout(timeoutId);
   }, [toastMessage]);
 
@@ -45,7 +55,7 @@ export default function HostNoticeEditPage() {
     try {
       await updateCrewNotice(crewId, notice.notice_id, {
         title,
-        content: contentHtml.trim(),
+        content: content.trim(),
       });
       router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}`);
     } catch {
@@ -55,7 +65,37 @@ export default function HostNoticeEditPage() {
     }
   };
 
-  if (crewId === null || noticeId === null || !notice) {
+  if (crewId === null || noticeId === null) {
+    return (
+      <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
+        <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-8">
+          <Header showBackButton title="공지 수정" />
+          <div className="px-5 pt-5">
+            <section className="rounded-card bg-card border border-text-secondary/10 shadow-card">
+              <EmptyState icon="!" title="수정할 공지를 찾을 수 없어요" />
+            </section>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
+        <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-8">
+          <Header showBackButton title="공지 수정" />
+          <div className="px-5 pt-5 flex flex-col gap-4 animate-pulse">
+            <div className="h-6 w-2/3 bg-text-secondary/10 rounded-full" />
+            <div className="h-4 w-1/3 bg-text-secondary/10 rounded-full" />
+            <div className="h-24 w-full bg-text-secondary/10 rounded-card" />
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (hasError || !notice) {
     return (
       <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
         <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-8">
@@ -79,7 +119,7 @@ export default function HostNoticeEditPage() {
           <div className="px-1">
             <p className="mb-3 flex items-center gap-1.5 text-xs font-medium text-text-secondary">
               <Megaphone size={14} strokeWidth={2.3} className="text-[#4C73D9]" />
-              <span className="font-extrabold text-text-primary">{crewDetail?.title}</span> 크루에 공지를 올립니다
+              공지를 수정합니다
             </p>
             <label className="block text-[12px] font-bold text-text-primary" htmlFor="notice-title">
               제목
@@ -98,8 +138,8 @@ export default function HostNoticeEditPage() {
             </label>
             <textarea
               id="notice-content"
-              value={contentHtml}
-              onChange={(event) => setContentHtml(event.target.value)}
+              value={content}
+              onChange={(event) => setContent(event.target.value)}
               placeholder="크루원에게 전할 내용을 작성하세요"
               rows={10}
               maxLength={65000}
