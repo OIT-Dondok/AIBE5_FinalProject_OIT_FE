@@ -725,7 +725,6 @@ export interface DashboardResponse {
 export interface CrewSettlementSummary {
   crew_id: number;
   settlement_id: number | null;
-  settlement_type: SettlementType | null;
   status: SettlementStatus;
   retry_count: number;
   failure_code: SettlementFailureCode | null;
@@ -738,7 +737,6 @@ export interface CrewSettlementSummary {
 export interface SettlementDetail {
   settlement_id: number;
   crew_id: number;
-  settlement_type: SettlementType;
   status: SettlementStatus;
   retry_count: number;
   total_participants: number;
@@ -747,12 +745,24 @@ export interface SettlementDetail {
   total_base_refund_amount: number;
   total_remainder_amount: number;
   remainder_policy: 'HOST_REMAINDER'; // floor 연산 후 잔액 전액을 방장에게 추가 지급
-  remainder_winner_crew_participant_id: number | null;
   failure_code: SettlementFailureCode | null;
   failure_message: string | null;
   started_at: string;
   finished_at: string | null;
   items: SettlementItem[];
+}
+
+// GET /api/settlements/{settlementId}/me 200
+export interface SettlementMe {
+  settlement_id: number;
+  crew_id: number;
+  status: SettlementStatus;
+  retry_count: number;
+  failure_code: SettlementFailureCode | null;
+  failure_message: string | null;
+  started_at: string;
+  finished_at: string | null;
+  my_item: SettlementItem | null;
 }
 
 export interface SettlementItem {
