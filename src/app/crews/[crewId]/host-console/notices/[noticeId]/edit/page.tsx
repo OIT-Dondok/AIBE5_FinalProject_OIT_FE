@@ -54,7 +54,7 @@ export default function HostNoticeEditPage() {
     setIsSubmitting(true);
     try {
       await updateCrewNotice(crewId, notice.notice_id, {
-        title,
+        title: title.trim(),
         content: content.trim(),
       });
       router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}`);

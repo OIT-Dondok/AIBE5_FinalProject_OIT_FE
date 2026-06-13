@@ -48,7 +48,7 @@ export default function HostConsoleClient() {
     if (crewId === null) return;
     getCrewNotices(crewId)
       .then((res) => setNoticeCount(res.data.items.length))
-      .catch(() => {});
+      .catch(() => setNoticeCount(0));
   }, [crewId]);
 
   if (crewId === null) {

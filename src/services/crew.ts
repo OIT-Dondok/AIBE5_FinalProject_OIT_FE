@@ -85,8 +85,10 @@ export const removeNoticeReaction = (crewId: number, noticeId: number, reactionT
 export const getCrewNoticeDetail = (crewId: number, noticeId: number) =>
   api.get<CrewNotice>(`/crews/${crewId}/notices/${noticeId}`);
 
-export const getNoticeComments = (crewId: number, noticeId: number) =>
-  api.get<NoticeCommentsResponse>(`/crews/${crewId}/notices/${noticeId}/comments`);
+export const getNoticeComments = (crewId: number, noticeId: number, cursor?: string) =>
+  api.get<NoticeCommentsResponse>(`/crews/${crewId}/notices/${noticeId}/comments`, {
+    params: cursor ? { cursor } : undefined,
+  });
 
 export const createNoticeComment = (crewId: number, noticeId: number, data: { content: string }) =>
   api.post<NoticeComment>(`/crews/${crewId}/notices/${noticeId}/comments`, data);
