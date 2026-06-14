@@ -8,6 +8,7 @@ import { Chip } from '@/components/common/Chip';
 import { Skeleton } from '@/components/common/Skeleton';
 import { getMyCrew } from '@/services/crew';
 import { CATEGORY_EMOJI, CATEGORY_BG } from '@/constants/crew';
+import { formatShortDate } from '@/utils/date';
 import type { MyCrew, CrewStatus } from '@/types/domain';
 
 // ─── 탭 정의 ────────────────────────────────────────────────
@@ -57,11 +58,6 @@ const STATUS_CONFIG: Record<CrewStatus, { dot: string; text: string; label: stri
   CLOSED: { dot: 'bg-text-secondary/50', text: 'text-text-secondary', label: '종료됨' },
   CANCELLED: { dot: 'bg-red-400', text: 'text-red-500', label: '취소됨' },
 };
-
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr);
-  return `${d.getMonth() + 1}.${String(d.getDate()).padStart(2, '0')}`;
-}
 
 // ─── 카드 ────────────────────────────────────────────────────
 
@@ -129,7 +125,7 @@ function MyCrewCard({ crew }: { crew: MyCrew }) {
         <div className="flex items-center gap-1.5">
           <Calendar size={11} strokeWidth={2} className="text-text-secondary/70" />
           <span className="text-[11px] text-text-secondary">
-            {formatDate(crew.start_at)} ~ {formatDate(crew.end_at)}
+            {formatShortDate(crew.start_at)} ~ {formatShortDate(crew.end_at)}
           </span>
         </div>
         <span className="text-[12px] font-bold text-primary-green">

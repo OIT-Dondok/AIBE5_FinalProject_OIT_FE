@@ -1,5 +1,6 @@
 import type { CrewDetail } from '@/types/domain';
 import { CATEGORY_LABEL, SETTLEMENT_TYPE_LABEL, SETTLEMENT_TIMES } from '@/constants/crew';
+import { formatFullDate } from '@/utils/date';
 
 interface CrewInfoTableProps {
   crew: CrewDetail;
@@ -18,6 +19,8 @@ export default function CrewInfoTable({ crew }: CrewInfoTableProps) {
       value: `${daily_settlement_type} · ${SETTLEMENT_TYPE_LABEL[daily_settlement_type]}`,
     },
     { label: '마감/정산', value: `${times.deadline} / ${times.settlement}` },
+    { label: '미션 시작일', value: formatFullDate(crew.start_at) },
+    { label: '미션 종료일', value: formatFullDate(crew.end_at) },
     { label: '보증금', value: `${crew.deposit_amount.toLocaleString()}원` },
     { label: '총 금액', value: `${totalAmount.toLocaleString()}원` },
     { label: '인원', value: `${crew.current_participants} / ${crew.max_participants}명` },
