@@ -49,13 +49,15 @@ export default function HostNoticeDetailPage() {
 
   useEffect(() => {
     if (crewId === null || noticeId === null) return;
+    let mounted = true;
     getCrewNoticeDetail(crewId, noticeId)
-      .then((res) => setNotice(res.data))
-      .catch(() => setHasError(true))
-      .finally(() => setIsLoading(false));
+      .then((res) => { if (mounted) setNotice(res.data); })
+      .catch(() => { if (mounted) setHasError(true); })
+      .finally(() => { if (mounted) setIsLoading(false); });
     getNoticeComments(crewId, noticeId)
-      .then((res) => setComments(res.data.items))
+      .then((res) => { if (mounted) setComments(res.data.items); })
       .catch(() => {});
+    return () => { mounted = false; };
   }, [crewId, noticeId]);
 
   useEffect(() => {
