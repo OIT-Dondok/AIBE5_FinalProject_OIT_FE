@@ -1,4 +1,19 @@
 /**
+ * ISO-8601 날짜 문자열을 KST(UTC+9) 기준 'YYYY.MM.DD' 형식으로 변환합니다.
+ * 월·일을 2자리로 0 패딩합니다. (예: '2026-06-05T00:00:00+09:00' → '2026.06.05')
+ *
+ * CrewCard·내 크루 카드의 간단 표기와 동일하게 UTC+9로 보정해, 같은 미션 날짜가
+ * 브라우저/서버 타임존에 관계없이 동일한 캘린더 날짜로 표시되도록 합니다.
+ */
+export function formatFullDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  d.setUTCHours(d.getUTCHours() + 9);
+  const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(d.getUTCDate()).padStart(2, '0');
+  return `${d.getUTCFullYear()}.${mm}.${dd}`;
+}
+
+/**
  * YYYY-MM-DD 두 날짜 사이의 일수를 UTC 기준으로 계산합니다.
  * 브라우저 로컬 타임존에 관계없이 일관된 결과를 반환합니다.
  */
