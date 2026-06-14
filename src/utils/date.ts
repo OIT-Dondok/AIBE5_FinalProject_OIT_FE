@@ -1,13 +1,34 @@
 /**
+ * ISO-8601 날짜 문자열을 KST(UTC+9)로 보정한 Date 객체로 변환합니다. (내부 헬퍼)
+ * 브라우저/서버 타임존에 관계없이 한국 기준 캘린더 날짜를 얻기 위해 사용합니다.
+ */
+function toKstDate(dateStr: string): Date {
+  const d = new Date(dateStr);
+  d.setUTCHours(d.getUTCHours() + 9);
+  return d;
+}
+
+/**
+ * ISO-8601 날짜 문자열을 KST(UTC+9) 기준 'MM.DD' 형식으로 변환합니다.
+ * 월·일을 2자리로 0 패딩합니다. (예: '2026-06-05T00:00:00+09:00' → '06.05')
+ *
+ * 크루 목록 카드(둘러보기·내 크루)의 간단 표기에 사용합니다.
+ */
+export function formatShortDate(dateStr: string): string {
+  const d = toKstDate(dateStr);
+  const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(d.getUTCDate()).padStart(2, '0');
+  return `${mm}.${dd}`;
+}
+
+/**
  * ISO-8601 날짜 문자열을 KST(UTC+9) 기준 'YYYY.MM.DD' 형식으로 변환합니다.
  * 월·일을 2자리로 0 패딩합니다. (예: '2026-06-05T00:00:00+09:00' → '2026.06.05')
  *
- * CrewCard·내 크루 카드의 간단 표기와 동일하게 UTC+9로 보정해, 같은 미션 날짜가
- * 브라우저/서버 타임존에 관계없이 동일한 캘린더 날짜로 표시되도록 합니다.
+ * 크루 상세 페이지의 미션 시작일/종료일 등 연도가 필요한 표기에 사용합니다.
  */
 export function formatFullDate(dateStr: string): string {
-  const d = new Date(dateStr);
-  d.setUTCHours(d.getUTCHours() + 9);
+  const d = toKstDate(dateStr);
   const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
   const dd = String(d.getUTCDate()).padStart(2, '0');
   return `${d.getUTCFullYear()}.${mm}.${dd}`;
