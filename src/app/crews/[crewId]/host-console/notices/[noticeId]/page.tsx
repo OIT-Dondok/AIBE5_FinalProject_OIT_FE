@@ -49,15 +49,29 @@ export default function HostNoticeDetailPage() {
 
   useEffect(() => {
     if (crewId === null || noticeId === null) return;
+
     let mounted = true;
-    getCrewNoticeDetail(crewId, noticeId)
-      .then((res) => { if (mounted) setNotice(res.data); })
-      .catch(() => { if (mounted) setHasError(true); })
-      .finally(() => { if (mounted) setIsLoading(false); });
-    getNoticeComments(crewId, noticeId)
-      .then((res) => { if (mounted) setComments(res.data.items); })
-      .catch(() => {});
-    return () => { mounted = false; };
+
+    Promise.all([
+      getCrewNoticeDetail(crewId, noticeId),
+      getNoticeComments(crewId, noticeId)
+    ])
+      .then(([noticeRes, commentsRes]) => {
+        if (mounted) {
+          setNotice(noticeRes.data);
+          setComments(commentsRes.data.items);
+        }
+      })
+      .catch((err) => {
+        if (mounted) setHasError(true);
+      })
+      .finally(() => {
+        if (mounted) setIsLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
   }, [crewId, noticeId]);
 
   useEffect(() => {
