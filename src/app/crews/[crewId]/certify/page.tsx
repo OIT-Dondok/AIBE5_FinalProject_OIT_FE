@@ -33,22 +33,12 @@ import type { ErrorResponse } from '@/types/common';
 const MAX_SIZE = 10 * 1024 * 1024;
 const CAPTION_MIN = 5;
 const CAPTION_MAX = 100;
-const HEIC_RE = /\.(heic|heif)$/i;
-const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'heic', 'heif'];
+const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png'];
 
 // ────────────────────────────────────────────────────────────
 // 유틸
 // ────────────────────────────────────────────────────────────
-function isHeicFile(file: File): boolean {
-  return (
-    file.type.toLowerCase().includes('heic') ||
-    file.type.toLowerCase().includes('heif') ||
-    HEIC_RE.test(file.name)
-  );
-}
-
 function getContentType(file: File): string | null {
-  if (isHeicFile(file)) return 'image/jpeg';
   const t = file.type.toLowerCase();
   if (t === 'image/jpeg' || t === 'image/png') return t;
   const ext = file.name.split('.').pop()?.toLowerCase();
@@ -58,7 +48,6 @@ function getContentType(file: File): string | null {
 }
 
 function isAllowedFile(file: File): boolean {
-  if (isHeicFile(file)) return true;
   const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
   return ALLOWED_EXTENSIONS.includes(ext) && getContentType(file) !== null;
 }
@@ -288,7 +277,7 @@ export default function CertifyPage() {
     }
     if (!isAllowedFile(selected)) {
       setFile(null);
-      setToast('JPG, PNG, HEIC 파일만 업로드 가능해요');
+      setToast('JPG, PNG 파일만 업로드 가능해요');
       setIsToastOpen(true);
       return;
     }
@@ -304,7 +293,7 @@ export default function CertifyPage() {
 
     const contentType = getContentType(file);
     if (!contentType) {
-      setToast('JPG, PNG, HEIC 파일만 업로드 가능해요');
+      setToast('JPG, PNG 파일만 업로드 가능해요');
       setIsToastOpen(true);
       return;
     }
@@ -469,7 +458,7 @@ export default function CertifyPage() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".jpg,.jpeg,.png,.heic,.heif"
+                accept="image/jpeg,image/png"
                 onChange={handleFileChange}
                 className="hidden"
               />
@@ -490,7 +479,7 @@ export default function CertifyPage() {
                   <>
                     <ImagePlus size={36} className="text-text-secondary/50" />
                     <p className="text-sm font-medium text-text-secondary">사진을 선택해주세요</p>
-                    <p className="text-xs text-text-secondary/60">JPG · PNG · HEIC · 최대 10MB</p>
+                    <p className="text-xs text-text-secondary/60">JPG · PNG · 최대 10MB</p>
                   </>
                 )}
               </button>
@@ -507,10 +496,11 @@ export default function CertifyPage() {
 
               {/* 캡션 입력 */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-semibold text-text-primary">
+                <label htmlFor="caption" className="text-sm font-semibold text-text-primary">
                   한 줄 소감 <span className="text-red-500">*</span>
                 </label>
                 <textarea
+                  id="caption"
                   value={caption}
                   onChange={(e) => setCaption(e.target.value.slice(0, CAPTION_MAX))}
                   placeholder="오늘 미션을 어떻게 수행했는지 알려주세요 (5~100자)"
