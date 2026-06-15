@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Check, ChevronDown, ClipboardCheck, User } from "lucide-react";
+import Link from "next/link";
+import { Check, ChevronDown, ChevronRight, ClipboardCheck, User } from "lucide-react";
 
 import { Header } from "@/components/common/Header";
 import { Skeleton } from "@/components/common/Skeleton";
@@ -155,7 +156,10 @@ function CertificationCard({ item }: { item: FeedItem }) {
   const detailParts = [formatTime(item.server_time), rejectReason, decisionType].filter(Boolean);
 
   return (
-    <div className="flex items-center gap-3 bg-card rounded-card shadow-card border border-text-secondary/10 px-4 py-3 animate-feed-in">
+    <Link
+      href={`/my/certifications/${item.mission_log_id}`}
+      className="flex items-center gap-3 bg-card rounded-card shadow-card border border-text-secondary/10 px-4 py-3 animate-feed-in hover:shadow-card-elevated active:scale-[0.99] transition-all"
+    >
       <NicknameAvatar nickname={item.nickname} crewId={item.crew_id} />
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
         <p className="text-sm font-semibold text-text-primary truncate leading-snug">
@@ -172,7 +176,8 @@ function CertificationCard({ item }: { item: FeedItem }) {
         )}
       </div>
       <StatusBadge status={item.certification_status} />
-    </div>
+      <ChevronRight size={14} className="shrink-0 text-text-secondary/30" />
+    </Link>
   );
 }
 
