@@ -10,42 +10,33 @@ import { getMyCrew } from '@/services/crew';
 import { CATEGORY_EMOJI, CATEGORY_BG } from '@/constants/crew';
 import type { MyCrew, CrewStatus } from '@/types/domain';
 
-// ─── 탭 정의 ────────────────────────────────────────────────
+// ─── 탭 정의 (role 기준) ─────────────────────────────────────
 
-type TabFilter = 'ALL' | 'PENDING' | 'ACTIVE' | 'CLOSED';
-type MyStatusParam = 'ALL' | 'PENDING' | 'LOCKED';
+type RoleTab = 'ALL' | 'HOST' | 'MEMBER';
 
-const TABS: { label: string; value: TabFilter }[] = [
-  { label: '전체', value: 'ALL' },
-  { label: '승인 대기', value: 'PENDING' },
-  { label: '참여중', value: 'ACTIVE' },
-  { label: '종료됨', value: 'CLOSED' },
-];
-
-const TAB_TO_MY_STATUS: Record<TabFilter, MyStatusParam> = {
-  ALL: 'ALL',
-  PENDING: 'PENDING',
-  ACTIVE: 'LOCKED',
-  CLOSED: 'LOCKED',
-};
-
-function applyTabFilter(items: MyCrew[], tab: TabFilter): MyCrew[] {
-  if (tab === 'ACTIVE') return items.filter((c) => c.status === 'ACTIVE');
-  if (tab === 'CLOSED') return items.filter((c) => c.status === 'CLOSED' || c.status === 'CANCELLED');
-  return items;
-}
-
-type RoleFilter = 'ALL' | 'HOST' | 'MEMBER';
-
-const ROLE_OPTIONS: { label: string; value: RoleFilter }[] = [
+const TABS: { label: string; value: RoleTab }[] = [
   { label: '전체', value: 'ALL' },
   { label: '방장', value: 'HOST' },
   { label: '크루원', value: 'MEMBER' },
 ];
 
-function applyRoleFilter(items: MyCrew[], role: RoleFilter): MyCrew[] {
-  if (role === 'HOST') return items.filter((c) => c.my_role === 'HOST');
-  if (role === 'MEMBER') return items.filter((c) => c.my_role === 'MEMBER');
+// ─── 드롭다운 상태 필터 (FE 필터링) ──────────────────────────
+
+type StatusFilter = 'ALL' | 'PENDING' | 'RECRUITING' | 'ACTIVE' | 'CLOSED';
+
+const STATUS_OPTIONS: { label: string; value: StatusFilter }[] = [
+  { label: '전체', value: 'ALL' },
+  { label: '승인 대기', value: 'PENDING' },
+  { label: '시작 전', value: 'RECRUITING' },
+  { label: '진행중', value: 'ACTIVE' },
+  { label: '종료됨', value: 'CLOSED' },
+];
+
+function applyStatusFilter(items: MyCrew[], filter: StatusFilter): MyCrew[] {
+  if (filter === 'PENDING') return items.filter((c) => c.my_status === 'PENDING');
+  if (filter === 'RECRUITING') return items.filter((c) => c.my_status === 'LOCKED' && c.status === 'RECRUITING');
+  if (filter === 'ACTIVE') return items.filter((c) => c.my_status === 'LOCKED' && c.status === 'ACTIVE');
+  if (filter === 'CLOSED') return items.filter((c) => c.my_status === 'LOCKED' && (c.status === 'CLOSED' || c.status === 'CANCELLED'));
   return items;
 }
 
@@ -162,8 +153,8 @@ function MyCrewCardSkeleton() {
 // ─── 페이지 ──────────────────────────────────────────────────
 
 export default function MyCrewsPage() {
-  const [activeTab, setActiveTab] = useState<TabFilter>('ALL');
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>('ALL');
+  const [activeTab, setActiveTab] = useState<RoleTab>('ALL');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const [crews, setCrews] = useState<MyCrew[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -171,9 +162,13 @@ export default function MyCrewsPage() {
   const [crewsError, setCrewsError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
-  // 에러를 caller로 전파 — null 반환 제거
-  const fetchCrews = useCallback(async (tab: TabFilter, cursor?: string, signal?: AbortSignal) => {
-    const res = await getMyCrew(TAB_TO_MY_STATUS[tab], cursor, signal);
+  const handleTabChange = (tab: RoleTab) => {
+    setActiveTab(tab);
+    setStatusFilter('ALL');
+  };
+
+  const fetchCrews = useCallback(async (role: RoleTab, cursor?: string, signal?: AbortSignal) => {
+    const res = await getMyCrew(role, cursor, signal);
     return res.data;
   }, []);
 
@@ -189,7 +184,7 @@ export default function MyCrewsPage() {
       try {
         const data = await fetchCrews(activeTab, undefined, controller.signal);
         if (controller.signal.aborted) return;
-        setCrews(applyTabFilter(data.items, activeTab));
+        setCrews(data.items);
         setNextCursor(data.next_cursor);
       } catch {
         if (controller.signal.aborted) return;
@@ -209,7 +204,7 @@ export default function MyCrewsPage() {
     setIsLoadingMore(true);
     try {
       const data = await fetchCrews(activeTab, nextCursor);
-      setCrews((prev) => [...prev, ...applyTabFilter(data.items, activeTab)]);
+      setCrews((prev) => [...prev, ...data.items]);
       setNextCursor(data.next_cursor);
     } catch {
       // load-more 실패는 기존 목록 유지
@@ -231,24 +226,24 @@ export default function MyCrewsPage() {
               label={tab.label}
               chipType="status"
               isActive={activeTab === tab.value}
-              onClick={() => setActiveTab(tab.value)}
+              onClick={() => handleTabChange(tab.value)}
               className="flex-1 justify-center text-[13px]"
             />
           ))}
         </div>
 
-        {/* 카운트 + 역할 드롭다운 */}
+        {/* 카운트 + 상태 드롭다운 */}
         <div className="px-5 pb-2 flex items-center justify-between">
           <span className="text-xs text-text-secondary">
-            총 <span className="font-bold text-text-primary">{applyRoleFilter(crews, roleFilter).length}</span>개의 크루
+            총 <span className="font-bold text-text-primary">{applyStatusFilter(crews, statusFilter).length}</span>개의 크루
           </span>
           <div className="relative">
             <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value as RoleFilter)}
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
               className="appearance-none text-xs font-semibold text-text-primary bg-card border border-text-secondary/20 rounded-xl pl-3 pr-7 py-1.5 cursor-pointer focus:outline-none focus:border-primary-green transition-colors"
             >
-              {ROLE_OPTIONS.map((opt) => (
+              {STATUS_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
@@ -276,13 +271,13 @@ export default function MyCrewsPage() {
                 다시 시도
               </button>
             </div>
-          ) : applyRoleFilter(crews, roleFilter).length === 0 ? (
+          ) : applyStatusFilter(crews, statusFilter).length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
               <span className="text-4xl">🫂</span>
               <p className="text-sm text-text-secondary font-medium">참여 중인 크루가 없어요</p>
             </div>
           ) : (
-            applyRoleFilter(crews, roleFilter).map((crew) => <MyCrewCard key={crew.crew_id} crew={crew} />)
+            applyStatusFilter(crews, statusFilter).map((crew) => <MyCrewCard key={crew.crew_id} crew={crew} />)
           )}
         </div>
 
