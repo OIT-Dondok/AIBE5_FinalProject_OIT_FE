@@ -22,23 +22,13 @@ const STATUS_OPTIONS: { label: string; value: StatusFilter }[] = [
 
 const CATEGORIES: { label: string; value: CategoryFilter }[] = [
   { label: '전체', value: 'ALL' },
-  { label: '기상', value: 'MORNING' },
-  { label: '독서', value: 'READING' },
-  { label: '운동', value: 'EXERCISE' },
-  { label: '공부', value: 'STUDY' },
-  { label: '식단', value: 'DIET' },
-  { label: '기타', value: 'ETC' },
+  { label: '🌅 기상', value: 'MORNING' },
+  { label: '📚 독서', value: 'READING' },
+  { label: '💪 운동', value: 'EXERCISE' },
+  { label: '📝 공부', value: 'STUDY' },
+  { label: '🥗 식단', value: 'DIET' },
+  { label: '📌 기타', value: 'ETC' },
 ];
-
-const CATEGORY_CHIP_STYLE: Record<CategoryFilter, { base: string; active: string }> = {
-  ALL:      { base: 'bg-slate-100 text-slate-600',  active: 'bg-slate-200 text-slate-700 border border-slate-400' },
-  MORNING:  { base: 'bg-amber-100 text-amber-700',  active: 'bg-amber-200 text-amber-800 border border-amber-400' },
-  READING:  { base: 'bg-blue-100 text-blue-700',    active: 'bg-blue-200 text-blue-800 border border-blue-400' },
-  EXERCISE: { base: 'bg-green-100 text-green-700',  active: 'bg-green-200 text-green-800 border border-green-400' },
-  STUDY:    { base: 'bg-violet-100 text-violet-700', active: 'bg-violet-200 text-violet-800 border border-violet-400' },
-  DIET:     { base: 'bg-orange-100 text-orange-700', active: 'bg-orange-200 text-orange-800 border border-orange-400' },
-  ETC:      { base: 'bg-gray-100 text-gray-600',    active: 'bg-gray-200 text-gray-700 border border-gray-400' },
-};
 
 type GroupedCrews = {
   RECRUITING: CrewListItem[];
@@ -134,23 +124,22 @@ export default function CrewsPage() {
 
       <div className="w-full max-w-[430px] mx-auto flex flex-col">
 
-        {/* 카테고리 탭 (가로 스크롤, 파스텔 칩 스타일) */}
-        <div className="flex overflow-x-auto no-scrollbar gap-2 px-5 py-3">
-          {CATEGORIES.map((cat) => {
-            const style = CATEGORY_CHIP_STYLE[cat.value];
-            return (
-              <button
-                key={cat.value}
-                type="button"
-                onClick={() => setActiveCategory(cat.value)}
-                className={`flex-shrink-0 px-3 py-1.5 text-xs font-semibold rounded-full whitespace-nowrap transition-colors ${
-                  activeCategory === cat.value ? style.active : style.base
-                }`}
-              >
-                {cat.label}
-              </button>
-            );
-          })}
+        {/* 카테고리 탭 (가로 스크롤, underline 스타일) */}
+        <div className="flex overflow-x-auto no-scrollbar border-b border-text-secondary/10 mt-1">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat.value}
+              type="button"
+              onClick={() => setActiveCategory(cat.value)}
+              className={`flex-shrink-0 px-4 py-3 text-sm whitespace-nowrap transition-colors ${
+                activeCategory === cat.value
+                  ? 'text-primary-green font-semibold border-b-2 border-primary-green -mb-px'
+                  : 'text-text-secondary font-medium hover:text-text-primary'
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
         </div>
 
         {/* 검색바 */}
