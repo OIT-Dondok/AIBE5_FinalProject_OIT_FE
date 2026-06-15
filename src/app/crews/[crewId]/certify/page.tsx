@@ -14,6 +14,7 @@ import {
 import { Header } from '@/components/common/Header';
 import { Button } from '@/components/common/Button';
 import { Toast } from '@/components/common/Toast';
+import { Modal } from '@/components/common/Modal';
 import { getCrew } from '@/services/crew';
 import { getPresignedUrl, uploadToS3 } from '@/services/upload';
 import { createMissionLog } from '@/services/mission';
@@ -679,38 +680,28 @@ export default function CertifyPage() {
       </div>
 
       {/* 업로드 확인 모달 */}
-      {isConfirmOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
-          onClick={() => setIsConfirmOpen(false)}
-        >
-          <div
-            className="w-full max-w-[430px] bg-card rounded-t-2xl px-5 pt-6 pb-8 flex flex-col gap-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="text-base font-bold text-text-primary text-center">인증 제출 확인</p>
-            <p className="text-sm text-text-secondary text-center leading-relaxed">
-              인증 사진은 제출 후 수정 또는 삭제가 불가능해요.
-              <br />제출하시겠어요?
-            </p>
-            <div className="flex gap-3 mt-1">
-              <Button variant="outline" size="lg" fullWidth onClick={() => setIsConfirmOpen(false)}>
-                취소
-              </Button>
-              <Button
-                variant="primary-green"
-                size="lg"
-                fullWidth
-                onClick={() => { setIsConfirmOpen(false); handleUpload(); }}
-              >
-                확인
-              </Button>
-            </div>
+      <Modal isOpen={isConfirmOpen} onClose={() => setIsConfirmOpen(false)} ariaLabel="인증 제출 확인">
+        <div className="p-5 flex flex-col gap-4">
+          <p className="text-base font-bold text-text-primary text-center">인증 제출 확인</p>
+          <p className="text-sm text-text-secondary text-center leading-relaxed">
+            인증 사진은 제출 후 수정 또는 삭제가 불가능해요.
+            <br />제출하시겠어요?
+          </p>
+          <div className="flex gap-3">
+            <Button variant="outline" size="lg" fullWidth onClick={() => setIsConfirmOpen(false)}>
+              취소
+            </Button>
+            <Button
+              variant="primary-green"
+              size="lg"
+              fullWidth
+              onClick={() => { setIsConfirmOpen(false); handleUpload(); }}
+            >
+              확인
+            </Button>
           </div>
         </div>
-      )}
+      </Modal>
 
       <Toast message={toast} isOpen={isToastOpen} onClose={() => setIsToastOpen(false)} />
     </main>
