@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Calendar } from 'lucide-react';
 import type { CrewListItem, CrewStatus, CrewCategory } from '@/types/domain';
 import { CATEGORY_EMOJI } from '@/constants/crew';
+import { formatShortDate } from '@/utils/date';
 
 const CATEGORY_BG: Record<CrewCategory, string> = {
   MORNING: 'bg-orange-50',
@@ -47,12 +48,6 @@ const STATUS_CONFIG: Record<CrewStatus, StatusConfig> = {
     progress: 'bg-red-300',
   },
 };
-
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr);
-  d.setUTCHours(d.getUTCHours() + 9);
-  return `${d.getUTCMonth() + 1}.${String(d.getUTCDate()).padStart(2, '0')}`;
-}
 
 interface CrewCardProps {
   crew: CrewListItem;
@@ -126,7 +121,7 @@ export default function CrewCard({ crew }: CrewCardProps) {
         <div className="flex items-center gap-1.5 pt-1 border-t border-text-secondary/10">
           <Calendar size={11} strokeWidth={2} className="text-text-secondary/70" />
           <span className="text-[11px] text-text-secondary">
-          {formatDate(crew.start_at)} ~ {formatDate(crew.end_at)}
+          {formatShortDate(crew.start_at)} ~ {formatShortDate(crew.end_at)}
         </span>
         </div>
       </div>
