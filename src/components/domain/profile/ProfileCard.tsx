@@ -63,7 +63,11 @@ export function ProfileCard({
     }
 
     const updateOverflowState = () => {
-      const lineHeight = Number.parseFloat(getComputedStyle(statusMessageElement).lineHeight);
+      const computedStyle = getComputedStyle(statusMessageElement);
+      const parsedLineHeight = Number.parseFloat(computedStyle.lineHeight);
+      const parsedFontSize = Number.parseFloat(computedStyle.fontSize);
+      const fontSize = Number.isNaN(parsedFontSize) ? 14 : parsedFontSize;
+      const lineHeight = Number.isNaN(parsedLineHeight) ? fontSize * 1.5 : parsedLineHeight;
       const collapsedHeight = lineHeight * 2;
 
       setIsIntroOverflowing(statusMessageElement.scrollHeight > collapsedHeight + 1);
