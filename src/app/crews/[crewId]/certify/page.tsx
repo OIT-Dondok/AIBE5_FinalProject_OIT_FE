@@ -202,6 +202,26 @@ export default function CertifyPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // ── VERIFYING 중 새로고침/탭 닫기 차단 ───────────────────────
+  useEffect(() => {
+    if (step !== 'VERIFYING') return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [step]);
+
+  // ── SUCCESS/WARNED 후 뒤로가기 → 피드로 리다이렉트 ──────────
+  useEffect(() => {
+    if (step !== 'SUCCESS' && step !== 'WARNED') return;
+    window.history.pushState(null, '', window.location.href);
+    const handler = () => router.replace('/feed');
+    window.addEventListener('popstate', handler);
+    return () => window.removeEventListener('popstate', handler);
+  }, [step, router]);
+
   // ── 크루 정보 조회 ──────────────────────────────────────────
   useEffect(() => {
     if (!crewId) return;
@@ -370,13 +390,43 @@ export default function CertifyPage() {
   const timeLeft = formatTimeLeft(deadline);
   const typeLabel = SETTLEMENT_TYPE_LABEL[crew.daily_settlement_type];
 
+  // ── 마감됨 전용 화면 (UPLOAD 단계에서만) ─────────────────────
+  if (isPastDeadline && step === 'UPLOAD') {
+    const deadlineTimeStr = deadline.toLocaleString('ko-KR', {
+      timeZone: 'Asia/Seoul',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    return (
+      <main className="min-h-screen flex flex-col items-center bg-transparent">
+        <div className="w-full max-w-[430px] flex flex-col">
+          <Header title="오늘의 인증" showBackButton />
+          <div className="flex flex-col items-center justify-center py-20 gap-5 px-6 text-center">
+            <div className="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center">
+              <Clock size={44} className="text-red-400" strokeWidth={1.5} />
+            </div>
+            <div>
+              <p className="text-xl font-bold text-text-primary">오늘 인증이 마감됐어요</p>
+              <p className="text-sm text-text-secondary mt-1">
+                {typeLabel} · {deadlineTimeStr} 마감
+              </p>
+            </div>
+            <Button variant="primary-green" size="lg" fullWidth onClick={() => router.push('/feed')}>
+              피드로 이동
+            </Button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   // ────────────────────────────────────────────────────────────
   // 렌더: 본문
   // ────────────────────────────────────────────────────────────
   return (
     <main className="min-h-screen flex flex-col items-center bg-transparent">
       <div className="w-full max-w-[430px] flex flex-col pb-10">
-        <Header title="오늘의 인증" showBackButton />
+        <Header title="오늘의 인증" showBackButton={step !== 'VERIFYING'} />
 
         <div className="px-5 pt-4 flex flex-col gap-5">
           {/* ── 마감 시간 배지 ── */}
@@ -471,26 +521,14 @@ export default function CertifyPage() {
                 ))}
               </div>
 
-              {/* 마감 안내 */}
-              {isPastDeadline && (
-                <p className="text-center text-sm text-red-500 font-medium">
-                  오늘 인증 마감됐어요
-                </p>
-              )}
-
               <Button
                 variant="primary-green"
                 size="lg"
                 fullWidth
-                disabled={
-                  !file ||
-                  caption.length < CAPTION_MIN ||
-                  caption.length > CAPTION_MAX ||
-                  isPastDeadline
-                }
+                disabled={!file || caption.length < CAPTION_MIN || caption.length > CAPTION_MAX}
                 onClick={handleUpload}
               >
-                {isPastDeadline ? '인증 마감됨' : '업로드하기'}
+                업로드하기
               </Button>
             </div>
           )}
@@ -561,7 +599,7 @@ export default function CertifyPage() {
 
           {/* ════════════════════════════════════════
               WARNED 단계
-              failure_reason 있음 → 방장이 최종 결정
+              exif_risk/duplicate 이상 → 방장이 최종 결정
           ════════════════════════════════════════ */}
           {step === 'WARNED' && certResult && (
             <div className="flex flex-col items-center gap-6 py-8">
