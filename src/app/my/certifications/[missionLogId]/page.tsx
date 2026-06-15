@@ -7,6 +7,7 @@ import { ClipboardCheck } from "lucide-react";
 
 import { Header } from "@/components/common/Header";
 import { Skeleton } from "@/components/common/Skeleton";
+import { ReportSuspicionCallout } from "@/components/domain/dashboard/ReportSuspicionCallout";
 import { getMissionLogDetail } from "@/services/feed";
 import type { CertificationStatus, FeedItem } from "@/types/domain";
 
@@ -256,6 +257,12 @@ export default function MissionLogDetailPage() {
 
               {/* 리액션 */}
               <ReactionRow counts={item.reaction_counts} />
+
+              {/* 부정 의심 신고 */}
+              <ReportSuspicionCallout
+                notice="부정 행위가 의심될 경우 운영팀에 신고해주세요."
+                actionLabel="부정 의심 신고"
+              />
             </div>
           </div>
         ) : null}
