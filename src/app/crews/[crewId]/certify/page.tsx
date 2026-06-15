@@ -104,11 +104,30 @@ function formatKstTime(isoStr: string): string {
   }
 }
 
-// failure_reason → WARNED 타이틀
-function warnedTitle(reason: MissionLogCreateResponse['failure_reason']): string {
-  if (reason === 'EXIF_TIME_INVALID') return '촬영 시각이 맞지 않아요';
-  if (reason === 'DUPLICATE_IMAGE_HASH') return '이미 사용된 이미지예요';
-  return '검증 결과에 이상이 있어요';
+// failure_reason → WARNED 타이틀 + 설명
+interface WarnedInfo {
+  title: string;
+  description: string;
+}
+
+function getWarnedInfo(reason: MissionLogCreateResponse['failure_reason']): WarnedInfo {
+  if (reason === 'EXIF_TIME_INVALID') {
+    return {
+      title: '사진 촬영 시각이 오늘과 맞지 않아요',
+      description:
+        '사진 안에 기록된 촬영 시간이 오늘 날짜와 다릅니다. 방장이 검토 후 최종 결정합니다.',
+    };
+  }
+  if (reason === 'DUPLICATE_IMAGE_HASH') {
+    return {
+      title: '이미 사용된 사진이에요',
+      description: '동일한 사진이 이미 인증에 사용됐어요. 방장이 검토 후 최종 결정합니다.',
+    };
+  }
+  return {
+    title: '검증 결과에 이상이 있어요',
+    description: '방장이 검토 후 최종 결정합니다.',
+  };
 }
 
 // API 에러코드 → 표시 메시지
@@ -286,14 +305,6 @@ export default function CertifyPage() {
       setStep('UPLOAD');
     }
   }, [file, crew, caption]);
-
-  // ── 다시 업로드 ───────────────────────────────────────────────
-  const handleReset = useCallback(() => {
-    setStep('UPLOAD');
-    setFile(null);
-    setCaption('');
-    setCertResult(null);
-  }, []);
 
   // ────────────────────────────────────────────────────────────
   // 렌더: 로딩 / 에러
@@ -518,7 +529,7 @@ export default function CertifyPage() {
 
               <div className="w-full rounded-card bg-card border border-text-secondary/10 divide-y divide-text-secondary/10">
                 <div className="flex items-center justify-between px-4 py-3">
-                  <span className="text-sm text-text-secondary">촬영 시각</span>
+                  <span className="text-sm text-text-secondary">업로드 시각</span>
                   <span className="text-sm font-medium text-text-primary">
                     {formatKstTime(certResult.server_time)}
                   </span>
@@ -552,16 +563,16 @@ export default function CertifyPage() {
               </div>
               <div className="text-center">
                 <p className="text-xl font-bold text-text-primary">
-                  {warnedTitle(certResult.failure_reason)}
+                  {getWarnedInfo(certResult.failure_reason).title}
                 </p>
                 <p className="text-sm text-text-secondary mt-1">
-                  방장이 검토 후 최종 결정합니다
+                  {getWarnedInfo(certResult.failure_reason).description}
                 </p>
               </div>
 
               <div className="w-full rounded-card bg-card border border-text-secondary/10 divide-y divide-text-secondary/10">
                 <div className="flex items-center justify-between px-4 py-3">
-                  <span className="text-sm text-text-secondary">촬영 시각</span>
+                  <span className="text-sm text-text-secondary">업로드 시각</span>
                   <span className="text-sm font-medium text-text-primary">
                     {formatKstTime(certResult.server_time)}
                   </span>
@@ -574,14 +585,9 @@ export default function CertifyPage() {
                 </div>
               </div>
 
-              <div className="w-full flex flex-col gap-2">
-                <Button variant="primary-green" size="lg" fullWidth onClick={() => router.push('/feed')}>
-                  피드로 이동
-                </Button>
-                <Button variant="outline" size="lg" fullWidth onClick={handleReset}>
-                  다시 업로드
-                </Button>
-              </div>
+              <Button variant="primary-green" size="lg" fullWidth onClick={() => router.push('/feed')}>
+                피드로 이동
+              </Button>
             </div>
           )}
         </div>
