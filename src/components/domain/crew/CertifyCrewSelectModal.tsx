@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { isAxiosError } from 'axios';
+import Image from 'next/image';
 import { X, ChevronRight } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { Skeleton } from '@/components/common/Skeleton';
@@ -13,9 +14,10 @@ import type { MyCrew } from '@/types/domain';
 interface CertifyCrewSelectModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialCrews?: MyCrew[];
 }
 
-export function CertifyCrewSelectModal({ isOpen, onClose }: CertifyCrewSelectModalProps) {
+export function CertifyCrewSelectModal({ isOpen, onClose, initialCrews }: CertifyCrewSelectModalProps) {
   const router = useRouter();
   const [crews, setCrews] = useState<MyCrew[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -23,17 +25,25 @@ export function CertifyCrewSelectModal({ isOpen, onClose }: CertifyCrewSelectMod
   const [retryKey, setRetryKey] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
 
+  // initialCrews가 전달된 경우 내부 fetch 결과 대신 사용
+  const displayCrews = initialCrews ?? crews;
+  const displayLoading = initialCrews !== undefined ? false : isLoading;
+  const displayError = initialCrews !== undefined ? false : isError;
+
   useEffect(() => {
-    if (!isOpen) return;
-    // retryKey 변경 시 재실행
+    if (!isOpen || initialCrews !== undefined) return;
 
     abortRef.current?.abort();
     const ac = new AbortController();
     abortRef.current = ac;
 
-    setIsLoading(true);
-    setCrews([]);
-    setIsError(false);
+    void Promise.resolve().then(() => {
+      if (!ac.signal.aborted) {
+        setIsLoading(true);
+        setCrews([]);
+        setIsError(false);
+      }
+    });
 
     getMyLockedCrews(ac.signal)
       .then((items) => {
@@ -46,7 +56,7 @@ export function CertifyCrewSelectModal({ isOpen, onClose }: CertifyCrewSelectMod
       .finally(() => { if (!ac.signal.aborted) setIsLoading(false); });
 
     return () => ac.abort();
-  }, [isOpen, retryKey]);
+  }, [isOpen, retryKey, initialCrews]);
 
   const handleSelect = (crewId: number) => {
     onClose();
@@ -71,7 +81,7 @@ export function CertifyCrewSelectModal({ isOpen, onClose }: CertifyCrewSelectMod
           </button>
         </div>
 
-        {isLoading ? (
+        {displayLoading ? (
           <ul className="flex flex-col gap-2">
             {[1, 2].map((i) => (
               <li key={i} className="flex items-center gap-3 px-3.5 py-3 rounded-xl bg-background/60">
@@ -83,7 +93,7 @@ export function CertifyCrewSelectModal({ isOpen, onClose }: CertifyCrewSelectMod
               </li>
             ))}
           </ul>
-        ) : isError ? (
+        ) : displayError ? (
           <div className="py-8 flex flex-col items-center gap-3 text-center">
             <p className="text-sm text-text-secondary">크루 정보를 불러오지 못했어요</p>
             <button
@@ -94,11 +104,11 @@ export function CertifyCrewSelectModal({ isOpen, onClose }: CertifyCrewSelectMod
               다시 시도
             </button>
           </div>
-        ) : crews.length === 0 ? (
+        ) : displayCrews.length === 0 ? (
           <p className="py-8 text-center text-sm text-text-secondary">진행 중인 크루가 없어요</p>
         ) : (
           <ul className="flex flex-col gap-2">
-            {crews.map((crew) => {
+            {displayCrews.map((crew) => {
               const emoji = CATEGORY_EMOJI[crew.category] ?? '📌';
               const label = CATEGORY_LABEL[crew.category]?.replace(/^\S+\s/, '') ?? '기타';
 
@@ -110,10 +120,12 @@ export function CertifyCrewSelectModal({ isOpen, onClose }: CertifyCrewSelectMod
                     className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl bg-background/60 border border-text-secondary/10 hover:bg-success-green/30 hover:border-primary-green/20 active:scale-[0.98] transition-all text-left"
                   >
                     {crew.image_url ? (
-                      <img
+                      <Image
                         src={crew.image_url}
                         alt={crew.title}
-                        className="w-10 h-10 rounded-lg object-cover shrink-0"
+                        width={40}
+                        height={40}
+                        className="rounded-lg object-cover shrink-0"
                       />
                     ) : (
                       <span className="w-10 h-10 rounded-lg bg-success-green flex items-center justify-center text-xl shrink-0">

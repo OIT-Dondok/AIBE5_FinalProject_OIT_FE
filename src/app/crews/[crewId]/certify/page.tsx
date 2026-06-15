@@ -34,18 +34,21 @@ import type { ErrorResponse } from '@/types/common';
 const MAX_SIZE = 10 * 1024 * 1024;
 const CAPTION_MIN = 5;
 const CAPTION_MAX = 100;
-const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'heic', 'heif'];
+const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'heic', 'heif'];
 
 // ────────────────────────────────────────────────────────────
 // 유틸
 // ────────────────────────────────────────────────────────────
 function getContentType(file: File): string | null {
   const t = file.type.toLowerCase();
-  if (t === 'image/jpeg' || t === 'image/png') return t;
+  if (t === 'image/jpeg' || t === 'image/png' || t === 'image/gif' || t === 'image/bmp' || t === 'image/webp') return t;
   if (t.includes('heic') || t.includes('heif')) return 'image/jpeg';
   const ext = file.name.split('.').pop()?.toLowerCase();
   if (ext === 'jpg' || ext === 'jpeg') return 'image/jpeg';
   if (ext === 'png') return 'image/png';
+  if (ext === 'gif') return 'image/gif';
+  if (ext === 'bmp') return 'image/bmp';
+  if (ext === 'webp') return 'image/webp';
   if (ext === 'heic' || ext === 'heif') return 'image/jpeg';
   return null;
 }
@@ -136,8 +139,13 @@ const ERROR_MESSAGES: Record<string, string> = {
   NOT_MISSION_DAY: '오늘은 미션 없는 날이에요',
   MISSION_NOT_STARTED: '아직 미션 시작 전이에요',
   MISSION_ENDED: '미션이 종료됐어요',
-  INVALID_IMAGE_KEY: '이미지 업로드에 실패했어요. 다시 시도해주세요',
+  INVALID_IMAGE_KEY: '이미지 업로드에 실패했어요. 다시 시도해주세요.',
   PARTICIPANT_NOT_ELIGIBLE: '인증 권한이 없어요',
+  IMAGE_DIMENSIONS_TOO_LARGE: '이미지 해상도가 너무 커요. 다른 이미지를 선택해주세요.',
+  IMAGE_DECODE_FAILED: '이미지를 읽을 수 없어요. 다른 이미지를 선택해주세요.',
+  UNSUPPORTED_IMAGE_TYPE: '지원하지 않는 이미지 형식이에요.',
+  IMAGE_TOO_LARGE: '10MB 이하 이미지를 선택해주세요.',
+  EMPTY_IMAGE: '이미지 파일이 비어있어요. 다른 이미지를 선택해주세요.',
 };
 
 // ────────────────────────────────────────────────────────────
@@ -173,8 +181,8 @@ export default function CertifyPage() {
   const crewId = Number(params.crewId);
 
   const [crew, setCrew] = useState<CrewDetail | null>(null);
-  const [crewLoading, setCrewLoading] = useState(true);
-  const [crewError, setCrewError] = useState(false);
+  const [crewLoading, setCrewLoading] = useState(!!crewId && Number.isFinite(crewId));
+  const [crewError, setCrewError] = useState(!crewId || !Number.isFinite(crewId));
 
   const [step, setStep] = useState<CertifyStep>('UPLOAD');
   const [file, setFile] = useState<File | null>(null);
@@ -186,7 +194,7 @@ export default function CertifyPage() {
 
   const [certResult, setCertResult] = useState<MissionLogCreateResponse | null>(null);
 
-  // 마감 시간 표시 tick
+  const [isPastDeadline, setIsPastDeadline] = useState(false);
   const [, setTick] = useState(0);
 
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -225,30 +233,29 @@ export default function CertifyPage() {
 
   // ── 크루 정보 조회 ──────────────────────────────────────────
   useEffect(() => {
-    if (!crewId || !Number.isFinite(crewId)) {
-      setCrewError(true);
-      setCrewLoading(false);
-      return;
-    }
-    setCrewLoading(true);
+    if (!crewId || !Number.isFinite(crewId)) return;
     getCrew(crewId)
-      .then(({ data }) => setCrew(data))
+      .then(({ data }) => {
+        setCrew(data);
+        setIsPastDeadline(getDeadline(data.daily_settlement_type).getTime() <= Date.now());
+      })
       .catch(() => setCrewError(true))
       .finally(() => setCrewLoading(false));
   }, [crewId]);
 
-  // ── 마감 남은 시간 tick (1분마다 갱신) ───────────────────────
+  // ── 마감 남은 시간 (1분마다 갱신) ────────────────────────────
   useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 60_000);
+    if (!crew) return;
+    const id = setInterval(() => {
+      setIsPastDeadline(getDeadline(crew.daily_settlement_type).getTime() <= Date.now());
+      setTick(t => t + 1);
+    }, 60_000);
     return () => clearInterval(id);
-  }, []);
+  }, [crew]);
 
   // ── VERIFYING 단계 애니메이션 ────────────────────────────────
   useEffect(() => {
-    if (step !== 'VERIFYING') {
-      setAnimStep(0);
-      return;
-    }
+    if (step !== 'VERIFYING') return;
     const t1 = setTimeout(() => setAnimStep(1), 600);
     const t2 = setTimeout(() => setAnimStep(2), 1200);
     const t3 = setTimeout(() => setAnimStep(3), 1900);
@@ -261,10 +268,13 @@ export default function CertifyPage() {
 
   // ── 파일 미리보기 URL 관리 ────────────────────────────────────
   useEffect(() => {
-    if (!file) { setPreview(null); return; }
+    if (!file) return;
     const url = URL.createObjectURL(file);
-    setPreview(url);
-    return () => URL.revokeObjectURL(url);
+    void Promise.resolve().then(() => setPreview(url));
+    return () => {
+      URL.revokeObjectURL(url);
+      setPreview(null);
+    };
   }, [file]);
 
   // ── 파일 선택 핸들러 ──────────────────────────────────────────
@@ -280,7 +290,7 @@ export default function CertifyPage() {
     }
     if (!isAllowedFile(selected)) {
       setFile(null);
-      setToast('JPG, PNG, HEIC 파일만 업로드 가능해요');
+      setToast('JPG, PNG, GIF, BMP, WEBP, HEIC 파일만 업로드 가능해요');
       setIsToastOpen(true);
       return;
     }
@@ -300,13 +310,16 @@ export default function CertifyPage() {
       return;
     }
 
+    setAnimStep(0);
     setStep('VERIFYING');
 
+    let phase: 'convert' | 'presign' | 's3' | 'log' = 'convert';
     try {
       // 1. HEIC→JPEG 변환(필요시), content type 결정
       const { file: uploadFile, contentType } = await prepareImageForUpload(file);
 
       // 2. Presigned URL 요청
+      phase = 'presign';
       const { data: presigned } = await getPresignedUrl({
         purpose: 'MISSION_IMAGE',
         crew_id: crew.crew_id,
@@ -316,9 +329,11 @@ export default function CertifyPage() {
       });
 
       // 3. S3 직접 업로드
+      phase = 's3';
       await uploadToS3(presigned.upload_url, uploadFile, contentType);
 
       // 4. 미션 로그 생성
+      phase = 'log';
       const { data: log } = await createMissionLog({
         crew_id: crew.crew_id,
         image_s3_key: presigned.s3_key,
@@ -336,12 +351,20 @@ export default function CertifyPage() {
     } catch (err) {
       let msg: string;
       if (err instanceof UnsupportedImageError) {
-        msg = 'JPG, PNG, HEIC 파일만 업로드 가능해요';
+        msg = 'JPG, PNG, GIF, BMP, WEBP, HEIC 파일만 업로드 가능해요';
+      } else if (phase === 'convert') {
+        msg = '이미지 변환에 실패했어요. 다른 이미지를 선택해주세요.';
+      } else if (phase === 's3') {
+        msg = '이미지 업로드에 실패했어요. 다시 시도해주세요.';
       } else if (isAxiosError<ErrorResponse>(err)) {
-        const code = err.response?.data?.code;
-        msg = (code && ERROR_MESSAGES[code]) ?? '업로드 중 오류가 발생했어요. 다시 시도해주세요';
+        if (!err.response) {
+          msg = '네트워크 오류가 발생했어요. 다시 시도해주세요.';
+        } else {
+          const code = err.response.data?.code;
+          msg = (code && ERROR_MESSAGES[code]) ?? '업로드 중 오류가 발생했어요. 다시 시도해주세요.';
+        }
       } else {
-        msg = '이미지 변환에 실패했어요';
+        msg = '네트워크 오류가 발생했어요. 다시 시도해주세요.';
       }
       setToast(msg);
       setIsToastOpen(true);
@@ -402,7 +425,6 @@ export default function CertifyPage() {
   }
 
   const deadline = getDeadline(crew.daily_settlement_type);
-  const isPastDeadline = deadline.getTime() <= Date.now();
   const timeLeft = formatTimeLeft(deadline);
   const typeLabel = SETTLEMENT_TYPE_LABEL[crew.daily_settlement_type];
 
@@ -427,7 +449,7 @@ export default function CertifyPage() {
                 {typeLabel} · {deadlineTimeStr} 마감
               </p>
             </div>
-            <Button variant="primary-green" size="lg" fullWidth onClick={() => router.push('/feed')}>
+            <Button variant="primary-green" size="lg" fullWidth onClick={() => router.replace('/feed')}>
               피드로 이동
             </Button>
           </div>
@@ -464,7 +486,7 @@ export default function CertifyPage() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/jpeg,image/png,image/heic,image/heif"
+                accept="image/jpeg,image/png,image/gif,image/bmp,image/webp,image/heic,image/heif"
                 onChange={handleFileChange}
                 className="hidden"
               />
@@ -476,6 +498,7 @@ export default function CertifyPage() {
                 className="w-full aspect-[4/3] rounded-card border-2 border-dashed border-text-secondary/25 bg-background/60 flex flex-col items-center justify-center gap-2 hover:border-primary-green/50 hover:bg-success-green/10 transition-all active:scale-[0.99]"
               >
                 {preview ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- blob preview URL은 next/image 최적화 불필요
                   <img
                     src={preview}
                     alt="미리보기"
@@ -485,7 +508,7 @@ export default function CertifyPage() {
                   <>
                     <ImagePlus size={36} className="text-text-secondary/50" />
                     <p className="text-sm font-medium text-text-secondary">사진을 선택해주세요</p>
-                    <p className="text-xs text-text-secondary/60">JPG · PNG · HEIC · 최대 10MB</p>
+                    <p className="text-xs text-text-secondary/60">JPG · PNG · GIF · BMP · WEBP · HEIC · 최대 10MB</p>
                   </>
                 )}
               </button>
@@ -608,7 +631,7 @@ export default function CertifyPage() {
                 </div>
               </div>
 
-              <Button variant="primary-green" size="lg" fullWidth onClick={() => router.push('/feed')}>
+              <Button variant="primary-green" size="lg" fullWidth onClick={() => router.replace('/feed')}>
                 피드로 이동
               </Button>
             </div>
@@ -647,7 +670,7 @@ export default function CertifyPage() {
                 </div>
               </div>
 
-              <Button variant="primary-green" size="lg" fullWidth onClick={() => router.push('/feed')}>
+              <Button variant="primary-green" size="lg" fullWidth onClick={() => router.replace('/feed')}>
                 피드로 이동
               </Button>
             </div>

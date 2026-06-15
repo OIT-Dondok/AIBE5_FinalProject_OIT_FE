@@ -6,6 +6,7 @@ import { Home, LayoutGrid, BarChart3, User, Camera, type LucideIcon } from "luci
 import { CertifyCrewSelectModal } from "@/components/domain/crew/CertifyCrewSelectModal";
 import { Toast } from "@/components/common/Toast";
 import { getMyLockedCrews } from "@/services/crew";
+import type { MyCrew } from "@/types/domain";
 
 interface NavItem {
     label: string;
@@ -27,6 +28,7 @@ export const BottomNav = () => {
     const pathname = usePathname();
     const router = useRouter();
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [activeCrews, setActiveCrews] = useState<MyCrew[]>([]);
     const [toast, setToast] = useState('');
     const [isToastOpen, setIsToastOpen] = useState(false);
     const [isFetching, setIsFetching] = useState(false);
@@ -68,6 +70,7 @@ export const BottomNav = () => {
             } else if (active.length === 1) {
                 router.push(`/crews/${active[0].crew_id}/certify`);
             } else {
+                setActiveCrews(active);
                 setIsModalOpen(true);
             }
         } catch {
@@ -105,6 +108,7 @@ export const BottomNav = () => {
             <CertifyCrewSelectModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
+                initialCrews={activeCrews}
             />
 
             <Toast
