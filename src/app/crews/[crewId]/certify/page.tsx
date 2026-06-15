@@ -21,6 +21,7 @@ import { SETTLEMENT_TYPE_LABEL } from '@/constants/crew';
 import type {
   CrewDetail,
   MissionLogCreateResponse,
+  MissionLogExifRisk,
   CertifyStep,
   DailySettlementType,
 } from '@/types/domain';
@@ -104,24 +105,30 @@ function formatKstTime(isoStr: string): string {
   }
 }
 
-// failure_reason → WARNED 타이틀 + 설명
+// exif_risk + duplicate → WARNED 타이틀 + 설명
 interface WarnedInfo {
   title: string;
   description: string;
 }
 
-function getWarnedInfo(reason: MissionLogCreateResponse['failure_reason']): WarnedInfo {
-  if (reason === 'EXIF_TIME_INVALID') {
+function getWarnedInfo(exifRisk: MissionLogExifRisk, duplicate: boolean): WarnedInfo {
+  if (duplicate) {
+    return {
+      title: '이미 사용된 사진이에요',
+      description: '동일한 사진이 이미 인증에 사용됐어요. 방장이 검토 후 최종 결정합니다.',
+    };
+  }
+  if (exifRisk === 'TIME_INVALID') {
     return {
       title: '사진 촬영 시각이 오늘과 맞지 않아요',
       description:
         '사진 안에 기록된 촬영 시간이 오늘 날짜와 다릅니다. 방장이 검토 후 최종 결정합니다.',
     };
   }
-  if (reason === 'DUPLICATE_IMAGE_HASH') {
+  if (exifRisk === 'MISSING') {
     return {
-      title: '이미 사용된 사진이에요',
-      description: '동일한 사진이 이미 인증에 사용됐어요. 방장이 검토 후 최종 결정합니다.',
+      title: '사진 정보를 읽을 수 없어요',
+      description: '촬영 시각 정보가 없는 사진이에요. 방장이 검토 후 최종 결정합니다.',
     };
   }
   return {
@@ -291,8 +298,8 @@ export default function CertifyPage() {
 
       setCertResult(log);
 
-      // failure_reason 없으면 SUCCESS, 있으면 WARNED
-      if (log.failure_reason === null) {
+      // exif_risk === NORMAL && duplicate === false → SUCCESS, 그 외 → WARNED
+      if (log.exif_risk === 'NORMAL' && !log.duplicate) {
         setStep('SUCCESS');
       } else {
         setStep('WARNED');
@@ -563,10 +570,10 @@ export default function CertifyPage() {
               </div>
               <div className="text-center">
                 <p className="text-xl font-bold text-text-primary">
-                  {getWarnedInfo(certResult.failure_reason).title}
+                  {getWarnedInfo(certResult.exif_risk, certResult.duplicate).title}
                 </p>
                 <p className="text-sm text-text-secondary mt-1">
-                  {getWarnedInfo(certResult.failure_reason).description}
+                  {getWarnedInfo(certResult.exif_risk, certResult.duplicate).description}
                 </p>
               </div>
 

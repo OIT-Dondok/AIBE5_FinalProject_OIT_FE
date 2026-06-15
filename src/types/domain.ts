@@ -530,7 +530,8 @@ export interface MissionLogCreateResponse {
   server_time: string;
   exif_taken_at?: string | null;
   certification_status: CertificationStatus;
-  failure_reason: 'EXIF_TIME_INVALID' | 'DUPLICATE_IMAGE_HASH' | 'EXIF_MISSING' | 'BEFORE_START' | 'AFTER_END' | null;
+  exif_risk: MissionLogExifRisk;
+  duplicate: boolean;
   decision_type: string | null;
   reject_reason_code: string | null;
 }
