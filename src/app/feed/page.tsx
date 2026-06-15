@@ -4,8 +4,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { isAxiosError } from 'axios';
 import { Loader2 } from 'lucide-react';
-
-import { Plus } from 'lucide-react';
 import { Header } from '@/components/common/Header';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FeedCalendar } from '@/components/domain/feed/FeedCalendar';
@@ -14,7 +12,6 @@ import { FeedItem } from '@/components/domain/feed/FeedItem';
 import { FeedSkeletonList } from '@/components/domain/feed/FeedItemSkeleton';
 import { FeedPeriodCard } from '@/components/domain/feed/FeedPeriodCard';
 import { Toast } from '@/components/common/Toast';
-import { CertifyCrewSelectModal } from '@/components/domain/crew/CertifyCrewSelectModal';
 import { getFeed } from '@/services/feed';
 import type { AvailableCrew, FeedItem as FeedItemType, FeedPeriod } from '@/types/domain';
 import { ERROR_CODE } from '@/types/common';
@@ -22,7 +19,6 @@ import type { ErrorResponse } from '@/types/common';
 
 export default function FeedPage() {
   const router = useRouter();
-  const [isCertifyModalOpen, setIsCertifyModalOpen] = useState(false);
   const [selectedCrewId, setSelectedCrewId] = useState<number | null>(null);
   // null = 전체 기간(날짜 필터 없음). 달력에서 선택 시 from/to 적용
   const [period, setPeriod] = useState<FeedPeriod | null>(null);
@@ -148,20 +144,7 @@ export default function FeedPage() {
   return (
     <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
       <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-8">
-        <Header
-          showLogo
-          rightElement={
-            <button
-              type="button"
-              onClick={() => setIsCertifyModalOpen(true)}
-              aria-label="인증하기"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-button bg-primary-green/10 hover:bg-primary-green/20 active:scale-95 transition-all"
-            >
-              <Plus size={16} strokeWidth={2.5} className="text-primary-green" />
-              <span className="text-xs font-bold text-primary-green">인증</span>
-            </button>
-          }
-        />
+        <Header showLogo />
 
         {/* 크루 필터 칩 */}
         <FeedCrewFilter
@@ -271,11 +254,6 @@ export default function FeedPage() {
           </div>
         </div>
       </div>
-
-      <CertifyCrewSelectModal
-        isOpen={isCertifyModalOpen}
-        onClose={() => setIsCertifyModalOpen(false)}
-      />
 
       <Toast
         message={toastMessage}
