@@ -197,20 +197,29 @@ export default function CertifyPage() {
   // 마감 시간 표시 tick
   const [, setTick] = useState(0);
 
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [toast, setToast] = useState('');
   const [isToastOpen, setIsToastOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ── VERIFYING 중 새로고침/탭 닫기 차단 ───────────────────────
+  // ── VERIFYING 중 새로고침/탭 닫기 + 뒤로가기 차단 ──────────
   useEffect(() => {
     if (step !== 'VERIFYING') return;
-    const handler = (e: BeforeUnloadEvent) => {
+    const beforeUnloadHandler = (e: BeforeUnloadEvent) => {
       e.preventDefault();
       e.returnValue = '';
     };
-    window.addEventListener('beforeunload', handler);
-    return () => window.removeEventListener('beforeunload', handler);
+    window.history.pushState(null, '', window.location.href);
+    const popStateHandler = () => {
+      window.history.pushState(null, '', window.location.href);
+    };
+    window.addEventListener('beforeunload', beforeUnloadHandler);
+    window.addEventListener('popstate', popStateHandler);
+    return () => {
+      window.removeEventListener('beforeunload', beforeUnloadHandler);
+      window.removeEventListener('popstate', popStateHandler);
+    };
   }, [step]);
 
   // ── SUCCESS/WARNED 후 뒤로가기 → 피드로 리다이렉트 ──────────
@@ -224,7 +233,11 @@ export default function CertifyPage() {
 
   // ── 크루 정보 조회 ──────────────────────────────────────────
   useEffect(() => {
-    if (!crewId) return;
+    if (!crewId || !Number.isFinite(crewId)) {
+      setCrewError(true);
+      setCrewLoading(false);
+      return;
+    }
     setCrewLoading(true);
     getCrew(crewId)
       .then(({ data }) => setCrew(data))
@@ -268,11 +281,13 @@ export default function CertifyPage() {
     if (!selected) return;
 
     if (selected.size > MAX_SIZE) {
+      setFile(null);
       setToast('10MB 이하 이미지를 선택해주세요');
       setIsToastOpen(true);
       return;
     }
     if (!isAllowedFile(selected)) {
+      setFile(null);
       setToast('JPG, PNG, HEIC 파일만 업로드 가능해요');
       setIsToastOpen(true);
       return;
@@ -290,6 +305,12 @@ export default function CertifyPage() {
     const contentType = getContentType(file);
     if (!contentType) {
       setToast('JPG, PNG, HEIC 파일만 업로드 가능해요');
+      setIsToastOpen(true);
+      return;
+    }
+
+    if (getDeadline(crew.daily_settlement_type).getTime() <= Date.now()) {
+      setToast('인증 마감 시간이 지났어요');
       setIsToastOpen(true);
       return;
     }
@@ -526,7 +547,7 @@ export default function CertifyPage() {
                 size="lg"
                 fullWidth
                 disabled={!file || caption.length < CAPTION_MIN || caption.length > CAPTION_MAX}
-                onClick={handleUpload}
+                onClick={() => setIsConfirmOpen(true)}
               >
                 업로드하기
               </Button>
@@ -637,6 +658,40 @@ export default function CertifyPage() {
           )}
         </div>
       </div>
+
+      {/* 업로드 확인 모달 */}
+      {isConfirmOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
+          onClick={() => setIsConfirmOpen(false)}
+        >
+          <div
+            className="w-full max-w-[430px] bg-card rounded-t-2xl px-5 pt-6 pb-8 flex flex-col gap-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-base font-bold text-text-primary text-center">인증 제출 확인</p>
+            <p className="text-sm text-text-secondary text-center leading-relaxed">
+              인증 사진은 제출 후 수정 또는 삭제가 불가능해요.
+              <br />제출하시겠어요?
+            </p>
+            <div className="flex gap-3 mt-1">
+              <Button variant="outline" size="lg" fullWidth onClick={() => setIsConfirmOpen(false)}>
+                취소
+              </Button>
+              <Button
+                variant="primary-green"
+                size="lg"
+                fullWidth
+                onClick={() => { setIsConfirmOpen(false); handleUpload(); }}
+              >
+                확인
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Toast message={toast} isOpen={isToastOpen} onClose={() => setIsToastOpen(false)} />
     </main>

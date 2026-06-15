@@ -11,6 +11,7 @@ import type {
   NoticeReactionResponse,
   NoticeComment,
   NoticeCommentsResponse,
+  MyCrew,
   MyCrewsResponse,
 } from '@/types/domain';
 
@@ -103,5 +104,16 @@ export const getMyCrew = (role?: 'ALL' | 'HOST' | 'MEMBER', cursor?: string, sig
   });
 };
 
-export const getMyLockedCrews = (signal?: AbortSignal) =>
-  api.get<MyCrewsResponse>('/me/crews', { params: { my_status: 'LOCKED' }, signal });
+export const getMyLockedCrews = async (signal?: AbortSignal): Promise<MyCrew[]> => {
+  const allItems: MyCrew[] = [];
+  let cursor: string | undefined;
+  do {
+    const { data } = await api.get<MyCrewsResponse>('/me/crews', {
+      params: { my_status: 'LOCKED', ...(cursor ? { cursor } : {}) },
+      signal,
+    });
+    allItems.push(...data.items);
+    cursor = data.next_cursor ?? undefined;
+  } while (cursor);
+  return allItems;
+};

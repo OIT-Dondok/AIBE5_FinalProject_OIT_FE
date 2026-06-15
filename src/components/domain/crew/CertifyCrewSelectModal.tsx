@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { isAxiosError } from 'axios';
 import { X, ChevronRight } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { Skeleton } from '@/components/common/Skeleton';
@@ -18,10 +19,13 @@ export function CertifyCrewSelectModal({ isOpen, onClose }: CertifyCrewSelectMod
   const router = useRouter();
   const [crews, setCrews] = useState<MyCrew[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
+    // retryKey 변경 시 재실행
 
     abortRef.current?.abort();
     const ac = new AbortController();
@@ -29,19 +33,20 @@ export function CertifyCrewSelectModal({ isOpen, onClose }: CertifyCrewSelectMod
 
     setIsLoading(true);
     setCrews([]);
+    setIsError(false);
 
     getMyLockedCrews(ac.signal)
-      .then(({ data }) => {
-        const active = data.items.filter((c) => c.status === 'ACTIVE');
-        setCrews(active);
+      .then((items) => {
+        setCrews(items.filter((c) => c.status === 'ACTIVE'));
       })
-      .catch(() => {
-        // aborted or network error — show empty state
+      .catch((err: unknown) => {
+        if (isAxiosError(err) && err.code === 'ERR_CANCELED') return;
+        setIsError(true);
       })
       .finally(() => setIsLoading(false));
 
     return () => ac.abort();
-  }, [isOpen]);
+  }, [isOpen, retryKey]);
 
   const handleSelect = (crewId: number) => {
     onClose();
@@ -78,6 +83,17 @@ export function CertifyCrewSelectModal({ isOpen, onClose }: CertifyCrewSelectMod
               </li>
             ))}
           </ul>
+        ) : isError ? (
+          <div className="py-8 flex flex-col items-center gap-3 text-center">
+            <p className="text-sm text-text-secondary">크루 정보를 불러오지 못했어요</p>
+            <button
+              type="button"
+              onClick={() => setRetryKey((k) => k + 1)}
+              className="text-xs font-semibold text-primary-green underline-offset-2 hover:underline"
+            >
+              다시 시도
+            </button>
+          </div>
         ) : crews.length === 0 ? (
           <p className="py-8 text-center text-sm text-text-secondary">진행 중인 크루가 없어요</p>
         ) : (

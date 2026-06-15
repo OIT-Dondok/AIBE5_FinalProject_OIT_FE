@@ -60,8 +60,8 @@ export const BottomNav = () => {
         if (isFetching) return;
         setIsFetching(true);
         try {
-            const { data } = await getMyLockedCrews();
-            const active = data.items.filter((c) => c.status === 'ACTIVE');
+            const items = await getMyLockedCrews();
+            const active = items.filter((c) => c.status === 'ACTIVE');
             if (active.length === 0) {
                 setToast('진행 중인 크루가 없어요');
                 setIsToastOpen(true);
