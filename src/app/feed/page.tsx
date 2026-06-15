@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { isAxiosError } from 'axios';
 import { Loader2 } from 'lucide-react';
 
+import { Plus } from 'lucide-react';
 import { Header } from '@/components/common/Header';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FeedCalendar } from '@/components/domain/feed/FeedCalendar';
@@ -13,6 +14,7 @@ import { FeedItem } from '@/components/domain/feed/FeedItem';
 import { FeedSkeletonList } from '@/components/domain/feed/FeedItemSkeleton';
 import { FeedPeriodCard } from '@/components/domain/feed/FeedPeriodCard';
 import { Toast } from '@/components/common/Toast';
+import { CertifyCrewSelectModal } from '@/components/domain/crew/CertifyCrewSelectModal';
 import { getFeed } from '@/services/feed';
 import type { AvailableCrew, FeedItem as FeedItemType, FeedPeriod } from '@/types/domain';
 import { ERROR_CODE } from '@/types/common';
@@ -20,6 +22,7 @@ import type { ErrorResponse } from '@/types/common';
 
 export default function FeedPage() {
   const router = useRouter();
+  const [isCertifyModalOpen, setIsCertifyModalOpen] = useState(false);
   const [selectedCrewId, setSelectedCrewId] = useState<number | null>(null);
   // null = 전체 기간(날짜 필터 없음). 달력에서 선택 시 from/to 적용
   const [period, setPeriod] = useState<FeedPeriod | null>(null);
@@ -255,6 +258,21 @@ export default function FeedPage() {
           </div>
         </div>
       </div>
+
+      {/* 인증 FAB */}
+      <button
+        type="button"
+        onClick={() => setIsCertifyModalOpen(true)}
+        aria-label="인증하기"
+        className="fixed bottom-28 right-4 z-40 w-12 h-12 rounded-full bg-primary-green shadow-lg shadow-primary-green/35 flex items-center justify-center active:scale-95 transition-transform"
+      >
+        <Plus size={24} strokeWidth={2.5} className="text-white" />
+      </button>
+
+      <CertifyCrewSelectModal
+        isOpen={isCertifyModalOpen}
+        onClose={() => setIsCertifyModalOpen(false)}
+      />
 
       <Toast
         message={toastMessage}
