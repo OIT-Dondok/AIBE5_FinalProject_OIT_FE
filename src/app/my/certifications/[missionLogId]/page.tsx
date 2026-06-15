@@ -80,19 +80,21 @@ function getAvatarClass(crewId: number): string {
 
 function DetailSkeleton() {
   return (
-    <div className="flex flex-col gap-4">
-      <Skeleton className="w-full aspect-square rounded-none" />
-      <div className="px-4 flex flex-col gap-3">
-        <div className="flex items-center gap-3">
-          <Skeleton className="w-12 h-12 rounded-xl shrink-0" />
-          <div className="flex flex-col gap-1.5 flex-1">
-            <Skeleton className="w-40 h-4 rounded" />
-            <Skeleton className="w-28 h-3 rounded" />
+    <div className="px-4 pt-4 flex flex-col gap-4">
+      <div className="bg-card rounded-xl overflow-hidden shadow-card-elevated border border-text-secondary/10">
+        <Skeleton className="w-full aspect-square" />
+        <div className="px-4 pt-4 pb-4 flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <Skeleton className="w-11 h-11 rounded-full shrink-0" />
+            <div className="flex-1 flex flex-col gap-1.5">
+              <Skeleton className="w-36 h-4 rounded" />
+              <Skeleton className="w-24 h-3 rounded" />
+            </div>
+            <Skeleton className="w-16 h-6 rounded-full shrink-0" />
           </div>
-          <Skeleton className="w-16 h-6 rounded-full shrink-0" />
+          <Skeleton className="w-32 h-3 rounded" />
+          <Skeleton className="w-full h-12 rounded-xl" />
         </div>
-        <Skeleton className="w-32 h-3 rounded" />
-        <Skeleton className="w-full h-14 rounded-xl" />
       </div>
     </div>
   );
@@ -169,101 +171,102 @@ export default function MissionLogDetailPage() {
             </button>
           </div>
         ) : item ? (
-          <div className="flex flex-col gap-0">
-            {/* 인증 이미지 */}
-            <div className="relative w-full aspect-square bg-text-secondary/10">
-              {item.image_url ? (
-                <Image
-                  src={item.image_url}
-                  alt="인증 이미지"
-                  fill
-                  className="object-cover"
-                  unoptimized
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <ClipboardCheck size={48} className="text-text-secondary opacity-30" />
-                </div>
-              )}
-            </div>
-
-            {/* 본문 섹션 */}
-            <div className="flex flex-col gap-4 px-4 pt-4">
-              {/* 닉네임 + 크루명 + 상태 배지 */}
-              <div className="flex items-center gap-3">
-                <div
-                  className={`shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold ${getAvatarClass(item.crew_id)}`}
-                >
-                  {item.profile_image_url ? (
-                    <Image
-                      src={item.profile_image_url}
-                      alt={item.nickname}
-                      width={48}
-                      height={48}
-                      className="rounded-xl object-cover"
-                      unoptimized
-                    />
-                  ) : (
-                    (item.nickname.charAt(0).toUpperCase() || "?")
-                  )}
-                </div>
-                <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-                  <p className="text-sm font-semibold text-text-primary truncate leading-snug">
-                    {item.nickname}
-                  </p>
-                  <p className="text-xs text-text-secondary truncate">{item.crew_name}</p>
-                </div>
-                {(() => {
-                  const meta = STATUS_META[item.certification_status];
-                  return (
-                    <span
-                      className={`shrink-0 inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${meta.className}`}
-                    >
-                      {meta.label}
-                    </span>
-                  );
-                })()}
+          <div className="px-4 pt-4 flex flex-col gap-4">
+            {/* 카드 */}
+            <div className="bg-card rounded-xl overflow-hidden shadow-card-elevated border border-text-secondary/10">
+              {/* 인증 이미지 (카드 상단, 부모 overflow-hidden이 코너 처리) */}
+              <div className="relative w-full aspect-square bg-text-secondary/10">
+                {item.image_url ? (
+                  <Image
+                    src={item.image_url}
+                    alt="인증 이미지"
+                    fill
+                    className="object-cover"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <ClipboardCheck size={48} className="text-text-secondary opacity-30" />
+                  </div>
+                )}
               </div>
 
-              {/* 인증 시간 */}
-              <p className="text-xs text-text-secondary">
-                {formatDateTime(item.server_time)}
-              </p>
-
-              {/* 위반 사유 (거절 시만) */}
-              {item.certification_status === "FAILED" && formatRejectReason(item.reject_reason_code) && (
-                <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 flex flex-col gap-0.5">
-                  <p className="text-xs font-semibold text-red-500">거절 사유</p>
-                  <p className="text-sm text-red-700">{formatRejectReason(item.reject_reason_code)}</p>
+              {/* 본문 (카드 내부) */}
+              <div className="px-4 pt-4 pb-4 flex flex-col gap-3">
+                {/* 아바타 + 닉네임/크루명 + 상태 배지 */}
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`shrink-0 w-11 h-11 rounded-full overflow-hidden flex items-center justify-center text-sm font-bold ${getAvatarClass(item.crew_id)}`}
+                  >
+                    {item.profile_image_url ? (
+                      <Image
+                        src={item.profile_image_url}
+                        alt={item.nickname}
+                        width={44}
+                        height={44}
+                        className="object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      (item.nickname.charAt(0).toUpperCase() || "?")
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                    <p className="text-[15px] font-bold text-text-primary truncate leading-tight">
+                      {item.nickname}
+                    </p>
+                    <p className="text-[11px] text-text-secondary truncate">{item.crew_name}</p>
+                  </div>
+                  {(() => {
+                    const meta = STATUS_META[item.certification_status];
+                    return (
+                      <span
+                        className={`shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold ${meta.className}`}
+                      >
+                        {meta.label}
+                      </span>
+                    );
+                  })()}
                 </div>
-              )}
 
-              {/* 결정 방식 */}
-              {formatDecisionType(item.decision_type) && (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-text-secondary">검수 방식</span>
-                  <span className="text-xs font-medium text-text-primary">
-                    {formatDecisionType(item.decision_type)}
-                  </span>
-                </div>
-              )}
+                {/* 인증 시간 */}
+                <p className="text-xs text-text-secondary">{formatDateTime(item.server_time)}</p>
 
-              {/* 캡션 */}
-              {item.caption && (
-                <div className="rounded-xl bg-card border border-text-secondary/10 px-4 py-3 shadow-card">
-                  <p className="text-sm text-text-primary leading-relaxed">{item.caption}</p>
-                </div>
-              )}
+                {/* 거절 사유 (FAILED 시만) */}
+                {item.certification_status === "FAILED" && formatRejectReason(item.reject_reason_code) && (
+                  <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 flex flex-col gap-0.5">
+                    <p className="text-xs font-semibold text-red-500">거절 사유</p>
+                    <p className="text-sm text-red-700">{formatRejectReason(item.reject_reason_code)}</p>
+                  </div>
+                )}
 
-              {/* 리액션 */}
-              <ReactionRow counts={item.reaction_counts} />
+                {/* 결정 방식 */}
+                {formatDecisionType(item.decision_type) && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-text-secondary">검수 방식</span>
+                    <span className="text-xs font-medium text-text-primary">
+                      {formatDecisionType(item.decision_type)}
+                    </span>
+                  </div>
+                )}
 
-              {/* 부정 의심 신고 */}
-              <ReportSuspicionCallout
-                notice="부정 행위가 의심될 경우 운영팀에 신고해주세요."
-                actionLabel="부정 의심 신고"
-              />
+                {/* 캡션 */}
+                {item.caption && (
+                  <p className="text-sm text-text-primary leading-relaxed whitespace-pre-line">
+                    {item.caption}
+                  </p>
+                )}
+
+                {/* 리액션 */}
+                <ReactionRow counts={item.reaction_counts} />
+              </div>
             </div>
+
+            {/* 부정 의심 신고 (카드 밖) */}
+            <ReportSuspicionCallout
+              notice="부정 행위가 의심될 경우 운영팀에 신고해주세요."
+              actionLabel="부정 의심 신고"
+            />
           </div>
         ) : null}
       </div>
