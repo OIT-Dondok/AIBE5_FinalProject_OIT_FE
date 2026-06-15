@@ -536,7 +536,7 @@ export interface MissionLogCreateResponse {
 }
 
 // FE 전용: 미션 인증 UI 단계
-export type CertifyStep = 'UPLOAD' | 'VERIFYING' | 'SUCCESS' | 'FAILED' | 'FALLBACK';
+export type CertifyStep = 'UPLOAD' | 'VERIFYING' | 'SUCCESS' | 'WARNED';
 
 // POST /api/mission-logs Request
 export interface CreateMissionLogRequest {
