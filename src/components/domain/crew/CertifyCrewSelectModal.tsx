@@ -43,7 +43,7 @@ export function CertifyCrewSelectModal({ isOpen, onClose }: CertifyCrewSelectMod
         if (isAxiosError(err) && err.code === 'ERR_CANCELED') return;
         setIsError(true);
       })
-      .finally(() => setIsLoading(false));
+      .finally(() => { if (!ac.signal.aborted) setIsLoading(false); });
 
     return () => ac.abort();
   }, [isOpen, retryKey]);
