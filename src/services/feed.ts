@@ -1,5 +1,5 @@
 import { api } from '@/lib/axios';
-import type { FeedResponse, ReactionResponse } from '@/types/domain';
+import type { FeedItem, FeedResponse, ReactionResponse } from '@/types/domain';
 
 export interface GetFeedParams {
   /** 특정 크루 필터. 생략 시 내가 참여 중인 전체 크루 */
@@ -18,6 +18,11 @@ export interface GetFeedParams {
 // undefined 파라미터는 axios가 쿼리에서 자동 제외한다.
 export const getFeed = (params?: GetFeedParams) => {
   return api.get<FeedResponse>('/feed', { params });
+};
+
+// GET /api/mission-logs/{missionLogId} — 미션 인증 로그 상세 조회
+export const getMissionLogDetail = (missionLogId: number) => {
+  return api.get<FeedItem>(`/mission-logs/${missionLogId}`);
 };
 
 // POST /api/mission-logs/{missionLogId}/reactions — 인증 로그에 이모지 리액션 추가

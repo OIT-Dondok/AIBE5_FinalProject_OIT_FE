@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { ChevronRight } from 'lucide-react';
 
 import type { FeedItem as FeedItemType } from '@/types/domain';
 import { FeedReactionBar } from '@/components/domain/feed/FeedReactionBar';
@@ -27,8 +29,11 @@ export function FeedItem({ item, onRemove }: FeedItemProps) {
 
   return (
     <article className="bg-card rounded-card overflow-hidden border border-text-secondary/10 shadow-card-elevated animate-feed-in">
-      {/* 상단: 사용자 프로필(닉네임 첫 글자) + 크루명 + 상태 뱃지 */}
-      <div className="px-4 pt-4 pb-3 flex items-center gap-3">
+      {/* 상단: 사용자 프로필(닉네임 첫 글자) + 크루명 + 상태 뱃지 + 상세 이동 */}
+      <Link
+        href={`/my/certifications/${item.mission_log_id}`}
+        className="px-4 pt-4 pb-3 flex items-center gap-3 hover:bg-text-secondary/5 active:bg-text-secondary/10 transition-colors"
+      >
         {/* 프로필: 이미지가 있으면 사진, 없으면 닉네임 첫 글자 */}
         <div className="relative w-11 h-11 flex items-center justify-center bg-primary-green/10 rounded-full flex-shrink-0 overflow-hidden text-base font-bold text-text-primary shadow-sm">
           {initial}
@@ -55,7 +60,8 @@ export function FeedItem({ item, onRemove }: FeedItemProps) {
           <status.Icon size={12} strokeWidth={2.5} />
           {status.label}
         </span>
-      </div>
+        <ChevronRight size={15} className="flex-shrink-0 text-text-secondary/30" />
+      </Link>
 
       {/* 이미지 영역 (실제 이미지가 있을 때만 클릭 확대 활성화) */}
       <div className="relative">

@@ -1,53 +1,115 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, ChevronDown } from 'lucide-react';
+import { Calendar, Check, ChevronDown } from 'lucide-react';
 import { Header } from '@/components/common/Header';
-import { Chip } from '@/components/common/Chip';
 import { Skeleton } from '@/components/common/Skeleton';
 import { getMyCrew } from '@/services/crew';
 import { CATEGORY_EMOJI, CATEGORY_BG } from '@/constants/crew';
 import { formatShortDate } from '@/utils/date';
 import type { MyCrew, CrewStatus } from '@/types/domain';
 
-// ─── 탭 정의 ────────────────────────────────────────────────
+// ─── 탭 정의 (role 기준) ─────────────────────────────────────
 
-type TabFilter = 'ALL' | 'PENDING' | 'ACTIVE' | 'CLOSED';
-type MyStatusParam = 'ALL' | 'PENDING' | 'LOCKED';
+type RoleTab = 'ALL' | 'HOST' | 'MEMBER';
 
-const TABS: { label: string; value: TabFilter }[] = [
-  { label: '전체', value: 'ALL' },
-  { label: '승인 대기', value: 'PENDING' },
-  { label: '참여중', value: 'ACTIVE' },
-  { label: '종료됨', value: 'CLOSED' },
-];
-
-const TAB_TO_MY_STATUS: Record<TabFilter, MyStatusParam> = {
-  ALL: 'ALL',
-  PENDING: 'PENDING',
-  ACTIVE: 'LOCKED',
-  CLOSED: 'LOCKED',
-};
-
-function applyTabFilter(items: MyCrew[], tab: TabFilter): MyCrew[] {
-  if (tab === 'ACTIVE') return items.filter((c) => c.status === 'ACTIVE');
-  if (tab === 'CLOSED') return items.filter((c) => c.status === 'CLOSED' || c.status === 'CANCELLED');
-  return items;
-}
-
-type RoleFilter = 'ALL' | 'HOST' | 'MEMBER';
-
-const ROLE_OPTIONS: { label: string; value: RoleFilter }[] = [
+const TABS: { label: string; value: RoleTab }[] = [
   { label: '전체', value: 'ALL' },
   { label: '방장', value: 'HOST' },
   { label: '크루원', value: 'MEMBER' },
 ];
 
-function applyRoleFilter(items: MyCrew[], role: RoleFilter): MyCrew[] {
-  if (role === 'HOST') return items.filter((c) => c.my_role === 'HOST');
-  if (role === 'MEMBER') return items.filter((c) => c.my_role === 'MEMBER');
+// ─── 드롭다운 상태 필터 (FE 필터링) ──────────────────────────
+
+type StatusFilter = 'ALL' | 'PENDING' | 'RECRUITING' | 'ACTIVE' | 'CLOSED';
+
+const STATUS_OPTIONS: { label: string; value: StatusFilter }[] = [
+  { label: '전체', value: 'ALL' },
+  { label: '승인 대기', value: 'PENDING' },
+  { label: '시작 전', value: 'RECRUITING' },
+  { label: '진행중', value: 'ACTIVE' },
+  { label: '종료됨', value: 'CLOSED' },
+];
+
+function applyStatusFilter(items: MyCrew[], filter: StatusFilter): MyCrew[] {
+  if (filter === 'PENDING') return items.filter((c) => c.my_status === 'PENDING');
+  if (filter === 'RECRUITING') return items.filter((c) => c.my_status === 'LOCKED' && c.status === 'RECRUITING');
+  if (filter === 'ACTIVE') return items.filter((c) => c.my_status === 'LOCKED' && c.status === 'ACTIVE');
+  if (filter === 'CLOSED') return items.filter((c) => c.my_status === 'LOCKED' && (c.status === 'CLOSED' || c.status === 'CANCELLED'));
   return items;
+}
+
+// ─── 커스텀 드롭다운 ──────────────────────────────────────────
+
+interface StatusDropdownProps {
+  value: StatusFilter;
+  onChange: (v: StatusFilter) => void;
+}
+
+function StatusDropdown({ value, onChange }: StatusDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [isOpen]);
+
+  const selectedLabel = STATUS_OPTIONS.find((o) => o.value === value)?.label ?? '전체';
+  const isFiltered = value !== 'ALL';
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen((v) => !v)}
+        className={`h-8 pl-3 pr-2 flex items-center gap-1.5 text-xs font-semibold rounded-lg border transition-colors ${
+          isFiltered
+            ? 'bg-[var(--color-primary-green)]/10 border-[var(--color-primary-green)] text-[var(--color-primary-green)]'
+            : 'bg-card border-text-secondary/20 text-text-primary'
+        }`}
+      >
+        <span>{selectedLabel}</span>
+        <ChevronDown
+          size={12}
+          className={`shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 top-[calc(100%+4px)] z-50 min-w-[96px] bg-card border border-text-secondary/15 rounded-xl shadow-lg overflow-hidden">
+          {STATUS_OPTIONS.map((opt) => {
+            const isSelected = opt.value === value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }}
+                className={`w-full flex items-center justify-between px-3 py-2.5 text-xs font-medium text-left transition-colors hover:bg-text-secondary/5 active:bg-text-secondary/10 ${
+                  isSelected ? 'text-[var(--color-primary-green)]' : 'text-text-primary'
+                }`}
+              >
+                <span>{opt.label}</span>
+                {isSelected && (
+                  <Check size={12} className="shrink-0 ml-2 text-[var(--color-primary-green)]" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ─── 상수 ────────────────────────────────────────────────────
@@ -158,8 +220,8 @@ function MyCrewCardSkeleton() {
 // ─── 페이지 ──────────────────────────────────────────────────
 
 export default function MyCrewsPage() {
-  const [activeTab, setActiveTab] = useState<TabFilter>('ALL');
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>('ALL');
+  const [activeTab, setActiveTab] = useState<RoleTab>('ALL');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const [crews, setCrews] = useState<MyCrew[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -167,9 +229,13 @@ export default function MyCrewsPage() {
   const [crewsError, setCrewsError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
-  // 에러를 caller로 전파 — null 반환 제거
-  const fetchCrews = useCallback(async (tab: TabFilter, cursor?: string, signal?: AbortSignal) => {
-    const res = await getMyCrew(TAB_TO_MY_STATUS[tab], cursor, signal);
+  const handleTabChange = (tab: RoleTab) => {
+    setActiveTab(tab);
+    setStatusFilter('ALL');
+  };
+
+  const fetchCrews = useCallback(async (role: RoleTab, cursor?: string, signal?: AbortSignal) => {
+    const res = await getMyCrew(role, cursor, signal);
     return res.data;
   }, []);
 
@@ -185,7 +251,7 @@ export default function MyCrewsPage() {
       try {
         const data = await fetchCrews(activeTab, undefined, controller.signal);
         if (controller.signal.aborted) return;
-        setCrews(applyTabFilter(data.items, activeTab));
+        setCrews(data.items);
         setNextCursor(data.next_cursor);
       } catch {
         if (controller.signal.aborted) return;
@@ -205,7 +271,7 @@ export default function MyCrewsPage() {
     setIsLoadingMore(true);
     try {
       const data = await fetchCrews(activeTab, nextCursor);
-      setCrews((prev) => [...prev, ...applyTabFilter(data.items, activeTab)]);
+      setCrews((prev) => [...prev, ...data.items]);
       setNextCursor(data.next_cursor);
     } catch {
       // load-more 실패는 기존 목록 유지
@@ -220,40 +286,29 @@ export default function MyCrewsPage() {
         <Header title="내 크루" showBackButton />
 
         {/* 탭 */}
-        <div className="mx-5 mt-4 mb-3 flex items-center bg-text-secondary/8 rounded-2xl p-1.5 gap-1">
+        <div className="mx-5 mt-4 mb-3 flex items-center gap-1.5">
           {TABS.map((tab) => (
-            <Chip
+            <button
               key={tab.value}
-              label={tab.label}
-              chipType="status"
-              isActive={activeTab === tab.value}
-              onClick={() => setActiveTab(tab.value)}
-              className="flex-1 justify-center text-[13px]"
-            />
+              type="button"
+              onClick={() => handleTabChange(tab.value)}
+              className={`flex-1 py-2.5 rounded-xl text-[13px] font-semibold transition-colors ${
+                activeTab === tab.value
+                  ? 'bg-[var(--color-primary-green)] text-white shadow-sm'
+                  : 'bg-card text-text-secondary border border-text-secondary/20 hover:text-text-primary'
+              }`}
+            >
+              {tab.label}
+            </button>
           ))}
         </div>
 
-        {/* 카운트 + 역할 드롭다운 */}
+        {/* 카운트 + 상태 드롭다운 */}
         <div className="px-5 pb-2 flex items-center justify-between">
           <span className="text-xs text-text-secondary">
-            총 <span className="font-bold text-text-primary">{applyRoleFilter(crews, roleFilter).length}</span>개의 크루
+            총 <span className="font-bold text-text-primary">{applyStatusFilter(crews, statusFilter).length}</span>개의 크루
           </span>
-          <div className="relative">
-            <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value as RoleFilter)}
-              className="appearance-none text-xs font-semibold text-text-primary bg-card border border-text-secondary/20 rounded-xl pl-3 pr-7 py-1.5 cursor-pointer focus:outline-none focus:border-primary-green transition-colors"
-            >
-              {ROLE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-            <ChevronDown
-              size={12}
-              strokeWidth={2.5}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none"
-            />
-          </div>
+          <StatusDropdown value={statusFilter} onChange={setStatusFilter} />
         </div>
 
         {/* 목록 */}
@@ -272,13 +327,13 @@ export default function MyCrewsPage() {
                 다시 시도
               </button>
             </div>
-          ) : applyRoleFilter(crews, roleFilter).length === 0 ? (
+          ) : applyStatusFilter(crews, statusFilter).length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
               <span className="text-4xl">🫂</span>
               <p className="text-sm text-text-secondary font-medium">참여 중인 크루가 없어요</p>
             </div>
           ) : (
-            applyRoleFilter(crews, roleFilter).map((crew) => <MyCrewCard key={crew.crew_id} crew={crew} />)
+            applyStatusFilter(crews, statusFilter).map((crew) => <MyCrewCard key={crew.crew_id} crew={crew} />)
           )}
         </div>
 

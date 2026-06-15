@@ -93,10 +93,10 @@ export const getNoticeComments = (crewId: number, noticeId: number, cursor?: str
 export const createNoticeComment = (crewId: number, noticeId: number, data: { content: string }) =>
   api.post<NoticeComment>(`/crews/${crewId}/notices/${noticeId}/comments`, data);
 
-export const getMyCrew = (myStatus?: 'PENDING' | 'LOCKED' | 'ALL', cursor?: string, signal?: AbortSignal) => {
+export const getMyCrew = (role?: 'ALL' | 'HOST' | 'MEMBER', cursor?: string, signal?: AbortSignal) => {
   return api.get<MyCrewsResponse>('/me/crews', {
     params: {
-      ...(myStatus && myStatus !== 'ALL' ? { my_status: myStatus } : {}),
+      ...(role && role !== 'ALL' ? { role } : {}),
       ...(cursor ? { cursor } : {}),
     },
     signal,
