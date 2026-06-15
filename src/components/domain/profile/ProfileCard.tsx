@@ -7,7 +7,7 @@ import type {
   PointerEvent,
   SetStateAction,
 } from "react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Camera, Crown, Pencil } from "lucide-react";
 
 import { Button } from "@/components/common/Button";
@@ -42,8 +42,10 @@ export function ProfileCard({
   onInlineSave,
 }: ProfileCardProps) {
   const [isIntroExpanded, setIsIntroExpanded] = useState(false);
+  const [isIntroOverflowing, setIsIntroOverflowing] = useState(false);
   const [isAvatarPressed, setIsAvatarPressed] = useState(false);
   const avatarImageInputRef = useRef<HTMLInputElement>(null);
+  const statusMessageRef = useRef<HTMLParagraphElement>(null);
   const statusMessage = profile.statusMessage;
   const statusMessageForDisplay =
     statusMessage && statusMessage.trim().length > 0
@@ -51,6 +53,34 @@ export function ProfileCard({
       : "프로필 상태를 입력해 주세요.";
   const avatarImageUrl = isInlineEditing ? inlineDraft.avatarImageUrl : profile.avatarImageUrl;
   const avatarInitials = isInlineEditing ? inlineDraft.initials : profile.initials;
+
+  useEffect(() => {
+    const statusMessageElement = statusMessageRef.current;
+
+    if (!statusMessageElement || isInlineEditing) {
+      setIsIntroOverflowing(false);
+      return;
+    }
+
+    const updateOverflowState = () => {
+      const computedStyle = getComputedStyle(statusMessageElement);
+      const parsedLineHeight = Number.parseFloat(computedStyle.lineHeight);
+      const parsedFontSize = Number.parseFloat(computedStyle.fontSize);
+      const fontSize = Number.isNaN(parsedFontSize) ? 14 : parsedFontSize;
+      const lineHeight = Number.isNaN(parsedLineHeight) ? fontSize * 1.5 : parsedLineHeight;
+      const collapsedHeight = lineHeight * 2;
+
+      setIsIntroOverflowing(statusMessageElement.scrollHeight > collapsedHeight + 1);
+    };
+
+    setIsIntroExpanded(false);
+    updateOverflowState();
+
+    const resizeObserver = new ResizeObserver(updateOverflowState);
+    resizeObserver.observe(statusMessageElement);
+
+    return () => resizeObserver.disconnect();
+  }, [isInlineEditing, statusMessageForDisplay]);
 
   const openAvatarImagePicker = () => {
     if (!isInlineEditing || isSaving) return;
@@ -175,20 +205,23 @@ export function ProfileCard({
         ) : (
           <>
             <p
+              ref={statusMessageRef}
               className={`break-words whitespace-pre-wrap text-sm leading-relaxed text-text-secondary ${isIntroExpanded ? "" : "line-clamp-2"
                 }`}
               title={statusMessageForDisplay}
             >
               {statusMessageForDisplay}
             </p>
-            <button
-              type="button"
-              className="mt-2 text-xs font-extrabold text-primary-green hover:text-primary-green/80 active:scale-95 transition"
-              aria-expanded={isIntroExpanded}
-              onClick={() => setIsIntroExpanded((current) => !current)}
-            >
-              {isIntroExpanded ? "접기" : "더 보기"}
-            </button>
+            {isIntroOverflowing && (
+              <button
+                type="button"
+                className="mt-2 text-xs font-extrabold text-primary-green hover:text-primary-green/80 active:scale-95 transition"
+                aria-expanded={isIntroExpanded}
+                onClick={() => setIsIntroExpanded((current) => !current)}
+              >
+                {isIntroExpanded ? "접기" : "더 보기"}
+              </button>
+            )}
           </>
         )}
       </div>
