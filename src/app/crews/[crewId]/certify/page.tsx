@@ -17,6 +17,7 @@ import { Toast } from '@/components/common/Toast';
 import { getCrew } from '@/services/crew';
 import { getPresignedUrl, uploadToS3 } from '@/services/upload';
 import { createMissionLog } from '@/services/mission';
+import { prepareImageForUpload, UnsupportedImageError } from '@/lib/prepareImageForUpload';
 import { SETTLEMENT_TYPE_LABEL } from '@/constants/crew';
 import type {
   CrewDetail,
@@ -33,7 +34,7 @@ import type { ErrorResponse } from '@/types/common';
 const MAX_SIZE = 10 * 1024 * 1024;
 const CAPTION_MIN = 5;
 const CAPTION_MAX = 100;
-const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png'];
+const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'heic', 'heif'];
 
 // ────────────────────────────────────────────────────────────
 // 유틸
@@ -41,9 +42,11 @@ const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png'];
 function getContentType(file: File): string | null {
   const t = file.type.toLowerCase();
   if (t === 'image/jpeg' || t === 'image/png') return t;
+  if (t.includes('heic') || t.includes('heif')) return 'image/jpeg';
   const ext = file.name.split('.').pop()?.toLowerCase();
   if (ext === 'jpg' || ext === 'jpeg') return 'image/jpeg';
   if (ext === 'png') return 'image/png';
+  if (ext === 'heic' || ext === 'heif') return 'image/jpeg';
   return null;
 }
 
@@ -277,7 +280,7 @@ export default function CertifyPage() {
     }
     if (!isAllowedFile(selected)) {
       setFile(null);
-      setToast('JPG, PNG 파일만 업로드 가능해요');
+      setToast('JPG, PNG, HEIC 파일만 업로드 가능해요');
       setIsToastOpen(true);
       return;
     }
@@ -291,13 +294,6 @@ export default function CertifyPage() {
     const { my_participation } = crew;
     if (!my_participation || my_participation.status !== 'LOCKED') return;
 
-    const contentType = getContentType(file);
-    if (!contentType) {
-      setToast('JPG, PNG 파일만 업로드 가능해요');
-      setIsToastOpen(true);
-      return;
-    }
-
     if (getDeadline(crew.daily_settlement_type).getTime() <= Date.now()) {
       setToast('인증 마감 시간이 지났어요');
       setIsToastOpen(true);
@@ -307,19 +303,22 @@ export default function CertifyPage() {
     setStep('VERIFYING');
 
     try {
-      // 1. Presigned URL 요청
+      // 1. HEIC→JPEG 변환(필요시), content type 결정
+      const { file: uploadFile, contentType } = await prepareImageForUpload(file);
+
+      // 2. Presigned URL 요청
       const { data: presigned } = await getPresignedUrl({
         purpose: 'MISSION_IMAGE',
         crew_id: crew.crew_id,
         crew_participant_id: my_participation.crew_participant_id,
         content_type: contentType,
-        content_length: file.size,
+        content_length: uploadFile.size,
       });
 
-      // 2. S3 직접 업로드 (원본 그대로, EXIF 보존)
-      await uploadToS3(presigned.upload_url, file, contentType);
+      // 3. S3 직접 업로드
+      await uploadToS3(presigned.upload_url, uploadFile, contentType);
 
-      // 3. 미션 로그 생성
+      // 4. 미션 로그 생성
       const { data: log } = await createMissionLog({
         crew_id: crew.crew_id,
         image_s3_key: presigned.s3_key,
@@ -335,8 +334,15 @@ export default function CertifyPage() {
         setStep('WARNED');
       }
     } catch (err) {
-      const code = isAxiosError<ErrorResponse>(err) ? err.response?.data?.code : undefined;
-      const msg = (code && ERROR_MESSAGES[code]) ?? '업로드 중 오류가 발생했어요. 다시 시도해주세요';
+      let msg: string;
+      if (err instanceof UnsupportedImageError) {
+        msg = 'JPG, PNG, HEIC 파일만 업로드 가능해요';
+      } else if (isAxiosError<ErrorResponse>(err)) {
+        const code = err.response?.data?.code;
+        msg = (code && ERROR_MESSAGES[code]) ?? '업로드 중 오류가 발생했어요. 다시 시도해주세요';
+      } else {
+        msg = '이미지 변환에 실패했어요';
+      }
       setToast(msg);
       setIsToastOpen(true);
       setStep('UPLOAD');
@@ -458,7 +464,7 @@ export default function CertifyPage() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/jpeg,image/png"
+                accept="image/jpeg,image/png,image/heic,image/heif"
                 onChange={handleFileChange}
                 className="hidden"
               />
@@ -479,7 +485,7 @@ export default function CertifyPage() {
                   <>
                     <ImagePlus size={36} className="text-text-secondary/50" />
                     <p className="text-sm font-medium text-text-secondary">사진을 선택해주세요</p>
-                    <p className="text-xs text-text-secondary/60">JPG · PNG · 최대 10MB</p>
+                    <p className="text-xs text-text-secondary/60">JPG · PNG · HEIC · 최대 10MB</p>
                   </>
                 )}
               </button>
