@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { isAxiosError } from 'axios';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/common/Header';
 import { Button } from '@/components/common/Button';
@@ -21,6 +22,7 @@ import type {
   FrequencyType,
   CreateCrewRequest,
 } from '@/types/domain';
+import type { ErrorResponse } from '@/types/common';
 
 // ─── 이미지 검증 ─────────────────────────────────────────────────────────────
 
@@ -377,10 +379,9 @@ export default function CrewNewPage() {
       const crewId = (data as { crew_id: number }).crew_id;
       router.push(`/crews/${crewId}`);
     } catch (err) {
-      const error = err as { response?: { data?: { error_code?: string } } };
-      const code = error?.response?.data?.error_code;
+      const code = isAxiosError<ErrorResponse>(err) ? err.response?.data?.code : undefined;
       if (code === 'INSUFFICIENT_BALANCE') {
-        showToast('포인트가 부족합니다. 충전 후 다시 시도해주세요.');
+        showToast('크루 생성에 필요한 잔액이 부족합니다. 충전 후 다시 시도해주세요.');
       } else if (code === 'INVALID_DEPOSIT_AMOUNT') {
         showToast('보증금은 1,000원 단위, 1,000~100,000원이어야 합니다.');
       } else {
