@@ -61,3 +61,12 @@ out/
 # Next.js 자동 생성 타입 파일
 next-env.d.ts
 tsconfig.tsbuildinfo
+
+# Claude CLI
+.omc/
+.omx/
+*.omc
+*.omx
+
+# 시안 모음 - 김한비 추가
+.local-designs/

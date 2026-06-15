@@ -36,7 +36,12 @@ function matchesStatusFilter(status: CertificationStatus, filter: StatusFilter):
 
 const REJECT_REASON_LABEL: Record<string, string> = {
   TIME_VIOLATION: "시간 위반",
+  DUPLICATE: "중복 업로드",
+  MISSION_MISMATCH: "미션 불일치",
+  UNCLEAR: "사진 불명확",
+  INAPPROPRIATE: "부적절",
   IMAGE_UNRELATED: "무관한 이미지",
+  OTHER: "기타",
 };
 
 const DECISION_TYPE_LABEL: Record<string, string> = {
@@ -159,6 +164,9 @@ function CertificationCard({ item }: { item: FeedItem }) {
           {item.crew_name}
         </p>
         <p className="text-xs text-text-secondary/70 truncate">{detailParts.join(" · ")}</p>
+        {item.reject_reason_code === "OTHER" && item.reject_memo && (
+          <p className="text-xs text-text-secondary line-clamp-1 mt-0.5">"{item.reject_memo}"</p>
+        )}
         {item.caption && (
           <p className="text-xs text-text-secondary line-clamp-1 mt-0.5">{item.caption}</p>
         )}
