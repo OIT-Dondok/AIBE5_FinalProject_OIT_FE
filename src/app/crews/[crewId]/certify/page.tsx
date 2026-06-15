@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation';
 import { isAxiosError } from 'axios';
 import {
   CheckCircle2,
-  XCircle,
   AlertTriangle,
   Loader2,
   ImagePlus,
@@ -34,7 +33,6 @@ const MAX_SIZE = 10 * 1024 * 1024;
 const CAPTION_MIN = 5;
 const CAPTION_MAX = 100;
 const HEIC_RE = /\.(heic|heif)$/i;
-
 const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'heic', 'heif'];
 
 // ────────────────────────────────────────────────────────────
@@ -52,7 +50,6 @@ function getContentType(file: File): string | null {
   if (isHeicFile(file)) return 'image/jpeg';
   const t = file.type.toLowerCase();
   if (t === 'image/jpeg' || t === 'image/png') return t;
-  // extension fallback
   const ext = file.name.split('.').pop()?.toLowerCase();
   if (ext === 'jpg' || ext === 'jpeg') return 'image/jpeg';
   if (ext === 'png') return 'image/png';
@@ -72,15 +69,12 @@ function getDeadline(type: DailySettlementType): Date {
   const y = nowKst.getUTCFullYear();
   const mo = nowKst.getUTCMonth();
   const d = nowKst.getUTCDate();
-
-  // [h, m, s] in KST
   const map: Record<DailySettlementType, [number, number, number]> = {
     A: [9, 0, 0],
     B: [21, 0, 0],
     C: [23, 59, 59],
   };
   const [h, m, s] = map[type];
-  // UTC = KST - 9h
   return new Date(Date.UTC(y, mo, d, h - 9, m, s));
 }
 
@@ -110,6 +104,13 @@ function formatKstTime(isoStr: string): string {
   }
 }
 
+// failure_reason → WARNED 타이틀
+function warnedTitle(reason: MissionLogCreateResponse['failure_reason']): string {
+  if (reason === 'EXIF_TIME_INVALID') return '촬영 시각이 맞지 않아요';
+  if (reason === 'DUPLICATE_IMAGE_HASH') return '이미 사용된 이미지예요';
+  return '검증 결과에 이상이 있어요';
+}
+
 // API 에러코드 → 표시 메시지
 const ERROR_MESSAGES: Record<string, string> = {
   ALREADY_CERTIFIED_TODAY: '오늘 이미 인증했어요',
@@ -122,7 +123,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 };
 
 // ────────────────────────────────────────────────────────────
-// 검증 단계 표시 컴포넌트
+// VERIFYING 단계 표시 컴포넌트
 // ────────────────────────────────────────────────────────────
 type StepStatus = 'done' | 'loading' | 'waiting';
 
@@ -161,15 +162,13 @@ export default function CertifyPage() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [caption, setCaption] = useState('');
-  const [isUploading, setIsUploading] = useState(false);
 
   // VERIFYING 단계 애니메이션 (0~3)
   const [animStep, setAnimStep] = useState(0);
 
-  // SUCCESS/FAILED/FALLBACK에서 사용할 결과
   const [certResult, setCertResult] = useState<MissionLogCreateResponse | null>(null);
 
-  // 마감 시간 표시용 tick
+  // 마감 시간 표시 tick
   const [, setTick] = useState(0);
 
   const [toast, setToast] = useState('');
@@ -233,7 +232,6 @@ export default function CertifyPage() {
       return;
     }
     setFile(selected);
-    // input 초기화 (같은 파일 재선택 허용)
     e.target.value = '';
   }, []);
 
@@ -250,7 +248,6 @@ export default function CertifyPage() {
       return;
     }
 
-    setIsUploading(true);
     setStep('VERIFYING');
 
     try {
@@ -275,13 +272,11 @@ export default function CertifyPage() {
 
       setCertResult(log);
 
-      // 결과에 따라 단계 전환
+      // failure_reason 없으면 SUCCESS, 있으면 WARNED
       if (log.failure_reason === null) {
         setStep('SUCCESS');
-      } else if (log.failure_reason === 'EXIF_MISSING') {
-        setStep('FALLBACK');
       } else {
-        setStep('FAILED');
+        setStep('WARNED');
       }
     } catch (err) {
       const code = isAxiosError<ErrorResponse>(err) ? err.response?.data?.code : undefined;
@@ -289,8 +284,6 @@ export default function CertifyPage() {
       setToast(msg);
       setIsToastOpen(true);
       setStep('UPLOAD');
-    } finally {
-      setIsUploading(false);
     }
   }, [file, crew, caption]);
 
@@ -344,9 +337,7 @@ export default function CertifyPage() {
           <div className="flex-1 flex flex-col items-center justify-center py-20 gap-3 px-6 text-center">
             <AlertTriangle size={40} className="text-amber-500" />
             <p className="text-base font-bold text-text-primary">인증 권한이 없어요</p>
-            <p className="text-sm text-text-secondary">
-              크루에 승인된 멤버만 인증할 수 있어요
-            </p>
+            <p className="text-sm text-text-secondary">크루에 승인된 멤버만 인증할 수 있어요</p>
             <Button variant="outline" size="sm" onClick={() => router.back()}>
               돌아가기
             </Button>
@@ -373,9 +364,7 @@ export default function CertifyPage() {
           {/* ── 마감 시간 배지 ── */}
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-card border border-text-secondary/10">
             <Clock size={16} className={isPastDeadline ? 'text-red-500' : 'text-primary-green'} />
-            <span className="text-xs text-text-secondary">
-              {typeLabel} · 마감{' '}
-            </span>
+            <span className="text-xs text-text-secondary">{typeLabel} · 마감 </span>
             <span
               className={`text-xs font-bold ${isPastDeadline ? 'text-red-500' : 'text-primary-green'}`}
             >
@@ -388,7 +377,6 @@ export default function CertifyPage() {
           ════════════════════════════════════════ */}
           {step === 'UPLOAD' && (
             <div className="flex flex-col gap-4">
-              {/* 이미지 선택 영역 */}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -397,6 +385,7 @@ export default function CertifyPage() {
                 className="hidden"
               />
 
+              {/* 이미지 선택 영역 */}
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -411,9 +400,7 @@ export default function CertifyPage() {
                 ) : (
                   <>
                     <ImagePlus size={36} className="text-text-secondary/50" />
-                    <p className="text-sm font-medium text-text-secondary">
-                      사진을 선택해주세요
-                    </p>
+                    <p className="text-sm font-medium text-text-secondary">사진을 선택해주세요</p>
                     <p className="text-xs text-text-secondary/60">JPG · PNG · HEIC · 최대 10MB</p>
                   </>
                 )}
@@ -466,7 +453,13 @@ export default function CertifyPage() {
                 ))}
               </div>
 
-              {/* 업로드 버튼 */}
+              {/* 마감 안내 */}
+              {isPastDeadline && (
+                <p className="text-center text-sm text-red-500 font-medium">
+                  오늘 인증 마감됐어요
+                </p>
+              )}
+
               <Button
                 variant="primary-green"
                 size="lg"
@@ -493,10 +486,7 @@ export default function CertifyPage() {
                 <Loader2 size={40} className="animate-spin text-primary-blue" />
               </div>
               <div className="w-full flex flex-col gap-4 px-2">
-                <VerifyStep
-                  label="파일 업로드"
-                  status={animStep >= 1 ? 'done' : 'loading'}
-                />
+                <VerifyStep label="파일 업로드" status={animStep >= 1 ? 'done' : 'loading'} />
                 <VerifyStep
                   label="Exif 추출"
                   status={animStep >= 2 ? 'done' : animStep >= 1 ? 'loading' : 'waiting'}
@@ -505,14 +495,9 @@ export default function CertifyPage() {
                   label="시각 검증"
                   status={animStep >= 3 ? 'loading' : 'waiting'}
                 />
-                <VerifyStep
-                  label="중복 검사"
-                  status="waiting"
-                />
+                <VerifyStep label="중복 검사" status="waiting" />
               </div>
-              <p className="text-xs text-text-secondary/70 text-center">
-                잠시만 기다려주세요
-              </p>
+              <p className="text-xs text-text-secondary/70 text-center">잠시만 기다려주세요</p>
             </div>
           )}
 
@@ -525,19 +510,19 @@ export default function CertifyPage() {
                 <CheckCircle2 size={44} className="text-primary-green" strokeWidth={2} />
               </div>
               <div className="text-center">
-                <p className="text-xl font-bold text-text-primary">촬영 시각 확인됨</p>
-                <p className="text-sm text-text-secondary mt-1">방장 최종 검증 후 인증이 확정됩니다</p>
+                <p className="text-xl font-bold text-text-primary">촬영 시각이 확인됐어요</p>
+                <p className="text-sm text-text-secondary mt-1">
+                  방장 최종 검증 후 인증이 확정됩니다
+                </p>
               </div>
 
               <div className="w-full rounded-card bg-card border border-text-secondary/10 divide-y divide-text-secondary/10">
-                {certResult.exif_taken_at && (
-                  <div className="flex items-center justify-between px-4 py-3">
-                    <span className="text-sm text-text-secondary">촬영 시각</span>
-                    <span className="text-sm font-medium text-text-primary">
-                      {formatKstTime(certResult.exif_taken_at)}
-                    </span>
-                  </div>
-                )}
+                <div className="flex items-center justify-between px-4 py-3">
+                  <span className="text-sm text-text-secondary">촬영 시각</span>
+                  <span className="text-sm font-medium text-text-primary">
+                    {formatKstTime(certResult.server_time)}
+                  </span>
+                </div>
                 <div className="flex items-center justify-between px-4 py-3">
                   <span className="text-sm text-text-secondary">Exif 상태</span>
                   <span className="text-sm font-medium text-primary-green">정상</span>
@@ -550,109 +535,53 @@ export default function CertifyPage() {
                 </div>
               </div>
 
-              <Button
-                variant="primary-green"
-                size="lg"
-                fullWidth
-                onClick={() => router.push('/feed')}
-              >
+              <Button variant="primary-green" size="lg" fullWidth onClick={() => router.push('/feed')}>
                 피드로 이동
               </Button>
             </div>
           )}
 
           {/* ════════════════════════════════════════
-              FAILED 단계
+              WARNED 단계
+              failure_reason 있음 → 방장이 최종 결정
           ════════════════════════════════════════ */}
-          {step === 'FAILED' && certResult && (
-            <div className="flex flex-col items-center gap-6 py-8">
-              <div className="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center">
-                <XCircle size={44} className="text-red-500" strokeWidth={2} />
-              </div>
-              <div className="text-center">
-                <p className="text-xl font-bold text-text-primary">
-                  {certResult.failure_reason === 'DUPLICATE_IMAGE_HASH'
-                    ? '중복 이미지'
-                    : '촬영 시각 불일치'}
-                </p>
-                <p className="text-sm text-text-secondary mt-1">
-                  {certResult.failure_reason === 'DUPLICATE_IMAGE_HASH'
-                    ? '이미 사용된 이미지예요'
-                    : '촬영 시각이 인증 마감 시각과 맞지 않아요'}
-                </p>
-              </div>
-
-              <div className="w-full rounded-card bg-card border border-text-secondary/10 divide-y divide-text-secondary/10">
-                {certResult.exif_taken_at && (
-                  <div className="flex items-center justify-between px-4 py-3">
-                    <span className="text-sm text-text-secondary">감지된 촬영 시각</span>
-                    <span className="text-sm font-medium text-red-500">
-                      {formatKstTime(certResult.exif_taken_at)}
-                    </span>
-                  </div>
-                )}
-                <div className="flex items-center justify-between px-4 py-3">
-                  <span className="text-sm text-text-secondary">필요 촬영 시각</span>
-                  <span className="text-sm font-medium text-text-primary">
-                    마감 {SETTLEMENT_TYPE_LABEL[crew.daily_settlement_type]} 이전
-                  </span>
-                </div>
-                <div className="flex items-center justify-between px-4 py-3">
-                  <span className="text-sm text-text-secondary">인증 상태</span>
-                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-red-100 text-red-500">
-                    미션 실패
-                  </span>
-                </div>
-              </div>
-
-              <Button variant="primary-green" size="lg" fullWidth onClick={handleReset}>
-                다시 업로드
-              </Button>
-            </div>
-          )}
-
-          {/* ════════════════════════════════════════
-              FALLBACK 단계
-          ════════════════════════════════════════ */}
-          {step === 'FALLBACK' && (
+          {step === 'WARNED' && certResult && (
             <div className="flex flex-col items-center gap-6 py-8">
               <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center">
                 <AlertTriangle size={44} className="text-amber-500" strokeWidth={2} />
               </div>
               <div className="text-center">
-                <p className="text-xl font-bold text-text-primary">Exif 검증 실패</p>
+                <p className="text-xl font-bold text-text-primary">
+                  {warnedTitle(certResult.failure_reason)}
+                </p>
                 <p className="text-sm text-text-secondary mt-1">
-                  1차 검증에 실패해도 괜찮아요
+                  방장이 검토 후 최종 결정합니다
                 </p>
               </div>
 
-              <div className="w-full rounded-card bg-card border border-text-secondary/10 px-4 py-4 flex flex-col gap-3">
-                <p className="text-sm font-semibold text-text-primary mb-1">다음 단계</p>
-                {[
-                  { label: '방장 수동 검토', status: '대기중' },
-                  { label: '승인 또는 거절 통보', status: '대기' },
-                  { label: '일일 정산 반영', status: '대기' },
-                ].map(({ label, status }, idx) => (
-                  <div key={label} className="flex items-center gap-3">
-                    <span className="w-6 h-6 rounded-full bg-success-green flex items-center justify-center text-xs font-bold text-primary-green shrink-0">
-                      {idx + 1}
-                    </span>
-                    <span className="text-sm text-text-primary flex-1">{label}</span>
-                    <span className="text-xs text-text-secondary/70 bg-background px-2 py-0.5 rounded-full">
-                      {status}
-                    </span>
-                  </div>
-                ))}
+              <div className="w-full rounded-card bg-card border border-text-secondary/10 divide-y divide-text-secondary/10">
+                <div className="flex items-center justify-between px-4 py-3">
+                  <span className="text-sm text-text-secondary">촬영 시각</span>
+                  <span className="text-sm font-medium text-text-primary">
+                    {formatKstTime(certResult.server_time)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between px-4 py-3">
+                  <span className="text-sm text-text-secondary">인증 상태</span>
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-600">
+                    검토중
+                  </span>
+                </div>
               </div>
 
-              <Button
-                variant="primary-green"
-                size="lg"
-                fullWidth
-                onClick={() => router.push('/feed')}
-              >
-                피드로 이동
-              </Button>
+              <div className="w-full flex flex-col gap-2">
+                <Button variant="primary-green" size="lg" fullWidth onClick={() => router.push('/feed')}>
+                  피드로 이동
+                </Button>
+                <Button variant="outline" size="lg" fullWidth onClick={handleReset}>
+                  다시 업로드
+                </Button>
+              </div>
             </div>
           )}
         </div>
