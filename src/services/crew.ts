@@ -102,3 +102,6 @@ export const getMyCrew = (role?: 'ALL' | 'HOST' | 'MEMBER', cursor?: string, sig
     signal,
   });
 };
+
+export const getMyLockedCrews = (signal?: AbortSignal) =>
+  api.get<MyCrewsResponse>('/me/crews', { params: { my_status: 'LOCKED' }, signal });
