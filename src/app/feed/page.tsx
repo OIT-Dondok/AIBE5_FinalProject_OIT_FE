@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { isAxiosError } from 'axios';
 import { Loader2 } from 'lucide-react';
-
 import { Header } from '@/components/common/Header';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FeedCalendar } from '@/components/domain/feed/FeedCalendar';
