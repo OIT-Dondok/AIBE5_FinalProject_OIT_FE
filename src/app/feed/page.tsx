@@ -148,7 +148,20 @@ export default function FeedPage() {
   return (
     <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
       <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-8">
-        <Header showLogo />
+        <Header
+          showLogo
+          rightElement={
+            <button
+              type="button"
+              onClick={() => setIsCertifyModalOpen(true)}
+              aria-label="인증하기"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-button bg-primary-green/10 hover:bg-primary-green/20 active:scale-95 transition-all"
+            >
+              <Plus size={16} strokeWidth={2.5} className="text-primary-green" />
+              <span className="text-xs font-bold text-primary-green">인증</span>
+            </button>
+          }
+        />
 
         {/* 크루 필터 칩 */}
         <FeedCrewFilter
@@ -258,16 +271,6 @@ export default function FeedPage() {
           </div>
         </div>
       </div>
-
-      {/* 인증 FAB */}
-      <button
-        type="button"
-        onClick={() => setIsCertifyModalOpen(true)}
-        aria-label="인증하기"
-        className="fixed bottom-28 right-4 z-40 w-12 h-12 rounded-full bg-primary-green shadow-lg shadow-primary-green/35 flex items-center justify-center active:scale-95 transition-transform"
-      >
-        <Plus size={24} strokeWidth={2.5} className="text-white" />
-      </button>
 
       <CertifyCrewSelectModal
         isOpen={isCertifyModalOpen}
