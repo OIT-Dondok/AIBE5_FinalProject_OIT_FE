@@ -131,7 +131,11 @@ export default function MissionLogDetailPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!missionLogId) return;
+    if (!Number.isFinite(missionLogId) || missionLogId <= 0) {
+      setErrorMessage("유효하지 않은 인증 ID예요.");
+      setIsLoading(false);
+      return;
+    }
 
     setIsLoading(true);
     setErrorMessage(null);
