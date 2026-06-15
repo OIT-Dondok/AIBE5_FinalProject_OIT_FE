@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, ChevronDown } from 'lucide-react';
+import { Calendar, Check, ChevronDown } from 'lucide-react';
 import { Header } from '@/components/common/Header';
-import { Chip } from '@/components/common/Chip';
 import { Skeleton } from '@/components/common/Skeleton';
 import { getMyCrew } from '@/services/crew';
 import { CATEGORY_EMOJI, CATEGORY_BG } from '@/constants/crew';
@@ -38,6 +37,78 @@ function applyStatusFilter(items: MyCrew[], filter: StatusFilter): MyCrew[] {
   if (filter === 'ACTIVE') return items.filter((c) => c.my_status === 'LOCKED' && c.status === 'ACTIVE');
   if (filter === 'CLOSED') return items.filter((c) => c.my_status === 'LOCKED' && (c.status === 'CLOSED' || c.status === 'CANCELLED'));
   return items;
+}
+
+// ─── 커스텀 드롭다운 ──────────────────────────────────────────
+
+interface StatusDropdownProps {
+  value: StatusFilter;
+  onChange: (v: StatusFilter) => void;
+}
+
+function StatusDropdown({ value, onChange }: StatusDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [isOpen]);
+
+  const selectedLabel = STATUS_OPTIONS.find((o) => o.value === value)?.label ?? '전체';
+  const isFiltered = value !== 'ALL';
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen((v) => !v)}
+        className={`h-8 pl-3 pr-2 flex items-center gap-1.5 text-xs font-semibold rounded-lg border transition-colors ${
+          isFiltered
+            ? 'bg-[var(--color-primary-green)]/10 border-[var(--color-primary-green)] text-[var(--color-primary-green)]'
+            : 'bg-card border-text-secondary/20 text-text-primary'
+        }`}
+      >
+        <span>{selectedLabel}</span>
+        <ChevronDown
+          size={12}
+          className={`shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 top-[calc(100%+4px)] z-50 min-w-[96px] bg-card border border-text-secondary/15 rounded-xl shadow-lg overflow-hidden">
+          {STATUS_OPTIONS.map((opt) => {
+            const isSelected = opt.value === value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }}
+                className={`w-full flex items-center justify-between px-3 py-2.5 text-xs font-medium text-left transition-colors hover:bg-text-secondary/5 active:bg-text-secondary/10 ${
+                  isSelected ? 'text-[var(--color-primary-green)]' : 'text-text-primary'
+                }`}
+              >
+                <span>{opt.label}</span>
+                {isSelected && (
+                  <Check size={12} className="shrink-0 ml-2 text-[var(--color-primary-green)]" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ─── 상수 ────────────────────────────────────────────────────
@@ -219,16 +290,20 @@ export default function MyCrewsPage() {
         <Header title="내 크루" showBackButton />
 
         {/* 탭 */}
-        <div className="mx-5 mt-4 mb-3 flex items-center bg-text-secondary/8 rounded-2xl p-1.5 gap-1">
+        <div className="mx-5 mt-4 mb-3 flex items-center gap-1.5">
           {TABS.map((tab) => (
-            <Chip
+            <button
               key={tab.value}
-              label={tab.label}
-              chipType="status"
-              isActive={activeTab === tab.value}
+              type="button"
               onClick={() => handleTabChange(tab.value)}
-              className="flex-1 justify-center text-[13px]"
-            />
+              className={`flex-1 py-2.5 rounded-xl text-[13px] font-semibold transition-colors ${
+                activeTab === tab.value
+                  ? 'bg-[var(--color-primary-green)] text-white shadow-sm'
+                  : 'bg-card text-text-secondary border border-text-secondary/20 hover:text-text-primary'
+              }`}
+            >
+              {tab.label}
+            </button>
           ))}
         </div>
 
@@ -237,22 +312,7 @@ export default function MyCrewsPage() {
           <span className="text-xs text-text-secondary">
             총 <span className="font-bold text-text-primary">{applyStatusFilter(crews, statusFilter).length}</span>개의 크루
           </span>
-          <div className="relative">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-              className="appearance-none text-xs font-semibold text-text-primary bg-card border border-text-secondary/20 rounded-xl pl-3 pr-7 py-1.5 cursor-pointer focus:outline-none focus:border-primary-green transition-colors"
-            >
-              {STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-            <ChevronDown
-              size={12}
-              strokeWidth={2.5}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none"
-            />
-          </div>
+          <StatusDropdown value={statusFilter} onChange={setStatusFilter} />
         </div>
 
         {/* 목록 */}
