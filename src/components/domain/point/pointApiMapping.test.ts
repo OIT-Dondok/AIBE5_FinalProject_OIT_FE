@@ -252,6 +252,24 @@ describe("point wallet API mapping", () => {
     );
   });
 
+  it("hides settlement failure metric when there is no failed settlement amount", () => {
+    const account: PointAccountResponse = {
+      available_balance: 12000,
+      reserved_balance: 5000,
+      active_locked_amount: 1000,
+      settlement_pending_amount: 800,
+      settlement_failed_amount: 0,
+      locked_balance: 1800,
+      total_balance: 18100,
+      updated_at: "2026-06-09T10:00:00+09:00",
+    };
+
+    const vm = createWalletViewModel(account, []);
+
+    assert.equal(vm.metrics.length, 3);
+    assert.equal(vm.metrics.some((metric) => metric.label === "정산 확인 필요"), false);
+  });
+
   it("clears the duplicate cursor guard when paginated history loading fails", () => {
     const sourceFile = readTsSourceFile("src/app/my/dodin/history/page.tsx");
     const catchClauses = findNodes(sourceFile, ts.isCatchClause);
