@@ -26,7 +26,6 @@ import {
   requestProfileImageUploadUrl,
   updateMyProfile,
 } from "@/services/profile";
-import { getMyCrew } from "@/services/crew";
 import { prepareImageForUpload, UnsupportedImageError } from "@/lib/prepareImageForUpload";
 import type { MeActivitySummaryResponse } from "@/types/domain";
 
@@ -118,7 +117,6 @@ export default function ProfilePage() {
   const [isInlineEditing, setIsInlineEditing] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [feedbackToast, setFeedbackToast] = useState<ProfileImageFeedback | null>(null);
-  const [hostCrewId, setHostCrewId] = useState<number | null>(null);
   const [inlineDraft, setInlineDraft] = useState<ProfileFormState>(() =>
     createProfileFormState(null),
   );
@@ -141,18 +139,17 @@ export default function ProfilePage() {
         ]);
 
         let hostOperationPendingCount = 0;
+        // 운영 콘솔 진입 크루는 BE가 선정해 host_crew_id로 내려준다. null이면 클릭 시 /my로 폴백.
+        let hostCrewId: number | null = null;
 
         if (profileResponse.data.is_host_ever) {
-          const [hostSummaryResult, myCrewsResult] = await Promise.allSettled([
-            getMyHostOperationSummary(),
-            getMyCrew(),
-          ]);
-          if (hostSummaryResult.status === "fulfilled") {
-            hostOperationPendingCount = hostSummaryResult.value.data.total_pending_count;
-          }
-          if (myCrewsResult.status === "fulfilled" && isMountedRef.current) {
-            const hostCrew = myCrewsResult.value.data.items.find((c) => c.my_role === "HOST");
-            if (hostCrew) setHostCrewId(hostCrew.crew_id);
+          // 운영 요약 조회 실패가 프로필 전체 로드를 막지 않도록 격리한다.
+          try {
+            const { data } = await getMyHostOperationSummary();
+            hostOperationPendingCount = data.total_pending_count;
+            hostCrewId = data.host_crew_id;
+          } catch {
+            // 실패 시 기본값 유지 (배지 0, 운영 콘솔 /my 폴백)
           }
         }
 
@@ -163,6 +160,7 @@ export default function ProfilePage() {
             profileResponse.data,
             activitySummaryResponse.data,
             hostOperationPendingCount,
+            hostCrewId,
           ),
           activitySummary: activitySummaryResponse.data,
         });
@@ -356,7 +354,7 @@ export default function ProfilePage() {
             unreadNotificationCount={profile.unreadNotificationCount}
             showHostSection={profile.isHostEver}
             hostOperationPendingCount={profile.hostOperationPendingCount}
-            hostCrewId={hostCrewId}
+            hostCrewId={profile.hostCrewId}
           />
         </div>
 
