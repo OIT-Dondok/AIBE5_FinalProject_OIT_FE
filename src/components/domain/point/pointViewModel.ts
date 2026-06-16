@@ -101,7 +101,7 @@ export interface WalletSummaryMetric {
   label: string;
   value: string;
   caption: string;
-  tone: "blue" | "green" | "amber" | "slate";
+  tone: "blue" | "green" | "amber" | "slate" | "red";
 }
 
 export interface WalletHistoryViewItem {
@@ -241,13 +241,13 @@ export function createWalletViewModel(
   const totalPendingReserveAmount = account.reserved_balance + account.active_locked_amount;
   const metrics: WalletSummaryMetric[] = [
     {
-      label: "총 도딘",
+      label: "총 보유 도딘",
       value: formatKrw(account.total_balance),
-      caption: "내가 가진 전체 도딘 (사용 가능·예치금·정산 예정 포함)",
+      caption: "내가 가진 전체 도딘 (사용 가능·크루 예치금·정산 예정·환급 문제 금액 포함)",
       tone: "blue",
     },
     {
-      label: "예치금",
+      label: "크루 예치금",
       value: formatKrw(totalPendingReserveAmount),
       caption: "크루에 예치한 도딘 (승인 대기 중 + 진행 중인 크루 예치금)",
       tone: "green",
@@ -262,10 +262,10 @@ export function createWalletViewModel(
 
   if (account.settlement_failed_amount > 0) {
     metrics.push({
-      label: "정산 확인 필요",
+      label: "환급 문제 발생",
       value: formatKrw(account.settlement_failed_amount),
-      caption: "지급에 실패해 복구가 필요한 정산 환급 도딘",
-      tone: "amber",
+      caption: "지급에 실패해 확인이 필요한 정산 환급 도딘",
+      tone: "red",
     });
   }
 
