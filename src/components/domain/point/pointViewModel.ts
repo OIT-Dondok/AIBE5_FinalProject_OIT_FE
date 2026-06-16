@@ -243,7 +243,7 @@ export function createWalletViewModel(
     {
       label: "총 보유 도딘",
       value: formatKrw(account.total_balance),
-      caption: "내가 가진 전체 도딘 (사용 가능·크루 예치금·정산 예정·환급 문제 금액 포함)",
+      caption: "내가 가진 전체 도딘 (사용 가능, 크루 예치금, 정산 예정, 환급 실패 금액 포함)",
       tone: "blue",
     },
     {
@@ -255,16 +255,16 @@ export function createWalletViewModel(
     {
       label: "정산 예정",
       value: formatKrw(account.settlement_pending_amount),
-      caption: "정상 처리·재시도 중인 정산 환급 예정 도딘",
+      caption: "정상 처리 및 재시도 중인 정산 환급 예정 도딘",
       tone: "amber",
     },
   ];
 
   if (account.settlement_failed_amount > 0) {
     metrics.push({
-      label: "환급 문제 발생",
+      label: "환급 실패 (확인 필요)",
       value: formatKrw(account.settlement_failed_amount),
-      caption: "지급에 실패해 확인이 필요한 정산 환급 도딘",
+      caption: "지급에 실패하여 복구 및 재시도가 필요한 정산 환급 도딘",
       tone: "red",
     });
   }
