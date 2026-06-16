@@ -33,10 +33,10 @@ const DEFAULT_SETTINGS: NotificationSettings = {
 const TOGGLE_ROWS: Array<{ key: keyof NotificationSettings; label: string; desc: string }> = [
   { key: "emojiReaction", label: "이모지 리액션", desc: "새 리액션 등록" },
   { key: "hostVerification", label: "방장 검증 대기", desc: "새 인증 업로드, 미검토 인증 존재" },
-  { key: "missionDeadline", label: "인증 마감 임박", desc: "인증 마감 임박" },
+  { key: "missionDeadline", label: "인증 마감 임박", desc: "" },
   { key: "dailyResult", label: "일일 결과", desc: "인증 성공, 인증 실패, 예상 환급금 변동" },
   { key: "finalSettlement", label: "최종 정산", desc: "최종 정산 완료, 환급 완료" },
-  { key: "crewDissolved", label: "크루 해체", desc: "크루 해체" },
+  { key: "crewDissolved", label: "크루 해체", desc: "" },
   { key: "crewNews", label: "크루 소식", desc: "크루 종료 예정, 새 공지 등록, 공지 댓글 등록" },
 ];
 
@@ -98,7 +98,7 @@ export function NotificationSettingsPanel({
             <div key={key} className="flex items-center justify-between gap-3 px-4 py-3.5">
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-text-primary">{label}</p>
-                <p className="mt-0.5 text-[11px] font-medium text-text-secondary">{desc}</p>
+                {desc && <p className="mt-0.5 text-[11px] font-medium text-text-secondary">{desc}</p>}
               </div>
               <Toggle checked={settings[key] as boolean} onChange={(v) => set(key, v)} />
             </div>
