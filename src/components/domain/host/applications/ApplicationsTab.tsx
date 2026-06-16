@@ -133,12 +133,18 @@ export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) 
   const loadApplications = useCallback(async () => {
     if (crewId === null) return;
     try {
-      const { data } = await fetchCrewApplications(crewId);
-      const filtered = data.items.filter(
-        (item) => item.status !== "CANCELLED" && item.status !== "EXPIRED",
-      );
-      setApplications(filtered);
-      onPendingCountChange?.(filtered.filter((item) => item.status === "PENDING").length);
+      const [pendingRes, lockedRes, rejectedRes] = await Promise.all([
+        fetchCrewApplications(crewId, { status: "PENDING" }),
+        fetchCrewApplications(crewId, { status: "LOCKED" }),
+        fetchCrewApplications(crewId, { status: "REJECTED" }),
+      ]);
+      const all = [
+        ...pendingRes.data.items,
+        ...lockedRes.data.items,
+        ...rejectedRes.data.items,
+      ];
+      setApplications(all);
+      onPendingCountChange?.(pendingRes.data.items.length);
     } catch {
       setApplications([]);
     }
@@ -191,8 +197,8 @@ export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) 
     visibleStatus: getApplicationVisibleStatus(item),
   }));
   const counts = applicationsWithStatus.reduce(
-    (acc, item) => {
-      acc[item.visibleStatus] += 1;
+    (acc, { visibleStatus }) => {
+      acc[visibleStatus] += 1;
       return acc;
     },
     { PENDING: 0, LOCKED: 0, REJECTED: 0 } as Record<ApplicationVisibleStatus, number>,
@@ -217,6 +223,7 @@ export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) 
         await rejectCrewApplication(crewId, item.crew_participant_id);
       }
       setToastDecision((prev) => ({ type: decision, seq: (prev?.seq ?? 0) + 1 }));
+      setApplicationFilter(decision === "approved" ? "LOCKED" : "REJECTED");
       await loadApplications();
     } catch {
       // API 실패 시 상태 유지
@@ -229,7 +236,7 @@ export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) 
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-3">
         <div className="py-1">
-          <h2 className="text-sm font-bold text-text-primary">대기 중인 신청</h2>
+          <h2 className="text-sm font-bold text-text-primary">가입 신청 목록</h2>
         </div>
         <div className="grid grid-cols-4 gap-2">
           {APPLICATION_FILTERS.map((filter) => {

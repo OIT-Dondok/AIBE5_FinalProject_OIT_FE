@@ -53,11 +53,8 @@ export default function HostConsoleClient() {
 
   useEffect(() => {
     if (crewId === null) return;
-    getCrewApplications(crewId)
-      .then((res) => {
-        const count = res.data.items.filter((item) => item.status === "PENDING").length;
-        setPendingApplicationCount(count);
-      })
+    getCrewApplications(crewId, { status: "PENDING" })
+      .then((res) => setPendingApplicationCount(res.data.items.length))
       .catch(() => setPendingApplicationCount(0));
   }, [crewId]);
 
