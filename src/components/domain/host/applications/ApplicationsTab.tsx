@@ -232,7 +232,6 @@ export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) 
         await rejectCrewApplication(crewId, item.crew_participant_id);
       }
       setToastDecision((prev) => ({ type: decision, seq: (prev?.seq ?? 0) + 1 }));
-      setApplicationFilter(decision === "approved" ? "LOCKED" : "REJECTED");
       await loadApplications();
     } catch {
       // API 실패 시 상태 유지
