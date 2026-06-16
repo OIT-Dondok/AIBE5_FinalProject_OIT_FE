@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 // 1. 버튼에 주입할 수 있는 가변 속성(Props) 정의
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     children: ReactNode;
-    variant?: "primary-blue" | "primary-green" | "outline";
+    variant?: "primary-blue" | "primary-green" | "outline" | "danger";
     size?: "sm" | "md" | "lg";
     isLoading?: boolean;
     fullWidth?: boolean;
@@ -25,6 +25,7 @@ export const Button = ({
     const variantStyles = {
         "primary-blue": "bg-primary-blue text-white hover:opacity-90 active:scale-[0.98] shadow-md shadow-primary-blue/20",
         "primary-green": "bg-primary-green text-white hover:opacity-90 active:scale-[0.98] shadow-md shadow-primary-green/20",
+        danger: "bg-rose-600 text-white hover:opacity-90 active:scale-[0.98] shadow-md shadow-rose-600/20",
         outline: "border border-text-secondary/25 text-text-primary bg-transparent hover:bg-text-secondary/5 hover:border-text-secondary/40 active:scale-[0.98]",
     };
 

@@ -27,6 +27,7 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error' | 'warning'>('success');
   const [isToastOpen, setIsToastOpen] = useState(false);
 
   useEffect(() => {
@@ -35,8 +36,9 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
     return () => clearTimeout(t);
   }, [showSuccessModal]);
 
-  const showToast = useCallback((message: string) => {
+  const showToast = useCallback((message: string, type: 'success' | 'error' | 'warning' = 'success') => {
     setToastMessage(message);
+    setToastType(type);
     setIsToastOpen(true);
   }, []);
 
@@ -52,16 +54,16 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
       if (isAxiosError<ErrorResponse>(err)) {
         const code = err.response?.data?.code;
         if (code === 'INSUFFICIENT_BALANCE') {
-          showToast('포인트가 부족합니다. 충전 후 다시 시도해주세요.');
+          showToast('포인트가 부족합니다. 충전 후 다시 시도해주세요.', 'error');
         } else if (code === 'CAPACITY_FULL') {
-          showToast('정원이 가득 찼습니다.');
+          showToast('정원이 가득 찼습니다.', 'error');
         } else if (code === 'CREW_NOT_RECRUITING') {
-          showToast('모집이 마감되었습니다.');
+          showToast('모집이 마감되었습니다.', 'error');
         } else {
-          showToast('입장 신청에 실패했습니다.');
+          showToast('입장 신청에 실패했습니다.', 'error');
         }
       } else {
-        showToast('입장 신청에 실패했습니다.');
+        showToast('입장 신청에 실패했습니다.', 'error');
       }
     } finally {
       setIsLoading(false);
@@ -72,18 +74,18 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
     setIsLoading(true);
     try {
       await cancelJoinCrew(crewId);
-      showToast('신청이 취소되었습니다.');
+      showToast('신청이 취소되었습니다.', 'success');
       onSuccess?.();
     } catch (err) {
       if (isAxiosError<ErrorResponse>(err)) {
         const code = err.response?.data?.code;
         if (code === 'APPLICATION_NOT_CANCELLABLE') {
-          showToast('신청 취소가 불가능한 상태입니다.');
+          showToast('신청 취소가 불가능한 상태입니다.', 'error');
         } else {
-          showToast('신청 취소에 실패했습니다.');
+          showToast('신청 취소에 실패했습니다.', 'error');
         }
       } else {
-        showToast('신청 취소에 실패했습니다.');
+        showToast('신청 취소에 실패했습니다.', 'error');
       }
     } finally {
       setIsLoading(false);
@@ -200,6 +202,7 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
         message={toastMessage}
         isOpen={isToastOpen}
         onClose={() => setIsToastOpen(false)}
+        type={toastType}
       />
     </>
   );

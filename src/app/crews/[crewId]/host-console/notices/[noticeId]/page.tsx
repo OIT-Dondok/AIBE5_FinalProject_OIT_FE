@@ -10,7 +10,8 @@ import { Header } from "@/components/common/Header";
 import { HostBadge } from "@/components/common/HostBadge";
 import { HostConfirmDialog } from "@/components/domain/host/common/HostConfirmDialog";
 import { HostMoreMenu } from "@/components/domain/host/common/HostMoreMenu";
-import { HostToast } from "@/components/domain/host/common/HostToast";
+import { Toast } from "@/components/common/Toast";
+import type { ToastType } from "@/components/common/Toast";
 import { formatDateMinute } from "@/components/domain/host/hostFormatters";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import {
@@ -31,13 +32,13 @@ export default function HostNoticeDetailPage() {
   const [hasError, setHasError] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteToast, setShowDeleteToast] = useState(false);
   const [isEmojiSheetOpen, setIsEmojiSheetOpen] = useState(false);
   const [isNoticeMenuOpen, setIsNoticeMenuOpen] = useState(false);
   const [commentInput, setCommentInput] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const deleteToastTimerRef = useRef<number | null>(null);
+  const [toastMessage, setToastMessage] = useState("");
+  const [isToastOpen, setIsToastOpen] = useState(false);
+  const [toastType, setToastType] = useState<ToastType>("success");
   const deleteNavTimerRef = useRef<number | null>(null);
   const router = useRouter();
   const params = useParams<{ crewId: string; noticeId: string }>();
@@ -76,16 +77,9 @@ export default function HostNoticeDetailPage() {
 
   useEffect(() => {
     return () => {
-      if (deleteToastTimerRef.current !== null) clearTimeout(deleteToastTimerRef.current);
       if (deleteNavTimerRef.current !== null) clearTimeout(deleteNavTimerRef.current);
     };
   }, []);
-
-  useEffect(() => {
-    if (!toastMessage) return;
-    const timeoutId = window.setTimeout(() => setToastMessage(null), 2200);
-    return () => window.clearTimeout(timeoutId);
-  }, [toastMessage]);
 
   const handleDeleteNotice = async () => {
     if (crewId === null || noticeId === null) return;
@@ -93,13 +87,16 @@ export default function HostNoticeDetailPage() {
     try {
       await deleteCrewNotice(crewId, noticeId);
       setIsDeleteModalOpen(false);
-      setShowDeleteToast(true);
-      deleteToastTimerRef.current = window.setTimeout(() => setShowDeleteToast(false), 2400);
+      setToastMessage("게시글이 삭제되었습니다");
+      setToastType("success");
+      setIsToastOpen(true);
       deleteNavTimerRef.current = window.setTimeout(() => {
         router.push(`/crews/${crewId}/host-console?tab=notices`);
       }, 2000);
     } catch {
       setToastMessage("공지 삭제에 실패했어요");
+      setToastType("error");
+      setIsToastOpen(true);
     } finally {
       setIsDeleting(false);
     }
@@ -119,6 +116,8 @@ export default function HostNoticeDetailPage() {
       );
     } catch {
       setToastMessage("리액션 처리에 실패했어요");
+      setToastType("error");
+      setIsToastOpen(true);
     }
   };
 
@@ -132,6 +131,8 @@ export default function HostNoticeDetailPage() {
       setCommentInput("");
     } catch {
       setToastMessage("댓글 등록에 실패했어요");
+      setToastType("error");
+      setIsToastOpen(true);
     } finally {
       setIsSubmittingComment(false);
     }
@@ -335,22 +336,12 @@ export default function HostNoticeDetailPage() {
           selectedEmojis={notice.my_reactions}
         />
 
-        {showDeleteToast && (
-          <div className="fixed inset-x-0 bottom-6 z-[90] flex justify-center px-5 pointer-events-none">
-            <div
-              className="flex w-fit items-center gap-2.5 rounded-2xl bg-[#28251F] px-4 py-3 text-white shadow-lg"
-              role="status"
-              aria-live="polite"
-            >
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#DB5C55] text-white">
-                <X size={13} strokeWidth={3} />
-              </span>
-              <span className="text-[13px] font-extrabold">게시글이 삭제되었습니다</span>
-            </div>
-          </div>
-        )}
-
-        {toastMessage && <HostToast message={toastMessage} />}
+        <Toast
+          message={toastMessage}
+          isOpen={isToastOpen}
+          type={toastType}
+          onClose={() => setIsToastOpen(false)}
+        />
 
         {isDeleteModalOpen && (
           <HostConfirmDialog
