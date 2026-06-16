@@ -18,6 +18,7 @@ interface NotificationItem {
   event_type: string;
   title: string;
   body: string;
+  crew_name?: string;
   created_at: string;
   is_read: boolean;
 }
@@ -109,7 +110,8 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     id: 1,
     event_type: "CREW_APPLICATION_PENDING",
     title: "크루 가입 신청",
-    body: "홍길동님이 독서 1챕터 가입을 신청했습니다. 지금 확인해보세요 →",
+    body: "홍길동님이 가입을 신청했습니다. 지금 확인해보세요 →",
+    crew_name: "독서 1챕터",
     created_at: new Date(Date.now() - 8 * 60000).toISOString(),
     is_read: false,
   },
@@ -117,7 +119,8 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     id: 19,
     event_type: "CREW_APPLICATION_WITHDRAWN",
     title: "크루 가입 신청 철회",
-    body: "김철수님이 독서 1챕터 가입 신청을 철회했습니다.",
+    body: "김철수님이 가입 신청을 철회했습니다.",
+    crew_name: "독서 1챕터",
     created_at: new Date(Date.now() - 20 * 60000).toISOString(),
     is_read: false,
   },
@@ -125,7 +128,8 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     id: 9,
     event_type: "MISSION_DEADLINE_MEMBER",
     title: "인증 마감 임박",
-    body: "독서 1챕터 인증 마감까지 1시간 남았습니다. 아직 인증을 완료하지 않으셨어요 ⏰",
+    body: "인증 마감까지 1시간 남았습니다. 아직 인증을 완료하지 않으셨어요 ⏰",
+    crew_name: "독서 1챕터",
     created_at: new Date(Date.now() - 35 * 60000).toISOString(),
     is_read: false,
   },
@@ -133,7 +137,8 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     id: 22,
     event_type: "MISSION_LOG_UPLOADED",
     title: "새 인증 업로드",
-    body: "이영희님이 독서 1챕터에 인증을 업로드했습니다. 검토해주세요 →",
+    body: "이영희님이 인증을 업로드했습니다. 검토해주세요 →",
+    crew_name: "독서 1챕터",
     created_at: new Date(Date.now() - 50 * 60000).toISOString(),
     is_read: false,
   },
@@ -141,7 +146,8 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     id: 11,
     event_type: "MISSION_LOG_VERIFICATION_RESULT",
     title: "인증 성공",
-    body: "독서 1챕터 5/21 인증이 성공 처리되었습니다 ✅",
+    body: "5/21 인증이 성공 처리되었습니다 ✅",
+    crew_name: "독서 1챕터",
     created_at: new Date(Date.now() - 2 * 3600000).toISOString(),
     is_read: false,
   },
@@ -158,7 +164,8 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     id: 3,
     event_type: "CREW_APPLICATION_APPROVED",
     title: "가입 승인 완료",
-    body: "독서 1챕터 가입이 승인되었습니다! 지금 바로 미션을 시작하세요 →",
+    body: "가입이 승인되었습니다! 지금 바로 미션을 시작하세요 →",
+    crew_name: "독서 1챕터",
     created_at: new Date(Date.now() - 25 * 3600000).toISOString(),
     is_read: true,
   },
@@ -166,7 +173,8 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     id: 20,
     event_type: "CREW_APPLICATION_REJECTED",
     title: "가입 거절",
-    body: "러닝 30분 가입 신청이 거절되었습니다. 다른 크루를 탐색해보세요 →",
+    body: "가입 신청이 거절되었습니다. 다른 크루를 탐색해보세요 →",
+    crew_name: "러닝 30분",
     created_at: new Date(Date.now() - 26 * 3600000).toISOString(),
     is_read: true,
   },
@@ -174,7 +182,8 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     id: 5,
     event_type: "CREW_NOTICE",
     title: "새 공지 등록",
-    body: "독서 1챕터에 새로운 공지가 등록되었습니다. 확인해보세요 →",
+    body: "새로운 공지가 등록되었습니다. 확인해보세요 →",
+    crew_name: "독서 1챕터",
     created_at: new Date(Date.now() - 27 * 3600000).toISOString(),
     is_read: true,
   },
@@ -183,6 +192,7 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     event_type: "CREW_NOTICE_COMMENT",
     title: "공지 댓글 등록",
     body: "홍길동님이 공지에 댓글을 남겼습니다 →",
+    crew_name: "독서 1챕터",
     created_at: new Date(Date.now() - 28 * 3600000).toISOString(),
     is_read: true,
   },
@@ -190,7 +200,8 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     id: 12,
     event_type: "MISSION_LOG_VERIFICATION_RESULT",
     title: "인증 실패",
-    body: "독서 1챕터 5/21 인증이 실패 처리되었습니다 ❌",
+    body: "5/21 인증이 실패 처리되었습니다 ❌",
+    crew_name: "독서 1챕터",
     created_at: new Date(Date.now() - 30 * 3600000).toISOString(),
     is_read: true,
   },
@@ -198,7 +209,8 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     id: 14,
     event_type: "MISSION_DEADLINE_HOST",
     title: "미검토 인증 존재",
-    body: "독서 1챕터 — 인증 마감 30분 전입니다. 아직 검토하지 않은 인증이 3건 있습니다. 정산 전 확인해주세요 →",
+    body: "인증 마감 30분 전입니다. 검토하지 않은 인증이 3건 있습니다. 정산 전 확인해주세요 →",
+    crew_name: "독서 1챕터",
     created_at: new Date(Date.now() - 33 * 3600000).toISOString(),
     is_read: true,
   },
@@ -206,7 +218,8 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     id: 15,
     event_type: "SETTLEMENT_DAILY",
     title: "예상 환급금 변동",
-    body: "독서 1챕터 5/21 미션 성공! 크루원 2명 인증 실패 → 예상 환급금 5,000도딘으로 상승했습니다 💪",
+    body: "5/21 미션 성공! 크루원 2명 인증 실패 → 예상 환급금 5,000도딘으로 상승했습니다 💪",
+    crew_name: "독서 1챕터",
     created_at: new Date(Date.now() - 36 * 3600000).toISOString(),
     is_read: true,
   },
@@ -215,6 +228,7 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     event_type: "SETTLEMENT_UNCHANGED",
     title: "예상 환급금 변동",
     body: "5/21 미션 성공! 크루 전원 인증 완료 → 예상 환급금 50,000도딘 유지 중 👏",
+    crew_name: "독서 1챕터",
     created_at: new Date(Date.now() - 37 * 3600000).toISOString(),
     is_read: true,
   },
@@ -223,6 +237,7 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     event_type: "SETTLEMENT_DECREASED",
     title: "예상 환급금 변동",
     body: "5/21 미션 인증 실패 → 예상 환급금 45,000도딘으로 하락했습니다 😢",
+    crew_name: "독서 1챕터",
     created_at: new Date(Date.now() - 38 * 3600000).toISOString(),
     is_read: true,
   },
@@ -231,7 +246,8 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     id: 6,
     event_type: "CREW_MISSION_END_SOON",
     title: "크루 종료 예정",
-    body: "독서 1챕터 미션이 3일 후 종료됩니다. 마지막까지 인증을 완료하세요 💪",
+    body: "미션이 3일 후 종료됩니다. 마지막까지 인증을 완료하세요 💪",
+    crew_name: "독서 1챕터",
     created_at: new Date(Date.now() - 50 * 3600000).toISOString(),
     is_read: true,
   },
@@ -240,6 +256,7 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     event_type: "CREW_DISSOLVED",
     title: "크루 해체",
     body: `${josa("독서 1챕터", "이/가")} 해체되었습니다. 예치하신 보증금 50,000도딘이 환급되었습니다.`,
+    crew_name: "독서 1챕터",
     created_at: new Date(Date.now() - 52 * 3600000).toISOString(),
     is_read: true,
   },
@@ -247,7 +264,8 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     id: 16,
     event_type: "SETTLEMENT_COMPLETED",
     title: "최종 정산 완료",
-    body: "독서 1챕터 미션 종료. 최종 환급금 50,000도딘이 지급되었습니다. 결과 보기 →",
+    body: "미션 종료. 최종 환급금 50,000도딘이 지급되었습니다. 결과 보기 →",
+    crew_name: "독서 1챕터",
     created_at: new Date(Date.now() - 55 * 3600000).toISOString(),
     is_read: true,
   },
@@ -283,6 +301,9 @@ function NotificationCard({
   const category = getCategory(item.event_type);
   const categoryMeta = CATEGORY_META[category];
   const CategoryIcon = categoryMeta.icon;
+  const message = item.crew_name && item.body.startsWith(`${item.crew_name} — `)
+    ? item.body.slice(`${item.crew_name} — `.length)
+    : item.body;
 
   return (
     <button
@@ -301,7 +322,7 @@ function NotificationCard({
         </span>
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-1.5">
               <span className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${categoryMeta.badgeClassName}`}>
                 {category}
@@ -314,8 +335,14 @@ function NotificationCard({
               {formatRelativeTime(item.created_at)}
             </span>
           </div>
-          <p className="mt-1.5 text-sm font-extrabold text-text-primary">{item.title}</p>
-          <p className="mt-0.5 text-xs font-medium leading-relaxed text-text-secondary">{item.body}</p>
+          <p className="mt-1.5 break-words text-[15px] font-bold leading-snug text-text-primary">
+            {message}
+          </p>
+          {item.crew_name && (
+            <p className="mt-1.5 break-words text-xs font-semibold leading-tight text-[#666666]">
+              {item.crew_name}
+            </p>
+          )}
         </div>
       </div>
     </button>
