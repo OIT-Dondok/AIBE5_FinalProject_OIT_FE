@@ -85,17 +85,6 @@ export const POINT_TRANSACTION_TYPE = {
 } as const;
 export type PointTransactionType = (typeof POINT_TRANSACTION_TYPE)[keyof typeof POINT_TRANSACTION_TYPE];
 
-// § 3.7 MissionLogFailureReason
-export const MISSION_LOG_FAILURE_REASON = {
-  EXIF_MISSING: 'EXIF_MISSING',               // risk signal only, 자동 실패 아님
-  EXIF_TIME_INVALID: 'EXIF_TIME_INVALID',     // risk signal only, 자동 실패 아님
-  DUPLICATE_IMAGE_HASH: 'DUPLICATE_IMAGE_HASH',
-  BEFORE_START: 'BEFORE_START',
-  AFTER_END: 'AFTER_END',
-  // AFTER_WITHDRAWN: brownfield/deferred
-} as const;
-export type MissionLogFailureReason = (typeof MISSION_LOG_FAILURE_REASON)[keyof typeof MISSION_LOG_FAILURE_REASON];
-
 // § 3.8 DailySettlementType
 export const DAILY_SETTLEMENT_TYPE = {
   A: 'A', // 인증마감 09:00 KST / 정산 12:00 KST
@@ -587,7 +576,6 @@ export interface MissionLog {
   server_time: string;
   exif_taken_at?: string | null;
   certification_status: CertificationStatus;
-  failure_reason: MissionLogFailureReason | null;
   decision_type: MissionLogDecisionType | null;
   reject_reason_code: RejectReasonCode | null;
 }

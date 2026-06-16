@@ -34,10 +34,18 @@ function HoverHint({ text }: { text: string }) {
 }
 
 function WalletBreakdownRow({ metric }: { metric: WalletSummaryMetric }) {
+  const isWarning = metric.tone === "red";
+
   return (
     <div className="flex items-center justify-between gap-3">
       <p className="inline-flex items-center pl-3 text-[11px] font-semibold text-[#D9E3CF]/60">
-        <span className="mr-2 h-px w-2 rounded-full bg-[#D9E3CF]/30" aria-hidden="true" />
+        {isWarning ? (
+          <span className="mr-1.5 text-[12px] font-black leading-none text-red-400" aria-hidden="true">
+            ⚠
+          </span>
+        ) : (
+          <span className="mr-2 h-px w-2 rounded-full bg-[#D9E3CF]/30" aria-hidden="true" />
+        )}
         <span>{metric.label}</span>
         <HoverHint text={metric.caption} />
       </p>

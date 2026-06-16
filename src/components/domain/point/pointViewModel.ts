@@ -101,7 +101,7 @@ export interface WalletSummaryMetric {
   label: string;
   value: string;
   caption: string;
-  tone: "blue" | "green" | "amber" | "slate";
+  tone: "blue" | "green" | "amber" | "slate" | "red";
 }
 
 export interface WalletHistoryViewItem {
@@ -239,6 +239,35 @@ export function createWalletViewModel(
   historyItems: WalletHistoryItem[],
 ): WalletViewModel {
   const totalPendingReserveAmount = account.reserved_balance + account.active_locked_amount;
+  const metrics: WalletSummaryMetric[] = [
+    {
+      label: "총 보유 도딘",
+      value: formatKrw(account.total_balance),
+      caption: "내가 가진 전체 도딘 (사용 가능, 크루 예치금, 정산 예정, 환급 실패 금액 포함)",
+      tone: "blue",
+    },
+    {
+      label: "크루 예치금",
+      value: formatKrw(totalPendingReserveAmount),
+      caption: "크루에 예치한 도딘 (승인 대기 중 + 진행 중인 크루 예치금)",
+      tone: "green",
+    },
+    {
+      label: "정산 예정",
+      value: formatKrw(account.settlement_pending_amount),
+      caption: "정상 처리 및 재시도 중인 정산 환급 예정 도딘",
+      tone: "amber",
+    },
+  ];
+
+  if (account.settlement_failed_amount > 0) {
+    metrics.push({
+      label: "환급 실패 (확인 필요)",
+      value: formatKrw(account.settlement_failed_amount),
+      caption: "지급에 실패하여 복구 및 재시도가 필요한 정산 환급 도딘",
+      tone: "red",
+    });
+  }
 
   return {
     availableBalance: formatKrw(account.available_balance),
@@ -250,32 +279,7 @@ export function createWalletViewModel(
     settlementFailedAmount: formatKrw(account.settlement_failed_amount),
     totalPendingReserveBalance: formatKrw(totalPendingReserveAmount),
     updatedAtLabel: formatUpdatedAt(account.updated_at),
-    metrics: [
-      {
-        label: "총 도딘",
-        value: formatKrw(account.total_balance),
-        caption: "지금까지의 전체 도딘",
-        tone: "blue",
-      },
-      {
-        label: "예치 대기",
-        value: formatKrw(totalPendingReserveAmount),
-        caption: "입금 대기 + 진행중 크루 예치금",
-        tone: "green",
-      },
-      {
-        label: "정산 예정",
-        value: formatKrw(account.settlement_pending_amount),
-        caption: "정상 처리/재시도 중인 정산 환급 예정액",
-        tone: "amber",
-      },
-      {
-        label: "정산 확인 필요",
-        value: formatKrw(account.settlement_failed_amount),
-        caption: "지급 실패 후 복구가 필요한 정산 환급액",
-        tone: "amber",
-      },
-    ],
+    metrics,
     historyItems: historyItems.map(toWalletHistoryViewItem),
   };
 }

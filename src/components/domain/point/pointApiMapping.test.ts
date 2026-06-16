@@ -245,11 +245,31 @@ describe("point wallet API mapping", () => {
     assert.equal(vm.metrics[1].value.replace(/\D/g, ""), "6000");
     assert.equal(vm.metrics[2].value.replace(/\D/g, ""), "800");
     assert.equal(vm.metrics[3].value.replace(/\D/g, ""), "700");
+    assert.equal(vm.metrics[3].label, "환급 실패 (확인 필요)");
+    assert.equal(vm.metrics[3].tone, "red");
     assert.equal(vm.settlementFailedAmount.replace(/\D/g, ""), "700");
     assert.deepEqual(
       vm.historyItems.map((item) => item.id),
       ["charge:21", "deposit:23", "settlement:22"],
     );
+  });
+
+  it("hides settlement failure metric when there is no failed settlement amount", () => {
+    const account: PointAccountResponse = {
+      available_balance: 12000,
+      reserved_balance: 5000,
+      active_locked_amount: 1000,
+      settlement_pending_amount: 800,
+      settlement_failed_amount: 0,
+      locked_balance: 1800,
+      total_balance: 18100,
+      updated_at: "2026-06-09T10:00:00+09:00",
+    };
+
+    const vm = createWalletViewModel(account, []);
+
+    assert.equal(vm.metrics.length, 3);
+    assert.equal(vm.metrics.some((metric) => metric.label === "환급 실패 (확인 필요)"), false);
   });
 
   it("clears the duplicate cursor guard when paginated history loading fails", () => {
