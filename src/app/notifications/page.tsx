@@ -12,11 +12,10 @@ import {
 } from "lucide-react";
 
 import { Header } from "@/components/common/Header";
-import type { NotificationEventType } from "@/types/domain";
 
 interface NotificationItem {
   id: number;
-  event_type: NotificationEventType;
+  event_type: string;
   title: string;
   body: string;
   created_at: string;
@@ -26,9 +25,9 @@ interface NotificationItem {
 // ── 카테고리 매핑 ────────────────────────────────────────────────────────────
 type BadgeCategory = "미션" | "정산" | "크루" | "리액션";
 
-function getCategory(event_type: NotificationEventType | string): BadgeCategory {
-  if (event_type === "MISSION_LOG_VERIFICATION_RESULT") return "미션";
-  if (event_type === "SETTLEMENT_COMPLETED") return "정산";
+function getCategory(event_type: string): BadgeCategory {
+  if (event_type.startsWith("MISSION_")) return "미션";
+  if (event_type.startsWith("SETTLEMENT_")) return "정산";
   if (event_type.includes("REACTION")) return "리액션";
   return "크루";
 }
@@ -92,44 +91,111 @@ function getDateLabel(isoString: string): string {
 
 // ── 목데이터 ────────────────────────────────────────────────────────────────
 const MOCK_NOTIFICATIONS: NotificationItem[] = [
+  // 오늘
   {
     id: 1,
-    event_type: "MISSION_LOG_VERIFICATION_RESULT",
-    title: "인증이 승인됐어요",
-    body: "오늘의 독서 미션 인증이 방장에게 승인됐어요.",
-    created_at: new Date(Date.now() - 5 * 60000).toISOString(),
+    event_type: "CREW_APPLICATION_PENDING",
+    title: "새로운 가입 신청이 있어요",
+    body: "홍길동님이 독서 1챕터 가입을 신청했습니다. 지금 확인해보세요 →",
+    created_at: new Date(Date.now() - 8 * 60000).toISOString(),
     is_read: false,
   },
   {
-    id: 2,
-    event_type: "CREW_APPLICATION_APPROVED",
-    title: "크루 가입이 승인됐어요",
-    body: "독서 1챕터 크루 가입 신청이 승인됐어요. 함께 달려봐요!",
+    id: 9,
+    event_type: "MISSION_DEADLINE_MEMBER",
+    title: "인증 마감까지 1시간 남았어요",
+    body: "독서 1챕터 인증 마감까지 1시간 남았습니다. 아직 인증을 완료하지 않으셨어요 ⏰",
+    created_at: new Date(Date.now() - 35 * 60000).toISOString(),
+    is_read: false,
+  },
+  {
+    id: 11,
+    event_type: "MISSION_LOG_VERIFICATION_RESULT",
+    title: "인증이 성공 처리됐어요",
+    body: "독서 1챕터 5/21 인증이 성공 처리되었습니다 ✅",
     created_at: new Date(Date.now() - 2 * 3600000).toISOString(),
     is_read: false,
   },
   {
-    id: 3,
-    event_type: "SETTLEMENT_COMPLETED",
-    title: "정산이 완료됐어요",
-    body: "오늘의 미션 정산이 완료됐어요. 포인트를 확인해보세요.",
-    created_at: new Date(Date.now() - 5 * 3600000).toISOString(),
+    id: 18,
+    event_type: "FEED_REACTION",
+    title: "리액션이 달렸어요",
+    body: "홍길동님이 내 인증에 🔥 리액션을 달았습니다",
+    created_at: new Date(Date.now() - 4 * 3600000).toISOString(),
     is_read: true,
   },
+  // 어제
   {
-    id: 4,
-    event_type: "CREW_ACTIVATED",
-    title: "크루가 시작됐어요",
-    body: "러닝 30분 크루가 활성화됐어요. 오늘부터 미션을 인증하세요!",
-    created_at: new Date(Date.now() - 26 * 3600000).toISOString(),
+    id: 3,
+    event_type: "CREW_APPLICATION_APPROVED",
+    title: "크루 가입이 승인됐어요",
+    body: "독서 1챕터 가입이 승인되었습니다! 보증금을 예치하고 미션을 시작하세요 →",
+    created_at: new Date(Date.now() - 25 * 3600000).toISOString(),
     is_read: true,
   },
   {
     id: 5,
-    event_type: "CREW_APPLICATION_REJECTED",
-    title: "크루 가입이 거절됐어요",
-    body: "아침 조깅 크루 가입 신청이 거절됐어요.",
+    event_type: "CREW_NOTICE",
+    title: "새 공지가 등록됐어요",
+    body: "독서 1챕터에 새로운 공지가 등록되었습니다. 확인해보세요 →",
+    created_at: new Date(Date.now() - 27 * 3600000).toISOString(),
+    is_read: true,
+  },
+  {
+    id: 12,
+    event_type: "MISSION_LOG_VERIFICATION_RESULT",
+    title: "인증이 실패 처리됐어요",
+    body: "독서 1챕터 5/21 인증이 실패 처리되었습니다 ❌",
+    created_at: new Date(Date.now() - 30 * 3600000).toISOString(),
+    is_read: true,
+  },
+  {
+    id: 14,
+    event_type: "MISSION_DEADLINE_HOST",
+    title: "인증 마감 30분 전이에요",
+    body: "독서 1챕터 — 인증 마감 30분 전입니다. 아직 검토하지 않은 인증이 3건 있습니다. 정산 전 확인해주세요 →",
+    created_at: new Date(Date.now() - 33 * 3600000).toISOString(),
+    is_read: true,
+  },
+  {
+    id: 15,
+    event_type: "SETTLEMENT_DAILY",
+    title: "예상 환급금이 상승했어요",
+    body: "독서 1챕터 5/21 미션 성공! 크루원 2명 인증 실패 → 예상 환급금 5,000도딘으로 상승했습니다 💪",
+    created_at: new Date(Date.now() - 36 * 3600000).toISOString(),
+    is_read: true,
+  },
+  // 이틀 전
+  {
+    id: 6,
+    event_type: "CREW_MISSION_END_SOON",
+    title: "미션 종료가 3일 남았어요",
+    body: "독서 1챕터 미션이 3일 후 종료됩니다. 마지막까지 인증을 완료하세요 💪",
     created_at: new Date(Date.now() - 50 * 3600000).toISOString(),
+    is_read: true,
+  },
+  {
+    id: 7,
+    event_type: "CREW_DISSOLVED",
+    title: "크루가 해체됐어요",
+    body: "독서 1챕터이 해체되었습니다. 예치하신 보증금 50,000도딘이 환급되었습니다.",
+    created_at: new Date(Date.now() - 52 * 3600000).toISOString(),
+    is_read: true,
+  },
+  {
+    id: 16,
+    event_type: "SETTLEMENT_COMPLETED",
+    title: "최종 정산이 완료됐어요",
+    body: "독서 1챕터 미션 종료. 최종 환급금 50,000도딘이 지급되었습니다. 결과 보기 →",
+    created_at: new Date(Date.now() - 55 * 3600000).toISOString(),
+    is_read: true,
+  },
+  {
+    id: 17,
+    event_type: "SETTLEMENT_COMPLETED",
+    title: "포인트가 지급됐어요",
+    body: "50,000도딘이 지급되었습니다. 현재 잔액을 확인해보세요 →",
+    created_at: new Date(Date.now() - 56 * 3600000).toISOString(),
     is_read: true,
   },
 ];
