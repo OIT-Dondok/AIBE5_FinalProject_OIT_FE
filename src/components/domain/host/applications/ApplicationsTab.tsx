@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { Check, UserCheck, X } from "lucide-react";
 
@@ -9,7 +9,12 @@ import { HostActionButton } from "@/components/domain/host/common/HostActionButt
 import { formatDate, formatTime } from "@/components/domain/host/hostFormatters";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { SectionCard } from "@/components/domain/host/SectionCard";
-import { getCrewApplications, type HostApplicationMock } from "@/mocks/data/host";
+import {
+  getCrewApplications as fetchCrewApplications,
+  approveCrewApplication,
+  rejectCrewApplication,
+} from "@/services/crew";
+import type { ApplicationListItem } from "@/types/domain";
 
 type ApplicationFilter = ApplicationVisibleStatus | "ALL";
 export type ApplicationDecision = "approved" | "rejected";
@@ -44,23 +49,22 @@ const applicationFilterStyles: Record<ApplicationVisibleStatus, { active: string
   },
 };
 
-function getApplicationVisibleStatus(
-  item: HostApplicationMock,
-  decision: ApplicationDecision | null,
-): ApplicationVisibleStatus {
-  if (decision === "approved") return "LOCKED";
-  if (decision === "rejected") return "REJECTED";
+function getApplicationVisibleStatus(item: ApplicationListItem): ApplicationVisibleStatus {
+  if (item.status === "LOCKED") return "LOCKED";
+  if (item.status === "REJECTED") return "REJECTED";
   return "PENDING";
 }
 
 function ApplicationCard({
   item,
   visibleStatus,
+  isProcessing,
   onApproveClick,
   onRejectClick,
 }: {
-  item: HostApplicationMock;
+  item: ApplicationListItem;
   visibleStatus: ApplicationVisibleStatus;
+  isProcessing: boolean;
   onApproveClick: () => void;
   onRejectClick: () => void;
 }) {
@@ -97,10 +101,10 @@ function ApplicationCard({
 
       {canDecide && (
         <div className="mt-3 grid grid-cols-2 gap-3">
-          <HostActionButton variant="reject" icon={<X size={16} strokeWidth={2.8} />} onClick={onRejectClick}>
+          <HostActionButton variant="reject" icon={<X size={16} strokeWidth={2.8} />} onClick={onRejectClick} disabled={isProcessing}>
             거절
           </HostActionButton>
-          <HostActionButton variant="approve" icon={<Check size={16} strokeWidth={2.8} />} onClick={onApproveClick}>
+          <HostActionButton variant="approve" icon={<Check size={16} strokeWidth={2.8} />} onClick={onApproveClick} disabled={isProcessing}>
             승인
           </HostActionButton>
         </div>
@@ -110,23 +114,39 @@ function ApplicationCard({
 }
 
 type ApplicationsTabProps = {
-  applicationDecisions: Record<number, ApplicationDecision>;
-  onApplicationDecisionsChange: (decisions: Record<number, ApplicationDecision>) => void;
+  onPendingCountChange?: (count: number) => void;
 };
 
-export function ApplicationsTab({
-  applicationDecisions,
-  onApplicationDecisionsChange,
-}: ApplicationsTabProps) {
+export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) {
   const [applicationFilter, setApplicationFilter] = useState<ApplicationFilter>("PENDING");
+  const [applications, setApplications] = useState<ApplicationListItem[]>([]);
   const [confirmTarget, setConfirmTarget] = useState<{
-    item: HostApplicationMock;
+    item: ApplicationListItem;
     decision: ApplicationDecision;
   } | null>(null);
   const [toastDecision, setToastDecision] = useState<{ type: ApplicationDecision; seq: number } | null>(null);
+  const [processingId, setProcessingId] = useState<number | null>(null);
   const confirmDialogRef = useRef<HTMLDivElement>(null);
   const params = useParams<{ crewId: string }>();
   const crewId = parseRouteNumber(params.crewId);
+
+  const loadApplications = useCallback(async () => {
+    if (crewId === null) return;
+    try {
+      const { data } = await fetchCrewApplications(crewId);
+      const filtered = data.items.filter(
+        (item) => item.status !== "CANCELLED" && item.status !== "EXPIRED",
+      );
+      setApplications(filtered);
+      onPendingCountChange?.(filtered.filter((item) => item.status === "PENDING").length);
+    } catch {
+      setApplications([]);
+    }
+  }, [crewId, onPendingCountChange]);
+
+  useEffect(() => {
+    loadApplications();
+  }, [loadApplications]);
 
   useEffect(() => {
     if (!toastDecision) return;
@@ -166,12 +186,9 @@ export function ApplicationsTab({
     );
   }
 
-  const applications = getCrewApplications(crewId).filter(
-    (item) => item.status !== "CANCELLED" && item.status !== "EXPIRED",
-  );
   const applicationsWithStatus = applications.map((item) => ({
     item,
-    visibleStatus: getApplicationVisibleStatus(item, applicationDecisions[item.crew_participant_id] ?? null),
+    visibleStatus: getApplicationVisibleStatus(item),
   }));
   const counts = applicationsWithStatus.reduce(
     (acc, item) => {
@@ -188,15 +205,24 @@ export function ApplicationsTab({
     return visibleStatus === applicationFilter;
   });
 
-  const handleConfirmDecision = () => {
-    if (!confirmTarget) return;
-
-    onApplicationDecisionsChange({
-      ...applicationDecisions,
-      [confirmTarget.item.crew_participant_id]: confirmTarget.decision,
-    });
-    setToastDecision((prev) => ({ type: confirmTarget.decision, seq: (prev?.seq ?? 0) + 1 }));
+  const handleConfirmDecision = async () => {
+    if (!confirmTarget || crewId === null) return;
+    const { item, decision } = confirmTarget;
     setConfirmTarget(null);
+    setProcessingId(item.crew_participant_id);
+    try {
+      if (decision === "approved") {
+        await approveCrewApplication(crewId, item.crew_participant_id);
+      } else {
+        await rejectCrewApplication(crewId, item.crew_participant_id);
+      }
+      setToastDecision((prev) => ({ type: decision, seq: (prev?.seq ?? 0) + 1 }));
+      await loadApplications();
+    } catch {
+      // API 실패 시 상태 유지
+    } finally {
+      setProcessingId(null);
+    }
   };
 
   return (
@@ -242,6 +268,7 @@ export function ApplicationsTab({
               key={item.crew_participant_id}
               item={item}
               visibleStatus={visibleStatus}
+              isProcessing={processingId === item.crew_participant_id}
               onApproveClick={() => setConfirmTarget({ item, decision: "approved" })}
               onRejectClick={() => setConfirmTarget({ item, decision: "rejected" })}
             />

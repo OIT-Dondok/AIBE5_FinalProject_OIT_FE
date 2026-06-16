@@ -13,6 +13,9 @@ import type {
   NoticeCommentsResponse,
   MyCrew,
   MyCrewsResponse,
+  ApplicationListResponse,
+  ApproveApplicationResponse,
+  RejectApplicationResponse,
 } from '@/types/domain';
 
 export const getCrews = (params?: {
@@ -103,6 +106,15 @@ export const getMyCrew = (role?: 'ALL' | 'HOST' | 'MEMBER', cursor?: string, sig
     signal,
   });
 };
+
+export const getCrewApplications = (crewId: number, params?: { status?: string; cursor?: string }) =>
+  api.get<ApplicationListResponse>(`/crews/${crewId}/applications`, { params });
+
+export const approveCrewApplication = (crewId: number, crewParticipantId: number) =>
+  api.post<ApproveApplicationResponse>(`/crews/${crewId}/applications/${crewParticipantId}/approve`);
+
+export const rejectCrewApplication = (crewId: number, crewParticipantId: number) =>
+  api.post<RejectApplicationResponse>(`/crews/${crewId}/applications/${crewParticipantId}/reject`);
 
 export const getMyLockedCrews = async (signal?: AbortSignal): Promise<MyCrew[]> => {
   const allItems: MyCrew[] = [];
