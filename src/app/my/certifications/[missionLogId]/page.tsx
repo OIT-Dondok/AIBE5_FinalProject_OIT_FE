@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { ClipboardCheck } from "lucide-react";
 
 import { Header } from "@/components/common/Header";
@@ -197,8 +198,12 @@ export default function MissionLogDetailPage() {
 
               {/* 본문 (카드 내부) */}
               <div className="px-4 pt-4 pb-4 flex flex-col gap-3">
-                {/* 아바타 + 닉네임/크루명 + 상태 배지 */}
+                {/* 아바타 + 닉네임/크루명(멤버 프로필 이동) + 상태 배지 */}
                 <div className="flex items-center gap-3">
+                  <Link
+                    href={`/members/${item.member_uuid}`}
+                    className="flex items-center gap-3 min-w-0 flex-1 hover:opacity-80 active:opacity-60 transition-opacity"
+                  >
                   <div
                     className={`shrink-0 w-11 h-11 rounded-full overflow-hidden flex items-center justify-center text-sm font-bold ${getAvatarClass(item.crew_id)}`}
                   >
@@ -215,12 +220,13 @@ export default function MissionLogDetailPage() {
                       (item.nickname.charAt(0).toUpperCase() || "?")
                     )}
                   </div>
-                  <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                  <div className="min-w-0 flex flex-col gap-0.5">
                     <p className="text-[15px] font-bold text-text-primary truncate leading-tight">
                       {item.nickname}
                     </p>
                     <p className="text-[11px] text-text-secondary truncate">{item.crew_name}</p>
                   </div>
+                  </Link>
                   {(() => {
                     const meta = STATUS_META[item.certification_status];
                     return (

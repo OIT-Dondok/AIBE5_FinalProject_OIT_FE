@@ -245,7 +245,7 @@ describe("point wallet API mapping", () => {
     assert.equal(vm.metrics[1].value.replace(/\D/g, ""), "6000");
     assert.equal(vm.metrics[2].value.replace(/\D/g, ""), "800");
     assert.equal(vm.metrics[3].value.replace(/\D/g, ""), "700");
-    assert.equal(vm.metrics[3].label, "환급 실패 (확인 필요)");
+    assert.equal(vm.metrics[3].label, "환급 문제 발생");
     assert.equal(vm.metrics[3].tone, "red");
     assert.equal(vm.settlementFailedAmount.replace(/\D/g, ""), "700");
     assert.deepEqual(
@@ -269,7 +269,7 @@ describe("point wallet API mapping", () => {
     const vm = createWalletViewModel(account, []);
 
     assert.equal(vm.metrics.length, 3);
-    assert.equal(vm.metrics.some((metric) => metric.label === "환급 실패 (확인 필요)"), false);
+    assert.equal(vm.metrics.some((metric) => metric.label === "환급 문제 발생"), false);
   });
 
   it("clears the duplicate cursor guard when paginated history loading fails", () => {
