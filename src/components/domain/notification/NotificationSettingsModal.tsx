@@ -7,9 +7,11 @@ import { Modal } from "@/components/common/Modal";
 interface NotificationSettings {
   emojiReaction: boolean;
   hostVerification: boolean;
+  missionDeadline: boolean;
   dailyResult: boolean;
   finalSettlement: boolean;
   crewDissolved: boolean;
+  crewNews: boolean;
   dndEnabled: boolean;
   dndStart: string;
   dndEnd: string;
@@ -18,20 +20,24 @@ interface NotificationSettings {
 const DEFAULT_SETTINGS: NotificationSettings = {
   emojiReaction: true,
   hostVerification: true,
+  missionDeadline: true,
   dailyResult: true,
   finalSettlement: true,
   crewDissolved: true,
+  crewNews: true,
   dndEnabled: false,
   dndStart: "22:00",
   dndEnd: "08:00",
 };
 
 const TOGGLE_ROWS: Array<{ key: keyof NotificationSettings; label: string; desc: string }> = [
-  { key: "emojiReaction", label: "이모지 리액션", desc: "피드 인증에 리액션이 달렸을 때" },
-  { key: "hostVerification", label: "방장 검증 대기", desc: "인증이 방장 검증 대기 중일 때" },
-  { key: "dailyResult", label: "일일 결과", desc: "오늘의 미션 인증 결과를 받을 때" },
-  { key: "finalSettlement", label: "최종 정산", desc: "크루 종료 후 정산이 완료됐을 때" },
-  { key: "crewDissolved", label: "크루 해체", desc: "참여 중인 크루가 취소됐을 때" },
+  { key: "emojiReaction", label: "이모지 리액션", desc: "새 리액션 등록" },
+  { key: "hostVerification", label: "방장 검증 대기", desc: "새 인증 업로드, 미검토 인증 존재" },
+  { key: "missionDeadline", label: "인증 마감 임박", desc: "인증 마감 임박" },
+  { key: "dailyResult", label: "일일 결과", desc: "인증 성공, 인증 실패, 예상 환급금 변동" },
+  { key: "finalSettlement", label: "최종 정산", desc: "최종 정산 완료, 환급 완료" },
+  { key: "crewDissolved", label: "크루 해체", desc: "크루 해체" },
+  { key: "crewNews", label: "크루 소식", desc: "크루 종료 예정, 새 공지 등록, 공지 댓글 등록" },
 ];
 
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
