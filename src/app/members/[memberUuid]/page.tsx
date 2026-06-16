@@ -193,12 +193,17 @@ export default function MemberProfilePage() {
       return;
     }
 
+    let cancelled = false;
+
     setIsLoading(true);
     setErrorMessage(null);
 
     getMemberProfile(memberUuid)
-      .then(({ data }) => setProfile(data))
+      .then(({ data }) => {
+        if (!cancelled) setProfile(data);
+      })
       .catch((err: { response?: { status?: number } }) => {
+        if (cancelled) return;
         const status = err?.response?.status;
         if (status === 404) {
           setErrorMessage("존재하지 않는 유저예요.");
@@ -206,7 +211,13 @@ export default function MemberProfilePage() {
           setErrorMessage("프로필을 불러오지 못했어요.");
         }
       })
-      .finally(() => setIsLoading(false));
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [memberUuid]);
 
   return (
