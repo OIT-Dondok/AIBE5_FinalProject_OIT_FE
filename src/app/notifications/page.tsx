@@ -309,7 +309,7 @@ function NotificationCard({
     <button
       type="button"
       onClick={() => onRead(item.id)}
-      className={`w-full text-left rounded-2xl px-4 py-3.5 transition-colors ${
+      className={`w-full origin-center rounded-2xl px-4 py-3.5 text-left transition-[background-color,transform] duration-150 ease-out active:scale-[0.985] ${
         item.is_read ? "bg-card" : "bg-[#F4F7FF]"
       }`}
     >
@@ -335,7 +335,7 @@ function NotificationCard({
               {formatRelativeTime(item.created_at)}
             </span>
           </div>
-          <p className="mt-1.5 break-words text-[15px] font-bold leading-snug text-text-primary">
+          <p className="mt-1.5 break-words text-[14px] font-bold leading-snug text-text-primary">
             {message}
           </p>
           {item.crew_name && (
@@ -349,9 +349,20 @@ function NotificationCard({
   );
 }
 
+type FilterTab = "전체" | BadgeCategory;
+
+const FILTER_TABS: Array<{ value: FilterTab; label: string }> = [
+  { value: "전체", label: "전체" },
+  { value: "미션", label: "미션" },
+  { value: "정산", label: "정산" },
+  { value: "리액션", label: "리액션" },
+  { value: "크루", label: "크루" },
+];
+
 // ── 페이지 ────────────────────────────────────────────────────────────────────
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<NotificationItem[]>(MOCK_NOTIFICATIONS);
+  const [activeFilter, setActiveFilter] = useState<FilterTab>("전체");
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
@@ -361,7 +372,12 @@ export default function NotificationsPage() {
   const markRead = (id: number) =>
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
 
-  const groups = groupByDate(notifications);
+  const filtered =
+    activeFilter === "전체"
+      ? notifications
+      : notifications.filter((n) => getCategory(n.event_type) === activeFilter);
+
+  const groups = groupByDate(filtered);
 
   return (
     <main className="min-h-screen w-full overflow-x-hidden bg-background flex flex-col items-center">
@@ -396,11 +412,34 @@ export default function NotificationsPage() {
           )}
         </div>
 
+        {/* 카테고리 필터 탭 */}
+        <div className="flex gap-2 overflow-x-auto px-5 pt-3 pb-1 scrollbar-hide">
+          {FILTER_TABS.map(({ value, label }) => {
+            const isActive = activeFilter === value;
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setActiveFilter(value)}
+                className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-extrabold transition-colors ${
+                  isActive
+                    ? "bg-text-primary text-background"
+                    : "bg-card text-text-secondary border border-text-secondary/20"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
         {/* 알림 목록 */}
         <div className="flex flex-col gap-4 px-5 pt-3">
           {groups.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <p className="text-sm font-semibold text-text-secondary">알림이 없어요</p>
+              <p className="text-sm font-semibold text-text-secondary">
+                {activeFilter === "전체" ? "알림이 없어요" : `${activeFilter} 알림이 없어요`}
+              </p>
             </div>
           ) : (
             groups.map(({ label, items }) => (
