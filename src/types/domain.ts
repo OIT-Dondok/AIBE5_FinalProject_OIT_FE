@@ -87,8 +87,9 @@ export type PointTransactionType = (typeof POINT_TRANSACTION_TYPE)[keyof typeof 
 
 // § 3.7 MissionLogFailureReason
 export const MISSION_LOG_FAILURE_REASON = {
-  EXIF_MISSING: 'EXIF_MISSING',           // risk signal only, 자동 실패 아님
-  EXIF_TIME_INVALID: 'EXIF_TIME_INVALID', // risk signal only, 자동 실패 아님
+  EXIF_MISSING: 'EXIF_MISSING',               // risk signal only, 자동 실패 아님
+  EXIF_TIME_INVALID: 'EXIF_TIME_INVALID',     // risk signal only, 자동 실패 아님
+  DUPLICATE_IMAGE_HASH: 'DUPLICATE_IMAGE_HASH',
   BEFORE_START: 'BEFORE_START',
   AFTER_END: 'AFTER_END',
   // AFTER_WITHDRAWN: brownfield/deferred
@@ -516,6 +517,27 @@ export interface PresignedUrlResponse {
   s3_key: string;
   expires_at: string;
 }
+
+// POST /api/mission-logs → 201 (인증 페이지 전용 응답 타입)
+export interface MissionLogCreateResponse {
+  mission_log_id: number;
+  crew_id: number;
+  crew_participant_id: number;
+  image_url: string | null;
+  image_s3_key: string;
+  caption: string;
+  image_hash: string | null;
+  server_time: string;
+  exif_taken_at?: string | null;
+  certification_status: CertificationStatus;
+  exif_risk: MissionLogExifRisk;
+  duplicate: boolean;
+  decision_type: string | null;
+  reject_reason_code: string | null;
+}
+
+// FE 전용: 미션 인증 UI 단계
+export type CertifyStep = 'UPLOAD' | 'VERIFYING' | 'SUCCESS' | 'WARNED';
 
 // POST /api/mission-logs Request
 export interface CreateMissionLogRequest {
