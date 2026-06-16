@@ -6,10 +6,7 @@ import { Bell, ShieldCheck } from "lucide-react";
 
 import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
-import {
-  ApplicationsTab,
-  type ApplicationDecision,
-} from "@/components/domain/host/applications/ApplicationsTab";
+import { ApplicationsTab } from "@/components/domain/host/applications/ApplicationsTab";
 import { HostConsoleTabs } from "@/components/domain/host/HostConsoleTabs";
 import type { HostTab } from "@/components/domain/host/hostConsoleTypes";
 import { HostSummaryCard } from "@/components/domain/host/HostSummaryCard";
@@ -17,11 +14,8 @@ import { NoticesTab } from "@/components/domain/host/notices/NoticesTab";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { SectionCard } from "@/components/domain/host/SectionCard";
 import { VerificationTab } from "@/components/domain/host/verification/VerificationTab";
-import {
-  getCrewApplications,
-  getHostCrewDetail,
-} from "@/mocks/data/host";
-import { getCrewNotices } from "@/services/crew";
+import { getHostCrewDetail } from "@/mocks/data/host";
+import { getCrewApplications, getCrewNotices } from "@/services/crew";
 
 export default function HostConsoleClient() {
   const params = useParams<{ crewId: string }>();
@@ -41,14 +35,27 @@ export default function HostConsoleClient() {
   }, [tabParam]);
 
   const [pendingReviewCount, setPendingReviewCount] = useState(0);
-  const [applicationDecisions, setApplicationDecisions] = useState<Record<number, ApplicationDecision>>({});
+  const [pendingApplicationCount, setPendingApplicationCount] = useState(0);
   const [noticeCount, setNoticeCount] = useState(0);
+  const [tabRefreshKey, setTabRefreshKey] = useState(0);
+
+  const handleTabChange = (tab: HostTab) => {
+    setActiveTab(tab);
+    setTabRefreshKey((prev) => prev + 1);
+  };
 
   useEffect(() => {
     if (crewId === null) return;
     getCrewNotices(crewId)
       .then((res) => setNoticeCount(res.data.items.length))
       .catch(() => setNoticeCount(0));
+  }, [crewId]);
+
+  useEffect(() => {
+    if (crewId === null) return;
+    getCrewApplications(crewId, { status: "PENDING" })
+      .then((res) => setPendingApplicationCount(res.data.items.length))
+      .catch(() => setPendingApplicationCount(0));
   }, [crewId]);
 
   if (crewId === null) {
@@ -71,14 +78,6 @@ export default function HostConsoleClient() {
   }
 
   const crewDetail = getHostCrewDetail(crewId);
-  const applications = getCrewApplications(crewId);
-
-  const pendingApplicationCount = applications.filter(
-    (item) =>
-      item.status !== "CANCELLED" &&
-      item.status !== "EXPIRED" &&
-      !applicationDecisions[item.crew_participant_id],
-  ).length;
 
   if (!crewDetail.isHost) {
     return (
@@ -111,19 +110,16 @@ export default function HostConsoleClient() {
             pendingReviewCount={pendingReviewCount}
             pendingApplicationCount={pendingApplicationCount}
             noticeCount={noticeCount}
-            onTabChange={setActiveTab}
+            onTabChange={handleTabChange}
           />
 
           {activeTab === "verification" && (
-            <VerificationTab onPendingCountChange={setPendingReviewCount} />
+            <VerificationTab key={tabRefreshKey} onPendingCountChange={setPendingReviewCount} />
           )}
           {activeTab === "applications" && (
-            <ApplicationsTab
-              applicationDecisions={applicationDecisions}
-              onApplicationDecisionsChange={setApplicationDecisions}
-            />
+            <ApplicationsTab key={tabRefreshKey} onPendingCountChange={setPendingApplicationCount} />
           )}
-          {activeTab === "notices" && <NoticesTab />}
+          {activeTab === "notices" && <NoticesTab key={tabRefreshKey} />}
         </div>
       </div>
     </main>

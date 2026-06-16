@@ -700,6 +700,7 @@ export interface FeedItem {
   reaction_counts: ReactionCounts; // 모든 상태에 대해 채워짐
   my_reactions: string[]; // 내가 누른 emoji token 목록
   reject_reason_code?: string | null; // 거절 사유 코드 (FAILED 상태일 때)
+  reject_memo?: string | null; // 거절 상세 사유 (OTHER일 때)
   decision_type?: string | null; // 검수 결정 유형 (MANUAL_APPROVE 등)
 }
 
