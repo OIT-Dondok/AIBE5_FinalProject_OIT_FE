@@ -310,7 +310,7 @@ function NotificationCard({
       type="button"
       onClick={() => onRead(item.id)}
       className={`w-full origin-center rounded-2xl px-4 py-3.5 text-left transition-[background-color,transform] duration-150 ease-out active:scale-[0.985] ${
-        item.is_read ? "bg-card" : "bg-[#F4F7FF]"
+        item.is_read ? "bg-card active:bg-[#F4F4F4]" : "bg-[#F4F7FF] active:bg-[#E9EEFB]"
       }`}
     >
       <div className="flex items-start gap-3">
