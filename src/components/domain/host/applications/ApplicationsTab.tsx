@@ -9,6 +9,7 @@ import { HostActionButton } from "@/components/domain/host/common/HostActionButt
 import { formatDate, formatTime } from "@/components/domain/host/hostFormatters";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { SectionCard } from "@/components/domain/host/SectionCard";
+import { useAuthStore } from "@/store/authStore";
 import {
   getCrewApplications as fetchCrewApplications,
   approveCrewApplication,
@@ -129,6 +130,7 @@ export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) 
   const confirmDialogRef = useRef<HTMLDivElement>(null);
   const params = useParams<{ crewId: string }>();
   const crewId = parseRouteNumber(params.crewId);
+  const myUuid = useAuthStore((s) => s.user?.member_uuid);
 
   const loadApplications = useCallback(async () => {
     if (crewId === null) return;
@@ -142,13 +144,15 @@ export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) 
         ...pendingRes.data.items,
         ...lockedRes.data.items,
         ...rejectedRes.data.items,
-      ];
+      ].filter((item) => item.member_uuid !== myUuid);
       setApplications(all);
-      onPendingCountChange?.(pendingRes.data.items.length);
+      onPendingCountChange?.(
+        pendingRes.data.items.filter((item) => item.member_uuid !== myUuid).length,
+      );
     } catch {
       setApplications([]);
     }
-  }, [crewId, onPendingCountChange]);
+  }, [crewId, myUuid, onPendingCountChange]);
 
   useEffect(() => {
     loadApplications();
