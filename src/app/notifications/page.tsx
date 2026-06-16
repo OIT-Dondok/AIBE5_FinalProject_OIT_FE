@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Settings } from "lucide-react";
+import {
+  Heart,
+  Settings,
+  TrendingUp,
+  Users,
+  WalletCards,
+  type LucideIcon,
+} from "lucide-react";
 
 import { Header } from "@/components/common/Header";
 import { NotificationSettingsModal } from "@/components/domain/notification/NotificationSettingsModal";
@@ -17,18 +24,48 @@ interface NotificationItem {
 }
 
 // ── 카테고리 매핑 ────────────────────────────────────────────────────────────
-type BadgeCategory = "미션" | "정산" | "크루";
+type BadgeCategory = "미션" | "정산" | "크루" | "리액션";
 
-function getCategory(event_type: NotificationEventType): BadgeCategory {
+function getCategory(event_type: NotificationEventType | string): BadgeCategory {
   if (event_type === "MISSION_LOG_VERIFICATION_RESULT") return "미션";
   if (event_type === "SETTLEMENT_COMPLETED") return "정산";
+  if (event_type.includes("REACTION")) return "리액션";
   return "크루";
 }
 
-const BADGE_STYLES: Record<BadgeCategory, string> = {
-  미션: "bg-[#FBF1E1] text-[#D89B4C]",
-  정산: "bg-[#E8F2EB] text-primary-green",
-  크루: "bg-[#E0E8FA] text-[#4d73d9]",
+const CATEGORY_META: Record<
+  BadgeCategory,
+  {
+    icon: LucideIcon;
+    iconBoxClassName: string;
+    iconClassName: string;
+    badgeClassName: string;
+  }
+> = {
+  미션: {
+    icon: TrendingUp,
+    iconBoxClassName: "bg-[#FBF1E1]",
+    iconClassName: "text-[#D89B4C]",
+    badgeClassName: "bg-[#FBF1E1] text-[#D89B4C]",
+  },
+  정산: {
+    icon: WalletCards,
+    iconBoxClassName: "bg-[#E8F2EB]",
+    iconClassName: "text-primary-green",
+    badgeClassName: "bg-[#E8F2EB] text-primary-green",
+  },
+  크루: {
+    icon: Users,
+    iconBoxClassName: "bg-[#E0E8FA]",
+    iconClassName: "text-[#4d73d9]",
+    badgeClassName: "bg-[#E0E8FA] text-[#4d73d9]",
+  },
+  리액션: {
+    icon: Heart,
+    iconBoxClassName: "bg-[#FCE8E4]",
+    iconClassName: "text-[#D9735E]",
+    badgeClassName: "bg-[#FCE8E4] text-[#D9735E]",
+  },
 };
 
 // ── 시간 포맷 ────────────────────────────────────────────────────────────────
@@ -117,6 +154,9 @@ function NotificationCard({
   onRead: (id: number) => void;
 }) {
   const category = getCategory(item.event_type);
+  const categoryMeta = CATEGORY_META[category];
+  const CategoryIcon = categoryMeta.icon;
+
   return (
     <button
       type="button"
@@ -126,15 +166,23 @@ function NotificationCard({
       }`}
     >
       <div className="flex items-start gap-3">
-        {!item.is_read && (
-          <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary-blue" aria-label="읽지 않음" />
-        )}
-        {item.is_read && <span className="mt-1.5 h-2 w-2 shrink-0" />}
+        <span
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${categoryMeta.iconBoxClassName}`}
+          aria-hidden="true"
+        >
+          <CategoryIcon size={18} strokeWidth={2.2} className={categoryMeta.iconClassName} />
+        </span>
+
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${BADGE_STYLES[category]}`}>
-              {category}
-            </span>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-1.5">
+              <span className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${categoryMeta.badgeClassName}`}>
+                {category}
+              </span>
+              {!item.is_read && (
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary-blue" aria-label="읽지 않음" />
+              )}
+            </div>
             <span className="text-[11px] font-medium text-text-secondary">
               {formatRelativeTime(item.created_at)}
             </span>
