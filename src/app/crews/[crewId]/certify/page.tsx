@@ -15,6 +15,7 @@ import { Header } from '@/components/common/Header';
 import { Button } from '@/components/common/Button';
 import { Toast } from '@/components/common/Toast';
 import { Modal } from '@/components/common/Modal';
+import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { getCrew } from '@/services/crew';
 import { getPresignedUrl, uploadToS3 } from '@/services/upload';
 import { createMissionLog } from '@/services/mission';
@@ -200,7 +201,14 @@ export default function CertifyPage() {
 
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [toast, setToast] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error' | 'warning'>('success');
   const [isToastOpen, setIsToastOpen] = useState(false);
+
+  const showToast = (msg: string, type: 'success' | 'error' | 'warning' = 'success') => {
+    setToast(msg);
+    setToastType(type);
+    setIsToastOpen(true);
+  };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -285,14 +293,12 @@ export default function CertifyPage() {
 
     if (selected.size > MAX_SIZE) {
       setFile(null);
-      setToast('10MB 이하 이미지를 선택해주세요');
-      setIsToastOpen(true);
+      showToast('10MB 이하 이미지를 선택해주세요', 'error');
       return;
     }
     if (!isAllowedFile(selected)) {
       setFile(null);
-      setToast('JPG, PNG, GIF, BMP, WEBP, HEIC 파일만 업로드 가능해요');
-      setIsToastOpen(true);
+      showToast('JPG, PNG, GIF, BMP, WEBP, HEIC 파일만 업로드 가능해요', 'error');
       return;
     }
     setFile(selected);
@@ -306,8 +312,7 @@ export default function CertifyPage() {
     if (!my_participation || my_participation.status !== 'LOCKED') return;
 
     if (getDeadline(crew.daily_settlement_type).getTime() <= Date.now()) {
-      setToast('인증 마감 시간이 지났어요');
-      setIsToastOpen(true);
+      showToast('인증 마감 시간이 지났어요', 'error');
       return;
     }
 
@@ -367,8 +372,7 @@ export default function CertifyPage() {
       } else {
         msg = '네트워크 오류가 발생했어요. 다시 시도해주세요.';
       }
-      setToast(msg);
-      setIsToastOpen(true);
+      showToast(msg, 'error');
       setStep('UPLOAD');
     }
   }, [file, crew, caption]);
@@ -679,31 +683,21 @@ export default function CertifyPage() {
         </div>
       </div>
 
-      {/* 업로드 확인 모달 */}
-      <Modal isOpen={isConfirmOpen} onClose={() => setIsConfirmOpen(false)} ariaLabel="인증 제출 확인">
-        <div className="p-5 flex flex-col gap-4">
-          <p className="text-base font-bold text-text-primary text-center">인증 제출 확인</p>
-          <p className="text-sm text-text-secondary text-center leading-relaxed">
-            인증 사진은 제출 후 수정 또는 삭제가 불가능해요.
-            <br />제출하시겠어요?
-          </p>
-          <div className="flex gap-3">
-            <Button variant="outline" size="lg" fullWidth onClick={() => setIsConfirmOpen(false)}>
-              취소
-            </Button>
-            <Button
-              variant="primary-green"
-              size="lg"
-              fullWidth
-              onClick={() => { setIsConfirmOpen(false); handleUpload(); }}
-            >
-              확인
-            </Button>
-          </div>
-        </div>
-      </Modal>
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={() => {
+          setIsConfirmOpen(false);
+          void handleUpload();
+        }}
+        title="인증 제출 확인"
+        description={`인증 사진은 제출 후 수정 또는 삭제가 불가능해요.\n제출하시겠어요?`}
+        confirmText="확인"
+        cancelText="취소"
+        confirmVariant="primary-green"
+      />
 
-      <Toast message={toast} isOpen={isToastOpen} onClose={() => setIsToastOpen(false)} />
+      <Toast message={toast} isOpen={isToastOpen} onClose={() => setIsToastOpen(false)} type={toastType} />
     </main>
   );
 }

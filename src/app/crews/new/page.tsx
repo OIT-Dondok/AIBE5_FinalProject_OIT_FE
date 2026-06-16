@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Header } from '@/components/common/Header';
 import { Button } from '@/components/common/Button';
 import { Modal } from '@/components/common/Modal';
+import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { Toast } from '@/components/common/Toast';
 import StepIndicator from './_components/StepIndicator';
 import Step1AI from './_components/Step1AI';
@@ -145,6 +146,7 @@ export default function CrewNewPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error' | 'warning'>('success');
   const [isToastOpen, setIsToastOpen] = useState(false);
   // 5단계 크루 생성 확인 모달
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -162,8 +164,9 @@ export default function CrewNewPage() {
     };
   }, []);
 
-  const showToast = (msg: string) => {
+  const showToast = (msg: string, type: 'success' | 'error' | 'warning' = 'success') => {
     setToastMessage(msg);
+    setToastType(type);
     setIsToastOpen(true);
   };
 
@@ -182,7 +185,7 @@ export default function CrewNewPage() {
     }
     const snapped = snapToScheduledDay(value, formData.mission_schedule_days, 'forward');
     update('start_date', snapped);
-    if (snapped !== value) showToast('인증 요일에 맞춰 시작일을 조정했어요.');
+    if (snapped !== value) showToast('인증 요일에 맞춰 시작일을 조정했어요.', 'warning');
   };
 
   const handleEndDateChange = (value: string) => {
@@ -192,7 +195,7 @@ export default function CrewNewPage() {
     }
     const snapped = snapToScheduledDay(value, formData.mission_schedule_days, 'backward');
     update('end_date', snapped);
-    if (snapped !== value) showToast('인증 요일에 맞춰 종료일을 조정했어요.');
+    if (snapped !== value) showToast('인증 요일에 맞춰 종료일을 조정했어요.', 'warning');
   };
 
   // ─── 이미지 업로드 핸들러 ───────────────────────────────────────────────────
@@ -200,7 +203,7 @@ export default function CrewNewPage() {
   const handleCrewImageUpload = async (file: File) => {
     const errorMsg = validateCrewImageSize(file);
     if (errorMsg) {
-      showToast(errorMsg);
+      showToast(errorMsg, 'error');
       return;
     }
 
@@ -212,7 +215,7 @@ export default function CrewNewPage() {
       // HEIC→JPEG 변환 시 용량이 늘 수 있어, 변환 후 파일 기준으로도 크기를 재검증한다.
       const convertedSizeError = validateCrewImageSize(prepared.file);
       if (convertedSizeError) {
-        showToast(convertedSizeError);
+        showToast(convertedSizeError, 'error');
         return;
       }
 
@@ -238,6 +241,7 @@ export default function CrewNewPage() {
     } catch (error) {
       showToast(
         error instanceof UnsupportedImageError ? error.message : '이미지 업로드에 실패했습니다.',
+        'error',
       );
     } finally {
       setIsUploadingImage(false);
@@ -381,11 +385,13 @@ export default function CrewNewPage() {
     } catch (err) {
       const code = isAxiosError<ErrorResponse>(err) ? err.response?.data?.code : undefined;
       if (code === 'INSUFFICIENT_BALANCE') {
-        showToast('크루 생성에 필요한 잔액이 부족합니다. 충전 후 다시 시도해주세요.');
+        showToast('크루 생성에 필요한 잔액이 부족합니다. 충전 후 다시 시도해주세요.', 'error');
       } else if (code === 'INVALID_DEPOSIT_AMOUNT') {
-        showToast('보증금은 1,000원 단위, 1,000~100,000원이어야 합니다.');
+        showToast('보증금은 1,000원 단위, 1,000~100,000원이어야 합니다.', 'error');
+      } else if (code === 'HOST_CREW_LIMIT_EXCEEDED') {
+        showToast('동시 운영 가능한 크루 개수(5개) 한도를 초과했습니다.', 'error');
       } else {
-        showToast('크루 생성에 실패했습니다. 다시 시도해주세요.');
+        showToast('크루 생성에 실패했습니다. 다시 시도해주세요.', 'error');
       }
     } finally {
       isSubmittingRef.current = false;
@@ -525,44 +531,23 @@ export default function CrewNewPage() {
         isOpen={isToastOpen}
         onClose={() => setIsToastOpen(false)}
         message={toastMessage}
+        type={toastType}
       />
 
-      <Modal
+      <ConfirmModal
         isOpen={isConfirmOpen}
         onClose={() => setIsConfirmOpen(false)}
-        ariaLabel="크루 생성 확인"
-      >
-        <div className="flex flex-col gap-4 p-6">
-          <div className="flex flex-col gap-2">
-            <h3 className="text-base font-bold text-text-primary">크루 생성 전 확인해주세요</h3>
-            <p className="text-sm text-text-secondary leading-relaxed">
-              크루 개설 후 수정 및 삭제가 불가능합니다.{'\n'}신중하게 만들어주세요.
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="md"
-              fullWidth
-              onClick={() => setIsConfirmOpen(false)}
-            >
-              다시 확인
-            </Button>
-            <Button
-              variant="primary-green"
-              size="md"
-              fullWidth
-              onClick={() => {
-                setIsConfirmOpen(false);
-                void handleSubmit();
-              }}
-              isLoading={isSubmitting}
-            >
-              생성하기
-            </Button>
-          </div>
-        </div>
-      </Modal>
+        onConfirm={() => {
+          setIsConfirmOpen(false);
+          void handleSubmit();
+        }}
+        title="크루 생성 전 확인해주세요"
+        description={`크루 개설 후 수정 및 삭제가 불가능합니다.\n신중하게 만들어주세요.`}
+        confirmText="생성하기"
+        cancelText="다시 확인"
+        confirmVariant="primary-green"
+        isLoading={isSubmitting}
+      />
     </div>
   );
 }

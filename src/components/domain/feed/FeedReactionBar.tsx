@@ -35,6 +35,7 @@ export function FeedReactionBar({
   const [mine, setMine] = useState<string[]>(() => myReactions ?? []);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error' | 'warning'>('success');
   const [isToastOpen, setIsToastOpen] = useState(false);
 
   // 같은 이모지에 대한 추가/삭제 요청이 겹치지 않도록 emoji 단위로 in-flight를 잠근다.
@@ -43,8 +44,9 @@ export function FeedReactionBar({
   // 발신 순서대로 반영되어, 늦게 도착한 오래된 응답이 최신 상태를 덮어쓰는 race를 막는다.
   const requestQueueRef = useRef<Promise<void>>(Promise.resolve());
 
-  const showToast = useCallback((message: string) => {
+  const showToast = useCallback((message: string, type: 'success' | 'error' | 'warning' = 'success') => {
     setToastMessage(message);
+    setToastType(type);
     setIsToastOpen(true);
   }, []);
 
@@ -96,11 +98,11 @@ export function FeedReactionBar({
           // 띄운다. 제거 즉시 이 컴포넌트가 언마운트되어 로컬 토스트는 보이지 않기 때문.
           onMissingLog?.();
         } else if (code === ERROR_CODE.REACTION_NOT_ALLOWED) {
-          showToast('이 인증에는 리액션을 남길 수 없어요.');
+          showToast('이 인증에는 리액션을 남길 수 없어요.', 'error');
         } else if (code === ERROR_CODE.INVALID_REACTION_TYPE) {
-          showToast('사용할 수 없는 이모지예요.');
+          showToast('사용할 수 없는 이모지예요.', 'error');
         } else {
-          showToast('리액션 처리에 실패했어요. 잠시 후 다시 시도해주세요.');
+          showToast('리액션 처리에 실패했어요. 잠시 후 다시 시도해주세요.', 'error');
         }
       } finally {
         inFlightRef.current.delete(emoji);
@@ -169,6 +171,7 @@ export function FeedReactionBar({
         message={toastMessage}
         isOpen={isToastOpen}
         onClose={() => setIsToastOpen(false)}
+        type={toastType}
       />
     </div>
   );
