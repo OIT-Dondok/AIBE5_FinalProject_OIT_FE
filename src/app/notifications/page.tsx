@@ -158,7 +158,7 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     id: 3,
     event_type: "CREW_APPLICATION_APPROVED",
     title: "가입 승인 완료",
-    body: "독서 1챕터 가입이 승인되었습니다! 보증금을 예치하고 미션을 시작하세요 →",
+    body: "독서 1챕터 가입이 승인되었습니다! 지금 바로 미션을 시작하세요 →",
     created_at: new Date(Date.now() - 25 * 3600000).toISOString(),
     is_read: true,
   },
