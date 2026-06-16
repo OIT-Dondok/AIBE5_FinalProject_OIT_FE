@@ -28,7 +28,7 @@ export function HostConfirmDialog({
   onConfirm,
   isSubmitting = false,
 }: HostConfirmDialogProps) {
-  
+
   const getIconType = (): "success" | "error" | "warning" | "none" => {
     switch (tone) {
       case "approve":

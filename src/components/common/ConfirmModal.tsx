@@ -30,7 +30,7 @@ export function ConfirmModal({
   confirmVariant = "primary-green",
   iconType = "none",
 }: ConfirmModalProps) {
-  
+
   const getIcon = () => {
     switch (iconType) {
       case "success":
