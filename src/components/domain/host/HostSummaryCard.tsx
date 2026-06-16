@@ -5,14 +5,43 @@ import { useRouter } from "next/navigation";
 import { ChevronDown, ShieldCheck } from "lucide-react";
 
 import type { HostCrewDetailMock } from "@/mocks/data/host";
-import { getCrewApplications, getMyCrew } from "@/services/crew";
-import type { MyCrew } from "@/types/domain";
+import { getCrew, getCrewApplications, getMyCrew } from "@/services/crew";
+import type { DailySettlementType, MyCrew } from "@/types/domain";
+
+function getNextSettlementMs(type: DailySettlementType): number {
+  const now = new Date();
+  const kstOffset = 9 * 60 * 60 * 1000;
+  const nowKST = new Date(now.getTime() + kstOffset);
+
+  const todayKSTMidnight = new Date(nowKST);
+  todayKSTMidnight.setUTCHours(0, 0, 0, 0);
+
+  if (type === "A" || type === "C") {
+    const target = new Date(todayKSTMidnight.getTime() + 12 * 60 * 60 * 1000 - kstOffset);
+    return target > now ? target.getTime() - now.getTime() : target.getTime() + 24 * 60 * 60 * 1000 - now.getTime();
+  }
+
+  // B: next midnight KST
+  const tomorrowMidnight = new Date(todayKSTMidnight.getTime() + 24 * 60 * 60 * 1000 - kstOffset);
+  return tomorrowMidnight.getTime() - now.getTime();
+}
+
+function formatCountdown(ms: number): string {
+  if (ms <= 0) return "0시간 0분";
+  const totalMinutes = Math.floor(ms / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${hours}시간 ${minutes}분`;
+}
 
 export function HostSummaryCard({ crewDetail }: { crewDetail: HostCrewDetailMock }) {
   const router = useRouter();
   const [isCrewListOpen, setIsCrewListOpen] = useState(false);
   const [hostCrews, setHostCrews] = useState<MyCrew[]>([]);
   const [pendingCounts, setPendingCounts] = useState<Record<number, number>>({});
+  const [settlementType, setSettlementType] = useState<DailySettlementType | null>(null);
+  const [crewStatus, setCrewStatus] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState<string>("");
 
   useEffect(() => {
     getMyCrew("HOST")
@@ -33,6 +62,24 @@ export function HostSummaryCard({ crewDetail }: { crewDetail: HostCrewDetailMock
       .catch(() => setHostCrews([]));
   }, []);
 
+  useEffect(() => {
+    getCrew(crewDetail.crew_id)
+      .then(({ data }) => {
+        setSettlementType(data.daily_settlement_type);
+        setCrewStatus(data.status);
+      })
+      .catch(() => {});
+  }, [crewDetail.crew_id]);
+
+  useEffect(() => {
+    if (!settlementType || crewStatus === "RECRUITING") return;
+
+    const update = () => setCountdown(formatCountdown(getNextSettlementMs(settlementType)));
+    update();
+    const id = window.setInterval(update, 60000);
+    return () => window.clearInterval(id);
+  }, [settlementType, crewStatus]);
+
   const handleCrewSelect = (crewId: number) => {
     setIsCrewListOpen(false);
     if (crewId === crewDetail.crew_id) return;
@@ -41,6 +88,7 @@ export function HostSummaryCard({ crewDetail }: { crewDetail: HostCrewDetailMock
 
   const selectedCrew = hostCrews.find((c) => c.crew_id === crewDetail.crew_id);
   const displayTitle = selectedCrew?.title ?? crewDetail.title;
+  const isRecruiting = crewStatus === "RECRUITING";
 
   return (
     <section className="relative">
@@ -57,7 +105,11 @@ export function HostSummaryCard({ crewDetail }: { crewDetail: HostCrewDetailMock
           <div className="min-w-0 flex-1">
             <p className="truncate text-[13px] font-extrabold leading-tight text-white">방장 · {displayTitle}</p>
             <p className="mt-1 text-xs font-semibold leading-tight text-white/90">
-              다음 정산까지 <span className="font-extrabold text-white">3시간 14분</span>
+              {isRecruiting ? (
+                "다음 정산까지 -"
+              ) : countdown ? (
+                <>다음 정산까지 <span className="font-extrabold text-white">{countdown}</span></>
+              ) : null}
             </p>
           </div>
           <span className="shrink-0 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-medium leading-tight text-white ring-1 ring-white/25">
