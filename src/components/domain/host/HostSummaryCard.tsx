@@ -39,13 +39,19 @@ export function HostSummaryCard({ crewDetail }: { crewDetail: HostCrewDetailMock
   const [isCrewListOpen, setIsCrewListOpen] = useState(false);
   const [hostCrews, setHostCrews] = useState<MyCrew[]>([]);
   const [pendingCounts, setPendingCounts] = useState<Record<number, number>>({});
+  const [isLoading, setIsLoading] = useState(true);
   const [settlementType, setSettlementType] = useState<DailySettlementType | null>(null);
   const [crewStatus, setCrewStatus] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<string>("");
 
   useEffect(() => {
-    getMyCrew("HOST")
+    const controller = new AbortController();
+    const { signal } = controller;
+
+    setIsLoading(true);
+    getMyCrew("HOST", undefined, signal)
       .then(({ data }) => {
+        if (signal.aborted) return;
         setHostCrews(data.items);
         Promise.all(
           data.items.map((crew) =>
@@ -54,12 +60,16 @@ export function HostSummaryCard({ crewDetail }: { crewDetail: HostCrewDetailMock
               .catch(() => ({ crew_id: crew.crew_id, count: 0 })),
           ),
         ).then((counts) => {
+          if (signal.aborted) return;
           setPendingCounts(
             Object.fromEntries(counts.map(({ crew_id, count }) => [crew_id, count])),
           );
         });
       })
-      .catch(() => setHostCrews([]));
+      .catch(() => { if (!signal.aborted) setHostCrews([]); })
+      .finally(() => { if (!signal.aborted) setIsLoading(false); });
+
+    return () => controller.abort();
   }, []);
 
   useEffect(() => {
@@ -129,7 +139,9 @@ export function HostSummaryCard({ crewDetail }: { crewDetail: HostCrewDetailMock
             <p className="text-[11px] font-semibold text-text-secondary">운영 중인 크루</p>
           </div>
           <div className="hover-scrollbar max-h-64 overflow-y-auto">
-            {hostCrews.length === 0 ? (
+            {isLoading ? (
+              <p className="px-4 py-4 text-[13px] font-medium text-text-secondary">불러오는 중...</p>
+            ) : hostCrews.length === 0 ? (
               <p className="px-4 py-4 text-[13px] font-medium text-text-secondary">운영 중인 크루가 없어요</p>
             ) : (
               hostCrews.map((crew) => {

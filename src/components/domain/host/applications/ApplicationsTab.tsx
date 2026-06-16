@@ -128,9 +128,14 @@ export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) 
   const [toastDecision, setToastDecision] = useState<{ type: ApplicationDecision; seq: number } | null>(null);
   const [processingId, setProcessingId] = useState<number | null>(null);
   const confirmDialogRef = useRef<HTMLDivElement>(null);
+  const onPendingCountChangeRef = useRef(onPendingCountChange);
   const params = useParams<{ crewId: string }>();
   const crewId = parseRouteNumber(params.crewId);
   const myUuid = useAuthStore((s) => s.user?.member_uuid);
+
+  useEffect(() => {
+    onPendingCountChangeRef.current = onPendingCountChange;
+  }, [onPendingCountChange]);
 
   const loadApplications = useCallback(async () => {
     if (crewId === null) return;
@@ -146,13 +151,13 @@ export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) 
         ...rejectedRes.data.items,
       ].filter((item) => item.member_uuid !== myUuid);
       setApplications(all);
-      onPendingCountChange?.(
+      onPendingCountChangeRef.current?.(
         pendingRes.data.items.filter((item) => item.member_uuid !== myUuid).length,
       );
     } catch {
       setApplications([]);
     }
-  }, [crewId, myUuid, onPendingCountChange]);
+  }, [crewId, myUuid]);
 
   useEffect(() => {
     loadApplications();
