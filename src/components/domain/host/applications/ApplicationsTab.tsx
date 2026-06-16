@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { Check, UserCheck, X } from "lucide-react";
 
 import { EmptyState } from "@/components/common/EmptyState";
@@ -73,7 +74,11 @@ function ApplicationCard({
       }`}
     >
       <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
+        <Link
+          href={`/members/${item.member_uuid}`}
+          className="flex min-w-0 items-center gap-3 hover:opacity-80 active:opacity-60 transition-opacity"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-blue/10 text-sm font-extrabold text-primary-blue">
             {item.nickname.slice(0, 1)}
           </div>
@@ -83,7 +88,7 @@ function ApplicationCard({
               신청 {formatDate(item.applied_at)} · {formatTime(item.applied_at)}
             </p>
           </div>
-        </div>
+        </Link>
         {visibleStatus !== "PENDING" && (
           <span
             className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium ${

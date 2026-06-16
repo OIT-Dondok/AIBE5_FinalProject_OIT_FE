@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Check, ChevronDown, ChevronRight, Maximize2, X } from "lucide-react";
 
 import { BottomSheet } from "@/components/common/BottomSheet";
@@ -113,7 +114,11 @@ export function VerificationCard({
       >
         <button type="button" onClick={onToggle} className="w-full px-4 py-3.5 text-left">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
+            <Link
+              href={`/members/${item.member_uuid}`}
+              className="flex min-w-0 items-center gap-3 hover:opacity-80 active:opacity-60 transition-opacity"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-blue/10 text-sm font-extrabold text-primary-blue">
                 {item.nickname.slice(0, 1)}
               </div>
@@ -123,7 +128,7 @@ export function VerificationCard({
                   {formatDate(item.submitted_at)} · {formatTime(item.submitted_at)}
                 </p>
               </div>
-          </div>
+            </Link>
 
           <div className="flex shrink-0 items-center gap-2">
               <span
