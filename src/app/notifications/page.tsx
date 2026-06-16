@@ -89,6 +89,19 @@ function getDateLabel(isoString: string): string {
   return `${target.getFullYear()}년 ${target.getMonth() + 1}월 ${target.getDate()}일`;
 }
 
+// ── 조사 자동 선택 ────────────────────────────────────────────────────────────
+function josa(word: string, form: "이/가" | "은/는" | "을/를" | "으로/로"): string {
+  const code = word.charCodeAt(word.length - 1);
+  const isKorean = code >= 0xac00 && code <= 0xd7a3;
+  const hasBatchim = isKorean && (code - 0xac00) % 28 !== 0;
+  const [withBatchim, withoutBatchim] = form.split("/");
+  if (form === "으로/로") {
+    const isRieul = isKorean && (code - 0xac00) % 28 === 8;
+    return word + (hasBatchim && !isRieul ? withBatchim : withoutBatchim);
+  }
+  return word + (hasBatchim ? withBatchim : withoutBatchim);
+}
+
 // ── 목데이터 ────────────────────────────────────────────────────────────────
 const MOCK_NOTIFICATIONS: NotificationItem[] = [
   // 오늘
@@ -178,7 +191,7 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     id: 7,
     event_type: "CREW_DISSOLVED",
     title: "크루가 해체됐어요",
-    body: "독서 1챕터이 해체되었습니다. 예치하신 보증금 50,000도딘이 환급되었습니다.",
+    body: `${josa("독서 1챕터", "이/가")} 해체되었습니다. 예치하신 보증금 50,000도딘이 환급되었습니다.`,
     created_at: new Date(Date.now() - 52 * 3600000).toISOString(),
     is_read: true,
   },
