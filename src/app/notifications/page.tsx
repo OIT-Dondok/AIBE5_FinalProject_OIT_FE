@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Heart,
   Settings,
@@ -11,7 +12,6 @@ import {
 } from "lucide-react";
 
 import { Header } from "@/components/common/Header";
-import { NotificationSettingsModal } from "@/components/domain/notification/NotificationSettingsModal";
 import type { NotificationEventType } from "@/types/domain";
 
 interface NotificationItem {
@@ -198,7 +198,6 @@ function NotificationCard({
 // ── 페이지 ────────────────────────────────────────────────────────────────────
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<NotificationItem[]>(MOCK_NOTIFICATIONS);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
@@ -217,14 +216,13 @@ export default function NotificationsPage() {
           title="알림"
           showBackButton
           rightElement={
-            <button
-              type="button"
+            <Link
+              href="/notifications/settings"
               aria-label="알림 설정"
-              onClick={() => setIsSettingsOpen(true)}
               className="p-1 -mr-1 hover:opacity-75 active:scale-95 transition-all"
             >
               <Settings size={22} className="text-text-primary" />
-            </button>
+            </Link>
           }
         />
 
@@ -265,7 +263,6 @@ export default function NotificationsPage() {
         </div>
       </div>
 
-      <NotificationSettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </main>
   );
 }
