@@ -23,6 +23,7 @@ export type ProfileViewModel = {
   hostedCrewCount: number;
   unreadNotificationCount: number;
   hostOperationPendingCount: number;
+  hostCrewId: number | null;
   stats: ProfileStat[];
 };
 
@@ -54,6 +55,7 @@ export function buildProfileViewModel(
   profile: MemberProfileResponse,
   activitySummary: MeActivitySummaryResponse,
   hostOperationPendingCount = 0,
+  hostCrewId: number | null = null,
 ): ProfileViewModel {
   const crew = activitySummary.activity_info.crew;
   const stats = activitySummary.activity_stats;
@@ -67,6 +69,7 @@ export function buildProfileViewModel(
     hostedCrewCount: profile.hosted_crew_count,
     unreadNotificationCount: activitySummary.activity_info.unread_notification_count,
     hostOperationPendingCount,
+    hostCrewId,
     stats: [
       {
         label: "참여 크루 수",
