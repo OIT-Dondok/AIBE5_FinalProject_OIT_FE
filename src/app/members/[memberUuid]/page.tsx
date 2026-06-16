@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import {
   Calendar,
   Crown,
-  ShieldCheck,
   TrendingUp,
   UserRound,
   Users,
@@ -31,15 +30,13 @@ function formatPercent(value: string | null): string {
   return `${(n * 100).toFixed(1)}%`;
 }
 
-function HostGrandBadge({ count }: { count: number }) {
+function HostGrandBadge() {
   return (
     <div className="relative inline-flex">
       <div className="absolute inset-0 rounded-full bg-gradient-to-r from-yellow-300/40 to-amber-400/40 blur-md scale-110" />
       <div className="relative inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 px-3.5 py-1.5 shadow-md shadow-amber-300/30">
         <Crown size={12} fill="white" className="text-white" />
-        <span className="text-xs font-extrabold text-white tracking-wide">
-          방장 {count}회
-        </span>
+        <span className="text-xs font-extrabold text-white tracking-wide">방장</span>
       </div>
     </div>
   );
@@ -233,60 +230,79 @@ export default function MemberProfilePage() {
           </div>
         ) : profile ? (
           <div className="px-5 pt-5 flex flex-col gap-5">
-            <div className="bg-card rounded-card px-5 py-6 shadow-card border border-text-secondary/10">
-              <div className="flex items-center gap-4">
-                <div className="relative shrink-0">
-                  <div
-                    className={`h-20 w-20 rounded-full flex items-center justify-center overflow-hidden text-2xl font-black text-primary-green bg-success-green ${
-                      profile.is_host_ever
-                        ? "ring-2 ring-yellow-400 ring-offset-2 ring-offset-card shadow-[0_0_16px_4px_rgba(251,191,36,0.30)]"
-                        : "border border-primary-green/20 shadow-inner"
-                    }`}
-                  >
-                    {profile.profile_image_url ? (
-                      <img
-                        src={profile.profile_image_url}
-                        alt={`${profile.nickname} 프로필 이미지`}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      (Array.from(profile.nickname)[0] ?? "?")
+            <div className={`bg-card rounded-card shadow-card overflow-hidden border ${profile.is_host_ever ? "border-amber-200/60" : "border-text-secondary/10"}`}>
+              {profile.is_host_ever && (
+                <div className="h-1 bg-gradient-to-r from-yellow-400 to-amber-500" />
+              )}
+              <div className="px-5 py-6">
+                <div className="flex items-center gap-4">
+                  <div className="relative shrink-0">
+                    <div
+                      className={`h-20 w-20 rounded-full flex items-center justify-center overflow-hidden text-2xl font-black text-primary-green bg-success-green ${
+                        profile.is_host_ever
+                          ? "ring-2 ring-amber-400 ring-offset-2 ring-offset-card shadow-[0_0_16px_4px_rgba(251,191,36,0.30)]"
+                          : "border border-primary-green/20 shadow-inner"
+                      }`}
+                    >
+                      {profile.profile_image_url ? (
+                        <img
+                          src={profile.profile_image_url}
+                          alt={`${profile.nickname} 프로필 이미지`}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        (Array.from(profile.nickname)[0] ?? "?")
+                      )}
+                    </div>
+                    {profile.is_host_ever && (
+                      <div className="absolute -bottom-1 -right-1">
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center shadow-md ring-2 ring-card">
+                          <Crown size={13} fill="white" className="text-white" />
+                        </div>
+                      </div>
                     )}
                   </div>
-                  {profile.is_host_ever && (
-                    <div className="absolute -bottom-1 -right-1">
-                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center shadow-md ring-2 ring-card">
-                        <Crown size={13} fill="white" className="text-white" />
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-2xl font-black tracking-tight text-text-primary">
+                        {profile.nickname}
+                      </h1>
+                      {profile.is_host_ever && (
+                        <Crown size={16} fill="currentColor" className="text-amber-500 shrink-0" />
+                      )}
+                    </div>
+                    {profile.is_host_ever && (
+                      <div className="mt-2">
+                        <HostGrandBadge />
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
 
-                <div className="min-w-0 flex-1">
-                  <h1 className="text-2xl font-black tracking-tight text-text-primary">
-                    {profile.nickname}
-                  </h1>
-                  {profile.is_host_ever && (
-                    <div className="mt-2">
-                      <HostGrandBadge count={profile.hosted_crew_count} />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {profile.status_message && profile.status_message.trim() && (
                 <div className="mt-5 rounded-2xl bg-background/60 border border-text-secondary/10 px-4 py-3">
                   <p className="text-sm leading-relaxed text-text-secondary whitespace-pre-wrap break-words">
-                    {profile.status_message}
+                    {profile.status_message?.trim()
+                      ? profile.status_message
+                      : "자기소개를 아직 작성하지 않았어요."}
                   </p>
                 </div>
-              )}
 
-              <div className="mt-4 flex items-center gap-1.5 text-text-secondary">
-                <Calendar size={13} className="shrink-0" />
-                <span className="text-xs font-medium">
-                  {formatJoinedAt(profile.joined_at)} 가입
-                </span>
+                {profile.is_host_ever && (
+                  <div className="mt-3 flex items-center gap-1.5">
+                    <Crown size={12} className="text-amber-600 shrink-0" />
+                    <span className="text-[11px] font-medium text-amber-600">
+                      크루를 직접 운영한 경험이 있어요
+                    </span>
+                  </div>
+                )}
+
+                <div className="mt-3 flex items-center gap-1.5 text-text-secondary">
+                  <Calendar size={13} className="shrink-0" />
+                  <span className="text-xs font-medium">
+                    {formatJoinedAt(profile.joined_at)} 가입
+                  </span>
+                </div>
               </div>
             </div>
 

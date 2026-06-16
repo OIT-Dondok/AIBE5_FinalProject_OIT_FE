@@ -108,10 +108,14 @@ export function ProfileCard({
 
   return (
     <form
-      className={`max-w-full bg-card rounded-card px-5 py-6 shadow-card border ${isInlineEditing ? "border-primary-green/30" : "border-text-secondary/10"
+      className={`max-w-full bg-card rounded-card shadow-card border overflow-hidden ${isInlineEditing ? "border-primary-green/30" : profile.isHostEver ? "border-amber-200/60" : "border-text-secondary/10"
         }`}
       onSubmit={onInlineSave}
     >
+      {profile.isHostEver && (
+        <div className="h-1 bg-gradient-to-r from-yellow-400 to-amber-500" />
+      )}
+      <div className="px-5 py-6">
       <div className="flex items-center gap-4">
         <div className="relative shrink-0">
           <input
@@ -182,10 +186,15 @@ export function ProfileCard({
               disabled={isSaving}
             />
           ) : (
-            <h1 className="text-2xl font-black tracking-tight text-text-primary">{profile.nickname}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-black tracking-tight text-text-primary">{profile.nickname}</h1>
+              {profile.isHostEver && (
+                <Crown size={16} fill="currentColor" className="text-amber-500 shrink-0" />
+              )}
+            </div>
           )}
           {profile.isHostEver && (
-            <HostBadge count={profile.hostedCrewCount} className="mt-2 shrink-0" />
+            <HostBadge label="방장" className="mt-2 shrink-0" />
           )}
         </div>
       </div>
@@ -226,6 +235,15 @@ export function ProfileCard({
         )}
       </div>
 
+      {!isInlineEditing && profile.isHostEver && (
+        <div className="mt-3 flex items-center gap-1.5">
+          <Crown size={12} className="text-amber-600 shrink-0" />
+          <span className="text-[11px] font-medium text-amber-600">
+            크루를 직접 운영한 경험이 있어요
+          </span>
+        </div>
+      )}
+
       <div className={isInlineEditing ? "mt-5 grid grid-cols-2 gap-2" : "mt-5"}>
         {isInlineEditing ? (
           <>
@@ -250,6 +268,7 @@ export function ProfileCard({
             </span>
           </Button>
         )}
+      </div>
       </div>
     </form>
   );
