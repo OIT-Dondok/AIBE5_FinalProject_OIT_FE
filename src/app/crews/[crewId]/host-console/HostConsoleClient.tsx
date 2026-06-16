@@ -6,10 +6,7 @@ import { Bell, ShieldCheck } from "lucide-react";
 
 import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
-import {
-  ApplicationsTab,
-  type ApplicationDecision,
-} from "@/components/domain/host/applications/ApplicationsTab";
+import { ApplicationsTab } from "@/components/domain/host/applications/ApplicationsTab";
 import { HostConsoleTabs } from "@/components/domain/host/HostConsoleTabs";
 import type { HostTab } from "@/components/domain/host/hostConsoleTypes";
 import { HostSummaryCard } from "@/components/domain/host/HostSummaryCard";
@@ -17,10 +14,7 @@ import { NoticesTab } from "@/components/domain/host/notices/NoticesTab";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { SectionCard } from "@/components/domain/host/SectionCard";
 import { VerificationTab } from "@/components/domain/host/verification/VerificationTab";
-import {
-  getCrewApplications,
-  getHostCrewDetail,
-} from "@/mocks/data/host";
+import { getHostCrewDetail } from "@/mocks/data/host";
 import { getCrewNotices } from "@/services/crew";
 
 export default function HostConsoleClient() {
@@ -41,7 +35,7 @@ export default function HostConsoleClient() {
   }, [tabParam]);
 
   const [pendingReviewCount, setPendingReviewCount] = useState(0);
-  const [applicationDecisions, setApplicationDecisions] = useState<Record<number, ApplicationDecision>>({});
+  const [pendingApplicationCount, setPendingApplicationCount] = useState(0);
   const [noticeCount, setNoticeCount] = useState(0);
 
   useEffect(() => {
@@ -71,14 +65,6 @@ export default function HostConsoleClient() {
   }
 
   const crewDetail = getHostCrewDetail(crewId);
-  const applications = getCrewApplications(crewId);
-
-  const pendingApplicationCount = applications.filter(
-    (item) =>
-      item.status !== "CANCELLED" &&
-      item.status !== "EXPIRED" &&
-      !applicationDecisions[item.crew_participant_id],
-  ).length;
 
   if (!crewDetail.isHost) {
     return (
@@ -118,10 +104,7 @@ export default function HostConsoleClient() {
             <VerificationTab onPendingCountChange={setPendingReviewCount} />
           )}
           {activeTab === "applications" && (
-            <ApplicationsTab
-              applicationDecisions={applicationDecisions}
-              onApplicationDecisionsChange={setApplicationDecisions}
-            />
+            <ApplicationsTab onPendingCountChange={setPendingApplicationCount} />
           )}
           {activeTab === "notices" && <NoticesTab />}
         </div>
