@@ -287,6 +287,8 @@ export interface MeActivitySummaryResponse {
 export interface HostOperationSummaryResponse {
   member_uuid: string;
   total_pending_count: number;
+  // 운영 콘솔 진입 대상 방장 크루 ID. 대기 건수 합이 가장 많은(동률 시 최근 생성) 방장 크루. CANCELLED 제외·대상 없으면 null.
+  host_crew_id: number | null;
   generated_at: string;
 }
 
