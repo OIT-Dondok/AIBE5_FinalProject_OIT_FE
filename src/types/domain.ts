@@ -290,6 +290,32 @@ export interface HostOperationSummaryResponse {
   generated_at: string;
 }
 
+// GET /api/members/{memberUuid}/profile → 200
+export interface MemberPublicProfile {
+  member_uuid: string;
+  nickname: string;
+  profile_image_url: string | null;
+  status_message: string | null;
+  joined_at: string;
+  is_host_ever: boolean;
+  hosted_crew_count: number;
+  activity_info: {
+    crew: {
+      total_crew_count: number;
+      active_crew_count: number;
+      completed_crew_count: number;
+    };
+    total_verification_count: number;
+  };
+  activity_stats: {
+    total_recognized_success_count: number;
+    highest_share_ratio: string | null;
+    highest_share_ratio_crew_id: number | null;
+    highest_share_ratio_crew_title: string | null;
+    average_success_rate: string | null;
+  };
+}
+
 
 // ════════════════════════════════════════════════════════════
 // § 5.2 크루 / 참여
