@@ -16,7 +16,6 @@ import {
   type ProfileFormState,
   type ProfileViewModel,
 } from "@/components/domain/profile/profileViewModel";
-import { HostBadge } from "@/components/common/HostBadge";
 
 interface ProfileCardProps {
   profile: ProfileViewModel;
@@ -108,10 +107,14 @@ export function ProfileCard({
 
   return (
     <form
-      className={`max-w-full bg-card rounded-card px-5 py-6 shadow-card border ${isInlineEditing ? "border-primary-green/30" : "border-text-secondary/10"
+      className={`max-w-full bg-card rounded-card shadow-card border overflow-hidden ${isInlineEditing ? "border-primary-green/30" : profile.isHostEver ? "border-amber-200/60" : "border-text-secondary/10"
         }`}
       onSubmit={onInlineSave}
     >
+      {profile.isHostEver && (
+        <div className="h-1 bg-gradient-to-r from-yellow-400 to-amber-500" />
+      )}
+      <div className="px-5 py-6">
       <div className="flex items-center gap-4">
         <div className="relative shrink-0">
           <input
@@ -127,7 +130,11 @@ export function ProfileCard({
             aria-label="프로필 이미지 파일 선택"
           />
           <div
-            className={`relative h-20 w-20 rounded-full bg-success-green border border-primary-green/20 flex items-center justify-center bg-cover bg-center text-2xl font-black text-primary-green shadow-inner ${avatarImageUrl ? "text-transparent" : ""
+            className={`relative h-20 w-20 rounded-full bg-success-green flex items-center justify-center bg-cover bg-center text-2xl font-black text-primary-green ${
+              profile.isHostEver
+                ? "ring-2 ring-amber-400 ring-offset-2 ring-offset-card shadow-[0_0_16px_4px_rgba(251,191,36,0.30)]"
+                : "border border-primary-green/20 shadow-inner"
+            } ${avatarImageUrl ? "text-transparent" : ""
               } ${isInlineEditing && !isSaving ? "cursor-pointer transition-transform active:scale-95" : ""} ${isAvatarPressed ? "scale-95" : ""}`}
             onClick={openAvatarImagePicker}
             onPointerDown={handleAvatarPress}
@@ -155,13 +162,19 @@ export function ProfileCard({
               avatarInitials
             )}
 
-            {isInlineEditing && (
+            {isInlineEditing ? (
               <div className="absolute -right-1 -bottom-1 rounded-full border-2 border-card bg-card p-[2px] shadow-md">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-green text-white">
                   <Camera size={13} />
                 </span>
               </div>
-            )}
+            ) : profile.isHostEver ? (
+              <div className="absolute -bottom-1 -right-1">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center shadow-md ring-2 ring-card">
+                  <Crown size={13} fill="white" className="text-white" />
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -182,10 +195,21 @@ export function ProfileCard({
               disabled={isSaving}
             />
           ) : (
-            <h1 className="text-2xl font-black tracking-tight text-text-primary">{profile.nickname}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-black tracking-tight text-text-primary">{profile.nickname}</h1>
+              {profile.isHostEver && (
+                <Crown size={16} fill="currentColor" className="text-amber-500 shrink-0" />
+              )}
+            </div>
           )}
           {profile.isHostEver && (
-            <HostBadge count={profile.hostedCrewCount} className="mt-2 shrink-0" />
+            <div className="relative inline-flex mt-2">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-yellow-300/40 to-amber-400/40 blur-md scale-110" />
+              <div className="relative inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 px-3.5 py-1.5 shadow-md shadow-amber-300/30">
+                <Crown size={12} fill="white" className="text-white" />
+                <span className="text-xs font-extrabold text-white tracking-wide">방장</span>
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -226,6 +250,15 @@ export function ProfileCard({
         )}
       </div>
 
+      {!isInlineEditing && profile.isHostEver && (
+        <div className="mt-3 flex items-center gap-1.5">
+          <Crown size={12} className="text-amber-600 shrink-0" />
+          <span className="text-[11px] font-medium text-amber-600">
+            크루를 직접 운영한 경험이 있어요
+          </span>
+        </div>
+      )}
+
       <div className={isInlineEditing ? "mt-5 grid grid-cols-2 gap-2" : "mt-5"}>
         {isInlineEditing ? (
           <>
@@ -250,6 +283,7 @@ export function ProfileCard({
             </span>
           </Button>
         )}
+      </div>
       </div>
     </form>
   );

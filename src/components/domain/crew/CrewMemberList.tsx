@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { isAxiosError } from 'axios';
 import { UserRound } from 'lucide-react';
+import Link from 'next/link';
 import { getCrewMembers } from '@/services/crew';
 import type { CrewMember } from '@/types/domain';
 import type { ErrorResponse } from '@/types/common';
@@ -134,30 +135,35 @@ export default function CrewMemberList({ crewId }: CrewMemberListProps) {
       <p className="text-xs text-text-secondary mb-3">{members.length}명</p>
       <ul className="flex flex-col divide-y divide-text-secondary/10">
         {members.map((member) => (
-          <li key={member.crew_participant_id} className="flex items-center gap-3 py-3">
-            <MemberAvatar member={member} />
+          <li key={member.crew_participant_id}>
+            <Link
+              href={`/members/${member.member_uuid}`}
+              className="flex items-center gap-3 py-3 hover:bg-text-secondary/5 active:bg-text-secondary/10 transition-colors rounded-xl -mx-1 px-1"
+            >
+              <MemberAvatar member={member} />
 
-            <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span
-                  className={`text-sm truncate ${
-                    member.role === 'HOST'
-                      ? 'font-bold text-text-primary'
-                      : 'font-semibold text-text-primary'
-                  }`}
-                >
-                  {member.nickname}
-                </span>
-                {member.role === 'HOST' && (
-                  <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-yellow-100 text-yellow-700 border border-yellow-300 leading-none">
-                    방장
+              <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={`text-sm truncate ${
+                      member.role === 'HOST'
+                        ? 'font-bold text-text-primary'
+                        : 'font-semibold text-text-primary'
+                    }`}
+                  >
+                    {member.nickname}
                   </span>
-                )}
+                  {member.role === 'HOST' && (
+                    <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-yellow-100 text-yellow-700 border border-yellow-300 leading-none">
+                      방장
+                    </span>
+                  )}
+                </div>
+                <span className="text-xs text-text-secondary">
+                  {formatJoinedAt(member.joined_at)}
+                </span>
               </div>
-              <span className="text-xs text-text-secondary">
-                {formatJoinedAt(member.joined_at)}
-              </span>
-            </div>
+            </Link>
           </li>
         ))}
       </ul>

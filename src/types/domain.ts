@@ -287,7 +287,35 @@ export interface MeActivitySummaryResponse {
 export interface HostOperationSummaryResponse {
   member_uuid: string;
   total_pending_count: number;
+  // 운영 콘솔 진입 대상 방장 크루 ID. 대기 건수 합이 가장 많은(동률 시 최근 생성) 방장 크루. CANCELLED 제외·대상 없으면 null.
+  host_crew_id: number | null;
   generated_at: string;
+}
+
+// GET /api/members/{memberUuid}/profile → 200
+export interface MemberPublicProfile {
+  member_uuid: string;
+  nickname: string;
+  profile_image_url: string | null;
+  status_message: string | null;
+  joined_at: string;
+  is_host_ever: boolean;
+  hosted_crew_count: number;
+  activity_info: {
+    crew: {
+      total_crew_count: number;
+      active_crew_count: number;
+      completed_crew_count: number;
+    };
+    total_verification_count: number;
+  };
+  activity_stats: {
+    total_recognized_success_count: number;
+    highest_share_ratio: string | null;
+    highest_share_ratio_crew_id: number | null;
+    highest_share_ratio_crew_title: string | null;
+    average_success_rate: string | null;
+  };
 }
 
 
@@ -698,6 +726,7 @@ export interface FeedItem {
   reaction_counts: ReactionCounts; // 모든 상태에 대해 채워짐
   my_reactions: string[]; // 내가 누른 emoji token 목록
   reject_reason_code?: string | null; // 거절 사유 코드 (FAILED 상태일 때)
+  reject_memo?: string | null; // 거절 상세 사유 (OTHER일 때)
   decision_type?: string | null; // 검수 결정 유형 (MANUAL_APPROVE 등)
 }
 

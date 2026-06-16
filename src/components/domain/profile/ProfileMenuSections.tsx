@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   BarChart3,
@@ -12,6 +13,7 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react";
+import { Toast } from "@/components/common/Toast";
 
 interface MenuItemData {
   icon: LucideIcon;
@@ -102,6 +104,8 @@ export function ProfileMenuSections({
   hostCrewId,
 }: ProfileMenuSectionsProps) {
   const router = useRouter();
+  const [toastMessage, setToastMessage] = useState("");
+  const [isToastOpen, setIsToastOpen] = useState(false);
 
   const sections: MenuSectionData[] = [
     {
@@ -171,7 +175,14 @@ export function ProfileMenuSections({
           title: "운영 콘솔",
           subtitle: "검증 · 공지 · 가입 관리",
           badge: hostOperationPendingCount,
-          onClick: () => router.push(hostCrewId ? `/crews/${hostCrewId}/host-console` : "/my"),
+          onClick: () => {
+            if (hostCrewId) {
+              router.push(`/crews/${hostCrewId}/host-console`);
+            } else {
+              setToastMessage("운영 중인 크루가 없습니다.");
+              setIsToastOpen(true);
+            }
+          },
         },
       ],
     });
@@ -182,6 +193,11 @@ export function ProfileMenuSections({
       {sections.map((section) => (
         <MenuSection key={section.sectionTitle} section={section} />
       ))}
+      <Toast
+        message={toastMessage}
+        isOpen={isToastOpen}
+        onClose={() => setIsToastOpen(false)}
+      />
     </>
   );
 }
