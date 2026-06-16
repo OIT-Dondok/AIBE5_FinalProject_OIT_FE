@@ -15,7 +15,7 @@ import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { SectionCard } from "@/components/domain/host/SectionCard";
 import { VerificationTab } from "@/components/domain/host/verification/VerificationTab";
 import { getHostCrewDetail } from "@/mocks/data/host";
-import { getCrewNotices } from "@/services/crew";
+import { getCrewApplications, getCrewNotices } from "@/services/crew";
 
 export default function HostConsoleClient() {
   const params = useParams<{ crewId: string }>();
@@ -37,12 +37,28 @@ export default function HostConsoleClient() {
   const [pendingReviewCount, setPendingReviewCount] = useState(0);
   const [pendingApplicationCount, setPendingApplicationCount] = useState(0);
   const [noticeCount, setNoticeCount] = useState(0);
+  const [tabRefreshKey, setTabRefreshKey] = useState(0);
+
+  const handleTabChange = (tab: HostTab) => {
+    setActiveTab(tab);
+    setTabRefreshKey((prev) => prev + 1);
+  };
 
   useEffect(() => {
     if (crewId === null) return;
     getCrewNotices(crewId)
       .then((res) => setNoticeCount(res.data.items.length))
       .catch(() => setNoticeCount(0));
+  }, [crewId]);
+
+  useEffect(() => {
+    if (crewId === null) return;
+    getCrewApplications(crewId)
+      .then((res) => {
+        const count = res.data.items.filter((item) => item.status === "PENDING").length;
+        setPendingApplicationCount(count);
+      })
+      .catch(() => setPendingApplicationCount(0));
   }, [crewId]);
 
   if (crewId === null) {
@@ -97,16 +113,16 @@ export default function HostConsoleClient() {
             pendingReviewCount={pendingReviewCount}
             pendingApplicationCount={pendingApplicationCount}
             noticeCount={noticeCount}
-            onTabChange={setActiveTab}
+            onTabChange={handleTabChange}
           />
 
           {activeTab === "verification" && (
-            <VerificationTab onPendingCountChange={setPendingReviewCount} />
+            <VerificationTab key={tabRefreshKey} onPendingCountChange={setPendingReviewCount} />
           )}
           {activeTab === "applications" && (
-            <ApplicationsTab onPendingCountChange={setPendingApplicationCount} />
+            <ApplicationsTab key={tabRefreshKey} onPendingCountChange={setPendingApplicationCount} />
           )}
-          {activeTab === "notices" && <NoticesTab />}
+          {activeTab === "notices" && <NoticesTab key={tabRefreshKey} />}
         </div>
       </div>
     </main>
