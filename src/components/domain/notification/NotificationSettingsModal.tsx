@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { X } from "lucide-react";
+import { ChevronRight, Moon, X } from "lucide-react";
+import { BottomSheet } from "@/components/common/BottomSheet";
 import { Modal } from "@/components/common/Modal";
 
 interface NotificationSettings {
@@ -72,6 +73,7 @@ export function NotificationSettingsPanel({
   showHeading = false,
 }: NotificationSettingsPanelProps) {
   const [settings, setSettings] = useState<NotificationSettings>(DEFAULT_SETTINGS);
+  const [isDndSheetOpen, setIsDndSheetOpen] = useState(false);
 
   const set = <K extends keyof NotificationSettings>(key: K, value: NotificationSettings[K]) =>
     setSettings((prev) => ({ ...prev, [key]: value }));
@@ -106,34 +108,88 @@ export function NotificationSettingsPanel({
         </div>
       </section>
 
-      <section className="mt-4 rounded-2xl bg-card px-4 py-3.5 shadow-card">
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-text-primary">방해금지 시간</p>
-            <p className="mt-0.5 text-[11px] font-medium text-text-secondary">
-              설정한 시간에는 알림을 받지 않아요.
-            </p>
+      <button
+        type="button"
+        onClick={() => setIsDndSheetOpen(true)}
+        className="mt-4 flex w-full items-center gap-3 rounded-2xl bg-card px-4 py-4 text-left shadow-card transition-[background-color,transform] duration-150 ease-out hover:bg-white active:scale-[0.985] active:bg-[#F7F7F3]"
+        aria-label="방해금지 시간 설정"
+      >
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EEF5EE] text-primary-green">
+          <Moon size={18} strokeWidth={2.2} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-bold text-text-primary">방해금지 시간</span>
+          <span className="mt-0.5 block text-xs font-semibold text-text-secondary">
+            {settings.dndStart} - {settings.dndEnd}
+          </span>
+        </span>
+        <span
+          className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-extrabold ${
+            settings.dndEnabled
+              ? "bg-[#E8F2EB] text-primary-green"
+              : "bg-text-secondary/10 text-text-secondary"
+          }`}
+        >
+          {settings.dndEnabled ? "활성" : "꺼짐"}
+        </span>
+        <ChevronRight size={18} className="shrink-0 text-text-secondary/70" />
+      </button>
+
+      <BottomSheet
+        isOpen={isDndSheetOpen}
+        onClose={() => setIsDndSheetOpen(false)}
+        title="방해금지 시간"
+        subtitle="설정한 시간에는 알림을 받지 않아요."
+        ariaLabel="방해금지 시간 설정"
+      >
+        <div className="px-5 pb-6 pt-2">
+          <div className="rounded-2xl bg-background/70 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-bold text-text-primary">방해금지 활성화</p>
+                <p className="mt-0.5 text-[11px] font-medium text-text-secondary">
+                  {settings.dndStart} - {settings.dndEnd}
+                </p>
+              </div>
+              <Toggle checked={settings.dndEnabled} onChange={(v) => set("dndEnabled", v)} />
+            </div>
+
+            <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-end gap-2">
+              <label className="min-w-0">
+                <span className="mb-1.5 block text-[11px] font-bold text-text-secondary">시작</span>
+                <input
+                  type="time"
+                  value={settings.dndStart}
+                  onChange={(e) => set("dndStart", e.target.value)}
+                  aria-label="방해금지 시작 시간"
+                  className="h-12 w-full min-w-0 rounded-xl border border-text-secondary/15 bg-card px-3 text-center text-sm font-extrabold text-text-primary shadow-sm focus:border-primary-green focus:outline-none focus:ring-2 focus:ring-primary-green/15 disabled:opacity-50"
+                  disabled={!settings.dndEnabled}
+                />
+              </label>
+              <span className="pb-3.5 text-sm font-bold text-text-secondary/70">~</span>
+              <label className="min-w-0">
+                <span className="mb-1.5 block text-[11px] font-bold text-text-secondary">종료</span>
+                <input
+                  type="time"
+                  value={settings.dndEnd}
+                  onChange={(e) => set("dndEnd", e.target.value)}
+                  aria-label="방해금지 종료 시간"
+                  className="h-12 w-full min-w-0 rounded-xl border border-text-secondary/15 bg-card px-3 text-center text-sm font-extrabold text-text-primary shadow-sm focus:border-primary-green focus:outline-none focus:ring-2 focus:ring-primary-green/15 disabled:opacity-50"
+                  disabled={!settings.dndEnabled}
+                />
+              </label>
+            </div>
           </div>
-          <Toggle checked={settings.dndEnabled} onChange={(v) => set("dndEnabled", v)} />
+
+          <button
+            type="button"
+            onClick={() => setIsDndSheetOpen(false)}
+            className="mt-4 h-12 w-full rounded-xl bg-primary-green text-sm font-extrabold text-white transition-colors hover:bg-[#3F7A55]"
+          >
+            적용
+          </button>
         </div>
-        {settings.dndEnabled && (
-          <div className="mt-3 flex items-center gap-2">
-            <input
-              type="time"
-              value={settings.dndStart}
-              onChange={(e) => set("dndStart", e.target.value)}
-              className="min-w-0 flex-1 rounded-lg border border-text-secondary/20 bg-card px-3 py-2 text-sm font-medium text-text-primary focus:border-primary-green focus:outline-none"
-            />
-            <span className="text-xs font-medium text-text-secondary">~</span>
-            <input
-              type="time"
-              value={settings.dndEnd}
-              onChange={(e) => set("dndEnd", e.target.value)}
-              className="min-w-0 flex-1 rounded-lg border border-text-secondary/20 bg-card px-3 py-2 text-sm font-medium text-text-primary focus:border-primary-green focus:outline-none"
-            />
-          </div>
-        )}
-      </section>
+      </BottomSheet>
 
       <div className={`mt-5 grid gap-3 ${onCancel ? "grid-cols-2" : "grid-cols-1"}`}>
         {onCancel && (
