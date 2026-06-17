@@ -12,7 +12,7 @@ const CATEGORY_BG: Record<CrewCategory, string> = {
   EXERCISE: 'bg-blue-50',
   STUDY: 'bg-violet-50',
   DIET: 'bg-green-50',
-  ETC: 'bg-slate-50',
+  OTHER: 'bg-slate-50',
 };
 
 interface StatusConfig {

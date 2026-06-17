@@ -6,7 +6,7 @@ export const CATEGORY_LABEL: Record<string, string> = {
   EXERCISE: '💪 운동',
   STUDY: '📝 공부',
   DIET: '🥗 식단',
-  ETC: '📌 기타',
+  OTHER: '📌 기타',
 } as const;
 
 export const CATEGORY_EMOJI: Record<string, string> = {
@@ -15,7 +15,7 @@ export const CATEGORY_EMOJI: Record<string, string> = {
   EXERCISE: '💪',
   STUDY: '📝',
   DIET: '🥗',
-  ETC: '📌',
+  OTHER: '📌',
 } as const;
 
 export const CATEGORY_BG: Record<string, string> = {
@@ -24,7 +24,7 @@ export const CATEGORY_BG: Record<string, string> = {
   EXERCISE: 'bg-blue-100',
   STUDY: 'bg-violet-100',
   DIET: 'bg-green-100',
-  ETC: 'bg-slate-100',
+  OTHER: 'bg-slate-100',
 } as const;
 
 export const CATEGORY_GRADIENT: Record<string, string> = {
@@ -33,7 +33,7 @@ export const CATEGORY_GRADIENT: Record<string, string> = {
   EXERCISE: 'from-blue-500 to-sky-400',
   STUDY: 'from-violet-500 to-purple-400',
   DIET: 'from-green-500 to-emerald-400',
-  ETC: 'from-slate-500 to-gray-400',
+  OTHER: 'from-slate-500 to-gray-400',
 } as const;
 
 export const SETTLEMENT_TYPE_LABEL: Record<DailySettlementType, string> = {
