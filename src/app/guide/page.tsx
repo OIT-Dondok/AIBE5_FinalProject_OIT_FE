@@ -12,6 +12,10 @@ import {
     Sun,
     Moon,
     Sunset,
+    ShieldCheck,
+    Hourglass,
+    Flag,
+    Lock,
 } from "lucide-react";
 import { Header } from "@/components/common/Header";
 import { FaqAccordion } from "@/components/domain/guide/FaqAccordion";
@@ -118,8 +122,8 @@ interface Step {
 
 const STEPS: readonly Step[] = [
     { number: 1, title: "크루 탐색", description: "마음에 드는 크루 발견" },
-    { number: 2, title: "보증금 예치", description: "방장 승인 대기" },
-    { number: 3, title: "매일 인증", description: "사진 + 캡션으로 인증" },
+    { number: 2, title: "보증금 예치", description: "방장 승인 후 시작일부터 인증" },
+    { number: 3, title: "미션 인증", description: "사진 + 캡션으로 인증" },
     { number: 4, title: "방장 검증", description: "승인 / 거절" },
     { number: 5, title: "정산", description: "지분율 기반 환급" },
 ] as const;
@@ -272,6 +276,89 @@ function Settlement() {
     );
 }
 
+// ─── 섹션 6: 운영 메커니즘 ────────────────────────────────────────────────────
+
+interface Mechanism {
+    icon: React.ReactNode;
+    title: string;
+    description: string;
+    bg: string;
+}
+
+const MECHANISMS: readonly Mechanism[] = [
+    {
+        icon: <ShieldCheck size={18} className="text-primary-green" />,
+        title: "방장 검증 타이밍",
+        description:
+            "방장은 매일 일일 정산 전까지 인증을 검증해요. 정산 전이라면 검증 결과를 다시 수정할 수 있어요.",
+        bg: "bg-emerald-50",
+    },
+    {
+        icon: <Hourglass size={18} className="text-primary-blue" />,
+        title: "검증 유예 기간",
+        description:
+            "정산 시각까지 검증되지 않은 인증은 정산 시각부터 3일(72시간)의 유예 기간이 적용돼요. 이 기간 안에 방장이 확정하지 않으면 임시 결과가 그대로 확정돼요.",
+        bg: "bg-blue-50",
+    },
+    {
+        icon: <Flag size={18} className="text-violet-500" />,
+        title: "최종 정산 시점",
+        description:
+            "크루의 마지막 일일 정산이 끝난 뒤 24시간이 지나면 최종 정산이 진행돼요.",
+        bg: "bg-violet-50",
+    },
+] as const;
+
+const PARTICIPATION_RULES: readonly string[] = [
+    "크루 활동 중에는 중도 탈퇴할 수 없어요.",
+    "활동 중 보증금은 중도 환급되지 않아요.",
+    "이미 시작한 크루에는 중도 참여하거나 재참여할 수 없어요.",
+] as const;
+
+function OperationMechanism() {
+    return (
+        <section className="bg-card rounded-card shadow-card border border-text-secondary/10 px-5 pt-5 pb-5">
+            <div className="flex items-center gap-2 mb-4">
+                <span className="text-xl">⚙️</span>
+                <h2 className="text-base font-bold text-text-primary">운영 메커니즘</h2>
+            </div>
+
+            <div className="flex flex-col gap-2.5">
+                {MECHANISMS.map((m) => (
+                    <div
+                        key={m.title}
+                        className="rounded-2xl border border-text-secondary/10 p-3.5 flex items-start gap-3"
+                    >
+                        <span className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${m.bg}`}>
+                            {m.icon}
+                        </span>
+                        <div className="flex-1">
+                            <p className="text-sm font-bold text-text-primary">{m.title}</p>
+                            <p className="text-xs text-text-secondary mt-0.5 leading-relaxed">{m.description}</p>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* 참여 규칙 */}
+            <div className="mt-4 rounded-2xl bg-amber-50 border border-amber-200/60 px-4 py-3.5">
+                <div className="flex items-center gap-2 mb-2.5">
+                    <Lock size={14} className="text-amber-500 shrink-0" />
+                    <p className="text-sm font-bold text-text-primary">참여 규칙</p>
+                </div>
+                <ul className="space-y-2">
+                    {PARTICIPATION_RULES.map((text) => (
+                        <li key={text} className="flex items-start gap-2">
+                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
+                            <p className="text-xs text-text-secondary leading-relaxed">{text}</p>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        </section>
+    );
+}
+
 // ─── 페이지 루트 ──────────────────────────────────────────────────────────────
 
 export default function GuidePage() {
@@ -286,6 +373,7 @@ export default function GuidePage() {
                     <HowToUse />
                     <AuthMethod />
                     <Settlement />
+                    <OperationMechanism />
                     <FaqAccordion />
 
                     {/* 하단 여백 */}
