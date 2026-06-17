@@ -3,9 +3,9 @@ import type { MissionLogReviewBucket } from "@/types/domain";
 type VerificationExifStatus = "NORMAL" | "MISSING" | "FAILED";
 
 export const REVIEW_FILTERS: Array<{ value: MissionLogReviewBucket; label: string }> = [
-  { value: "urgent", label: "긴급 검수" },
-  { value: "warning", label: "주의 검수" },
-  { value: "normal", label: "일반 검수" },
+  { value: "urgent", label: "긴급 검토" },
+  { value: "warning", label: "주의 검토" },
+  { value: "normal", label: "일반 검토" },
 ];
 
 export const REVIEW_FILTER_STYLES: Record<MissionLogReviewBucket, { active: string; inactive: string }> = {

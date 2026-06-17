@@ -57,7 +57,7 @@ export function ProfileSettingsSheet() {
 
     const handleNotificationSettings = () => {
         close();
-        alert("준비 중입니다");
+        router.push("/notifications/settings");
     };
 
     const handleInstallApp = async () => {
