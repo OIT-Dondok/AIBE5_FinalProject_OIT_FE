@@ -378,7 +378,7 @@ export default function GuidePage() {
 
                     {/* 하단 여백 */}
                     <p className="text-center text-[11px] text-text-secondary/50 pb-2">
-                        돈독 v1.0 · 문의: support@dondok.kr
+                        돈독 v1.0 · 문의: dondok.oit@gmail.com
                     </p>
                 </div>
             </div>
