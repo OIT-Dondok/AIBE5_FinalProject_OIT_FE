@@ -4,15 +4,23 @@ import { PieChart, RefreshCw } from "lucide-react";
 
 import { Skeleton } from "@/components/common/Skeleton";
 
-export function RefreshButton({ onRefresh }: { onRefresh: () => void }) {
+export function RefreshButton({
+  onRefresh,
+  loading = false,
+}: {
+  onRefresh: () => void;
+  loading?: boolean;
+}) {
   return (
     <button
       type="button"
       aria-label="대시보드 새로고침"
-      className="p-1 -mr-1 rounded-full text-text-secondary hover:text-text-primary"
+      aria-busy={loading}
+      disabled={loading}
+      className="p-1 -mr-1 rounded-full text-text-secondary hover:text-text-primary disabled:pointer-events-none disabled:opacity-50"
       onClick={onRefresh}
     >
-      <RefreshCw size={21} />
+      <RefreshCw size={21} className={loading ? "animate-spin" : ""} />
     </button>
   );
 }

@@ -61,7 +61,9 @@ export function DashboardPageClient() {
         <Header
           title="대시보드"
           showBackButton
-          rightElement={<RefreshButton onRefresh={loadGlobal} />}
+          rightElement={
+            <RefreshButton onRefresh={loadGlobal} loading={globalLoading} />
+          }
         />
 
         <div className="px-5 pt-5 flex flex-col gap-4">

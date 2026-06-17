@@ -77,7 +77,7 @@ export default function CrewDashboardPage() {
           title="크루 대시보드"
           showBackButton
           onBackClick={() => router.push("/dashboard")}
-          rightElement={<RefreshButton onRefresh={load} />}
+          rightElement={<RefreshButton onRefresh={load} loading={isLoading} />}
         />
 
         <div className="px-5 pt-5 flex flex-col gap-4">
