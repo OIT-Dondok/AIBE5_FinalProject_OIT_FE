@@ -159,7 +159,7 @@ function CrewRow({
               {crew.title}
             </span>
             <span className="shrink-0 text-[10px] font-bold text-text-secondary">
-              · 비중 {crew.percent}%
+              · 환급 비중 {crew.percent}%
             </span>
           </span>
           <ProgressBar percent={crew.percent} color={crew.color} className="mt-2" />
