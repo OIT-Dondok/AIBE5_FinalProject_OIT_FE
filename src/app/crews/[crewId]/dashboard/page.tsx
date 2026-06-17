@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { Header } from "@/components/common/Header";
@@ -24,19 +24,31 @@ export default function CrewDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // 요청 시퀀스 가드: 연속 새로고침·crewId 변경 시 이전 요청이 늦게 도착해
+  // 최신 상태를 덮어쓰지 않도록, 마지막 요청 결과만 반영한다.
+  const requestSeq = useRef(0);
+
   const load = useCallback(() => {
     if (!Number.isFinite(crewId) || crewId <= 0) {
+      requestSeq.current += 1; // 진행 중이던 이전 요청 무효화
       setErrorMessage("유효하지 않은 크루예요.");
       setIsLoading(false);
       return;
     }
 
+    const seq = ++requestSeq.current;
+    const isStale = () => seq !== requestSeq.current;
+
     setIsLoading(true);
     setErrorMessage(null);
 
     getCrewDashboard(crewId)
-      .then(({ data: res }) => setData(res))
+      .then(({ data: res }) => {
+        if (isStale()) return;
+        setData(res);
+      })
       .catch((err: { response?: { data?: { code?: string } } }) => {
+        if (isStale()) return;
         const code = err?.response?.data?.code;
         if (code === "CREW_NOT_FOUND") {
           setErrorMessage("크루를 찾을 수 없어요.");
@@ -48,7 +60,10 @@ export default function CrewDashboardPage() {
           setErrorMessage("크루 대시보드를 불러오지 못했어요.");
         }
       })
-      .finally(() => setIsLoading(false));
+      .finally(() => {
+        if (isStale()) return;
+        setIsLoading(false);
+      });
   }, [crewId]);
 
   useEffect(() => {
