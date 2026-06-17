@@ -3,32 +3,16 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronDown, Plus, Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { Header } from '@/components/common/Header';
 import { EmptyState } from '@/components/common/EmptyState';
 import CrewCard from '@/components/domain/crew/CrewCard';
+import CrewFilterBar, { CategoryFilter } from '@/components/domain/crew/CrewFilterBar';
+import StatusDropdown from '@/components/domain/crew/StatusDropdown';
 import { getCrews } from '@/services/crew';
-import type { CrewListItem, CrewStatus, CrewCategory } from '@/types/domain';
+import type { CrewListItem, CrewStatus } from '@/types/domain';
 
 type StatusFilter = CrewStatus | 'ALL';
-type CategoryFilter = CrewCategory | 'ALL';
-
-const STATUS_OPTIONS: { label: string; value: StatusFilter }[] = [
-  { label: '전체', value: 'ALL' },
-  { label: '모집중', value: 'RECRUITING' },
-  { label: '진행중', value: 'ACTIVE' },
-  { label: '종료됨', value: 'CLOSED' },
-];
-
-const CATEGORIES: { label: string; value: CategoryFilter }[] = [
-  { label: '전체', value: 'ALL' },
-  { label: '🌅 기상', value: 'MORNING' },
-  { label: '📚 독서', value: 'READING' },
-  { label: '💪 운동', value: 'EXERCISE' },
-  { label: '📝 공부', value: 'STUDY' },
-  { label: '🥗 식단', value: 'DIET' },
-  { label: '📌 기타', value: 'OTHER' },
-];
 
 type GroupedCrews = {
   RECRUITING: CrewListItem[];
@@ -39,9 +23,9 @@ type GroupedCrews = {
 const SECTION_ORDER: (keyof GroupedCrews)[] = ['RECRUITING', 'ACTIVE', 'CLOSED'];
 
 const SECTION_CONFIG: Record<keyof GroupedCrews, { label: string; badgeClass: string }> = {
-  RECRUITING: { label: '모집중', badgeClass: 'bg-primary-green text-white' },
-  ACTIVE: { label: '진행중', badgeClass: 'bg-primary-blue text-white' },
-  CLOSED: { label: '종료됨', badgeClass: 'bg-text-secondary/20 text-text-secondary' },
+  RECRUITING: { label: '모집중', badgeClass: 'bg-blue-500/10 text-blue-600 border border-blue-500/20' },
+  ACTIVE: { label: '진행중', badgeClass: 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' },
+  CLOSED: { label: '종료됨', badgeClass: 'bg-slate-500/10 text-slate-500 border border-slate-500/20' },
 };
 
 export default function CrewsPage() {
@@ -123,67 +107,33 @@ export default function CrewsPage() {
       <Header showLogo={true} />
 
       <div className="w-full max-w-[430px] mx-auto flex flex-col">
-
-        {/* 카테고리 탭 (가로 스크롤, underline 스타일) */}
-        <div className="flex overflow-x-auto no-scrollbar border-b border-text-secondary/10 mt-1">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat.value}
-              type="button"
-              onClick={() => setActiveCategory(cat.value)}
-              className={`flex-shrink-0 px-4 py-3 text-sm whitespace-nowrap transition-colors ${
-                activeCategory === cat.value
-                  ? 'text-primary-green font-semibold border-b-2 border-primary-green -mb-px'
-                  : 'text-text-secondary font-medium hover:text-text-primary'
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
+        {/* 카테고리 탭 (둥근 파스텔 칩 스타일) */}
+        <CrewFilterBar activeCategory={activeCategory} onChangeCategory={setActiveCategory} />
 
         {/* 검색바 */}
-        <div className="px-5 pt-3">
-          <div className="relative flex items-center">
+        <div className="px-5 pt-1 pb-3">
+          <div className="relative flex items-center group/search">
             <Search
               size={15}
               strokeWidth={2.5}
-              className="absolute left-3.5 text-text-secondary/50 pointer-events-none"
+              className="absolute left-4 text-text-secondary/40 group-focus-within/search:text-primary-green transition-colors duration-200 pointer-events-none"
             />
             <input
               type="text"
-              placeholder="크루 이름으로 검색..."
+              placeholder="찾고 있는 크루 이름이 있나요?"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 text-sm bg-card text-text-primary rounded-2xl border border-text-secondary/15 shadow-sm focus:border-primary-green focus:outline-none placeholder:text-text-secondary/40 transition-colors"
+              className="w-full pl-11 pr-4 py-3.5 text-sm bg-card text-text-primary rounded-full border border-text-secondary/10 shadow-sm focus:border-primary-green focus:ring-4 focus:ring-primary-green/5 focus:outline-none placeholder:text-text-secondary/30 transition-all duration-200"
             />
           </div>
         </div>
 
         {/* 결과 카운트 + 상태 드롭다운 */}
-        <div className="px-5 pt-3 pb-2 flex items-center justify-between">
-          <span className="text-xs text-text-secondary">
-            총{' '}
-            <span className="font-bold text-text-primary">{totalCount}</span>
-            개의 크루
+        <div className="px-5 pt-3 pb-3 flex items-center justify-between">
+          <span className="text-xs text-text-secondary font-medium">
+            총 <span className="font-extrabold text-text-primary bg-text-secondary/10 px-2 py-0.5 rounded-full">{totalCount}</span>개의 크루
           </span>
-          <div className="relative">
-            <select
-              aria-label="크루 상태 필터"
-              value={activeStatus}
-              onChange={(e) => setActiveStatus(e.target.value as StatusFilter)}
-              className="appearance-none text-xs font-semibold text-text-primary bg-card border border-text-secondary/20 rounded-xl pl-3 pr-7 py-1.5 cursor-pointer focus:outline-none focus:border-primary-green transition-colors"
-            >
-              {STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-            <ChevronDown
-              size={12}
-              strokeWidth={2.5}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none"
-            />
-          </div>
+          <StatusDropdown value={activeStatus} onChange={setActiveStatus} />
         </div>
 
         {/* 크루 카드 리스트 */}
