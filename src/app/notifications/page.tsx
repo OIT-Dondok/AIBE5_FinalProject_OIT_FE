@@ -156,6 +156,7 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     event_type: "FEED_REACTION",
     title: "새 리액션 등록",
     body: "홍길동님이 내 인증에 🔥 리액션을 달았습니다",
+    crew_name: "독서 1챕터",
     created_at: new Date(Date.now() - 4 * 3600000).toISOString(),
     is_read: true,
   },
@@ -276,14 +277,6 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     body: "독서 1챕터 미션 종료. 최종 환급금 50,000도딘이 지급되었습니다. 결과 보기 →",
     crew_name: "독서 1챕터",
     created_at: new Date(Date.now() - 55 * 3600000).toISOString(),
-    is_read: true,
-  },
-  {
-    id: 17,
-    event_type: "SETTLEMENT_COMPLETED",
-    title: "환급 완료",
-    body: "50,000도딘이 지급되었습니다. 현재 잔액을 확인해보세요 →",
-    created_at: new Date(Date.now() - 56 * 3600000).toISOString(),
     is_read: true,
   },
 ];
