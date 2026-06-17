@@ -202,7 +202,8 @@ function noticeMessage(notice: ProjectionNotice): string | null {
 
 export interface CrewDashboardSegmentView {
   label: string;
-  value: number;
+  value: number; // 링 그라데이션용 숫자 (null → 0)
+  valueLabel: string; // 범례 표시용 ("23.5%" 또는 집계 전 "—")
   color: string;
   isMe: boolean;
 }
@@ -240,6 +241,7 @@ export function mapCrewDashboard(res: DashboardResponse): CrewDashboardView {
     segments: res.participants.map((p, index) => ({
       label: p.nickname,
       value: ratioToPercentValue(p.share_ratio),
+      valueLabel: formatRatioPercent(p.share_ratio),
       color: crewColor(index),
       isMe: p.is_me,
     })),
@@ -250,9 +252,10 @@ export function mapCrewDashboard(res: DashboardResponse): CrewDashboardView {
         ? null
         : formatSignedWon(res.my_expected_refund_delta_amount),
     expectedRefundTrend: deltaTrend(res.my_expected_refund_delta_amount),
+    // rank가 null(예: 배치 전)이어도 rank_total이 있으면 "전체 N명"은 표시
     rankLabel:
-      res.rank != null && res.rank_total != null
-        ? `${res.rank}위 / ${res.rank_total}명`
+      res.rank_total != null
+        ? `${res.rank != null ? `${res.rank}위` : "—"} / ${res.rank_total}명`
         : "—",
     rankDeltaLabel: rankDelta.label,
     rankTrend: rankDelta.trend,

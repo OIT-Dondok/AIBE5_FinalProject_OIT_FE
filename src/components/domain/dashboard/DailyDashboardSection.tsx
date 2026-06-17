@@ -126,7 +126,7 @@ function LegendRow({ segment }: { segment: CrewDashboardSegmentView }) {
         {segment.label}
       </span>
       <span className="font-black tabular-nums text-text-primary">
-        {segment.value}%
+        {segment.valueLabel}
       </span>
     </div>
   );
