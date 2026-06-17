@@ -755,7 +755,8 @@ export interface ReactionResponse {
 export interface GlobalDashboardCrew {
   crew_id: number;
   crew_name: string;
-  image_url: string | null; // 크루 대표 이미지. 없으면 null → FE 색 플레이스홀더
+  category: CrewCategory;
+  image_url: string | null; // 크루 대표 이미지. 없으면 null → FE 카테고리 아이콘 폴백
   share_ratio: string | null; // 해당 크루 내 나의 지분율. string decimal
   expected_refund_amount: number | null;
   today_delta_amount: number | null; // 직전 정산 배치 대비 변동액. 음수 가능. 배치 없으면 null

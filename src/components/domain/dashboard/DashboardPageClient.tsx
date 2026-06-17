@@ -1,23 +1,62 @@
 "use client";
 
-import { useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { PieChart, RefreshCw } from "lucide-react";
 
 import { Header } from "@/components/common/Header";
+import { Skeleton } from "@/components/common/Skeleton";
+import { getDashboard } from "@/services/dashboard";
 import { mockDashboard } from "@/mocks/data/dashboard";
 import type { DashboardSectionId } from "@/mocks/data/dashboard";
+import type { GlobalDashboardResponse } from "@/types/domain";
 
 import { CrewDonutSection } from "./CrewDonutSection";
 import { DailyDashboardSection } from "./DailyDashboardSection";
 import { PrinciplesModal } from "./PrinciplesModal";
+import { mapGlobalDashboard } from "./dashboardViewModel";
+
+function formatTodayLabel(): string {
+  const now = new Date();
+  const yy = String(now.getFullYear()).slice(2);
+  return `${yy}년 ${now.getMonth() + 1}월 ${now.getDate()}일`;
+}
 
 export function DashboardPageClient() {
   const [activeSection, setActiveSection] =
     useState<DashboardSectionId>("donuts");
+  const [selectedCrewId, setSelectedCrewId] = useState<number | null>(null);
   const [isPrinciplesModalOpen, setIsPrinciplesModalOpen] = useState(false);
 
-  const handleRefresh = () => {
-    window.location.reload();
+  const [globalData, setGlobalData] = useState<GlobalDashboardResponse | null>(
+    null,
+  );
+  const [globalLoading, setGlobalLoading] = useState(true);
+  const [globalError, setGlobalError] = useState<string | null>(null);
+
+  const loadGlobal = useCallback(() => {
+    setGlobalLoading(true);
+    setGlobalError(null);
+
+    getDashboard()
+      .then(({ data }) => setGlobalData(data))
+      .catch((err: { response?: { data?: { code?: string } } }) => {
+        const code = err?.response?.data?.code;
+        if (code === "PARTICIPANT_NOT_FOUND") {
+          setGlobalError("참여 중인 크루 정보를 찾을 수 없어요.");
+        } else {
+          setGlobalError("대시보드를 불러오지 못했어요.");
+        }
+      })
+      .finally(() => setGlobalLoading(false));
+  }, []);
+
+  useEffect(() => {
+    loadGlobal();
+  }, [loadGlobal]);
+
+  const handleOpenDaily = (crewId: number) => {
+    setSelectedCrewId(crewId);
+    setActiveSection("daily");
   };
 
   return (
@@ -26,7 +65,7 @@ export function DashboardPageClient() {
         <Header
           title="대시보드"
           showBackButton
-          rightElement={<RefreshButton onRefresh={handleRefresh} />}
+          rightElement={<RefreshButton onRefresh={loadGlobal} />}
         />
 
         <div className="px-5 pt-5 flex flex-col gap-4">
@@ -37,14 +76,21 @@ export function DashboardPageClient() {
               projectionCopy={mockDashboard.projectionCopy}
             />
           )}
-          {activeSection === "donuts" && (
-            <CrewDonutSection
-              crewDonuts={mockDashboard.crewDonuts}
-              projectionCopy={mockDashboard.projectionCopy}
-              onOpenDaily={() => setActiveSection("daily")}
-              onOpenPrinciples={() => setIsPrinciplesModalOpen(true)}
-            />
-          )}
+          {activeSection === "donuts" &&
+            (globalLoading ? (
+              <DonutSkeleton />
+            ) : globalError ? (
+              <DashboardError message={globalError} onRetry={loadGlobal} />
+            ) : globalData && globalData.crews.length === 0 ? (
+              <DashboardEmpty />
+            ) : globalData ? (
+              <CrewDonutSection
+                crewDonuts={mapGlobalDashboard(globalData, formatTodayLabel())}
+                projectionCopy={mockDashboard.projectionCopy}
+                onOpenDaily={handleOpenDaily}
+                onOpenPrinciples={() => setIsPrinciplesModalOpen(true)}
+              />
+            ) : null)}
         </div>
       </div>
 
@@ -68,5 +114,47 @@ function RefreshButton({ onRefresh }: { onRefresh: () => void }) {
     >
       <RefreshCw size={21} />
     </button>
+  );
+}
+
+function DonutSkeleton() {
+  return (
+    <div className="flex flex-col gap-4">
+      <Skeleton className="h-44 w-full rounded-card" />
+      <Skeleton className="h-16 w-full rounded-card" />
+      <Skeleton className="h-16 w-full rounded-card" />
+      <Skeleton className="h-16 w-full rounded-card" />
+    </div>
+  );
+}
+
+function DashboardError({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry: () => void;
+}) {
+  return (
+    <div className="mt-20 flex flex-col items-center gap-3 text-text-secondary">
+      <PieChart size={40} className="opacity-30" />
+      <p className="text-sm font-medium">{message}</p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="mt-2 rounded-button border border-text-secondary/20 bg-card px-5 py-2 text-sm font-semibold text-text-primary hover:bg-text-secondary/5"
+      >
+        다시 시도
+      </button>
+    </div>
+  );
+}
+
+function DashboardEmpty() {
+  return (
+    <div className="mt-20 flex flex-col items-center gap-3 text-text-secondary">
+      <PieChart size={40} className="opacity-30" />
+      <p className="text-sm font-medium">아직 참여 중인 크루가 없어요.</p>
+    </div>
   );
 }
