@@ -102,7 +102,7 @@ export function CrewDonutSection({
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-green text-white">
               <ShieldCheck size={15} />
             </span>
-            방장의 운영원칙 보기
+            방장 운영 원칙 보기
           </span>
           <ChevronRight size={16} className="text-primary-green/70" />
         </span>

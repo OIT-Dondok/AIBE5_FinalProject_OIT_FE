@@ -1,6 +1,28 @@
 import type { NextConfig } from "next";
+// @ts-expect-error next-pwa lacks type declarations
+import withPWAInit from "next-pwa";
+// @ts-expect-error next-pwa lacks type declarations
+import runtimeCaching from "next-pwa/cache";
+
+const withPWA = withPWAInit({
+    dest: "public",
+    disable: process.env.NODE_ENV === "development",
+    register: true,
+    skipWaiting: true,
+    fallbacks: {
+        document: "/offline",
+    },
+    runtimeCaching: [
+        {
+            urlPattern: /^\/api\/.*$/,
+            handler: "NetworkOnly",
+        },
+        ...runtimeCaching,
+    ],
+});
 
 const nextConfig: NextConfig = {
+    turbopack: {},
     images: {
         remotePatterns: [
             {
@@ -23,4 +45,4 @@ const nextConfig: NextConfig = {
     }
 };
 
-export default nextConfig;
+export default withPWA(nextConfig);
