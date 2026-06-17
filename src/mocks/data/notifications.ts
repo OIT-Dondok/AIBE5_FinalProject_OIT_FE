@@ -65,7 +65,7 @@ export const MOCK_NOTIFICATIONS: NotificationItem[] = [
     notification_id: "notif-005",
     event_type: "CREW_APPLICATION_APPROVED",
     title: "크루 신청이 승인됐어요 🎉",
-    body: "독서 1챕터 — 방장이 신청을 승인했어요. 미션 시작일을 확인해 보세요.",
+    body: "독서 1챕터 가입이 승인되었습니다!",
     is_read: true,
     crew_id: 2,
     crew_name: "독서 1챕터",
@@ -90,6 +90,16 @@ export const MOCK_NOTIFICATIONS: NotificationItem[] = [
     crew_id: 7,
     crew_name: "새벽 러닝 크루",
     created_at: "2026-04-28T10:14:00+09:00",
+  },
+  {
+    notification_id: "notif-008",
+    event_type: "CREW_ACTIVATED",
+    title: "미션 시작",
+    body: "영어 단어 50 미션이 시작되었습니다! 오늘부터 인증을 시작하세요 🔥",
+    is_read: true,
+    crew_id: 4,
+    crew_name: "영어 단어 50",
+    created_at: "2026-04-27T00:00:00+09:00",
   },
 ];
 
