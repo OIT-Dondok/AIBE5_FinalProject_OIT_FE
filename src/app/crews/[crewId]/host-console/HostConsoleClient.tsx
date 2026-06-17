@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Bell, ShieldCheck, Trash2 } from "lucide-react";
 
 import { ConfirmModal } from "@/components/common/ConfirmModal";
+import { Toast } from "@/components/common/Toast";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
 import { ApplicationsTab } from "@/components/domain/host/applications/ApplicationsTab";
@@ -44,6 +45,7 @@ export default function HostConsoleClient() {
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [isDisbandModalOpen, setIsDisbandModalOpen] = useState(false);
   const [isDisbanding, setIsDisbanding] = useState(false);
+  const [isDisbandErrorToastOpen, setIsDisbandErrorToastOpen] = useState(false);
 
   const handleTabChange = (tab: HostTab) => {
     setActiveTab(tab);
@@ -72,7 +74,7 @@ export default function HostConsoleClient() {
       router.push("/");
     } catch {
       setIsDisbanding(false);
-      setIsDisbandModalOpen(false);
+      setIsDisbandErrorToastOpen(true);
     }
   };
 
@@ -160,6 +162,13 @@ export default function HostConsoleClient() {
           {activeTab === "notices" && <NoticesTab key={tabRefreshKey} />}
         </div>
       </div>
+
+      <Toast
+        isOpen={isDisbandErrorToastOpen}
+        onClose={() => setIsDisbandErrorToastOpen(false)}
+        message="크루 해체에 실패했어요. 다시 시도해주세요."
+        type="error"
+      />
 
       <ConfirmModal
         isOpen={isDisbandModalOpen}
