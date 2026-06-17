@@ -2,51 +2,26 @@
 
 import { useEffect, useState } from "react";
 import { X, Download, Share } from "lucide-react";
+import { usePwaInstall } from "@/hooks/usePwaInstall";
 
 export function InstallPrompt() {
+  const { isInstallable, isIOS, install } = usePwaInstall();
   const [showPrompt, setShowPrompt] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
-    // 1. 이미 앱으로 접속된 상태(standalone)이면 설치 프롬프트를 띄우지 않습니다.
-    const isStandalone = window.matchMedia("(display-mode: standalone)").matches 
-      || (window.navigator as any).standalone === true;
-
-    if (isStandalone) return;
-
-    // 2. iOS 디바이스 감지
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    setIsIOS(isIOSDevice);
-
-    // 3. Android / Chrome 'beforeinstallprompt' 이벤트 리스너 등록
-    const handleBeforeInstallPrompt = (event: Event) => {
-      event.preventDefault();
-      setDeferredPrompt(event);
-      setShowPrompt(true);
-    };
-
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-
-    // iOS 기기이면서 독립형 앱이 아니면 우선 배너 노출 테스트 (세션 단위나 로컬스토리지로 닫기 기록 관리 가능)
     const isDismissed = localStorage.getItem("pwa-install-prompt-dismissed");
-    if (isIOSDevice && !isDismissed) {
+    if (isInstallable && !isDismissed) {
       setShowPrompt(true);
-    }
-
-    return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    };
-  }, []);
-
-  const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === "accepted") {
+    } else {
       setShowPrompt(false);
     }
-    setDeferredPrompt(null);
+  }, [isInstallable]);
+
+  const handleInstallClick = async () => {
+    const result = await install();
+    if (result.outcome === "accepted") {
+      setShowPrompt(false);
+    }
   };
 
   const handleClose = () => {
@@ -90,7 +65,7 @@ export function InstallPrompt() {
           </div>
         </div>
 
-        {!isIOS && deferredPrompt && (
+        {!isIOS && (
           <div className="mt-4 flex justify-end gap-2">
             <button
               type="button"
@@ -112,3 +87,4 @@ export function InstallPrompt() {
     </div>
   );
 }
+
