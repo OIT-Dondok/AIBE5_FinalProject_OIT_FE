@@ -75,10 +75,19 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
 
   const fetchNotices = useCallback(
     async (cursor?: string) => {
+      Promise.resolve().then(() => {
+        if (!cursor) {
+          setIsLoading(true);
+          setHasError(false);
+          setAccessDenied(false);
+          setNotices([]);
+          setNextCursor(null);
+        }
+      });
+
       try {
         const res = await getCrewNotices(crewId, cursor);
         const { items, next_cursor } = res.data;
-        // 서버 응답의 my_reactions, reaction_counts를 그대로 초기 상태로 사용
         setNotices((prev) => (cursor ? [...prev, ...items] : items));
         setNextCursor(next_cursor);
       } catch (err) {
@@ -90,18 +99,20 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
         } else {
           setHasError(true);
         }
+      } finally {
+        if (!cursor) {
+          setIsLoading(false);
+        }
       }
     },
     [crewId],
   );
 
   useEffect(() => {
-    setIsLoading(true);
-    setHasError(false);
-    setAccessDenied(false);
-    setNotices([]);
-    setNextCursor(null);
-    fetchNotices().finally(() => setIsLoading(false));
+    const timer = setTimeout(() => {
+      void fetchNotices();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [fetchNotices]);
 
   const handleLoadMore = async () => {
@@ -292,7 +303,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
     return (
       <div className="flex flex-col items-center justify-center py-10 gap-2">
         <p className="text-3xl">⚠️</p>
-        <p className="text-sm text-text-secondary">공지를 불러오지 못했습니다</p>
+        <p className="text-sm font-semibold text-text-primary/80">공지를 불러오지 못했습니다</p>
       </div>
     );
   }
@@ -334,7 +345,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
                 <button
                   type="button"
                   onClick={() => openEditModal(notice)}
-                  className="p-1 text-text-secondary hover:text-text-primary transition-colors"
+                  className="p-1 text-text-primary/70 hover:text-text-primary transition-colors"
                   aria-label="공지 수정"
                 >
                   <Edit2 size={14} />
@@ -342,7 +353,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
                 <button
                   type="button"
                   onClick={() => setDeleteTarget(notice.notice_id)}
-                  className="p-1 text-text-secondary hover:text-red-500 transition-colors"
+                  className="p-1 text-text-primary/70 hover:text-red-500 transition-colors"
                   aria-label="공지 삭제"
                 >
                   <Trash2 size={14} />
@@ -351,7 +362,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
             )}
           </div>
 
-          <p className="text-sm text-text-secondary leading-relaxed line-clamp-3 whitespace-pre-wrap">
+          <p className="text-sm font-medium text-text-primary/85 leading-relaxed line-clamp-3 whitespace-pre-wrap">
             {notice.content}
           </p>
 
@@ -371,8 +382,8 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
                       aria-label={`${emoji} 반응 ${count}개`}
                       className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs border transition-colors ${
                         isReacted
-                          ? 'bg-primary-green/10 border-primary-green/30 text-text-primary'
-                          : 'bg-transparent border-text-secondary/20 text-text-secondary hover:bg-text-secondary/5'
+                          ? 'bg-primary-green/10 border-primary-green/30 text-text-primary font-bold'
+                          : 'bg-transparent border-text-primary/20 text-text-primary/80 font-semibold hover:bg-text-secondary/5'
                       }`}
                     >
                       <span>{emoji}</span>
@@ -385,13 +396,13 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
               <button
                 type="button"
                 onClick={() => setPickerTarget(notice.notice_id)}
-                className="flex items-center justify-center w-7 h-7 rounded-full border border-text-secondary/20 text-text-secondary hover:bg-text-secondary/5 transition-colors"
+                className="flex items-center justify-center w-7 h-7 rounded-full border border-text-primary/20 text-text-primary/80 hover:bg-text-secondary/5 transition-colors"
                 aria-label="리액션 추가"
               >
                 <SmilePlus size={14} />
               </button>
             </div>
-            <span className="text-xs text-text-secondary shrink-0">
+            <span className="text-xs font-semibold text-text-primary/70 shrink-0">
               {formatDate(notice.created_at)}
             </span>
           </div>
@@ -403,7 +414,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
           type="button"
           onClick={handleLoadMore}
           disabled={isLoadingMore}
-          className="w-full py-2.5 text-sm font-semibold text-text-secondary border border-text-secondary/20 rounded-button hover:bg-text-secondary/5 transition-colors disabled:opacity-50"
+          className="w-full py-2.5 text-sm font-bold text-text-primary/80 border border-text-primary/20 rounded-button hover:bg-text-secondary/5 transition-colors disabled:opacity-50"
         >
           {isLoadingMore ? '불러오는 중...' : '더 보기'}
         </button>
@@ -439,7 +450,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="notice-title"
-              className="text-xs font-semibold text-text-secondary"
+              className="text-xs font-bold text-text-primary/80"
             >
               제목
             </label>
@@ -449,13 +460,13 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
               value={formTitle}
               onChange={(e) => setFormTitle(e.target.value)}
               placeholder="공지 제목을 입력하세요"
-              className="w-full px-3 py-2 text-sm border border-text-secondary/20 rounded-button focus:outline-none focus:border-primary-green bg-transparent text-text-primary placeholder:text-text-secondary/50"
+              className="w-full px-3 py-2 text-sm border border-text-secondary/20 rounded-button focus:outline-none focus:border-primary-green bg-transparent text-text-primary placeholder:text-text-primary/35"
             />
           </div>
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="notice-content"
-              className="text-xs font-semibold text-text-secondary"
+              className="text-xs font-bold text-text-primary/80"
             >
               내용
             </label>
@@ -465,7 +476,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
               onChange={(e) => setFormContent(e.target.value)}
               placeholder="공지 내용을 입력하세요"
               rows={5}
-              className="w-full px-3 py-2 text-sm border border-text-secondary/20 rounded-button focus:outline-none focus:border-primary-green bg-transparent text-text-primary placeholder:text-text-secondary/50 resize-none"
+              className="w-full px-3 py-2 text-sm border border-text-secondary/20 rounded-button focus:outline-none focus:border-primary-green bg-transparent text-text-primary placeholder:text-text-primary/35 resize-none"
             />
           </div>
           {formError && (
@@ -499,7 +510,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
       >
         <div className="p-5 flex flex-col gap-4">
           <p className="text-base font-bold text-text-primary">공지를 삭제할까요?</p>
-          <p className="text-sm text-text-secondary">삭제된 공지는 복구할 수 없습니다.</p>
+          <p className="text-sm font-semibold text-text-primary/80">삭제된 공지는 복구할 수 없습니다.</p>
           <div className="flex gap-2">
             <Button
               variant="outline"
