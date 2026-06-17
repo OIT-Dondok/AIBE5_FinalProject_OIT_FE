@@ -75,15 +75,13 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
 
   const fetchNotices = useCallback(
     async (cursor?: string) => {
-      Promise.resolve().then(() => {
-        if (!cursor) {
-          setIsLoading(true);
-          setHasError(false);
-          setAccessDenied(false);
-          setNotices([]);
-          setNextCursor(null);
-        }
-      });
+      if (!cursor) {
+        setIsLoading(true);
+        setHasError(false);
+        setAccessDenied(false);
+        setNotices([]);
+        setNextCursor(null);
+      }
 
       try {
         const res = await getCrewNotices(crewId, cursor);

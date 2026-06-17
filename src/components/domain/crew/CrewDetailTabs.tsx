@@ -27,20 +27,22 @@ export default function CrewDetailTabs({ crew, crewId }: CrewDetailTabsProps) {
   useEffect(() => {
     let active = true;
     const loadHostMember = async () => {
+      setHostProfileUrl(null); // 이전 크루 데이터 클리어
       try {
         const res = await getCrewMembers(crewId);
         if (!active) return;
         const host = res.data.items.find((m) => m.role === 'HOST');
-        if (host?.profile_image_url) {
-          setHostProfileUrl(host.profile_image_url);
-        }
+        setHostProfileUrl(host?.profile_image_url ?? null);
       } catch {
         // 무시
       }
     };
-    void loadHostMember();
+    const timer = setTimeout(() => {
+      void loadHostMember();
+    }, 0);
     return () => {
       active = false;
+      clearTimeout(timer);
     };
   }, [crewId]);
 

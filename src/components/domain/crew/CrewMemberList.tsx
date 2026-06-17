@@ -67,17 +67,15 @@ export default function CrewMemberList({ crewId }: CrewMemberListProps) {
   const [hasError, setHasError] = useState(false);
 
   const fetchMembers = useCallback(async (cursor?: string) => {
-    Promise.resolve().then(() => {
-      if (!cursor) {
-        setIsLoading(true);
-        setAccessDenied(false);
-        setHasError(false);
-        setMembers([]);
-        setNextCursor(null);
-      } else {
-        setIsLoadingMore(true);
-      }
-    });
+    if (!cursor) {
+      setIsLoading(true);
+      setAccessDenied(false);
+      setHasError(false);
+      setMembers([]);
+      setNextCursor(null);
+    } else {
+      setIsLoadingMore(true);
+    }
 
     try {
       const res = await getCrewMembers(crewId, cursor);

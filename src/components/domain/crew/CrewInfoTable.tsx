@@ -38,27 +38,37 @@ export default function CrewInfoTable({ crew }: CrewInfoTableProps) {
           const isDeadline = row.label === '인증 마감';
           return (
             <div key={row.label} className="flex flex-col border-b border-text-secondary/5 last:border-b-0">
-              <div
-                onClick={isSettlementType ? () => setIsScheduleOpen(!isScheduleOpen) : undefined}
-                className={`flex items-center justify-between py-3.5 transition-colors ${
-                  isSettlementType ? 'cursor-pointer hover:bg-text-secondary/5 px-2 -mx-2 rounded-xl' : ''
-                }`}
-              >
-                <span className="text-[13px] text-text-primary font-bold flex items-center gap-1.5">
-                  {row.label}
-                  {isSettlementType && (
+              {isSettlementType ? (
+                <button
+                  type="button"
+                  onClick={() => setIsScheduleOpen(!isScheduleOpen)}
+                  className="w-full flex items-center justify-between py-3.5 transition-colors cursor-pointer hover:bg-text-secondary/5 px-2 -mx-2 rounded-xl text-left"
+                >
+                  <span className="text-[13px] text-text-primary font-bold flex items-center gap-1.5">
+                    {row.label}
                     <span className="text-[10px] bg-blue-500/10 text-blue-600 px-1.5 py-0.5 rounded-md font-bold transition-all hover:bg-blue-500/20">
                       시간표 보기
                     </span>
-                  )}
-                </span>
-                <span className="text-[13px] font-bold text-text-primary flex items-center gap-1">
-                  {row.value}
-                  {isSettlementType && (
-                    isScheduleOpen ? <ChevronUp size={14} className="text-text-secondary/50 animate-pulse" /> : <ChevronDown size={14} className="text-text-secondary/50" />
-                  )}
-                </span>
-              </div>
+                  </span>
+                  <span className="text-[13px] font-bold text-text-primary flex items-center gap-1">
+                    {row.value}
+                    {isScheduleOpen ? (
+                      <ChevronUp size={14} className="text-text-secondary/50 animate-pulse" />
+                    ) : (
+                      <ChevronDown size={14} className="text-text-secondary/50" />
+                    )}
+                  </span>
+                </button>
+              ) : (
+                <div className="flex items-center justify-between py-3.5 transition-colors">
+                  <span className="text-[13px] text-text-primary font-bold flex items-center gap-1.5">
+                    {row.label}
+                  </span>
+                  <span className="text-[13px] font-bold text-text-primary flex items-center gap-1">
+                    {row.value}
+                  </span>
+                </div>
+              )}
 
               {isDeadline && (
                 <p className="text-[11px] text-text-primary/75 pb-3.5 -mt-1 leading-normal font-semibold">
@@ -81,7 +91,10 @@ export default function CrewInfoTable({ crew }: CrewInfoTableProps) {
                               : 'bg-text-secondary/5 border-transparent opacity-80'
                           }`}
                         >
-                          <div className={`w-fit px-2 py-0.5 rounded-full text-[9px] font-extrabold text-white bg-gradient-to-r ${item.gradient} shadow-[0_0_8px_${item.shadow}] mb-2`}>
+                          <div
+                            style={{ boxShadow: `0 0 8px ${item.shadow}` }}
+                            className={`w-fit px-2 py-0.5 rounded-full text-[9px] font-extrabold text-white bg-gradient-to-r ${item.gradient} mb-2`}
+                          >
                             타입 {item.type}
                           </div>
                           <span className={`text-xs font-black ${isCurrent ? 'text-primary-green' : 'text-text-primary'} mb-1.5`}>
