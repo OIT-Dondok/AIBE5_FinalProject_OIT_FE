@@ -14,16 +14,19 @@ import type {Member} from '@/types/domain';
 
 interface AuthState {
     user: Member | null;
+    isInitialized: boolean;
 
     setAuth: (user: Member, accessToken: string) => void;
     clearAuth: () => void;
     setUser: (user: Member) => void;
+    setInitialized: (initialized: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
     persist(
         (set) => ({
             user: null,
+            isInitialized: false,
 
             setAuth: (user, accessToken) => {
                 set({user});
@@ -36,6 +39,7 @@ export const useAuthStore = create<AuthState>()(
             },
 
             setUser: (user) => set({user}),
+            setInitialized: (initialized) => set({isInitialized: initialized}),
         }),
         {
             name: 'dondok-auth',

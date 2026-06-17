@@ -152,8 +152,13 @@ api.interceptors.response.use(
       return api(originalRequest);
     } catch (refreshError) {
       // refreshToken이 없거나 만료/위조/rotation 이후 재사용이면 복구 불가.
-      // access token을 비우고 로그인 화면으로 보낸다.
-      clearAccessToken();
+      // access token과 함께 store의 Auth 정보도 모두 비우고 로그인 화면으로 보낸다.
+      try {
+        const { useAuthStore } = await import('@/store/authStore');
+        useAuthStore.getState().clearAuth();
+      } catch {
+        clearAccessToken();
+      }
       window.location.href = '/login';
       return Promise.reject(refreshError);
     }
