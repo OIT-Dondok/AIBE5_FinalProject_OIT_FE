@@ -1,4 +1,9 @@
-import type { CrewCategory, GlobalDashboardResponse } from "@/types/domain";
+import type {
+  CrewCategory,
+  DashboardResponse,
+  GlobalDashboardResponse,
+  ProjectionNotice,
+} from "@/types/domain";
 
 // 크루별 자동 색 — 도넛 세그먼트와 크루 행 프로그래스바에 공용으로 사용
 export const CREW_COLOR_PALETTE = [
@@ -127,5 +132,134 @@ export function mapGlobalDashboard(
     participantLabel: `참여 크루 ${res.crews.length}`,
     segments,
     crews,
+  };
+}
+
+// ─── 크루 상세 뷰모델 (GET /api/crews/{crewId}/dashboard → DailyDashboardSection) ─
+
+// string decimal 지분율 → 퍼센트 문자열. null이면 "—"
+function formatRatioPercent(ratio: string | null): string {
+  if (ratio == null) return "—";
+  const n = Number(ratio);
+  if (!Number.isFinite(n)) return "—";
+  return `${(n * 100).toFixed(1)}%`;
+}
+
+// SegmentRing/LegendRow용 숫자 퍼센트 (null → 0)
+function ratioToPercentValue(ratio: string | null): number {
+  if (ratio == null) return 0;
+  const n = Number(ratio);
+  if (!Number.isFinite(n)) return 0;
+  return Number((n * 100).toFixed(1));
+}
+
+// days_until_end → D-day 라벨 (당일 0 → "D-DAY", 종료 후 null → "종료")
+function formatDday(days: number | null): string {
+  if (days == null) return "종료";
+  if (days <= 0) return "D-DAY";
+  return `D-${days}`;
+}
+
+function formatRankDelta(delta: number | null): { label: string | null; trend: Trend } {
+  if (delta == null) return { label: null, trend: "flat" };
+  if (delta > 0) return { label: `${delta}단계 상승`, trend: "up" };
+  if (delta < 0) return { label: `${Math.abs(delta)}단계 하락`, trend: "down" };
+  return { label: "유지", trend: "flat" };
+}
+
+// next_settlement_at → "오전 12시 · N시간 뒤". null이면 null
+function formatNextSettlement(iso: string | null): string | null {
+  if (!iso) return null;
+  const target = new Date(iso);
+  if (Number.isNaN(target.getTime())) return null;
+
+  const hour24 = target.getHours();
+  const ampm = hour24 < 12 ? "오전" : "오후";
+  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+
+  const diffHours = Math.round((target.getTime() - Date.now()) / 3_600_000);
+  const relative = diffHours <= 0 ? "곧" : `${diffHours}시간 뒤`;
+
+  return `${ampm} ${hour12}시 · ${relative}`;
+}
+
+// projection_notice → 안내 문구. 일반 LIVE(ESTIMATED_NOT_FINAL)는 툴팁으로 충분하므로 null
+function noticeMessage(notice: ProjectionNotice): string | null {
+  switch (notice) {
+    case "NOT_STARTED":
+      return "아직 정산 배치가 실행되지 않아 예상 성과가 집계되기 전이에요.";
+    case "NOT_PROVIDED":
+      return "현재 크루 상태에서는 예상 대시보드를 제공하지 않아요.";
+    case "SETTLEMENT_RESULT_AVAILABLE":
+      return "최종 정산이 완료됐어요. 정산 상세에서 확정 결과를 확인하세요.";
+    case "INSUFFICIENT_PROJECTION_INPUT":
+      return "예상 계산에 필요한 정보가 부족해 일부 값을 표시하지 못했어요.";
+    case "ESTIMATED_NOT_FINAL":
+    default:
+      return null;
+  }
+}
+
+export interface CrewDashboardSegmentView {
+  label: string;
+  value: number;
+  color: string;
+  isMe: boolean;
+}
+
+export interface CrewDashboardView {
+  crewId: number;
+  crewName: string;
+  ddayLabel: string;
+  myShareLabel: string;
+  mySharePercent: string;
+  segments: CrewDashboardSegmentView[];
+  successCount: string;
+  expectedRefund: string;
+  expectedRefundDelta: string | null;
+  expectedRefundTrend: Trend;
+  rankLabel: string;
+  rankDeltaLabel: string | null;
+  rankTrend: Trend;
+  nextSettlementTime: string | null;
+  notice: string | null;
+  // SETTLEMENT_RESULT_AVAILABLE일 때 정산 상세(/crews/{crewId}/settlement) 유도
+  showSettlementLink: boolean;
+}
+
+export function mapCrewDashboard(res: DashboardResponse): CrewDashboardView {
+  const me = res.participants.find((p) => p.is_me) ?? null;
+  const rankDelta = formatRankDelta(res.rank_delta);
+
+  return {
+    crewId: res.crew_id,
+    crewName: res.crew_name,
+    ddayLabel: formatDday(res.days_until_end),
+    myShareLabel: "나의 지분율",
+    mySharePercent: formatRatioPercent(me?.share_ratio ?? null),
+    segments: res.participants.map((p, index) => ({
+      label: p.nickname,
+      value: ratioToPercentValue(p.share_ratio),
+      color: crewColor(index),
+      isMe: p.is_me,
+    })),
+    successCount: res.my_success_count == null ? "—" : `${res.my_success_count}회`,
+    expectedRefund: formatWon(res.my_expected_refund_amount),
+    expectedRefundDelta:
+      res.my_expected_refund_delta_amount == null
+        ? null
+        : formatSignedWon(res.my_expected_refund_delta_amount),
+    expectedRefundTrend: deltaTrend(res.my_expected_refund_delta_amount),
+    rankLabel:
+      res.rank != null && res.rank_total != null
+        ? `${res.rank}위 / ${res.rank_total}명`
+        : "—",
+    rankDeltaLabel: rankDelta.label,
+    rankTrend: rankDelta.trend,
+    nextSettlementTime: formatNextSettlement(res.next_settlement_at),
+    notice: noticeMessage(res.projection_notice),
+    showSettlementLink:
+      res.projection_notice === "SETTLEMENT_RESULT_AVAILABLE" &&
+      res.settlement_id != null,
   };
 }

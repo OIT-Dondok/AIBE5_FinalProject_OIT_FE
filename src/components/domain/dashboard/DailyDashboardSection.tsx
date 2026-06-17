@@ -1,96 +1,119 @@
-import { ArrowUp, Clock3 } from "lucide-react";
+import Link from "next/link";
+import { ArrowDown, ArrowUp, CheckCircle2, Clock3, Info } from "lucide-react";
 
-import type {
-  DailyDashboardMock,
-  DashboardMetric,
-  HostPrinciplesMock,
-  ProjectionCopy,
-  ShareSegment,
-} from "@/mocks/data/dashboard";
+import type { ProjectionCopy } from "@/mocks/data/dashboard";
 
 import {
   DashboardCard,
-  ProgressBar,
   ProjectionTooltip,
   SegmentRing,
 } from "./DashboardPrimitives";
 import { ReportSuspicionCallout } from "./ReportSuspicionCallout";
+import type {
+  CrewDashboardSegmentView,
+  CrewDashboardView,
+  Trend,
+} from "./dashboardViewModel";
 
 export function DailyDashboardSection({
-  daily,
-  principles,
+  dashboard,
   projectionCopy,
+  reportNotice,
+  reportActionLabel,
 }: {
-  daily: DailyDashboardMock;
-  principles: HostPrinciplesMock;
+  dashboard: CrewDashboardView;
   projectionCopy: ProjectionCopy;
+  reportNotice: string;
+  reportActionLabel: string;
 }) {
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-center gap-2">
         <h2 className="text-sm font-black text-text-primary">
-          {daily.crewName}
+          {dashboard.crewName}
         </h2>
         <span className="rounded-full bg-success-green px-3 py-1 text-[11px] font-extrabold text-primary-green">
-          {daily.dayLabel}
+          {dashboard.ddayLabel}
         </span>
       </div>
 
-      <DashboardCard className="mb-4 flex items-center gap-5 border-primary-green/25 bg-card/95 px-5 py-6 shadow-[0_14px_30px_rgba(94,155,115,0.16)] ring-1 ring-primary-green/10">
-        <SegmentRing segments={daily.shareSegments} size={144} stroke={16}>
+      <DashboardCard className="mb-1 flex items-center gap-5 border-primary-green/25 bg-card/95 px-5 py-6 shadow-[0_14px_30px_rgba(94,155,115,0.16)] ring-1 ring-primary-green/10">
+        <SegmentRing segments={dashboard.segments} size={144} stroke={16}>
           <span className="text-[10px] font-bold text-text-secondary">
-            {daily.myShareLabel}
+            {dashboard.myShareLabel}
           </span>
           <strong className="mt-1 text-2xl font-black tracking-tight text-primary-green">
-            {daily.mySharePercent}
+            {dashboard.mySharePercent}
           </strong>
         </SegmentRing>
 
         <div className="min-w-0 flex-1 space-y-2">
-          {daily.shareSegments.map((segment) => (
+          {dashboard.segments.map((segment) => (
             <LegendRow key={segment.label} segment={segment} />
           ))}
         </div>
       </DashboardCard>
 
+      {dashboard.notice && (
+        <NoticeBanner
+          message={dashboard.notice}
+          settlementHref={
+            dashboard.showSettlementLink
+              ? `/crews/${dashboard.crewId}/settlement`
+              : null
+          }
+        />
+      )}
+
       <div className="grid grid-cols-2 gap-2.5">
-        {daily.metrics.map((metric) => (
-          <MetricCard
-            key={metric.label}
-            metric={metric}
-            projectionCopy={projectionCopy}
-          />
-        ))}
+        <MetricCard label="예상 환급금" showTooltip projectionCopy={projectionCopy}>
+          <strong className="mt-3 text-xl font-black tracking-tight text-text-primary">
+            {dashboard.expectedRefund}
+          </strong>
+          <DeltaText label={dashboard.expectedRefundDelta} trend={dashboard.expectedRefundTrend} />
+        </MetricCard>
+
+        <MetricCard label="현재 순위">
+          <RankValue label={dashboard.rankLabel} />
+          <DeltaText label={dashboard.rankDeltaLabel} trend={dashboard.rankTrend} withArrow />
+        </MetricCard>
       </div>
 
-      <DashboardCard className="flex items-center gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-blue/10 text-primary-blue">
-          <Clock3 size={19} />
+      <DashboardCard className="flex items-center gap-3 bg-card/95">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-green/10 text-primary-green">
+          <CheckCircle2 size={19} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-black text-text-primary">
-            {daily.nextSettlement.label}
-          </p>
+          <p className="text-xs font-black text-text-primary">나의 성공 횟수</p>
           <p className="mt-0.5 text-[11px] text-text-secondary">
-            {daily.nextSettlement.timeLabel}
+            직전 정산 배치 기준 확정 성공
           </p>
         </div>
-        <ProgressBar
-          percent={daily.nextSettlement.progressPercent}
-          tone="blue"
-          className="w-20"
-        />
+        <strong className="shrink-0 text-xl font-black tracking-tight text-primary-green">
+          {dashboard.successCount}
+        </strong>
       </DashboardCard>
 
-      <ReportSuspicionCallout
-        notice={principles.reportNotice}
-        actionLabel={principles.reportActionLabel}
-      />
+      {dashboard.nextSettlementTime && (
+        <DashboardCard className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-blue/10 text-primary-blue">
+            <Clock3 size={19} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-black text-text-primary">다음 정산</p>
+            <p className="mt-0.5 text-[11px] text-text-secondary">
+              {dashboard.nextSettlementTime}
+            </p>
+          </div>
+        </DashboardCard>
+      )}
+
+      <ReportSuspicionCallout notice={reportNotice} actionLabel={reportActionLabel} />
     </section>
   );
 }
 
-function LegendRow({ segment }: { segment: ShareSegment }) {
+function LegendRow({ segment }: { segment: CrewDashboardSegmentView }) {
   return (
     <div className="flex items-center gap-2 text-[11px]">
       <span
@@ -110,46 +133,97 @@ function LegendRow({ segment }: { segment: ShareSegment }) {
 }
 
 function MetricCard({
-  metric,
+  label,
+  showTooltip = false,
   projectionCopy,
+  children,
 }: {
-  metric: DashboardMetric;
-  projectionCopy: ProjectionCopy;
+  label: string;
+  showTooltip?: boolean;
+  projectionCopy?: ProjectionCopy;
+  children: React.ReactNode;
 }) {
-  const isUp = metric.trend === "up";
-  const isRankMetric = metric.label === "현재 순위";
-  const [rankValue, rankTotal] = metric.value.split(" / ");
-
   return (
     <DashboardCard className="min-h-28 flex flex-col justify-between bg-card/95">
       <p className="inline-flex items-center gap-1 text-[11px] font-black text-text-secondary">
-        {metric.label}
-        {metric.label === "예상 환급금" && (
-          <ProjectionTooltip copy={projectionCopy} />
-        )}
+        {label}
+        {showTooltip && projectionCopy && <ProjectionTooltip copy={projectionCopy} />}
       </p>
-      {isRankMetric ? (
-        <strong className="mt-3 flex items-baseline gap-1.5 tracking-tight">
-          <span className="text-2xl font-black text-primary-blue">
-            {rankValue}
-          </span>
-          <span className="text-sm font-extrabold text-text-secondary">
-            / {rankTotal}
-          </span>
-        </strong>
-      ) : (
-        <strong className="mt-3 text-xl font-black tracking-tight text-text-primary">
-          {metric.value}
-        </strong>
+      {children}
+    </DashboardCard>
+  );
+}
+
+function RankValue({ label }: { label: string }) {
+  if (label === "—") {
+    return (
+      <strong className="mt-3 text-xl font-black tracking-tight text-text-primary">
+        —
+      </strong>
+    );
+  }
+
+  const [rankValue, rankTotal] = label.split(" / ");
+  return (
+    <strong className="mt-3 flex items-baseline gap-1.5 tracking-tight">
+      <span className="text-2xl font-black text-primary-blue">{rankValue}</span>
+      {rankTotal && (
+        <span className="text-sm font-extrabold text-text-secondary">/ {rankTotal}</span>
       )}
-      <span
-        className={`mt-2 inline-flex items-center gap-1 text-[11px] font-extrabold ${
-          isUp ? "text-primary-green" : "text-text-secondary"
-        }`}
-      >
-        {isRankMetric && isUp && <ArrowUp size={12} />}
-        {metric.detail}
-      </span>
+    </strong>
+  );
+}
+
+function DeltaText({
+  label,
+  trend,
+  withArrow = false,
+}: {
+  label: string | null;
+  trend: Trend;
+  withArrow?: boolean;
+}) {
+  if (!label) return <span className="mt-2 h-[16px]" />;
+
+  const color =
+    trend === "up"
+      ? "text-primary-green"
+      : trend === "down"
+        ? "text-red-500"
+        : "text-text-secondary";
+
+  return (
+    <span className={`mt-2 inline-flex items-center gap-1 text-[11px] font-extrabold ${color}`}>
+      {withArrow && trend === "up" && <ArrowUp size={12} />}
+      {withArrow && trend === "down" && <ArrowDown size={12} />}
+      {label}
+    </span>
+  );
+}
+
+function NoticeBanner({
+  message,
+  settlementHref,
+}: {
+  message: string;
+  settlementHref: string | null;
+}) {
+  return (
+    <DashboardCard className="flex items-start gap-2.5 border-primary-blue/20 bg-primary-blue/5">
+      <Info size={16} className="mt-0.5 shrink-0 text-primary-blue" />
+      <div className="min-w-0 flex-1">
+        <p className="text-[12px] font-medium leading-relaxed text-text-secondary">
+          {message}
+        </p>
+        {settlementHref && (
+          <Link
+            href={settlementHref}
+            className="mt-1.5 inline-flex text-[12px] font-black text-primary-blue hover:underline"
+          >
+            정산 상세 보기 →
+          </Link>
+        )}
+      </div>
     </DashboardCard>
   );
 }

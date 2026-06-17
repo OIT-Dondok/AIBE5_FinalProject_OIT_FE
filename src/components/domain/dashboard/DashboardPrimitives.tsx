@@ -98,11 +98,13 @@ export function ProgressBar({
 }
 
 function createConicGradient(segments: ShareSegment[]) {
-  if (segments.length === 0) {
+  const total = segments.reduce((sum, segment) => sum + segment.value, 0);
+
+  // 세그먼트가 없거나 모든 값이 0(예: 정산 배치 전이라 지분율 미집계)이면 회색 빈 링
+  if (segments.length === 0 || total <= 0) {
     return "conic-gradient(#e0e0e0 0% 100%)";
   }
 
-  const total = segments.reduce((sum, segment) => sum + segment.value, 0) || 1;
   let cursor = 0;
 
   const stops = segments.map((segment) => {
