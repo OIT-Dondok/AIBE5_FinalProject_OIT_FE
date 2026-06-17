@@ -10,11 +10,6 @@
   "description": "습관 형성 및 정산 플랫폼, 돈독",
   "icons": [
     {
-      "src": "/favicon.ico",
-      "sizes": "256x256",
-      "type": "image/x-icon"
-    },
-    {
       "src": "/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png"

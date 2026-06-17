@@ -59,7 +59,7 @@ export function InstallPrompt() {
                   {isIOS ? (
                     <span className="flex flex-wrap items-center gap-1">
                       아래 공유 버튼 <Share size={12} className="text-primary-blue inline" /> 을 누르고
-                      <strong className="text-text-primary">"홈 화면에 추가"</strong>를 탭하세요.
+                      <strong className="text-text-primary">&quot;홈 화면에 추가&quot;</strong>를 탭하세요.
                     </span>
                   ) : (
                     "앱으로 설치하여 오프라인에서도 습관을 인증해보세요!"
