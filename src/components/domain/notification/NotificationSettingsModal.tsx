@@ -41,12 +41,13 @@ const TOGGLE_ROWS: Array<{ key: keyof NotificationSettings; label: string; desc:
   { key: "crewNews", label: "크루 소식", desc: "크루 종료 예정, 새 공지 등록, 공지 댓글 등록" },
 ];
 
-function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+function Toggle({ checked, onChange, ariaLabel }: { checked: boolean; onChange: (v: boolean) => void; ariaLabel: string }) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
+      aria-label={ariaLabel}
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors ${
         checked ? "bg-primary-green" : "bg-text-secondary/30"
@@ -102,7 +103,7 @@ export function NotificationSettingsPanel({
                 <p className="text-sm font-semibold text-text-primary">{label}</p>
                 {desc && <p className="mt-0.5 text-[11px] font-medium text-text-secondary">{desc}</p>}
               </div>
-              <Toggle checked={settings[key] as boolean} onChange={(v) => set(key, v)} />
+              <Toggle checked={settings[key] as boolean} onChange={(v) => set(key, v)} ariaLabel={label} />
             </div>
           ))}
         </div>
@@ -151,7 +152,7 @@ export function NotificationSettingsPanel({
                   {settings.dndStart} - {settings.dndEnd}
                 </p>
               </div>
-              <Toggle checked={settings.dndEnabled} onChange={(v) => set("dndEnabled", v)} />
+              <Toggle checked={settings.dndEnabled} onChange={(v) => set("dndEnabled", v)} ariaLabel="방해금지 활성화" />
             </div>
 
             <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-end gap-2">

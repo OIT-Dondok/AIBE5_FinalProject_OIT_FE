@@ -282,7 +282,8 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
 // ── 날짜별 그루핑 ────────────────────────────────────────────────────────────
 function groupByDate(items: NotificationItem[]): Array<{ label: string; items: NotificationItem[] }> {
   const map = new Map<string, NotificationItem[]>();
-  for (const item of items) {
+  const sorted = [...items].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  for (const item of sorted) {
     const label = getDateLabel(item.created_at);
     if (!map.has(label)) map.set(label, []);
     map.get(label)!.push(item);
