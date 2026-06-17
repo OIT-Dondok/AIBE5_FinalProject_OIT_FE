@@ -1,9 +1,6 @@
 // 대시보드 화면에서 FE 하드코딩으로 유지하는 값/타입.
 // 집계·크루 상세 데이터는 API 연동(GET /api/dashboard, GET /api/crews/{crewId}/dashboard)으로 대체됨.
 
-// 대시보드 내 탭 식별자
-export type DashboardSectionId = "daily" | "donuts";
-
 // 예상 정산 안내 툴팁 카피
 export type ProjectionCopy = {
   eyebrow: string;
