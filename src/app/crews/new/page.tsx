@@ -542,7 +542,7 @@ export default function CrewNewPage() {
           void handleSubmit();
         }}
         title="크루 생성 전 확인해주세요"
-        description={`크루 개설 후 수정 및 삭제가 불가능합니다.\n신중하게 만들어주세요.`}
+        description={`크루 개설 후 수정이 불가능합니다.\n신중하게 만들어주세요.`}
         confirmText="생성하기"
         cancelText="다시 확인"
         confirmVariant="primary-green"
