@@ -143,7 +143,11 @@ export default function CrewMemberList({ crewId }: CrewMemberListProps) {
     );
   }
 
-  if (members.length === 0) {
+  const activeMembers = members.filter(
+    (member) => member.status === 'LOCKED' || member.role === 'HOST'
+  );
+
+  if (activeMembers.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 gap-2">
         <p className="text-3xl">👥</p>
@@ -154,9 +158,9 @@ export default function CrewMemberList({ crewId }: CrewMemberListProps) {
 
   return (
     <div className="flex flex-col">
-      <p className="text-xs font-bold text-text-primary/80 mb-3">{members.length}명</p>
+      <p className="text-xs font-bold text-text-primary/80 mb-3">{activeMembers.length}명</p>
       <ul className="flex flex-col divide-y divide-text-secondary/10">
-        {members.map((member) => (
+        {activeMembers.map((member) => (
           <li key={member.crew_participant_id}>
             <Link
               href={`/members/${member.member_uuid}`}
