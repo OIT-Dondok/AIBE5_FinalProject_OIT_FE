@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { usePwaStore } from "@/store/pwaStore";
 
 // Chrome / Android 등에서 제공하는 PWA 설치 관련 beforeinstallprompt 이벤트 타입 정의
 export interface BeforeInstallPromptEvent extends Event {
@@ -26,10 +27,16 @@ declare global {
 }
 
 export function usePwaInstall() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isStandalone, setIsStandalone] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
-  const [isInstallable, setIsInstallable] = useState(false);
+  const {
+    deferredPrompt,
+    isStandalone,
+    isIOS,
+    isInstallable,
+    setDeferredPrompt,
+    setIsStandalone,
+    setIsIOS,
+    setIsInstallable,
+  } = usePwaStore();
 
   useEffect(() => {
     // 1. standalone 모드 감지 (이미 설치된 앱으로 실행 중인지 확인)
@@ -70,13 +77,7 @@ export function usePwaInstall() {
       }
     };
 
-    // 4-2. layout.tsx의 인라인 스크립트에서 초기 캡처 성공 시 보낸 이벤트를 수신하여 동기화
-    const handleCustomReady = () => {
-      checkExistingPrompt();
-    };
-
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    window.addEventListener("pwa-installable-ready", handleCustomReady);
 
     // 5. iOS 디바이스인 경우 브라우저 레벨에서 beforeinstallprompt가 발생하지 않으므로,
     // standalone 모드가 아니면 항상 홈 화면 추가 가이드가 가능하므로 installable로 간주합니다.
@@ -86,9 +87,8 @@ export function usePwaInstall() {
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-      window.removeEventListener("pwa-installable-ready", handleCustomReady);
     };
-  }, []);
+  }, [setDeferredPrompt, setIsStandalone, setIsIOS, setIsInstallable]);
 
   const install = async (): Promise<{ outcome: "accepted" | "dismissed" | "ios_guide" | "not_supported" | "error" }> => {
     if (isIOS) {
@@ -122,3 +122,4 @@ export function usePwaInstall() {
     install,
   };
 }
+
