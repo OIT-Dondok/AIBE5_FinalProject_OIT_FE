@@ -47,22 +47,16 @@ export type DailyDashboardMock = {
   nextSettlement: NextSettlementMock;
 };
 
-export type GracePeriodItem = {
+export type HostPrincipleItem = {
   title: string;
   description: string;
 };
 
 export type HostPrinciplesMock = {
-  hostInitial: string;
-  hostName: string;
-  agreementLabel: string;
   title: string;
-  principles: string[];
+  principles: HostPrincipleItem[];
   reportNotice: string;
   reportActionLabel: string;
-  graceTitle: string;
-  graceDescription: string;
-  graceItems: GracePeriodItem[];
 };
 
 export type CrewDonutRow = {
@@ -182,37 +176,34 @@ export const mockDashboard: DashboardMock = {
     },
   },
   principles: {
-    hostInitial: "모",
-    hostName: "모닝맨",
-    agreementLabel: "4가지 원칙 동의함",
-    title: "이 크루의 방장 운영원칙",
+    title: "방장 운영 원칙",
     principles: [
-      "정직한 인증 검증을 약속합니다",
-      "일일 정산 전에 모든 인증을 검토합니다",
-      "임시승인/기각 정책을 이해했습니다",
-      "개인적 친분으로 판단하지 않습니다",
+      {
+        title: "정직한 인증",
+        description:
+          "모든 인증 사진은 실제 미션을 수행한 결과여야 하며, 조작하거나 대리 제출하지 않겠습니다.",
+      },
+      {
+        title: "성실한 검토",
+        description:
+          "크루원의 인증 사진을 매일 성실하게 검토하고 공정하게 판단하겠습니다.",
+      },
+      {
+        title: "정책 준수",
+        description:
+          "돈독 서비스의 운영 정책과 크루 운영 규칙을 숙지하고 이를 준수하겠습니다.",
+      },
+      {
+        title: "공정한 운영",
+        description: "특정 크루원에 대한 개인적 편향 없이 동일한 기준으로 검증하겠습니다.",
+      },
+      {
+        title: "크루 운영 한도",
+        description: "방장은 최대 5개의 크루를 동시에 운영할 수 있습니다.",
+      },
     ],
     reportNotice: "부정 검증이 의심되면 운영팀에 신고할 수 있어요.",
     reportActionLabel: "부정 의심 신고",
-    graceTitle: "검증 유예 기간 안내",
-    graceDescription:
-      "방장이 일일 정산 전까지 인증을 검토하지 못하면, 정산 시각부터 72시간의 유예 기간이 적용돼요.",
-    graceItems: [
-      {
-        title: "유예 중 임시 처리",
-        description:
-          "Exif 1차 검증 결과로 성공/실패를 임시 적용해 정산을 막지 않아요.",
-      },
-      {
-        title: "긴급 검토 표시",
-        description: "임시 처리된 인증은 운영 콘솔에서 긴급 검토로 표시돼요.",
-      },
-      {
-        title: "기간 내 확정 필요",
-        description:
-          "유예 기간 안에 방장이 확정하지 않으면 임시 결과가 그대로 확정돼요.",
-      },
-    ],
   },
   crewDonuts: {
     dateLabel: "26년 5월 21일",
