@@ -1,10 +1,11 @@
-﻿"use client";
+"use client";
 
 import type { FormEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import { CircleAlert, CheckCircle2 } from "lucide-react";
 
 import { Header } from "@/components/common/Header";
+import { Toast } from "@/components/common/Toast";
 import { ProfileCard } from "@/components/domain/profile/ProfileCard";
 import { ProfileEmpty } from "@/components/domain/profile/ProfileEmpty";
 import { ProfileLoading } from "@/components/domain/profile/ProfileLoading";
@@ -58,56 +59,6 @@ function validateProfileImageSize(file: File): string | null {
   return null;
 }
 
-function ProfileUploadToast({
-  isOpen,
-  onClose,
-  tone,
-  message,
-  duration = 2600,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  tone: FeedbackTone;
-  message: string;
-  duration?: number;
-}) {
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const timer = window.setTimeout(onClose, duration);
-    return () => window.clearTimeout(timer);
-  }, [isOpen, onClose, duration]);
-
-  if (!isOpen) return null;
-
-  const icon =
-    tone === "error" ? (
-      <CircleAlert size={18} className="text-red-200 stroke-[2.5]" />
-    ) : (
-      <CheckCircle2 size={18} className="text-emerald-100 stroke-[2.5]" />
-    );
-  const backgroundClass = tone === "error" ? "bg-rose-500/90" : "bg-neutral-900/90";
-
-  return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="fixed bottom-24 left-0 right-0 z-[90] flex justify-center px-4 pointer-events-none"
-    >
-      <div
-        className={`pointer-events-auto w-full max-w-[380px] px-4 py-3 rounded-button flex items-center gap-2.5 shadow-lg ${
-          backgroundClass
-        } backdrop-blur-sm text-white animate-in slide-in-from-bottom-4 fade-in duration-300`}
-      >
-        {icon}
-        <span className="text-xs font-semibold tracking-tight">
-          {tone === "error" ? "실패: " : "성공: "}
-          {message}
-        </span>
-      </div>
-    </div>
-  );
-}
 
 export default function ProfilePage() {
   const [pageData, setPageData] = useState<ProfilePageData | null>(null);
@@ -359,10 +310,10 @@ export default function ProfilePage() {
         </div>
 
         {feedbackToast && (
-          <ProfileUploadToast
+          <Toast
             isOpen={feedbackToast.isOpen}
             onClose={closeFeedbackToast}
-            tone={feedbackToast.tone}
+            type={feedbackToast.tone}
             message={feedbackToast.message}
           />
         )}

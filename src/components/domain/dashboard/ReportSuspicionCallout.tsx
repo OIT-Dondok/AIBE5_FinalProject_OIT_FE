@@ -5,7 +5,7 @@ import { useState } from "react";
 import { AlertTriangle, ExternalLink, Flag, Mail, MessageCircle, X } from "lucide-react";
 
 const OPEN_CHAT_URL = "https://open.kakao.com/o/s5Pxfgxi";
-const REPORT_EMAIL = "report@dondok.example";
+const REPORT_EMAIL = "dondok.oit@gmail.com";
 
 export function ReportSuspicionCallout({
   notice,

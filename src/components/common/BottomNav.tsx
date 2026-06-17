@@ -30,6 +30,7 @@ export const BottomNav = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [activeCrews, setActiveCrews] = useState<MyCrew[]>([]);
     const [toast, setToast] = useState('');
+    const [toastType, setToastType] = useState<'success' | 'error' | 'warning'>('success');
     const [isToastOpen, setIsToastOpen] = useState(false);
     const [isFetching, setIsFetching] = useState(false);
 
@@ -66,6 +67,7 @@ export const BottomNav = () => {
             const active = items.filter((c) => c.status === 'ACTIVE');
             if (active.length === 0) {
                 setToast('진행 중인 크루가 없어요');
+                setToastType('warning');
                 setIsToastOpen(true);
             } else if (active.length === 1) {
                 router.push(`/crews/${active[0].crew_id}/certify`);
@@ -75,6 +77,7 @@ export const BottomNav = () => {
             }
         } catch {
             setToast('크루 정보를 불러오지 못했어요');
+            setToastType('error');
             setIsToastOpen(true);
         } finally {
             setIsFetching(false);
@@ -115,6 +118,7 @@ export const BottomNav = () => {
                 message={toast}
                 isOpen={isToastOpen}
                 onClose={() => setIsToastOpen(false)}
+                type={toastType}
             />
         </>
     );

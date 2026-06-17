@@ -116,6 +116,9 @@ export const approveCrewApplication = (crewId: number, crewParticipantId: number
 export const rejectCrewApplication = (crewId: number, crewParticipantId: number) =>
   api.post<RejectApplicationResponse>(`/crews/${crewId}/applications/${crewParticipantId}/reject`);
 
+export const disbandCrew = (crewId: number) =>
+  api.delete(`/crews/${crewId}`);
+
 export const getMyLockedCrews = async (signal?: AbortSignal): Promise<MyCrew[]> => {
   const allItems: MyCrew[] = [];
   let cursor: string | undefined;

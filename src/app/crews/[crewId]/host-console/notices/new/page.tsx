@@ -7,7 +7,8 @@ import { Megaphone } from "lucide-react";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
 import { HostActionButton } from "@/components/domain/host/common/HostActionButton";
-import { HostToast } from "@/components/domain/host/common/HostToast";
+import { Toast } from "@/components/common/Toast";
+import type { ToastType } from "@/components/common/Toast";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { createCrewNotice, getCrew } from "@/services/crew";
 
@@ -17,20 +18,12 @@ export default function HostNoticeNewPage() {
   const crewId = parseRouteNumber(params.crewId);
   const [title, setTitle] = useState("");
   const [contentHtml, setContentHtml] = useState("");
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState("");
+  const [isToastOpen, setIsToastOpen] = useState(false);
+  const [toastType, setToastType] = useState<ToastType>("success");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [crewName, setCrewName] = useState<string | null>(null);
   const isTitleReady = title.trim().length > 0;
-
-  useEffect(() => {
-    if (!toastMessage) return;
-
-    const timeoutId = window.setTimeout(() => {
-      setToastMessage(null);
-    }, 2200);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [toastMessage]);
 
   useEffect(() => {
     if (crewId === null) return;
@@ -56,6 +49,8 @@ export default function HostNoticeNewPage() {
     if (isSubmitting) return;
     if (!isTitleReady) {
       setToastMessage("제목을 작성해주세요");
+      setToastType("warning");
+      setIsToastOpen(true);
       return;
     }
     setIsSubmitting(true);
@@ -64,6 +59,8 @@ export default function HostNoticeNewPage() {
       router.push(`/crews/${crewId}/host-console?tab=notices`);
     } catch {
       setToastMessage("공지 등록에 실패했어요");
+      setToastType("error");
+      setIsToastOpen(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -118,7 +115,12 @@ export default function HostNoticeNewPage() {
             </HostActionButton>
           </div>
         </form>
-        {toastMessage && <HostToast message={toastMessage} />}
+        <Toast
+          message={toastMessage}
+          isOpen={isToastOpen}
+          type={toastType}
+          onClose={() => setIsToastOpen(false)}
+        />
       </div>
     </main>
   );

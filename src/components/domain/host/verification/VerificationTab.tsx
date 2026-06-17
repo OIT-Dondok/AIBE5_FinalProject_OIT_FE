@@ -6,7 +6,8 @@ import { ShieldCheck } from "lucide-react";
 import { useParams } from "next/navigation";
 
 import { EmptyState } from "@/components/common/EmptyState";
-import { HostToast } from "@/components/domain/host/common/HostToast";
+import { Toast } from "@/components/common/Toast";
+import type { ToastType } from "@/components/common/Toast";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { SectionCard } from "@/components/domain/host/SectionCard";
 import {
@@ -90,6 +91,8 @@ export function VerificationTab({ onPendingCountChange }: VerificationTabProps) 
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [expandedMissionLogId, setExpandedMissionLogId] = useState<number | null>(null);
   const [toastMessage, setToastMessage] = useState("");
+  const [isToastOpen, setIsToastOpen] = useState(false);
+  const [toastType, setToastType] = useState<ToastType>("success");
 
   const updateCounts = useCallback((nextCounts: Record<MissionLogReviewBucket, number>) => {
     setCounts(nextCounts);
@@ -112,6 +115,8 @@ export function VerificationTab({ onPendingCountChange }: VerificationTabProps) 
       updateCounts(data.counts);
     } catch (error) {
       setToastMessage(getErrorMessage(error));
+      setToastType("error");
+      setIsToastOpen(true);
       if (!cursor) setItems([]);
     } finally {
       setIsLoading(false);
@@ -124,12 +129,6 @@ export function VerificationTab({ onPendingCountChange }: VerificationTabProps) 
     void fetchItems();
   }, [fetchItems]);
 
-  useEffect(() => {
-    if (!toastMessage) return;
-    const timeoutId = window.setTimeout(() => setToastMessage(""), 2600);
-    return () => window.clearTimeout(timeoutId);
-  }, [toastMessage]);
-
   const handleApprove = async (missionLogId: number) => {
     try {
       await approveMissionLog(missionLogId);
@@ -137,6 +136,8 @@ export function VerificationTab({ onPendingCountChange }: VerificationTabProps) 
       return true;
     } catch (error) {
       setToastMessage(getErrorMessage(error));
+      setToastType("error");
+      setIsToastOpen(true);
       return false;
     }
   };
@@ -154,6 +155,8 @@ export function VerificationTab({ onPendingCountChange }: VerificationTabProps) 
       return true;
     } catch (error) {
       setToastMessage(getErrorMessage(error));
+      setToastType("error");
+      setIsToastOpen(true);
       return false;
     }
   };
@@ -222,7 +225,12 @@ export function VerificationTab({ onPendingCountChange }: VerificationTabProps) 
         </div>
       )}
 
-      {toastMessage && <HostToast message={toastMessage} />}
+      <Toast
+        message={toastMessage}
+        isOpen={isToastOpen}
+        type={toastType}
+        onClose={() => setIsToastOpen(false)}
+      />
     </div>
   );
 }

@@ -11,6 +11,8 @@ import { formatDate, formatTime } from "@/components/domain/host/hostFormatters"
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { SectionCard } from "@/components/domain/host/SectionCard";
 import { useAuthStore } from "@/store/authStore";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
+import { Toast } from "@/components/common/Toast";
 import {
   getCrewApplications as fetchCrewApplications,
   approveCrewApplication,
@@ -130,17 +132,14 @@ export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) 
     item: ApplicationListItem;
     decision: ApplicationDecision;
   } | null>(null);
-  const [toastDecision, setToastDecision] = useState<{ type: ApplicationDecision; seq: number } | null>(null);
+  const [isToastOpen, setIsToastOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<'success' | 'error'>('success');
   const [processingId, setProcessingId] = useState<number | null>(null);
-  const confirmDialogRef = useRef<HTMLDivElement>(null);
   const onPendingCountChangeRef = useRef(onPendingCountChange);
   const params = useParams<{ crewId: string }>();
   const crewId = parseRouteNumber(params.crewId);
   const myUuid = useAuthStore((s) => s.user?.member_uuid);
-
-  useEffect(() => {
-    onPendingCountChangeRef.current = onPendingCountChange;
-  }, [onPendingCountChange]);
 
   const loadApplications = useCallback(async () => {
     if (crewId === null) return;
@@ -167,36 +166,6 @@ export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) 
   useEffect(() => {
     loadApplications();
   }, [loadApplications]);
-
-  useEffect(() => {
-    if (!toastDecision) return;
-    const timeoutId = window.setTimeout(() => setToastDecision(null), TOAST_DURATION_MS);
-    return () => window.clearTimeout(timeoutId);
-  }, [toastDecision]);
-
-  useEffect(() => {
-    if (!confirmTarget) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [confirmTarget]);
-
-  useEffect(() => {
-    if (!confirmTarget) return;
-    const previousFocus = document.activeElement as HTMLElement | null;
-    const firstButton = confirmDialogRef.current?.querySelector<HTMLButtonElement>("button");
-    firstButton?.focus();
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setConfirmTarget(null);
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      previousFocus?.focus();
-    };
-  }, [confirmTarget]);
 
   if (crewId === null) {
     return (
@@ -236,7 +205,9 @@ export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) 
       } else {
         await rejectCrewApplication(crewId, item.crew_participant_id);
       }
-      setToastDecision((prev) => ({ type: decision, seq: (prev?.seq ?? 0) + 1 }));
+      setToastMessage(decision === "approved" ? "가입을 승인했어요" : "가입을 거절했어요");
+      setToastType(decision === "approved" ? "success" : "error");
+      setIsToastOpen(true);
       await loadApplications();
     } catch {
       // API 실패 시 상태 유지
@@ -296,87 +267,24 @@ export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) 
         </div>
       )}
 
-      {confirmTarget && (
-        <div
-          className="fixed inset-0 z-[85] flex items-center justify-center bg-black/40 px-5"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={`application-${confirmTarget.decision}-title-${confirmTarget.item.crew_participant_id}`}
-          onClick={() => setConfirmTarget(null)}
-        >
-          <div
-            ref={confirmDialogRef}
-            className="w-full max-w-[340px] rounded-2xl bg-card px-5 py-5 shadow-lg"
-            onClick={(event) => event.stopPropagation()}
-            onKeyDown={(e) => {
-              if (e.key !== "Tab") return;
-              const buttons = Array.from(confirmDialogRef.current?.querySelectorAll<HTMLButtonElement>("button") ?? []);
-              if (buttons.length < 2) return;
-              if (e.shiftKey && document.activeElement === buttons[0]) {
-                e.preventDefault();
-                buttons[buttons.length - 1].focus();
-              } else if (!e.shiftKey && document.activeElement === buttons[buttons.length - 1]) {
-                e.preventDefault();
-                buttons[0].focus();
-              }
-            }}
-          >
-            <div
-              className={`mx-auto flex h-11 w-11 items-center justify-center rounded-full ${
-                confirmTarget.decision === "approved" ? "bg-[#E8F2EB] text-primary-green" : "bg-[#FCEDEC] text-[#DB5C55]"
-              }`}
-            >
-              {confirmTarget.decision === "approved" ? <Check size={22} strokeWidth={2.8} /> : <X size={22} strokeWidth={2.8} />}
-            </div>
-            <h2
-              id={`application-${confirmTarget.decision}-title-${confirmTarget.item.crew_participant_id}`}
-              className="mt-3 text-center text-base font-extrabold text-text-primary"
-            >
-              {confirmTarget.decision === "approved" ? "승인하시겠습니까?" : "거절하시겠습니까?"}
-            </h2>
-            <p className="mt-2 text-center text-sm font-medium leading-relaxed text-text-secondary">
-              {confirmTarget.item.nickname}님의 가입 신청을{" "}
-              {confirmTarget.decision === "approved" ? "승인합니다." : "거절합니다."}
-              <br />
-              {confirmTarget.decision === "approved" ? "승인 후 크루 참여가 확정됩니다." : "거절 후 신청 상태가 변경됩니다."}
-            </p>
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <HostActionButton variant="cancel" onClick={() => setConfirmTarget(null)}>
-                취소
-              </HostActionButton>
-              <HostActionButton
-                variant={confirmTarget.decision === "approved" ? "approve" : "danger"}
-                onClick={handleConfirmDecision}
-              >
-                {confirmTarget.decision === "approved" ? "승인" : "거절"}
-              </HostActionButton>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={!!confirmTarget}
+        onClose={() => setConfirmTarget(null)}
+        onConfirm={handleConfirmDecision}
+        title={confirmTarget?.decision === "approved" ? "승인하시겠습니까?" : "거절하시겠습니까?"}
+        description={`${confirmTarget?.item.nickname}님의 가입 신청을 ${confirmTarget?.decision === "approved" ? "승인합니다." : "거절합니다."}\n${confirmTarget?.decision === "approved" ? "승인 후 크루 참여가 확정됩니다." : "거절 후 신청 상태가 변경됩니다."}`}
+        confirmText={confirmTarget?.decision === "approved" ? "승인" : "거절"}
+        cancelText="취소"
+        confirmVariant={confirmTarget?.decision === "approved" ? "primary-green" : "danger"}
+        iconType={confirmTarget?.decision === "approved" ? "success" : "error"}
+      />
 
-      {toastDecision && (
-        <div className="fixed inset-x-0 bottom-6 z-[90] flex justify-center px-5 pointer-events-none">
-          <div
-            className="flex w-fit items-center gap-2.5 rounded-2xl bg-[#28251F] px-4 py-3 text-white shadow-lg"
-            role="status"
-            aria-live="polite"
-          >
-            {toastDecision.type === "approved" ? (
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-green text-white">
-                <Check size={13} strokeWidth={3} />
-              </span>
-            ) : (
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#DB5C55] text-white">
-                <X size={13} strokeWidth={3} />
-              </span>
-            )}
-            <span className="text-[13px] font-extrabold">
-              가입을 {toastDecision.type === "approved" ? "승인했어요" : "거절했어요"}
-            </span>
-          </div>
-        </div>
-      )}
+      <Toast
+        isOpen={isToastOpen}
+        onClose={() => setIsToastOpen(false)}
+        message={toastMessage}
+        type={toastType}
+      />
     </div>
   );
 }
