@@ -1,34 +1,18 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronDown, Plus, Search, Check, ChevronRight } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { Header } from '@/components/common/Header';
 import { EmptyState } from '@/components/common/EmptyState';
 import CrewCard from '@/components/domain/crew/CrewCard';
+import CrewFilterBar, { CategoryFilter } from '@/components/domain/crew/CrewFilterBar';
+import StatusDropdown from '@/components/domain/crew/StatusDropdown';
 import { getCrews } from '@/services/crew';
-import type { CrewListItem, CrewStatus, CrewCategory } from '@/types/domain';
+import type { CrewListItem, CrewStatus } from '@/types/domain';
 
 type StatusFilter = CrewStatus | 'ALL';
-type CategoryFilter = CrewCategory | 'ALL';
-
-const STATUS_OPTIONS: { label: string; value: StatusFilter }[] = [
-  { label: '전체', value: 'ALL' },
-  { label: '모집중', value: 'RECRUITING' },
-  { label: '진행중', value: 'ACTIVE' },
-  { label: '종료됨', value: 'CLOSED' },
-];
-
-const CATEGORIES: { label: string; value: CategoryFilter }[] = [
-  { label: '전체', value: 'ALL' },
-  { label: '🌅 기상', value: 'MORNING' },
-  { label: '📚 독서', value: 'READING' },
-  { label: '💪 운동', value: 'EXERCISE' },
-  { label: '📝 공부', value: 'STUDY' },
-  { label: '🥗 식단', value: 'DIET' },
-  { label: '📌 기타', value: 'OTHER' },
-];
 
 type GroupedCrews = {
   RECRUITING: CrewListItem[];
@@ -43,107 +27,6 @@ const SECTION_CONFIG: Record<keyof GroupedCrews, { label: string; badgeClass: st
   ACTIVE: { label: '진행중', badgeClass: 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' },
   CLOSED: { label: '종료됨', badgeClass: 'bg-slate-500/10 text-slate-500 border border-slate-500/20' },
 };
-
-const CATEGORY_CHIP_STYLES: Record<CategoryFilter, { active: string; inactive: string }> = {
-  ALL: {
-    active: 'bg-slate-900 text-white shadow-lg shadow-slate-900/20 ring-2 ring-slate-950/20 scale-[1.04] z-10',
-    inactive: 'bg-slate-100 text-slate-600 hover:bg-slate-200/80 border border-slate-200/50',
-  },
-  MORNING: {
-    active: 'bg-orange-500 text-white shadow-lg shadow-orange-500/30 ring-4 ring-orange-500/20 scale-[1.04] z-10',
-    inactive: 'bg-orange-50 text-orange-700 hover:bg-orange-100/80 border border-orange-100/30',
-  },
-  READING: {
-    active: 'bg-amber-500 text-white shadow-lg shadow-amber-500/30 ring-4 ring-amber-500/20 scale-[1.04] z-10',
-    inactive: 'bg-amber-50 text-amber-700 hover:bg-amber-100/80 border border-amber-100/30',
-  },
-  EXERCISE: {
-    active: 'bg-blue-500 text-white shadow-lg shadow-blue-500/30 ring-4 ring-blue-500/20 scale-[1.04] z-10',
-    inactive: 'bg-blue-50 text-blue-700 hover:bg-blue-100/80 border border-blue-100/30',
-  },
-  STUDY: {
-    active: 'bg-violet-500 text-white shadow-lg shadow-violet-500/30 ring-4 ring-violet-500/20 scale-[1.04] z-10',
-    inactive: 'bg-violet-50 text-violet-700 hover:bg-violet-100/80 border border-violet-100/30',
-  },
-  DIET: {
-    active: 'bg-green-500 text-white shadow-lg shadow-green-500/30 ring-4 ring-green-500/20 scale-[1.04] z-10',
-    inactive: 'bg-green-50 text-green-700 hover:bg-green-100/80 border border-green-100/30',
-  },
-  OTHER: {
-    active: 'bg-slate-600 text-white shadow-lg shadow-slate-600/30 ring-4 ring-slate-600/20 scale-[1.04] z-10',
-    inactive: 'bg-slate-100 text-slate-700 hover:bg-slate-200/80 border border-slate-200/50',
-  },
-};
-
-interface StatusDropdownProps {
-  value: StatusFilter;
-  onChange: (v: StatusFilter) => void;
-}
-
-function StatusDropdown({ value, onChange }: StatusDropdownProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [isOpen]);
-
-  const selectedLabel = STATUS_OPTIONS.find((o) => o.value === value)?.label ?? '전체';
-  const isFiltered = value !== 'ALL';
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={() => setIsOpen((v) => !v)}
-        className={`h-9 px-4 flex items-center gap-1.5 text-xs font-bold rounded-full border shadow-sm transition-all duration-200 active:scale-95 ${
-          isFiltered
-            ? 'bg-primary-green/10 border-primary-green/30 text-primary-green'
-            : 'bg-card border-text-secondary/15 text-text-primary'
-        }`}
-      >
-        <span>{selectedLabel}</span>
-        <ChevronDown
-          size={12}
-          className={`shrink-0 text-text-secondary/60 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-        />
-      </button>
-
-      {isOpen && (
-        <div className="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[100px] bg-card border border-text-secondary/10 rounded-2xl shadow-xl py-1 overflow-hidden origin-top-right animate-dropdown-open">
-          {STATUS_OPTIONS.map((opt) => {
-            const isSelected = opt.value === value;
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => {
-                  onChange(opt.value);
-                  setIsOpen(false);
-                }}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-bold text-left transition-colors hover:bg-text-secondary/5 active:bg-text-secondary/10 ${
-                  isSelected ? 'text-primary-green' : 'text-text-primary'
-                }`}
-              >
-                <span>{opt.label}</span>
-                {isSelected && (
-                  <Check size={12} strokeWidth={3} className="shrink-0 ml-2 text-primary-green" />
-                )}
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
 
 export default function CrewsPage() {
   const router = useRouter();
@@ -225,30 +108,7 @@ export default function CrewsPage() {
 
       <div className="w-full max-w-[430px] mx-auto flex flex-col">
         {/* 카테고리 탭 (둥근 파스텔 칩 스타일) */}
-        <div className="relative w-full overflow-hidden">
-          <div className="flex overflow-x-auto no-scrollbar gap-2 px-5 py-4 pr-14">
-            {CATEGORIES.map((cat) => {
-              const isSelected = activeCategory === cat.value;
-              const chipStyle = CATEGORY_CHIP_STYLES[cat.value];
-              return (
-                <button
-                  key={cat.value}
-                  type="button"
-                  onClick={() => setActiveCategory(cat.value)}
-                  className={`flex-shrink-0 px-4 py-2 text-xs font-bold rounded-full transition-all duration-300 active:scale-95 ${
-                    isSelected ? chipStyle.active : chipStyle.inactive
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              );
-            })}
-          </div>
-          {/* 우측 페이드 & 스크롤 암시 아이콘 */}
-          <div className="absolute right-0 top-0 bottom-0 w-14 bg-gradient-to-l from-background via-background/80 to-transparent pointer-events-none flex items-center justify-end pr-0.5 overflow-hidden">
-            <ChevronRight size={18} className="text-text-secondary/40 translate-x-1.5 animate-pulse shrink-0" strokeWidth={3} />
-          </div>
-        </div>
+        <CrewFilterBar activeCategory={activeCategory} onChangeCategory={setActiveCategory} />
 
         {/* 검색바 */}
         <div className="px-5 pt-1 pb-3">
