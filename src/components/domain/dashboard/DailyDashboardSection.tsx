@@ -125,7 +125,9 @@ function LegendRow({ segment }: { segment: CrewDashboardSegmentView }) {
       >
         {segment.label}
       </span>
-      <span className="font-black tabular-nums text-text-primary">
+      <span
+        className={`shrink-0 tabular-nums text-text-primary ${segment.isMe ? "font-black" : "font-medium"}`}
+      >
         {segment.valueLabel}
       </span>
     </div>
