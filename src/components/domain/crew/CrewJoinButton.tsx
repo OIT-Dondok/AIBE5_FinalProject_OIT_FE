@@ -205,9 +205,9 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
       <ConfirmModal
         isOpen={showCancelConfirmModal}
         onClose={() => setShowCancelConfirmModal(false)}
-        onConfirm={() => {
+        onConfirm={async () => {
+          await handleCancel();
           setShowCancelConfirmModal(false);
-          void handleCancel();
         }}
         title="정말 신청을 취소하시겠어요?"
         description={
@@ -226,9 +226,9 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
       <ConfirmModal
         isOpen={showJoinConfirmModal}
         onClose={() => setShowJoinConfirmModal(false)}
-        onConfirm={() => {
+        onConfirm={async () => {
+          await handleJoin();
           setShowJoinConfirmModal(false);
-          void handleJoin();
         }}
         title="크루에 입장 신청을 하시겠어요?"
         description={

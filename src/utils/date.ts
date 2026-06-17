@@ -2,7 +2,7 @@
  * ISO-8601 날짜 문자열을 KST(UTC+9)로 보정한 Date 객체로 변환합니다. (내부 헬퍼)
  * 브라우저/서버 타임존에 관계없이 한국 기준 캘린더 날짜를 얻기 위해 사용합니다.
  */
-function toKstDate(dateStr: string): Date {
+export function toKstDate(dateStr: string): Date {
   const d = new Date(dateStr);
   d.setUTCHours(d.getUTCHours() + 9);
   return d;

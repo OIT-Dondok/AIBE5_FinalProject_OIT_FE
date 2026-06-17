@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Calendar, Pin } from 'lucide-react';
 import type { CrewListItem, CrewStatus, CrewCategory } from '@/types/domain';
 import { CATEGORY_EMOJI } from '@/constants/crew';
-import { formatShortDate } from '@/utils/date';
+import { formatShortDate, toKstDate } from '@/utils/date';
 
 const CATEGORY_BG: Record<CrewCategory, string> = {
   MORNING: 'bg-orange-50',
@@ -61,15 +61,13 @@ const PASTEL_GRADIENTS = [
 
 function getDDay(deadlineStr: string) {
   if (!deadlineStr) return null;
-  const deadline = new Date(deadlineStr);
-  const today = new Date();
+  const targetKst = toKstDate(deadlineStr);
+  const targetDate = new Date(Date.UTC(targetKst.getUTCFullYear(), targetKst.getUTCMonth(), targetKst.getUTCDate(), 0, 0, 0, 0));
   
-  today.setHours(0, 0, 0, 0);
+  const todayKst = toKstDate(new Date().toISOString());
+  const todayDate = new Date(Date.UTC(todayKst.getUTCFullYear(), todayKst.getUTCMonth(), todayKst.getUTCDate(), 0, 0, 0, 0));
   
-  const targetDate = new Date(deadline);
-  targetDate.setHours(0, 0, 0, 0);
-  
-  const diffTime = targetDate.getTime() - today.getTime();
+  const diffTime = targetDate.getTime() - todayDate.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   
   if (diffDays < 0) {
