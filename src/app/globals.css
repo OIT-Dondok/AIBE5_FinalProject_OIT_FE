@@ -77,9 +77,26 @@
   animation: feed-in 0.3s ease-out both;
 }
 
+/* 드롭다운 오픈 애니메이션 */
+@keyframes dropdown-open {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@utility animate-dropdown-open {
+  animation: dropdown-open 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
 /* 모션 최소화 선호 시 애니메이션 비활성화 */
 @media (prefers-reduced-motion: reduce) {
-  .animate-feed-in {
+  .animate-feed-in,
+  .animate-dropdown-open {
     animation: none;
   }
 }

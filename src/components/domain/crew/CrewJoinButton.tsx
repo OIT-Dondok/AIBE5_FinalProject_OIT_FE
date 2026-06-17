@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { isAxiosError } from 'axios';
 import { Toast } from '@/components/common/Toast';
+import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { joinCrew, cancelJoinCrew } from '@/services/crew';
 import type { MyParticipation } from '@/types/domain';
 import type { ErrorResponse } from '@/types/common';
@@ -26,6 +27,8 @@ function Spinner() {
 export default function CrewJoinButton({ crewId, depositAmount, myParticipation, onSuccess }: CrewJoinButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showCancelConfirmModal, setShowCancelConfirmModal] = useState(false);
+  const [showJoinConfirmModal, setShowJoinConfirmModal] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'warning'>('success');
   const [isToastOpen, setIsToastOpen] = useState(false);
@@ -98,7 +101,7 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
       return (
         <button
           type="button"
-          onClick={handleJoin}
+          onClick={() => setShowJoinConfirmModal(true)}
           disabled={isLoading}
           className="relative w-full py-4 px-6 rounded-2xl bg-pastel-yellow overflow-hidden shadow-lg shadow-pastel-yellow/40 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none select-none"
         >
@@ -128,7 +131,7 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
           {/* 취소 버튼 */}
           <button
             type="button"
-            onClick={handleCancel}
+            onClick={() => setShowCancelConfirmModal(true)}
             disabled={isLoading}
             className="relative w-full py-3 px-6 rounded-2xl bg-card overflow-hidden border border-text-secondary/20 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none select-none"
           >
@@ -197,6 +200,48 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
           </div>
         </div>
       )}
+
+      {/* 신청 취소 컨펌 모달 */}
+      <ConfirmModal
+        isOpen={showCancelConfirmModal}
+        onClose={() => setShowCancelConfirmModal(false)}
+        onConfirm={() => {
+          setShowCancelConfirmModal(false);
+          void handleCancel();
+        }}
+        title="정말 신청을 취소하시겠어요?"
+        description={
+          <span>
+            신청 철회 시 <strong className="text-[#DB5C55] font-bold">재참여가 불가능</strong>합니다.
+          </span>
+        }
+        confirmText="네, 취소할게요"
+        cancelText="아니오"
+        confirmVariant="danger"
+        iconType="warning"
+        isLoading={isLoading}
+      />
+
+      {/* 입장 신청 컨펌 모달 */}
+      <ConfirmModal
+        isOpen={showJoinConfirmModal}
+        onClose={() => setShowJoinConfirmModal(false)}
+        onConfirm={() => {
+          setShowJoinConfirmModal(false);
+          void handleJoin();
+        }}
+        title="크루에 입장 신청을 하시겠어요?"
+        description={
+          <span>
+            방장 승인 시 보증금 <strong className="text-primary-green font-bold">{depositAmount.toLocaleString()}원</strong>이 예약 잠금 처리됩니다.
+          </span>
+        }
+        confirmText="네, 신청할게요"
+        cancelText="아니오"
+        confirmVariant="primary-green"
+        iconType="none"
+        isLoading={isLoading}
+      />
 
       <Toast
         message={toastMessage}
