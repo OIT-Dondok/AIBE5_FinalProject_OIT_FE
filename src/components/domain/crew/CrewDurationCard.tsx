@@ -1,5 +1,5 @@
 import { Pin } from 'lucide-react';
-import { formatShortDate, calcDurationDays } from '@/utils/date';
+import { formatFullDate, calcDurationDays } from '@/utils/date';
 
 interface CrewDurationCardProps {
   startAt: string;
@@ -26,7 +26,7 @@ export default function CrewDurationCard({ startAt, endAt }: CrewDurationCardPro
       </div>
       <div className="flex items-center justify-center py-1">
         <span className="text-[14px] font-black text-amber-950 tracking-tight">
-          {formatShortDate(startAt)} ~ {formatShortDate(endAt)}
+          {formatFullDate(startAt)} ~ {formatFullDate(endAt)}
         </span>
       </div>
     </div>
