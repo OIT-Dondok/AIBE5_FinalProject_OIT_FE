@@ -148,7 +148,10 @@ export function NoticeCard({
                 <button
                   key={emoji}
                   type="button"
-                  onClick={(e) => void handleReactionClick(emoji, e)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void handleReactionClick(emoji, e);
+                  }}
                   className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border transition-all cursor-pointer active:scale-95 ${
                     isReacted
                       ? 'bg-[#E0E8FA] border-[#4D73D9] text-[#4D73D9] font-bold'
@@ -187,12 +190,14 @@ export function NoticeCard({
           <ChevronRight size={13} className="transition-transform group-hover:translate-x-0.5" />
         </div>
       </div>
-      <EmojiPickerSheet
-        isOpen={isEmojiSheetOpen}
-        onClose={() => setIsEmojiSheetOpen(false)}
-        onSelect={handleEmojiSelect}
-        selectedEmojis={notice.my_reactions}
-      />
+      <div onClick={(e) => e.stopPropagation()}>
+        <EmojiPickerSheet
+          isOpen={isEmojiSheetOpen}
+          onClose={() => setIsEmojiSheetOpen(false)}
+          onSelect={handleEmojiSelect}
+          selectedEmojis={notice.my_reactions}
+        />
+      </div>
     </article>
   );
 }
