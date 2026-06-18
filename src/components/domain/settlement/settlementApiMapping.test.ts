@@ -23,6 +23,9 @@ describe('settlement API mapping', () => {
       my_item: {
         settlement_item_id: 1001,
         crew_participant_id: 777,
+        nickname: '테스터',
+        is_me: true,
+        rank: 1,
         participant_status_snapshot: 'LOCKED',
         deposit_amount: 20000,
         success_count_raw: 3,
