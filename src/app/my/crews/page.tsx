@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, Check, ChevronDown } from 'lucide-react';
+import { Check, ChevronDown, Pin } from 'lucide-react';
 import { Header } from '@/components/common/Header';
 import { Skeleton } from '@/components/common/Skeleton';
 import { getMyCrew } from '@/services/crew';
@@ -49,12 +49,13 @@ interface StatusDropdownProps {
 
 function StatusDropdown({ value, onChange }: StatusDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -66,42 +67,58 @@ function StatusDropdown({ value, onChange }: StatusDropdownProps) {
   const isFiltered = value !== 'ALL';
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={containerRef} className="relative">
       <button
+        ref={buttonRef}
+        id="my-status-dropdown-btn"
         type="button"
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        aria-controls="my-status-dropdown-list"
         onClick={() => setIsOpen((v) => !v)}
-        className={`h-8 pl-3 pr-2 flex items-center gap-1.5 text-xs font-semibold rounded-lg border transition-colors ${
+        className={`h-9 px-4 flex items-center gap-1.5 text-xs font-bold rounded-full border shadow-sm transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-green focus:ring-offset-1 ${
           isFiltered
-            ? 'bg-[var(--color-primary-green)]/10 border-[var(--color-primary-green)] text-[var(--color-primary-green)]'
-            : 'bg-card border-text-secondary/20 text-text-primary'
+            ? 'bg-primary-green/10 border-primary-green/30 text-primary-green'
+            : 'bg-card border-text-secondary/15 text-text-primary'
         }`}
       >
         <span>{selectedLabel}</span>
         <ChevronDown
           size={12}
-          className={`shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`shrink-0 text-text-secondary/60 transition-transform duration-200 ${
+            isOpen ? 'rotate-180' : ''
+          }`}
         />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-[calc(100%+4px)] z-50 min-w-[96px] bg-card border border-text-secondary/15 rounded-xl shadow-lg overflow-hidden">
+        <div
+          id="my-status-dropdown-list"
+          role="listbox"
+          aria-labelledby="my-status-dropdown-btn"
+          tabIndex={-1}
+          className="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[100px] bg-card border border-text-secondary/10 rounded-2xl shadow-xl py-1 overflow-hidden origin-top-right focus:outline-none animate-dropdown-open"
+        >
           {STATUS_OPTIONS.map((opt) => {
             const isSelected = opt.value === value;
             return (
               <button
                 key={opt.value}
                 type="button"
+                role="option"
+                aria-selected={isSelected}
                 onClick={() => {
                   onChange(opt.value);
                   setIsOpen(false);
+                  buttonRef.current?.focus();
                 }}
-                className={`w-full flex items-center justify-between px-3 py-2.5 text-xs font-medium text-left transition-colors hover:bg-text-secondary/5 active:bg-text-secondary/10 ${
-                  isSelected ? 'text-[var(--color-primary-green)]' : 'text-text-primary'
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-bold text-left transition-colors focus:outline-none hover:bg-text-secondary/5 active:bg-text-secondary/10 ${
+                  isSelected ? 'text-primary-green' : 'text-text-primary'
                 }`}
               >
                 <span>{opt.label}</span>
                 {isSelected && (
-                  <Check size={12} className="shrink-0 ml-2 text-[var(--color-primary-green)]" />
+                  <Check size={12} strokeWidth={3} className="shrink-0 ml-2 text-primary-green" />
                 )}
               </button>
             );
@@ -138,12 +155,23 @@ function MyCrewCard({ crew }: { crew: MyCrew }) {
       role="button"
       tabIndex={0}
       onClick={() => router.push(`/crews/${crew.crew_id}`)}
-      onKeyDown={(e) => { if (e.key === 'Enter') router.push(`/crews/${crew.crew_id}`); }}
-      className={`bg-card rounded-card p-4 flex flex-col gap-3 border border-text-secondary/10 shadow-card hover:shadow-card-elevated active:scale-[0.985] transition-all duration-200 cursor-pointer ${isClosed ? 'opacity-60' : ''}`}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === ' ') e.preventDefault();
+          router.push(`/crews/${crew.crew_id}`);
+        }
+      }}
+      className={`bg-card rounded-[24px] p-5 flex flex-col gap-4 border border-text-secondary/10 shadow-sm hover:shadow-md hover:-translate-y-1 active:scale-[0.985] transition-all duration-300 cursor-pointer group relative overflow-hidden ${
+        isClosed ? 'opacity-60' : ''
+      }`}
     >
-      {/* 상단: 썸네일 + 크루명 + 상태/역할 배지 */}
-      <div className="flex items-center gap-3">
-        <div className={`w-11 h-11 rounded-2xl flex-shrink-0 overflow-hidden shadow-sm ${showImage ? '' : `${categoryBg} flex items-center justify-center text-2xl`}`}>
+      {/* 상단: 썸네일 + 크루명 + 상태/역할 배지 + 보증금 */}
+      <div className="flex items-center gap-3.5">
+        <div
+          className={`w-12 h-12 rounded-2xl flex-shrink-0 overflow-hidden shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 ${
+            showImage ? '' : `${categoryBg} flex items-center justify-center text-2xl`
+          }`}
+        >
           {showImage ? (
             <img
               src={crew.image_url!}
@@ -157,43 +185,54 @@ function MyCrewCard({ crew }: { crew: MyCrew }) {
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className="text-[15px] font-bold text-text-primary leading-tight truncate mb-1.5">
+          <p className="text-[15px] font-bold text-text-primary leading-tight truncate mb-1.5 group-hover:text-primary-green transition-colors duration-200">
             {crew.title}
           </p>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 flex-wrap">
             {isPending ? (
-              <span className="text-[11px] font-semibold text-amber-600">승인 대기 중</span>
+              <span className="bg-amber-500/10 text-amber-600 border border-amber-500/20 px-2 py-0.5 rounded-full text-[10px] font-bold shadow-sm leading-none shrink-0">
+                승인 대기
+              </span>
             ) : (
               <>
                 <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${status.dot}`} />
-                <span className={`text-[11px] font-semibold ${status.text}`}>{status.label}</span>
+                <span className={`text-xs font-semibold ${status.text}`}>{status.label}</span>
               </>
             )}
-            {crew.my_role === 'HOST' && (
+            {!isPending && (
               <>
                 <span className="text-text-secondary/30 text-[10px]">·</span>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">
-                  방장
-                </span>
+                {crew.my_role === 'HOST' ? (
+                  <span className="bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-900 px-2 py-0.5 rounded-full text-[10px] font-bold border border-amber-200/60 shadow-sm leading-none shrink-0">
+                    방장
+                  </span>
+                ) : (
+                  <span className="bg-gradient-to-r from-green-50 to-emerald-100/60 text-green-900 px-2 py-0.5 rounded-full text-[10px] font-bold border border-green-200/60 shadow-sm leading-none shrink-0">
+                    크루원
+                  </span>
+                )}
               </>
             )}
           </div>
         </div>
+
+        <div className="text-right flex-shrink-0">
+          <p className="text-[15px] font-extrabold text-primary-green leading-tight">
+            {crew.deposit_amount.toLocaleString()}
+            <span className="text-xs font-semibold ml-0.5">원</span>
+          </p>
+          <p className="text-[10px] text-text-secondary mt-0.5 tracking-tight">보증금 💰</p>
+        </div>
       </div>
 
-      {/* 하단: 기간 + 보증금 */}
-      {/* TODO: 정산 API 완료 후 지분율/예상 수익 추가 예정 */}
+      {/* 하단: 미션 수행 기간 카드 (Stationery Motif) */}
       <div className="flex items-center justify-between pt-2.5 border-t border-text-secondary/10">
-        <div className="flex items-center gap-1.5">
-          <Calendar size={11} strokeWidth={2} className="text-text-secondary/70" />
-          <span className="text-[11px] text-text-secondary">
+        <div className="relative bg-[#FFFEEA] border border-amber-200/50 shadow-sm rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 rotate-[-1deg] hover:rotate-0 transition-transform duration-300 shrink-0">
+          <Pin size={11} className="text-amber-600/70 rotate-45 shrink-0" />
+          <span className="text-[11px] font-bold text-amber-800 tracking-tight">
             {formatShortDate(crew.start_at)} ~ {formatShortDate(crew.end_at)}
           </span>
         </div>
-        <span className="text-[12px] font-bold text-primary-green">
-          {crew.deposit_amount.toLocaleString()}
-          <span className="text-[10px] font-semibold ml-0.5">원</span>
-        </span>
       </div>
     </div>
   );
@@ -201,17 +240,20 @@ function MyCrewCard({ crew }: { crew: MyCrew }) {
 
 function MyCrewCardSkeleton() {
   return (
-    <div className="bg-card rounded-card p-4 flex flex-col gap-3 border border-text-secondary/10 shadow-card">
-      <div className="flex items-center gap-3">
-        <Skeleton variant="rect" width={44} height={44} className="rounded-2xl flex-shrink-0" />
+    <div className="bg-card rounded-[24px] p-5 flex flex-col gap-4 border border-text-secondary/10 shadow-sm">
+      <div className="flex items-center gap-3.5">
+        <Skeleton variant="rect" width={48} height={48} className="rounded-2xl flex-shrink-0" />
         <div className="flex-1 flex flex-col gap-1.5">
           <Skeleton variant="text" height={16} className="w-3/4" />
           <Skeleton variant="text" height={12} className="w-1/3" />
         </div>
+        <div className="flex flex-col gap-1 items-end">
+          <Skeleton variant="text" width={50} height={16} />
+          <Skeleton variant="text" width={35} height={12} />
+        </div>
       </div>
       <div className="flex items-center justify-between pt-2.5 border-t border-text-secondary/10">
-        <Skeleton variant="text" height={12} className="w-1/3" />
-        <Skeleton variant="text" width={56} height={14} />
+        <Skeleton variant="rect" width={140} height={26} className="rounded-lg" />
       </div>
     </div>
   );
@@ -242,12 +284,11 @@ export default function MyCrewsPage() {
   useEffect(() => {
     const controller = new AbortController();
 
-    setIsLoading(true);
-    setCrews([]);
-    setNextCursor(null);
-    setCrewsError(false);
-
-    void (async () => {
+    const loadData = async () => {
+      setIsLoading(true);
+      setCrews([]);
+      setNextCursor(null);
+      setCrewsError(false);
       try {
         const data = await fetchCrews(activeTab, undefined, controller.signal);
         if (controller.signal.aborted) return;
@@ -259,10 +300,15 @@ export default function MyCrewsPage() {
       } finally {
         if (!controller.signal.aborted) setIsLoading(false);
       }
-    })();
+    };
+
+    const timer = setTimeout(() => {
+      void loadData();
+    }, 0);
 
     return () => {
       controller.abort();
+      clearTimeout(timer);
     };
   }, [activeTab, fetchCrews, retryCount]);
 
@@ -287,26 +333,37 @@ export default function MyCrewsPage() {
 
         {/* 탭 */}
         <div className="mx-5 mt-4 mb-3 flex items-center gap-1.5">
-          {TABS.map((tab) => (
-            <button
-              key={tab.value}
-              type="button"
-              onClick={() => handleTabChange(tab.value)}
-              className={`flex-1 py-2.5 rounded-xl text-[13px] font-semibold transition-colors ${
-                activeTab === tab.value
-                  ? 'bg-[var(--color-primary-green)] text-white shadow-sm'
-                  : 'bg-card text-text-secondary border border-text-secondary/20 hover:text-text-primary'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+          {TABS.map((tab) => {
+            const isActive = activeTab === tab.value;
+            let activeClass = 'bg-primary-green text-white border-primary-green/20 shadow-sm font-bold';
+            
+            if (tab.value === 'HOST') {
+              activeClass = 'bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-900 border-amber-200/60 shadow-sm font-bold';
+            } else if (tab.value === 'MEMBER') {
+              activeClass = 'bg-gradient-to-r from-green-50 to-emerald-100/60 text-green-900 border-green-200/60 shadow-sm font-bold';
+            }
+
+            return (
+              <button
+                key={tab.value}
+                type="button"
+                onClick={() => handleTabChange(tab.value)}
+                className={`flex-1 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 border ${
+                  isActive
+                    ? activeClass
+                    : 'bg-card text-text-secondary border-text-secondary/20 hover:text-text-primary'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
         {/* 카운트 + 상태 드롭다운 */}
         <div className="px-5 pb-2 flex items-center justify-between">
-          <span className="text-xs text-text-secondary">
-            총 <span className="font-bold text-text-primary">{applyStatusFilter(crews, statusFilter).length}</span>개의 크루
+          <span className="text-xs text-text-secondary font-medium">
+            총 <span className="font-extrabold text-text-primary bg-text-secondary/10 px-2 py-0.5 rounded-full">{applyStatusFilter(crews, statusFilter).length}</span>개의 크루
           </span>
           <StatusDropdown value={statusFilter} onChange={setStatusFilter} />
         </div>
@@ -344,7 +401,7 @@ export default function MyCrewsPage() {
               type="button"
               onClick={() => void handleLoadMore()}
               disabled={isLoadingMore}
-              className="w-full py-3 rounded-[var(--radius-button)] text-sm font-semibold text-text-secondary bg-card border border-text-secondary/15 hover:bg-text-secondary/5 active:scale-[0.98] transition-all disabled:opacity-50"
+              className="w-full py-3 text-sm font-semibold text-primary-green border border-primary-green/30 rounded-2xl hover:bg-primary-green/5 active:scale-[0.98] transition-all disabled:opacity-50"
             >
               {isLoadingMore ? '불러오는 중...' : '더 보기'}
             </button>

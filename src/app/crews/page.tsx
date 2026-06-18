@@ -133,7 +133,15 @@ export default function CrewsPage() {
           <span className="text-xs text-text-secondary font-medium">
             총 <span className="font-extrabold text-text-primary bg-text-secondary/10 px-2 py-0.5 rounded-full">{totalCount}</span>개의 크루
           </span>
-          <StatusDropdown value={activeStatus} onChange={setActiveStatus} />
+          <div className="flex items-center gap-2">
+            <Link
+              href="/my/crews"
+              className="text-xs font-bold text-primary-green bg-primary-green/10 border border-primary-green/30 px-3 py-1.5 rounded-full hover:bg-primary-green/15 active:scale-95 transition-all duration-200"
+            >
+              내 크루 보러가기 🏃
+            </Link>
+            <StatusDropdown value={activeStatus} onChange={setActiveStatus} />
+          </div>
         </div>
 
         {/* 크루 카드 리스트 */}
