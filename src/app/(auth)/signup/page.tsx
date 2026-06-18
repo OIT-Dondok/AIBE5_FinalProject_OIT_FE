@@ -84,7 +84,7 @@ const TERMS_CONTENT: Record<TermsModalKey, { title: string; content: string }> =
   이용자는 언제든지 자신의 개인정보를 조회·수정·삭제하거나 처리 정지를 요구할 수 있습니다.
 
 7. 개인정보 보호 책임자
-  - 이메일: privacy@dondok.com
+  - 이메일: dondok.oit@gmail.com
 
 이 방침은 2024년 1월 1일부터 시행합니다.`,
   },

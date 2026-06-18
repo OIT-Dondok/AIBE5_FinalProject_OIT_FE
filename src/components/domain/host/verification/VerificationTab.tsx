@@ -41,12 +41,12 @@ const EMPTY_COUNTS: Record<MissionLogReviewBucket, number> = {
 };
 
 const ERROR_MESSAGES: Record<string, string> = {
-  FORBIDDEN_NOT_HOST: "방장만 인증을 검수할 수 있어요.",
-  MISSION_LOG_NOT_REVIEWABLE: "이미 처리되었거나 검수 가능 시간이 지난 인증이에요.",
-  SETTLEMENT_INPUT_FROZEN: "정산이 시작되어 더 이상 검수할 수 없어요.",
+  FORBIDDEN_NOT_HOST: "방장만 인증을 검토할 수 있어요.",
+  MISSION_LOG_NOT_REVIEWABLE: "이미 처리되었거나 검토 가능 시간이 지난 인증이에요.",
+  SETTLEMENT_INPUT_FROZEN: "정산이 시작되어 더 이상 검토할 수 없어요.",
   REJECT_MEMO_REQUIRED: "기타 사유를 입력해 주세요.",
   REJECT_MEMO_TOO_LONG: "기타 사유는 50자 이내로 입력해 주세요.",
-  INVALID_INPUT: "입력한 검수 정보를 확인해 주세요.",
+  INVALID_INPUT: "입력한 검토 정보를 확인해 주세요.",
 };
 
 function toCardItem(item: ReviewableMissionLog): HostCertificationMock {
@@ -72,12 +72,12 @@ function toCardItem(item: ReviewableMissionLog): HostCertificationMock {
 
 function getErrorMessage(error: unknown) {
   if (!isAxiosError<ErrorResponse>(error)) {
-    return "검수 처리 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.";
+    return "검토 처리 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.";
   }
 
   const code = error.response?.data?.code;
   return (code && ERROR_MESSAGES[code]) || error.response?.data?.message ||
-    "검수 처리 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.";
+    "검토 처리 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.";
 }
 
 export function VerificationTab({ onPendingCountChange }: VerificationTabProps) {
@@ -196,7 +196,7 @@ export function VerificationTab({ onPendingCountChange }: VerificationTabProps) 
         </SectionCard>
       ) : items.length === 0 ? (
         <SectionCard>
-          <EmptyState icon={<ShieldCheck size={44} className="text-primary-green" />} title="검수할 인증이 없어요" />
+          <EmptyState icon={<ShieldCheck size={44} className="text-primary-green" />} title="검토할 인증이 없어요" />
         </SectionCard>
       ) : (
         <div className="flex flex-col gap-3">

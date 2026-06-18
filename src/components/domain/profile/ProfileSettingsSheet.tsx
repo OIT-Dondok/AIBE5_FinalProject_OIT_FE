@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Settings, BellRing, LogOut, ChevronRight } from "lucide-react";
+import { Settings, BellRing, LogOut, ChevronRight, Download } from "lucide-react";
 import { BottomSheet } from "@/components/common/BottomSheet";
 import { logout } from "@/services/auth";
 import { useAuthStore } from "@/store/authStore";
+import { usePwaInstall } from "@/hooks/usePwaInstall";
 
 interface SheetItemProps {
     icon: React.ReactNode;
@@ -50,12 +51,24 @@ export function ProfileSettingsSheet() {
     const clearAuth = useAuthStore((state) => state.clearAuth);
     const [isOpen, setIsOpen] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const { isInstallable, isIOS, install } = usePwaInstall();
 
     const close = () => setIsOpen(false);
 
     const handleNotificationSettings = () => {
         close();
-        alert("준비 중입니다");
+        router.push("/notifications/settings");
+    };
+
+    const handleInstallApp = async () => {
+        if (isIOS) {
+            alert("Safari 브라우저의 하단 공유 버튼을 누르고 '홈 화면에 추가'를 선택하여 앱을 설치할 수 있습니다.");
+            return;
+        }
+        const result = await install();
+        if (result.outcome === "accepted") {
+            close();
+        }
     };
 
     const handleLogout = async () => {
@@ -94,6 +107,18 @@ export function ProfileSettingsSheet() {
                         onClick={handleNotificationSettings}
                     />
 
+                    {isInstallable && (
+                        <>
+                            <div className="mx-5 my-2 border-t border-text-secondary/[0.08]" />
+                            <SheetItem
+                                icon={<Download size={20} className="text-[#5E9B73]" />}
+                                title="돈독 앱 설치하기"
+                                subtitle="홈 화면에 추가하여 편리하게 인증"
+                                onClick={handleInstallApp}
+                            />
+                        </>
+                    )}
+
                     <div className="mx-5 my-2 border-t border-text-secondary/[0.08]" />
 
                     <SheetItem
@@ -108,3 +133,4 @@ export function ProfileSettingsSheet() {
         </>
     );
 }
+

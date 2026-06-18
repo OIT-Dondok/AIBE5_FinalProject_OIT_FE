@@ -34,7 +34,7 @@ export const CREW_CATEGORY = {
   EXERCISE: 'EXERCISE',
   STUDY: 'STUDY',
   DIET: 'DIET',
-  ETC: 'ETC',
+  OTHER: 'OTHER',
 } as const;
 export type CrewCategory = (typeof CREW_CATEGORY)[keyof typeof CREW_CATEGORY];
 
@@ -322,6 +322,7 @@ export interface CrewListItem {
   deposit_amount: number;
   min_participants: number;
   max_participants: number;
+  current_participants: number;
   frequency_type: FrequencyType;
   frequency_count: number | null;
   mission_schedule_days: string[];
@@ -749,23 +750,67 @@ export interface ReactionResponse {
 // § 5.5 크루 대시보드
 // ════════════════════════════════════════════════════════════
 
+// ─── GET /api/dashboard (참여 중인 전체 크루 집계) ──────────────────────────
+
+// crews[] 항목. RECRUITING 등 배치 미실행 크루는 share_ratio·expected_refund_amount·today_delta_amount가 null.
+export interface GlobalDashboardCrew {
+  crew_id: number;
+  crew_name: string;
+  category: CrewCategory;
+  image_url: string | null; // 크루 대표 이미지. 없으면 null → FE 카테고리 아이콘 폴백
+  share_ratio: string | null; // 해당 크루 내 나의 지분율. string decimal
+  expected_refund_amount: number | null;
+  today_delta_amount: number | null; // 직전 정산 배치 대비 변동액. 음수 가능. 배치 없으면 null
+}
+
+// 오늘 절댓값 기준 변동액이 가장 큰 크루. 참여 크루 없으면 null
+export interface GlobalDashboardMaxDeltaCrew {
+  crew_id: number;
+  crew_name: string;
+  today_delta_amount: number; // 음수 가능
+}
+
+// GET /api/dashboard → 200
+export interface GlobalDashboardResponse {
+  total_expected_refund_amount: number;
+  today_delta_amount: number; // 전체 예상 환급금 변동액. 음수 가능. 참여 크루 없으면 0
+  today_delta_ratio: string; // string decimal
+  rising_crew_count: number;
+  falling_crew_count: number;
+  max_delta_crew: GlobalDashboardMaxDeltaCrew | null;
+  crews: GlobalDashboardCrew[];
+}
+
+// ─── GET /api/crews/{crewId}/dashboard (특정 크루에서의 나의 상세) ────────────
+
+export interface DashboardParticipant {
+  crew_participant_id: number;
+  nickname: string;
+  share_ratio: string | null; // 직전 정산 배치 기준 지분율. string decimal
+  is_me: boolean;
+}
+
 // GET /api/crews/{crewId}/dashboard → 200
+// projection_status별 필드 계약은 API 명세 참고 (null 상태 존재)
 export interface DashboardResponse {
   crew_id: number;
+  crew_name: string;
   crew_participant_id: number;
-  settlement_id: number | null;
+  settlement_id: number | null; // SETTLEMENT_SUCCEEDED 이전은 null
   crew_status: CrewStatus;
   settlement_status: SettlementStatus;
   projection_status: ProjectionStatus;
   projection_notice: ProjectionNotice;
+  days_until_end: number | null; // 종료일 당일 0, 종료 이후 null
   my_deposit_amount: number;
-  my_success_count: number;
-  my_recognized_success_count_estimated: number | null;
-  total_recognized_success_count_estimated: number | null;
-  my_share_ratio_estimated: string | null; // 소수 정밀도 오해 방지용 string decimal
+  my_success_count: number | null; // NOT_PROVIDED/SETTLEMENT_SUCCEEDED는 null, NOT_STARTED는 0
   my_expected_refund_amount: number | null;
-  my_expected_refund_delta_amount: number | null;
-  rank_estimated: number | null;
+  my_expected_refund_delta_amount: number | null; // 직전 배치 없으면 null. 음수 가능
+  rank: number | null;
+  participant_count: number | null; // 전체 참여자 수
+  rank_delta: number | null; // 양수 상승 / 음수 하락 / 0 유지
+  next_settlement_at: string | null; // 종료/남은 일정 없으면 null
+  participants: DashboardParticipant[];
   updated_at: string;
 }
 

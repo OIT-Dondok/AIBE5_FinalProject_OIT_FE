@@ -1,19 +1,9 @@
-import {
-  BookOpen,
-  CalendarDays,
-  ChevronRight,
-  ShieldCheck,
-  Dumbbell,
-  Sun,
-  Utensils,
-} from "lucide-react";
+import Image from "next/image";
+import { CalendarDays, ChevronRight, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/common/Button";
-import type {
-  CrewDonutMock,
-  CrewDonutRow,
-  ProjectionCopy,
-} from "@/mocks/data/dashboard";
+import { CATEGORY_BG, CATEGORY_EMOJI } from "@/constants/crew";
+import type { ProjectionCopy } from "@/mocks/data/dashboard";
 
 import {
   DashboardCard,
@@ -21,6 +11,7 @@ import {
   ProjectionTooltip,
   SegmentRing,
 } from "./DashboardPrimitives";
+import type { CrewDonutRowView, CrewDonutView } from "./dashboardViewModel";
 
 export function CrewDonutSection({
   crewDonuts,
@@ -28,11 +19,13 @@ export function CrewDonutSection({
   onOpenDaily,
   onOpenPrinciples,
 }: {
-  crewDonuts: CrewDonutMock;
+  crewDonuts: CrewDonutView;
   projectionCopy: ProjectionCopy;
-  onOpenDaily: () => void;
+  onOpenDaily: (crewId: number) => void;
   onOpenPrinciples: () => void;
 }) {
+  const isDeltaDown = crewDonuts.deltaTrend === "down";
+
   return (
     <section className="flex flex-col gap-3">
       <DashboardCard className="mb-4 flex flex-col gap-5 border-primary-blue/25 bg-card/95 px-5 py-5 shadow-[0_14px_30px_rgba(122,168,219,0.16)] ring-1 ring-primary-blue/10">
@@ -54,22 +47,32 @@ export function CrewDonutSection({
           </SegmentRing>
           <div className="min-w-0 flex-1">
             <p className="text-[11px] text-text-secondary">오늘</p>
-            <p className="mt-1 inline-flex items-center gap-1 text-lg font-black text-primary-green">
+            <p
+              className={`mt-1 inline-flex items-center gap-1 text-lg font-black ${
+                isDeltaDown ? "text-red-500" : "text-primary-green"
+              }`}
+            >
               {crewDonuts.todayDelta}
             </p>
-            <p className="text-[11px] font-bold text-primary-green">
+            <p
+              className={`text-[11px] font-bold ${
+                isDeltaDown ? "text-red-500" : "text-primary-green"
+              }`}
+            >
               {crewDonuts.todayDeltaPercent}
             </p>
             <div className="mt-3 flex flex-col gap-1.5 border-t border-text-secondary/10 pt-3">
               <p className="text-[11px] font-black text-text-primary">
                 {crewDonuts.trendSummaryLabel}
               </p>
-              <p className="text-[11px] font-bold leading-snug text-text-secondary">
-                {crewDonuts.topMoverLabel}{" "}
-                <span className="font-black text-primary-green">
-                  {crewDonuts.topMoverDelta}
-                </span>
-              </p>
+              {crewDonuts.topMoverLabel && (
+                <p className="text-[11px] font-bold leading-snug text-text-secondary">
+                  {crewDonuts.topMoverLabel}{" "}
+                  <span className="font-black text-primary-green">
+                    {crewDonuts.topMoverDelta}
+                  </span>
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -86,7 +89,11 @@ export function CrewDonutSection({
 
       <div className="flex flex-col gap-2.5">
         {crewDonuts.crews.map((crew) => (
-          <CrewRow key={crew.title} crew={crew} onSelect={onOpenDaily} />
+          <CrewRow
+            key={crew.crewId}
+            crew={crew}
+            onSelect={() => onOpenDaily(crew.crewId)}
+          />
         ))}
       </div>
 
@@ -115,11 +122,11 @@ function CrewRow({
   crew,
   onSelect,
 }: {
-  crew: CrewDonutRow;
+  crew: CrewDonutRowView;
   onSelect: () => void;
 }) {
-  const Icon = categoryIcons[crew.category];
   const isUp = crew.trend === "up";
+  const isDown = crew.trend === "down";
 
   return (
     <button
@@ -129,10 +136,22 @@ function CrewRow({
     >
       <span className="flex items-center gap-3">
         <span
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-          style={{ backgroundColor: crew.color, color: crew.tone }}
+          className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl text-xl ${
+            crew.imageUrl ? "" : (CATEGORY_BG[crew.category] ?? "bg-slate-100")
+          }`}
         >
-          <Icon size={19} />
+          {crew.imageUrl ? (
+            <Image
+              src={crew.imageUrl}
+              alt={crew.title}
+              width={40}
+              height={40}
+              className="h-full w-full object-cover"
+              unoptimized
+            />
+          ) : (
+            (CATEGORY_EMOJI[crew.category] ?? "📌")
+          )}
         </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1.5">
@@ -140,22 +159,28 @@ function CrewRow({
               {crew.title}
             </span>
             <span className="shrink-0 text-[10px] font-bold text-text-secondary">
-              · 비중 {crew.percent}%
+              · 환급 비중 {crew.percent}%
             </span>
           </span>
-          <ProgressBar percent={crew.percent} color={crew.tone} className="mt-2" />
+          <ProgressBar percent={crew.percent} color={crew.color} className="mt-2" />
         </span>
         <span className="shrink-0 text-right">
           <span className="block text-sm font-black tabular-nums text-text-primary">
             {crew.amount}
           </span>
-          <span
-            className={`mt-1 inline-flex items-center gap-0.5 text-[11px] font-extrabold ${
-              isUp ? "text-primary-green" : "text-red-500"
-            }`}
-          >
-            {crew.delta}
-          </span>
+          {crew.delta && (
+            <span
+              className={`mt-1 inline-flex items-center gap-0.5 text-[11px] font-extrabold ${
+                isUp
+                  ? "text-primary-green"
+                  : isDown
+                    ? "text-red-500"
+                    : "text-text-secondary"
+              }`}
+            >
+              {crew.delta}
+            </span>
+          )}
         </span>
       </span>
       <span className="mt-3 flex items-center justify-end gap-1 text-[11px] font-black text-primary-green">
@@ -165,10 +190,3 @@ function CrewRow({
     </button>
   );
 }
-
-const categoryIcons = {
-  기상: Sun,
-  운동: Dumbbell,
-  독서: BookOpen,
-  식단: Utensils,
-} satisfies Record<CrewDonutRow["category"], typeof Sun>;
