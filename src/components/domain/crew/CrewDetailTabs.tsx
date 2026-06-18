@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getCrewMembers } from '@/services/crew';
+import { getCrewMembers, getCrewApplications } from '@/services/crew';
 import type { CrewDetail } from '@/types/domain';
+import { useAuthStore } from '@/store/authStore';
 import CrewInfoTable from './CrewInfoTable';
 import CrewMemberList from './CrewMemberList';
 import CrewNoticeList from './CrewNoticeList';
@@ -18,6 +19,7 @@ interface CrewDetailTabsProps {
 }
 
 export default function CrewDetailTabs({ crew, crewId }: CrewDetailTabsProps) {
+  const user = useAuthStore((state) => state.user);
   const [activeTab, setActiveTab] = useState<TabType>('정보');
   const [hostProfileUrl, setHostProfileUrl] = useState<string | null>(null);
   const [confirmedCount, setConfirmedCount] = useState<number | null>(null);
@@ -30,16 +32,23 @@ export default function CrewDetailTabs({ crew, crewId }: CrewDetailTabsProps) {
       setConfirmedCount(null);
       setPendingCount(null);
       try {
+        // 1. LOCKED 참여 멤버 목록 조회
         const res = await getCrewMembers(crewId, undefined, 100);
         if (!active) return;
         const items = res.data.items;
         const host = items.find((m) => m.role === 'HOST');
         setHostProfileUrl(host?.profile_image_url ?? null);
+        setConfirmedCount(items.length);
 
-        const confirmed = items.filter((m) => m.status !== 'PENDING').length;
-        const pending = items.filter((m) => m.status === 'PENDING').length;
-        setConfirmedCount(confirmed);
-        setPendingCount(pending);
+        // 2. 현재 로그인된 유저가 방장(HOST)인 경우에만 승인 대기자(PENDING) 조회
+        const isHost = user?.member_uuid === crew.host_member_uuid;
+        if (isHost) {
+          const appRes = await getCrewApplications(crewId, { status: 'PENDING' });
+          if (!active) return;
+          setPendingCount(appRes.data.items.length);
+        } else {
+          setPendingCount(null);
+        }
       } catch {
         // 무시
       }
