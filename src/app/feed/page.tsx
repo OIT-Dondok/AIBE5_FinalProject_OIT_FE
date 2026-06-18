@@ -432,7 +432,7 @@ export default function FeedPage() {
         <button
           type="button"
           onClick={handleCreateNoticeClick}
-          className="fixed bottom-24 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary-green text-white shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-primary-green/20"
+          className="fixed bottom-24 right-5 md:right-[calc(50%-200px)] z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary-green text-white shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-primary-green/20"
           aria-label="공지 작성"
         >
           <Plus size={24} strokeWidth={2.5} />
