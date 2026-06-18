@@ -28,6 +28,7 @@ import {
   updateMyProfile,
 } from "@/services/profile";
 import { prepareImageForUpload, UnsupportedImageError } from "@/lib/prepareImageForUpload";
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 import type { MeActivitySummaryResponse } from "@/types/domain";
 
 type FeedbackTone = "success" | "error";
@@ -257,8 +258,15 @@ export default function ProfilePage() {
       });
       setIsInlineEditing(false);
       showFeedbackToast("프로필이 저장되었습니다.", "success");
-    } catch {
-      const message = "프로필 수정에 실패했습니다. 입력 값을 확인해 주세요.";
+    } catch (error) {
+      const message = getApiErrorMessage(
+        error,
+        {
+          NICKNAME_ALREADY_EXISTS: "이미 사용 중인 닉네임이에요.",
+          VALIDATION_ERROR: "닉네임 또는 자기소개 길이를 확인해 주세요.",
+        },
+        "프로필 수정에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+      );
       showFeedbackToast(message, "error");
     } finally {
       setIsSaving(false);
