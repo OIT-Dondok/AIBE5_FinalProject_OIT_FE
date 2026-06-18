@@ -231,10 +231,19 @@ export default function NoticeDetailPage() {
 
         <div className="px-5 pt-5 flex flex-col gap-5">
           {/* 공지 상세 본문 카드 프레임 */}
-          <section className="bg-card rounded-card border border-text-secondary/10 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4">
+          <section className={`rounded-card border shadow-[var(--shadow-card)] p-5 flex flex-col gap-4 ${
+            notice.is_important
+              ? "bg-[#FFFDF6] border-[#F2D786] dark:bg-[#1E1B15] dark:border-[#9A7D2C]"
+              : "bg-card border-text-secondary/10"
+          }`}>
             <article className="px-0 py-0">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
+                  {notice.is_important && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-black shrink-0 bg-[#E5C158]/25 text-[#B28704] dark:bg-[#9A7D2C]/40 dark:text-[#E8C35A] px-1.5 py-0.5 rounded-md mb-2 w-fit">
+                      📌 필독 중요공지
+                    </span>
+                  )}
                   <h1 className="text-lg font-extrabold leading-snug text-text-primary">{notice.title}</h1>
                   <div className="mt-3 flex items-center gap-2.5">
                     {/* 방장 프로필 이미지 연동 및 프로필 페이지 이동 */}
