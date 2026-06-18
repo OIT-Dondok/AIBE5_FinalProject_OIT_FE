@@ -26,6 +26,7 @@ type ApiErrorBody = {
 function isAuthEndpoint(url?: string) {
   return (
     url?.includes('/auth/login') ||
+    url?.includes('/auth/oauth2/token') ||
     url?.includes('/auth/refresh') ||
     url?.includes('/auth/logout')
   );
