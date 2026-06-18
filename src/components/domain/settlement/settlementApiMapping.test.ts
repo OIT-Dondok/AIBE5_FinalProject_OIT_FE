@@ -11,6 +11,9 @@ describe('settlement API mapping', () => {
     const responseData = {
       settlement_id: 501,
       crew_id: 401,
+      crew_name: '테스트 크루',
+      crew_started_at: '2026-01-01',
+      crew_ended_at: '2026-01-31',
       status: 'SUCCEEDED',
       retry_count: 0,
       failure_code: null,
