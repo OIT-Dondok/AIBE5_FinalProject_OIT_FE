@@ -221,7 +221,19 @@ export default function ProfilePage() {
       const message =
         error instanceof UnsupportedImageError
           ? error.message
-          : "프로필 이미지 업로드에 실패했습니다.";
+          : getApiErrorMessage(
+              error,
+              {
+                IMAGE_TOO_LARGE: "10MB 이하 이미지를 선택해 주세요.",
+                UNSUPPORTED_IMAGE_TYPE: "지원하지 않는 이미지 형식이에요.",
+                IMAGE_DIMENSIONS_TOO_LARGE:
+                  "이미지 해상도가 너무 커요. 다른 이미지를 선택해 주세요.",
+                IMAGE_DECODE_FAILED:
+                  "이미지를 읽을 수 없어요. 다른 이미지를 선택해 주세요.",
+                EMPTY_IMAGE: "이미지 파일이 비어 있어요. 다른 이미지를 선택해 주세요.",
+              },
+              "프로필 이미지 업로드에 실패했습니다.",
+            );
       showFeedbackToast(message, "error");
     } finally {
       if (uploadAbortControllerRef.current === uploadAbortController) {

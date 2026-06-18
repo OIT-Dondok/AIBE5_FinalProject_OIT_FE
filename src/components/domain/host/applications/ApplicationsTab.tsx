@@ -159,8 +159,20 @@ export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) 
       onPendingCountChangeRef.current?.(
         pendingRes.data.items.filter((item) => item.member_uuid !== myUuid).length,
       );
-    } catch {
+    } catch (error) {
       setApplications([]);
+      setToastMessage(
+        getApiErrorMessage(
+          error,
+          {
+            CREW_ACCESS_DENIED: "이 크루의 신청 목록에 접근할 수 없어요.",
+            FORBIDDEN_NOT_HOST: "방장만 신청을 관리할 수 있어요.",
+          },
+          "신청 목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.",
+        ),
+      );
+      setToastType("error");
+      setIsToastOpen(true);
     }
   }, [crewId, myUuid]);
 

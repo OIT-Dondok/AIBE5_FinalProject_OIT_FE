@@ -124,8 +124,17 @@ export default function HostNoticeDetailPage() {
           ? { ...prev, my_reactions: res.data.my_reactions, reaction_counts: res.data.reaction_counts }
           : prev,
       );
-    } catch {
-      setToastMessage("리액션 처리에 실패했어요");
+    } catch (error) {
+      setToastMessage(
+        getApiErrorMessage(
+          error,
+          {
+            REACTION_NOT_ALLOWED: "리액션할 수 없는 공지예요.",
+            INVALID_REACTION_TYPE: "사용할 수 없는 리액션이에요.",
+          },
+          "리액션 처리에 실패했어요. 잠시 후 다시 시도해 주세요.",
+        ),
+      );
       setToastType("error");
       setIsToastOpen(true);
     }
