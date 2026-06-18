@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Megaphone } from "lucide-react";
+import { Megaphone, ChevronDown } from "lucide-react";
+import type { MyCrew } from "@/types/domain";
 
 import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
@@ -12,7 +13,7 @@ import { ConfirmModal } from "@/components/common/ConfirmModal";
 import type { ToastType } from "@/components/common/Toast";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
-import { createCrewNotice, getCrew } from "@/services/crew";
+import { createCrewNotice, getCrew, getMyCrew } from "@/services/crew";
 
 const getRelativeTimeString = (timestamp: number): string => {
   const diff = Date.now() - timestamp;
@@ -41,6 +42,7 @@ export default function HostNoticeNewPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [crewName, setCrewName] = useState<string | null>(null);
+  const [hostCrews, setHostCrews] = useState<MyCrew[]>([]);
   const isTitleReady = title.trim().length > 0;
 
   // 임시 저장 복원 상태
@@ -51,6 +53,21 @@ export default function HostNoticeNewPage() {
   } | null>(null);
   const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
   const preventSaveRef = useRef(true); // 복원 팝업 처리 전 자동 저장 덮어쓰기 가드
+
+  // 내가 방장인 크루 목록 로드
+  useEffect(() => {
+    let active = true;
+    getMyCrew("HOST")
+      .then((res) => {
+        if (active) {
+          setHostCrews(res.data.items);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // 진입 시 임시 저장 검사
   useEffect(() => {
@@ -189,10 +206,35 @@ export default function HostNoticeNewPage() {
 
         <form className="px-5 pt-5 flex flex-col gap-4">
           <div className="px-1">
-            <p className="mb-3 flex items-center gap-1.5 text-xs font-medium text-text-secondary">
-              <Megaphone size={14} strokeWidth={2.3} className="text-[#4C73D9]" />
-              {crewName && <span className="font-extrabold text-text-primary">{crewName}</span>}{crewName ? " 크루에 공지를 올립니다" : "공지를 올립니다"}
-            </p>
+            {hostCrews.length > 0 && (
+              <div className="mb-4">
+                <label className="block text-[11px] font-bold text-text-secondary mb-1.5 flex items-center gap-1.5" htmlFor="crew-select">
+                  <Megaphone size={14} strokeWidth={2.3} className="text-[#4C73D9]" />
+                  공지를 등록할 크루 선택
+                </label>
+                <div className="relative">
+                  <select
+                    id="crew-select"
+                    value={crewId}
+                    onChange={(e) => {
+                      const newCrewId = Number(e.target.value);
+                      router.replace(`/crews/${newCrewId}/host-console/notices/new?from=${from || ''}`);
+                    }}
+                    className="w-full rounded-xl border border-text-secondary/20 bg-white px-3.5 py-3 text-sm font-extrabold text-text-primary outline-none focus:border-[#4C73D9] cursor-pointer appearance-none shadow-sm"
+                  >
+                    {hostCrews.map((c) => (
+                      <option key={c.crew_id} value={c.crew_id}>
+                        {c.title} (방장 권한)
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-3.5 flex items-center pointer-events-none text-text-secondary/70">
+                    <ChevronDown size={16} />
+                  </div>
+                </div>
+              </div>
+            )}
+
             <label className="block text-[12px] font-bold text-text-primary" htmlFor="notice-title">
               제목
             </label>
