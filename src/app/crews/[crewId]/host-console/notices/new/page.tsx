@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
 import { HostActionButton } from "@/components/domain/host/common/HostActionButton";
 import { Toast } from "@/components/common/Toast";
+import { Modal } from "@/components/common/Modal";
 import type { ToastType } from "@/components/common/Toast";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
@@ -25,8 +26,18 @@ export default function HostNoticeNewPage() {
   const [isToastOpen, setIsToastOpen] = useState(false);
   const [toastType, setToastType] = useState<ToastType>("success");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [crewName, setCrewName] = useState<string | null>(null);
   const isTitleReady = title.trim().length > 0;
+
+  const handleSuccessModalClose = () => {
+    setIsSuccessModalOpen(false);
+    if (from === "feed") {
+      router.push("/feed?tab=notice");
+    } else {
+      router.push(`/crews/${crewId}/host-console?tab=notices`);
+    }
+  };
 
   useEffect(() => {
     if (crewId === null) return;
@@ -59,11 +70,7 @@ export default function HostNoticeNewPage() {
     setIsSubmitting(true);
     try {
       await createCrewNotice(crewId, { title, content: contentHtml.trim() });
-      if (from === "feed") {
-        router.push("/feed?tab=notice");
-      } else {
-        router.push(`/crews/${crewId}/host-console?tab=notices`);
-      }
+      setIsSuccessModalOpen(true);
     } catch (error) {
       setToastMessage(
         getApiErrorMessage(
@@ -134,13 +141,41 @@ export default function HostNoticeNewPage() {
               취소
             </HostActionButton>
             <HostActionButton
-              variant={isTitleReady && !isSubmitting ? "primary" : "primaryDisabled"}
+              variant={isTitleReady && !isSubmitting ? "approve" : "approveDisabled"}
               onClick={() => void handleSubmit()}
             >
               공지 등록
             </HostActionButton>
           </div>
         </form>
+
+        {/* 공지 등록 성공 모달 */}
+        <Modal 
+          isOpen={isSuccessModalOpen} 
+          onClose={handleSuccessModalClose}
+          className="bg-primary-green text-white border-none p-0 overflow-hidden max-w-[320px]"
+          ariaLabel="공지 등록 완료"
+        >
+          <div className="relative p-6 py-8 overflow-hidden rounded-card">
+            <div className="absolute inset-[8px] rounded-2xl border-2 border-dashed border-white/30 pointer-events-none" />
+
+            <div className="relative flex flex-col items-center gap-4 text-center">
+              <span className="text-4xl leading-none">🙌</span>
+              <div className="flex flex-col gap-1.5">
+                <p className="text-lg font-bold text-white">공지가 등록되었습니다!</p>
+                <p className="text-sm text-white/75 leading-snug">크루원들에게 소식이 전파됩니다.</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleSuccessModalClose}
+                className="mt-1 w-full py-2.5 rounded-xl bg-white/20 text-sm font-semibold text-white hover:bg-white/30 active:scale-[0.98] transition-all cursor-pointer"
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </Modal>
+
         <Toast
           message={toastMessage}
           isOpen={isToastOpen}
