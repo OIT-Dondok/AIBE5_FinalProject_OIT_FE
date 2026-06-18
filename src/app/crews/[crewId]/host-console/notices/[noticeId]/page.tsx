@@ -287,13 +287,17 @@ export default function HostNoticeDetailPage() {
               {comments.map((comment) => (
                 <article key={comment.comment_id} className="py-1">
                   <div className="flex gap-2.5">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-blue/10 text-xs font-extrabold text-primary-blue">
-                      {comment.author_nickname.slice(0, 1)}
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-blue/10 text-xs font-extrabold text-primary-blue overflow-hidden">
+                      {comment.author_profile_image_url ? (
+                        <img src={comment.author_profile_image_url} alt={comment.nickname ?? ''} className="h-full w-full object-cover" />
+                      ) : (
+                        comment.nickname?.slice(0, 1) ?? '?'
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[13px] font-bold text-text-primary">{comment.author_nickname}</p>
+                      <p className="truncate text-[13px] font-bold text-text-primary">{comment.nickname}</p>
                       <p className="mt-0.5 text-[13px] leading-relaxed text-text-primary">{comment.content}</p>
-                      <p className="mt-0.5 text-[11px] text-text-secondary">{formatDateMinute(comment.created_at)}</p>
+                      <p className="mt-0.5 text-[11px] text-text-secondary">{comment.created_at ? formatDateMinute(comment.created_at) : ''}</p>
                     </div>
                   </div>
                 </article>
