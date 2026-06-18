@@ -114,7 +114,7 @@ export function LoginPageClient({ loginNotice }: LoginPageClientProps) {
                 slogan1Visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
               }`}
             >
-              사이좋게 돈독하게
+              사이는 돈독하게
             </p>
             <p
               className={`text-xl font-bold text-primary-green transition-all duration-700 ${
