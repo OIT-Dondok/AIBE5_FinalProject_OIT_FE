@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { isAxiosError } from 'axios';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 import { Header } from '@/components/common/Header';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FeedCalendar } from '@/components/domain/feed/FeedCalendar';
@@ -15,8 +15,10 @@ import FeedNoticeList from '@/components/domain/feed/FeedNoticeList';
 import { Toast } from '@/components/common/Toast';
 import type { ToastType } from '@/components/common/Toast';
 import { getFeed } from '@/services/feed';
-import { getCrewNotices } from '@/services/crew';
-import type { AvailableCrew, FeedItem as FeedItemType, FeedPeriod, CrewNotice } from '@/types/domain';
+import { getCrewNotices, getMyCrew } from '@/services/crew';
+import type { AvailableCrew, FeedItem as FeedItemType, FeedPeriod, CrewNotice, MyCrew } from '@/types/domain';
+import { useAuthStore } from '@/store/authStore';
+import { NoticeCrewSelectModal } from '@/components/domain/crew/NoticeCrewSelectModal';
 import { ERROR_CODE } from '@/types/common';
 import type { ErrorResponse } from '@/types/common';
 
@@ -34,6 +36,43 @@ export default function FeedPage() {
   const [viewMode, setViewMode] = useState<'feed' | 'notice'>('feed');
   const [notices, setNotices] = useState<CrewNotice[]>([]);
   const [isNoticesLoading, setIsNoticesLoading] = useState(false);
+  const [hostCrews, setHostCrews] = useState<MyCrew[]>([]);
+  const [isNoticeModalOpen, setIsNoticeModalOpen] = useState(false);
+  const user = useAuthStore((s) => s.user);
+
+  // 방장 권한을 가진 크루 목록 로드
+  useEffect(() => {
+    if (!user) {
+      setHostCrews([]);
+      return;
+    }
+    let active = true;
+    getMyCrew('HOST')
+      .then((res) => {
+        if (active) {
+          setHostCrews(res.data.items);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  const handleCreateNoticeClick = useCallback(() => {
+    // 만약 현재 필터링된 크루가 있고, 내가 그 크루의 방장이라면 즉시 이동
+    const isHostOfSelected = selectedCrewId !== null && hostCrews.some((c) => c.crew_id === selectedCrewId);
+    if (isHostOfSelected) {
+      router.push(`/crews/${selectedCrewId}/host-console/notices/new?from=feed`);
+    } else {
+      setIsNoticeModalOpen(true);
+    }
+  }, [selectedCrewId, hostCrews, router]);
+
+  const handleSelectNoticeCrew = useCallback((crewId: number) => {
+    setIsNoticeModalOpen(false);
+    router.push(`/crews/${crewId}/host-console/notices/new?from=feed`);
+  }, [router]);
 
   // URL 쿼리 스트링과 동기화하여 뷰 전환 상태 제어
   const handleSetViewMode = useCallback((mode: 'feed' | 'notice') => {
@@ -387,6 +426,26 @@ export default function FeedPage() {
           )}
         </div>
       </div>
+
+      {/* 공지 작성 플로팅 버튼 (FAB) */}
+      {viewMode === 'notice' && hostCrews.length > 0 && (
+        <button
+          type="button"
+          onClick={handleCreateNoticeClick}
+          className="fixed bottom-24 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary-green text-white shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-primary-green/20"
+          aria-label="공지 작성"
+        >
+          <Plus size={24} strokeWidth={2.5} />
+        </button>
+      )}
+
+      {/* 공지 작성 크루 선택 모달 */}
+      <NoticeCrewSelectModal
+        isOpen={isNoticeModalOpen}
+        onClose={() => setIsNoticeModalOpen(false)}
+        hostCrews={hostCrews}
+        onSelect={handleSelectNoticeCrew}
+      />
 
       <Toast
         message={toastMessage}
