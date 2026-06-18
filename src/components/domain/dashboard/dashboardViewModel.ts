@@ -254,10 +254,10 @@ export function mapCrewDashboard(res: DashboardResponse): CrewDashboardView {
         ? null
         : formatSignedWon(res.my_expected_refund_delta_amount),
     expectedRefundTrend: deltaTrend(res.my_expected_refund_delta_amount),
-    // rank가 null(예: 배치 전)이어도 rank_total이 있으면 "전체 N명"은 표시
+    // rank가 null(예: 배치 전)이어도 participant_count가 있으면 "전체 N명"은 표시
     rankLabel:
-      res.rank_total != null
-        ? `${res.rank != null ? `${res.rank}위` : "—"} / ${res.rank_total}명`
+      res.participant_count != null
+        ? `${res.rank != null ? `${res.rank}위` : "—"} / ${res.participant_count}명`
         : "—",
     rankDeltaLabel: rankDelta.label,
     rankTrend: rankDelta.trend,

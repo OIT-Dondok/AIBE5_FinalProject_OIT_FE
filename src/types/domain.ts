@@ -806,7 +806,7 @@ export interface DashboardResponse {
   my_expected_refund_amount: number | null;
   my_expected_refund_delta_amount: number | null; // 직전 배치 없으면 null. 음수 가능
   rank: number | null;
-  rank_total: number | null;
+  participant_count: number | null; // 전체 참여자 수
   rank_delta: number | null; // 양수 상승 / 음수 하락 / 0 유지
   next_settlement_at: string | null; // 종료/남은 일정 없으면 null
   participants: DashboardParticipant[];
