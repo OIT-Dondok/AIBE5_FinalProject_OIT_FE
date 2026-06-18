@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Megaphone } from "lucide-react";
 
 import { EmptyState } from "@/components/common/EmptyState";
@@ -16,6 +16,8 @@ import { createCrewNotice, getCrew } from "@/services/crew";
 export default function HostNoticeNewPage() {
   const router = useRouter();
   const params = useParams<{ crewId: string }>();
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from");
   const crewId = parseRouteNumber(params.crewId);
   const [title, setTitle] = useState("");
   const [contentHtml, setContentHtml] = useState("");
@@ -57,7 +59,11 @@ export default function HostNoticeNewPage() {
     setIsSubmitting(true);
     try {
       await createCrewNotice(crewId, { title, content: contentHtml.trim() });
-      router.push(`/crews/${crewId}/host-console?tab=notices`);
+      if (from === "feed") {
+        router.push("/feed?tab=notice");
+      } else {
+        router.push(`/crews/${crewId}/host-console?tab=notices`);
+      }
     } catch (error) {
       setToastMessage(
         getApiErrorMessage(
@@ -115,7 +121,16 @@ export default function HostNoticeNewPage() {
           </div>
 
           <div className="grid grid-cols-[0.85fr_1.15fr] gap-2">
-            <HostActionButton variant="cancel" onClick={() => router.push(`/crews/${crewId}/host-console?tab=notices`)}>
+            <HostActionButton
+              variant="cancel"
+              onClick={() => {
+                if (from === "feed") {
+                  router.push("/feed?tab=notice");
+                } else {
+                  router.push(`/crews/${crewId}/host-console?tab=notices`);
+                }
+              }}
+            >
               취소
             </HostActionButton>
             <HostActionButton

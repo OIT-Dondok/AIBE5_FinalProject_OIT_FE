@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Megaphone } from "lucide-react";
 
 import { EmptyState } from "@/components/common/EmptyState";
@@ -17,6 +17,8 @@ import type { CrewNotice } from "@/types/domain";
 export default function HostNoticeEditPage() {
   const router = useRouter();
   const params = useParams<{ crewId: string; noticeId: string }>();
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from");
   const crewId = parseRouteNumber(params.crewId);
   const noticeId = parseRouteNumber(params.noticeId);
 
@@ -58,7 +60,11 @@ export default function HostNoticeEditPage() {
         title: title.trim(),
         content: content.trim(),
       });
-      router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}`);
+      if (from === "detail") {
+        router.push(`/crews/${crewId}/notices/${notice.notice_id}`);
+      } else {
+        router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}`);
+      }
     } catch (error) {
       setToastMessage(
         getApiErrorMessage(
@@ -163,7 +169,13 @@ export default function HostNoticeEditPage() {
           <div className="mt-1 grid grid-cols-[0.85fr_1.15fr] gap-2">
             <HostActionButton
               variant="cancel"
-              onClick={() => router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}`)}
+              onClick={() => {
+                if (from === "detail") {
+                  router.push(`/crews/${crewId}/notices/${notice.notice_id}`);
+                } else {
+                  router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}`);
+                }
+              }}
             >
               취소
             </HostActionButton>
