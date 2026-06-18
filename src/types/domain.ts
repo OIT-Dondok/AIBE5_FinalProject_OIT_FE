@@ -493,6 +493,7 @@ export interface CrewNotice {
   created_at: string;
   my_reactions: string[];
   reaction_counts: ReactionCounts;
+  is_important?: boolean;
 }
 
 export type CrewNoticesResponse = CursorPageResponse<CrewNotice>;

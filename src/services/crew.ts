@@ -59,14 +59,17 @@ export const getCrewNotices = (crewId: number, cursor?: string) => {
   });
 };
 
-export const createCrewNotice = (crewId: number, data: { title: string; content: string }) => {
+export const createCrewNotice = (
+  crewId: number,
+  data: { title: string; content: string; is_important?: boolean },
+) => {
   return api.post(`/crews/${crewId}/notices`, data);
 };
 
 export const updateCrewNotice = (
   crewId: number,
   noticeId: number,
-  data: { title?: string; content?: string },
+  data: { title?: string; content?: string; is_important?: boolean },
 ) => {
   return api.patch(`/crews/${crewId}/notices/${noticeId}`, data);
 };
