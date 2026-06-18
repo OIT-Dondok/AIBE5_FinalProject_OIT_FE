@@ -20,6 +20,7 @@ import type { RejectReasonCode } from "@/types/domain";
 type VerificationCardProps = {
   item: HostCertificationMock;
   isExpanded: boolean;
+  isDecided?: boolean;
   onToggle: () => void;
   onApprove: () => Promise<boolean>;
   onReject: (reason: { code: RejectReasonCode; label: string; memo?: string }) => Promise<boolean>;
@@ -37,6 +38,7 @@ const rejectReasonOptions: Array<{ value: RejectReasonCode; label: string; descr
 export function VerificationCard({
   item,
   isExpanded,
+  isDecided = false,
   onToggle,
   onApprove,
   onReject,
@@ -110,7 +112,7 @@ export function VerificationCard({
       <article
         className={`overflow-hidden rounded-card bg-card shadow-sm transition-opacity ${
           isExpanded ? "border-2 border-[#4d73d9]" : "border border-text-secondary/10"
-        }`}
+        } ${isDecided ? "opacity-40" : ""}`}
       >
         <button type="button" onClick={onToggle} className="w-full px-4 py-3.5 text-left">
           <div className="flex items-center justify-between gap-3">

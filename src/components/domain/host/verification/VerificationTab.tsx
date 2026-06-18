@@ -85,6 +85,7 @@ export function VerificationTab({ onPendingCountChange }: VerificationTabProps) 
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [decidedIds, setDecidedIds] = useState<Set<number>>(new Set());
   const [expandedMissionLogId, setExpandedMissionLogId] = useState<number | null>(null);
   const [toastMessage, setToastMessage] = useState("");
   const [isToastOpen, setIsToastOpen] = useState(false);
@@ -125,10 +126,19 @@ export function VerificationTab({ onPendingCountChange }: VerificationTabProps) 
     void fetchItems();
   }, [fetchItems]);
 
+  const markDecided = (missionLogId: number) => {
+    setDecidedIds((prev) => new Set(prev).add(missionLogId));
+    setCounts((prev) => {
+      const next = { ...prev, [reviewFilter]: Math.max(0, prev[reviewFilter] - 1) };
+      onPendingCountChange?.(next.urgent + next.warning + next.normal);
+      return next;
+    });
+  };
+
   const handleApprove = async (missionLogId: number) => {
     try {
       await approveMissionLog(missionLogId);
-      await fetchItems();
+      markDecided(missionLogId);
       return true;
     } catch (error) {
       setToastMessage(getErrorMessage(error));
@@ -147,7 +157,7 @@ export function VerificationTab({ onPendingCountChange }: VerificationTabProps) 
         reject_reason_code: reason.code,
         reject_memo: reason.memo,
       });
-      await fetchItems();
+      markDecided(missionLogId);
       return true;
     } catch (error) {
       setToastMessage(getErrorMessage(error));
@@ -201,6 +211,7 @@ export function VerificationTab({ onPendingCountChange }: VerificationTabProps) 
               key={item.mission_log_id}
               item={item}
               isExpanded={expandedMissionLogId === item.mission_log_id}
+              isDecided={decidedIds.has(item.mission_log_id)}
               onToggle={() => setExpandedMissionLogId((current) =>
                 current === item.mission_log_id ? null : item.mission_log_id
               )}
