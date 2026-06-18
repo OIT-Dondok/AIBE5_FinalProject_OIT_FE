@@ -47,8 +47,6 @@ export default function CrewInfoTable({ crew, confirmedCount, pendingCount }: Cr
   };
 
   const activeCount = confirmedCount !== null ? confirmedCount : 1;
-  const isMinAchieved = confirmedCount !== null && activeCount >= crew.min_participants;
-  const minAchievedLabel = isMinAchieved ? ' (최소 인원 달성! 🎉)' : '';
 
   const rows: { label: string; value: string }[] = [
     { label: '인증 주기', value: getFrequencyLabel() },
@@ -57,7 +55,7 @@ export default function CrewInfoTable({ crew, confirmedCount, pendingCount }: Cr
       value: `${daily_settlement_type} · ${SETTLEMENT_TYPE_LABEL[daily_settlement_type]}`,
     },
     { label: '인증 마감', value: `${times.deadline}까지 완료` },
-    { label: '인원 (참여 확정)', value: `${activeCount} / ${crew.max_participants}명 (최소 ${crew.min_participants}명)${minAchievedLabel}` },
+    { label: '인원 (참여 확정)', value: `${activeCount} / ${crew.max_participants}명 (최소 ${crew.min_participants}명)` },
     ...(pendingCount !== null
       ? [{ label: '승인 대기 인원', value: `${pendingCount}명` }]
       : []),
