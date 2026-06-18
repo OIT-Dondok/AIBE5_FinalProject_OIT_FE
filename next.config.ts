@@ -4,8 +4,6 @@ import withPWAInit from "next-pwa";
 // @ts-expect-error next-pwa lacks type declarations
 import runtimeCaching from "next-pwa/cache";
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080").replace(/\/+$/, "");
-
 const withPWA = withPWAInit({
     dest: "public",
     disable: process.env.NODE_ENV === "development",
@@ -41,10 +39,10 @@ const nextConfig: NextConfig = {
         return [
             {
                 source: '/api/:path*',
-                destination: `${API_BASE_URL}/api/:path*`,
+                destination: `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/:path*`,
             },
         ];
     }
 };
 
-export default withPWA(nextConfig) as NextConfig;
+export default withPWA(nextConfig);
