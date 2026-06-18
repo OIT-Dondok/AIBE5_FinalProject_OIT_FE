@@ -6,6 +6,16 @@ import { SETTLEMENT_TYPE_LABEL, SETTLEMENT_TIMES } from '@/constants/crew';
 import { ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
 
+const DAY_LABEL: Record<string, string> = {
+  MONDAY: '월',
+  TUESDAY: '화',
+  WEDNESDAY: '수',
+  THURSDAY: '목',
+  FRIDAY: '금',
+  SATURDAY: '토',
+  SUNDAY: '일',
+};
+
 interface CrewInfoTableProps {
   crew: CrewDetail;
 }
@@ -21,13 +31,29 @@ export default function CrewInfoTable({ crew }: CrewInfoTableProps) {
     { type: 'C', label: '올빼미형', deadline: '23:59', settlement: '익일 12:00', gradient: 'from-violet-300 to-fuchsia-300', shadow: 'rgba(196,181,253,0.2)' },
   ];
 
+  const getFrequencyLabel = () => {
+    if (crew.frequency_type === 'DAILY') {
+      return '매일 인증';
+    }
+    if (crew.frequency_type === 'SPECIFIC_DAYS' && crew.mission_schedule_days) {
+      const days = crew.mission_schedule_days
+        .map((d) => DAY_LABEL[d] ?? d)
+        .join(', ');
+      return `매주 (${days})`;
+    }
+    return '기타';
+  };
+
   const rows: { label: string; value: string }[] = [
+    { label: '인증 주기', value: getFrequencyLabel() },
     {
       label: '인증 타입',
       value: `${daily_settlement_type} · ${SETTLEMENT_TYPE_LABEL[daily_settlement_type]}`,
     },
     { label: '인증 마감', value: `${times.deadline}까지 완료` },
     { label: '인원', value: `${crew.current_participants} / ${crew.max_participants}명 (최소 ${crew.min_participants}명)` },
+    { label: '참여 보증금 💳', value: `${crew.deposit_amount.toLocaleString()}원` },
+    { label: '총 모인 보증금 💰', value: `${(crew.deposit_amount * crew.current_participants).toLocaleString()}원` },
   ];
 
   return (
@@ -36,6 +62,7 @@ export default function CrewInfoTable({ crew }: CrewInfoTableProps) {
         {rows.map((row) => {
           const isSettlementType = row.label === '인증 타입';
           const isDeadline = row.label === '인증 마감';
+          const isTotalDeposit = row.label === '총 모인 보증금 💰';
           return (
             <div key={row.label} className="flex flex-col border-b border-text-secondary/5 last:border-b-0">
               {isSettlementType ? (
@@ -64,7 +91,7 @@ export default function CrewInfoTable({ crew }: CrewInfoTableProps) {
                   <span className="text-[13px] text-text-primary font-bold flex items-center gap-1.5">
                     {row.label}
                   </span>
-                  <span className="text-[13px] font-bold text-text-primary flex items-center gap-1">
+                  <span className={`text-[13px] font-bold flex items-center gap-1 ${isTotalDeposit ? 'text-primary-green' : 'text-text-primary'}`}>
                     {row.value}
                   </span>
                 </div>

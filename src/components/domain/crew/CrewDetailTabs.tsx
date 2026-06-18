@@ -7,7 +7,6 @@ import CrewInfoTable from './CrewInfoTable';
 import CrewMemberList from './CrewMemberList';
 import CrewNoticeList from './CrewNoticeList';
 import CrewHostProfile from './CrewHostProfile';
-import CrewDepositCard from './CrewDepositCard';
 import CrewDurationCard from './CrewDurationCard';
 
 const TABS = ['정보', '공지', '멤버'] as const;
@@ -29,7 +28,7 @@ export default function CrewDetailTabs({ crew, crewId }: CrewDetailTabsProps) {
     const loadHostMember = async () => {
       setHostProfileUrl(null); // 이전 크루 데이터 클리어
       try {
-        const res = await getCrewMembers(crewId);
+        const res = await getCrewMembers(crewId, undefined, 100);
         if (!active) return;
         const host = res.data.items.find((m) => m.role === 'HOST');
         setHostProfileUrl(host?.profile_image_url ?? null);
@@ -73,11 +72,6 @@ export default function CrewDetailTabs({ crew, crewId }: CrewDetailTabsProps) {
               hostNickname={crew.host_nickname}
               hostMemberUuid={crew.host_member_uuid}
               hostProfileUrl={hostProfileUrl}
-            />
-
-            <CrewDepositCard
-              depositAmount={crew.deposit_amount}
-              currentParticipants={currentParticipants}
             />
 
             <CrewDurationCard

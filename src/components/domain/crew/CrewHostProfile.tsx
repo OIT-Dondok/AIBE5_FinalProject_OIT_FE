@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { UserRound, Crown } from 'lucide-react';
 
@@ -14,6 +15,13 @@ export default function CrewHostProfile({
   hostMemberUuid,
   hostProfileUrl,
 }: CrewHostProfileProps) {
+  const [imgError, setImgError] = useState(false);
+
+  // hostProfileUrl이 변경되면 이미지 에러 상태를 초기화합니다.
+  useEffect(() => {
+    setImgError(false);
+  }, [hostProfileUrl]);
+
   return (
     <div className="flex flex-col gap-3">
       {description && (
@@ -39,8 +47,13 @@ export default function CrewHostProfile({
             style={{ animationDuration: '3.5s' }}
           />
           <div className="w-11 h-11 rounded-full overflow-hidden bg-neutral-200 border border-yellow-300 ring-2 ring-yellow-400/30 shadow-[0_0_12px_rgba(245,158,11,0.25)] flex items-center justify-center group-hover/host:ring-yellow-400/50 transition-all">
-            {hostProfileUrl ? (
-              <img src={hostProfileUrl} alt={hostNickname} className="w-full h-full object-cover" />
+            {hostProfileUrl && hostProfileUrl.trim() !== '' && !imgError ? (
+              <img
+                src={hostProfileUrl}
+                alt={hostNickname}
+                className="w-full h-full object-cover"
+                onError={() => setImgError(true)}
+              />
             ) : (
               <UserRound size={20} className="text-neutral-500" />
             )}
