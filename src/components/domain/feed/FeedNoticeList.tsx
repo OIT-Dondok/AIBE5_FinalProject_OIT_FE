@@ -24,6 +24,7 @@ export function NoticeCard({
   crewName?: string;
 }) {
   const router = useRouter();
+  const isImportant = !!notice.is_important;
 
   const handleGoToDetail = () => {
     const targetCrewId = crewId ?? notice.crew_id;
@@ -33,14 +34,28 @@ export function NoticeCard({
   return (
     <article
       onClick={handleGoToDetail}
-      className="group relative overflow-hidden rounded-card border transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md flex flex-col bg-card border-text-secondary/10 hover:border-text-secondary/20"
+      className={`group relative overflow-hidden rounded-card border transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md flex flex-col ${
+        isImportant
+          ? "bg-[#FFFDF6] border-[#F2D786] dark:bg-[#1E1B15] dark:border-[#9A7D2C] hover:border-[#E5C158]"
+          : "bg-card border-text-secondary/10 hover:border-text-secondary/20"
+      }`}
     >
       {/* 1. 상단 풀위드 강조 띠 (Accent Bar) */}
-      <div className="px-4 py-2.5 flex items-center justify-between gap-2 border-b bg-text-secondary/5 border-text-secondary/5 text-text-secondary">
+      <div className={`px-4 py-2.5 flex items-center justify-between gap-2 border-b text-text-secondary ${
+        isImportant
+          ? "bg-[#FDFBF0] border-[#F2D786]/30"
+          : "bg-text-secondary/5 border-text-secondary/5"
+      }`}>
         <div className="flex items-center gap-1.5">
-          <span className="flex items-center gap-1 text-[10px] font-bold shrink-0 bg-text-secondary/20 text-text-primary px-1.5 py-0.5 rounded-md">
-            📢 공지
-          </span>
+          {isImportant ? (
+            <span className="flex items-center gap-1 text-[10px] font-black shrink-0 bg-[#E5C158]/25 text-[#B28704] dark:bg-[#9A7D2C]/40 dark:text-[#E8C35A] px-1.5 py-0.5 rounded-md">
+              📌 필독
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 text-[10px] font-bold shrink-0 bg-text-secondary/20 text-text-primary px-1.5 py-0.5 rounded-md">
+              📢 공지
+            </span>
+          )}
           {crewName && (
             <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-black border tracking-tight shrink-0 transition-colors ${getCrewBrandingColor(notice.crew_id).bgClass} ${getCrewBrandingColor(notice.crew_id).textClass} ${getCrewBrandingColor(notice.crew_id).borderClass}`}>
               {crewName}
@@ -136,10 +151,17 @@ export default function FeedNoticeList({
     );
   }
 
-  // 최신 시간순(내림차순) 정렬
-  const sortedNotices = [...notices].sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  );
+  // 1. 중요 공지 최상단 우선 고정
+  // 2. 중요 공지 그룹 및 일반 공지 그룹 내에서 최신 등록순 정렬 (2차 정렬)
+  const sortedNotices = [...notices].sort((a, b) => {
+    const aImportant = a.is_important ? 1 : 0;
+    const bImportant = b.is_important ? 1 : 0;
+    
+    if (aImportant !== bImportant) {
+      return bImportant - aImportant;
+    }
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
 
   return (
     <div className="flex flex-col gap-4">
