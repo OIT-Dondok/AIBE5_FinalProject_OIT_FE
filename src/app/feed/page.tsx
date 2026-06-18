@@ -202,15 +202,10 @@ export default function FeedPage() {
           const res = await getCrewNotices(selectedCrewId);
           if (!active) return;
           setNotices(res.data.items);
-          // 만약 공지가 없고 현재 뷰모드가 notice인 경우 feed로 리다이렉트
-          if (res.data.items.length === 0) {
-            handleSetViewMode('feed');
-          }
         }
       } catch {
         if (!active) return;
         setNotices([]);
-        handleSetViewMode('feed');
       } finally {
         if (active) setIsNoticesLoading(false);
       }
@@ -278,8 +273,8 @@ export default function FeedPage() {
           onSelect={setSelectedCrewId}
         />
 
-        {/* 뷰 전환 탭 (공지가 1개 이상 있을 때 노출) */}
-        {notices.length > 0 && (
+        {/* 뷰 전환 탭 (참여 중인 크루가 있거나 내가 방장인 크루가 있을 때 노출) */}
+        {(availableCrews.length > 0 || hostCrews.length > 0) && (
           <div className="px-5 mb-3 mt-1.5">
             <div className="flex bg-text-secondary/10 p-1 rounded-full w-full max-w-[260px] mx-auto border border-text-secondary/5">
               <button
