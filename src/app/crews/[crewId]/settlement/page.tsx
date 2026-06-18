@@ -227,7 +227,12 @@ export default function CrewSettlementPage() {
           {detailViewModel ? (
             <SettlementResultCard
               viewModel={detailViewModel}
-              onPrimaryAction={() => router.push(`/crews/${crewId}`)}
+              onViewResult={() => {
+                if (summary.settlement_id !== null) {
+                  router.push(`/settlements/${summary.settlement_id}`);
+                }
+              }}
+              onGoToCrewFeed={() => router.push(`/crews/${crewId}`)}
             />
           ) : (
             <>
