@@ -21,8 +21,6 @@ export default function CrewDetailTabs({ crew, crewId }: CrewDetailTabsProps) {
   const [activeTab, setActiveTab] = useState<TabType>('정보');
   const [hostProfileUrl, setHostProfileUrl] = useState<string | null>(null);
 
-  const currentParticipants = crew.current_participants ?? 0;
-
   useEffect(() => {
     let active = true;
     const loadHostMember = async () => {
