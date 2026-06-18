@@ -201,6 +201,7 @@ function noticeMessage(notice: ProjectionNotice): string | null {
 }
 
 export interface CrewDashboardSegmentView {
+  id: number; // crew_participant_id — 중복 닉네임에도 안정적인 React key
   label: string;
   value: number; // 링 그라데이션용 숫자 (null → 0)
   valueLabel: string; // 범례 표시용 ("23.5%" 또는 집계 전 "—")
@@ -239,6 +240,7 @@ export function mapCrewDashboard(res: DashboardResponse): CrewDashboardView {
     myShareLabel: "나의 지분율",
     mySharePercent: formatRatioPercent(me?.share_ratio ?? null),
     segments: res.participants.map((p, index) => ({
+      id: p.crew_participant_id,
       label: p.nickname,
       value: ratioToPercentValue(p.share_ratio),
       valueLabel: formatRatioPercent(p.share_ratio),

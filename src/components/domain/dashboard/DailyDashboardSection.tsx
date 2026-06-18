@@ -49,7 +49,7 @@ export function DailyDashboardSection({
 
         <div className="min-w-0 flex-1 space-y-2">
           {dashboard.segments.map((segment) => (
-            <LegendRow key={segment.label} segment={segment} />
+            <LegendRow key={segment.id} segment={segment} />
           ))}
         </div>
       </DashboardCard>
