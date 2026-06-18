@@ -52,7 +52,11 @@ export default function FeedPage() {
           setHostCrews(res.data.items);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        if (active) {
+          setHostCrews([]);
+        }
+      });
     return () => {
       active = false;
     };

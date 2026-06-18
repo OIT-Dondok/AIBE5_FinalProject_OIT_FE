@@ -21,34 +21,40 @@ export function NoticeCrewSelectModal({
   onSelect,
 }: NoticeCrewSelectModalProps) {
   const [sortedCrews, setSortedCrews] = useState<MyCrew[]>([]);
+  const [frequentIdsSet, setFrequentIdsSet] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     if (!isOpen) return;
 
+    let frequentIds: number[] = [];
     try {
       const stored = localStorage.getItem('frequent_notice_crew_ids');
-      const frequentIds: number[] = stored ? JSON.parse(stored) : [];
-
-      const sorted = [...hostCrews].sort((a, b) => {
-        const indexA = frequentIds.indexOf(a.crew_id);
-        const indexB = frequentIds.indexOf(b.crew_id);
-
-        // 둘 다 자주 쓰는 목록에 있는 경우
-        if (indexA !== -1 && indexB !== -1) {
-          return indexA - indexB; // 최근에 쓴 것(배열의 앞에 위치함)이 우선
-        }
-        // 한쪽만 자주 쓰는 목록에 있는 경우
-        if (indexA !== -1) return -1;
-        if (indexB !== -1) return 1;
-
-        // 둘 다 자주 쓰는 목록에 없는 경우 크루 ID 내림차순(최신 크루 우선)
-        return b.crew_id - a.crew_id;
-      });
-
-      setSortedCrews(sorted);
+      frequentIds = stored ? JSON.parse(stored) : [];
+      if (!Array.isArray(frequentIds)) {
+        frequentIds = [];
+      }
     } catch {
-      setSortedCrews(hostCrews);
+      frequentIds = [];
     }
+    setFrequentIdsSet(new Set(frequentIds));
+
+    const sorted = [...hostCrews].sort((a, b) => {
+      const indexA = frequentIds.indexOf(a.crew_id);
+      const indexB = frequentIds.indexOf(b.crew_id);
+
+      // 둘 다 자주 쓰는 목록에 있는 경우
+      if (indexA !== -1 && indexB !== -1) {
+        return indexA - indexB; // 최근에 쓴 것(배열의 앞에 위치함)이 우선
+      }
+      // 한쪽만 자주 쓰는 목록에 있는 경우
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+
+      // 둘 다 자주 쓰는 목록에 없는 경우 크루 ID 내림차순(최신 크루 우선)
+      return b.crew_id - a.crew_id;
+    });
+
+    setSortedCrews(sorted);
   }, [isOpen, hostCrews]);
 
   return (
@@ -78,9 +84,7 @@ export function NoticeCrewSelectModal({
               const label = CATEGORY_LABEL[crew.category]?.replace(/^\S+\s/, '') ?? '기타';
               
               // 자주 쓰는 탭 배지 표시 여부 검사
-              const stored = typeof window !== 'undefined' ? localStorage.getItem('frequent_notice_crew_ids') : null;
-              const frequentIds: number[] = stored ? JSON.parse(stored) : [];
-              const isFrequent = frequentIds.includes(crew.crew_id);
+              const isFrequent = frequentIdsSet.has(crew.crew_id);
 
               return (
                 <li key={crew.crew_id}>

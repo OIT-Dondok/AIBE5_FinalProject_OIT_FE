@@ -15,6 +15,16 @@ import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 import { getCrewNoticeDetail, updateCrewNotice } from "@/services/crew";
 import type { CrewNotice } from "@/types/domain";
 
+const isValidDraft = (data: any): data is { title: string; content: string; savedAt: number } => {
+  return (
+    data &&
+    typeof data === "object" &&
+    typeof data.title === "string" &&
+    typeof data.content === "string" &&
+    typeof data.savedAt === "number"
+  );
+};
+
 const getRelativeTimeString = (timestamp: number): string => {
   const diff = Date.now() - timestamp;
   const minutes = Math.floor(diff / 60000);
@@ -65,8 +75,14 @@ export default function HostNoticeEditPage() {
         if (stored) {
           try {
             const parsed = JSON.parse(stored);
-            setDraftToRestore(parsed);
-            setIsRestoreModalOpen(true);
+            if (isValidDraft(parsed)) {
+              setDraftToRestore(parsed);
+              setIsRestoreModalOpen(true);
+            } else {
+              setTitle(res.data.title);
+              setContent(res.data.content);
+              preventSaveRef.current = false;
+            }
           } catch {
             setTitle(res.data.title);
             setContent(res.data.content);

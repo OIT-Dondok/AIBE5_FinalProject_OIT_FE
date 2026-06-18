@@ -46,7 +46,7 @@ export default function CrewSelectDropdown({ value, options, onChange }: CrewSel
       const next = !prev;
       if (next) {
         const selectedIdx = options.findIndex((o) => o.crew_id === value);
-        setFocusedIndex(selectedIdx >= 0 ? selectedIdx : 0);
+        setFocusedIndex(selectedIdx >= 0 ? selectedIdx : (options.length > 0 ? 0 : -1));
       } else {
         setFocusedIndex(-1);
       }
@@ -66,7 +66,7 @@ export default function CrewSelectDropdown({ value, options, onChange }: CrewSel
       e.preventDefault();
       setIsOpen(true);
       const selectedIdx = options.findIndex((o) => o.crew_id === value);
-      setFocusedIndex(selectedIdx >= 0 ? selectedIdx : 0);
+      setFocusedIndex(selectedIdx >= 0 ? selectedIdx : (options.length > 0 ? 0 : -1));
     }
   };
 
@@ -82,11 +82,15 @@ export default function CrewSelectDropdown({ value, options, onChange }: CrewSel
         break;
       case 'ArrowDown':
         e.preventDefault();
-        setFocusedIndex((prev) => (prev + 1) % options.length);
+        if (options.length > 0) {
+          setFocusedIndex((prev) => (prev + 1) % options.length);
+        }
         break;
       case 'ArrowUp':
         e.preventDefault();
-        setFocusedIndex((prev) => (prev - 1 + options.length) % options.length);
+        if (options.length > 0) {
+          setFocusedIndex((prev) => (prev - 1 + options.length) % options.length);
+        }
         break;
       case 'Tab':
         closeDropdown();
