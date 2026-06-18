@@ -2,8 +2,9 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Megaphone, ChevronDown } from "lucide-react";
+import { Megaphone } from "lucide-react";
 import type { MyCrew } from "@/types/domain";
+import CrewSelectDropdown from "@/components/domain/crew/CrewSelectDropdown";
 
 import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
@@ -208,30 +209,17 @@ export default function HostNoticeNewPage() {
           <div className="px-1">
             {hostCrews.length > 0 && (
               <div className="mb-4">
-                <label className="block text-[12px] font-bold text-text-primary mb-1.5 flex items-center gap-1.5" htmlFor="crew-select">
+                <label className="block text-[12px] font-bold text-text-primary mb-1.5 flex items-center gap-1.5" htmlFor="crew-select-dropdown-btn">
                   <Megaphone size={14} strokeWidth={2.3} className="text-[#4C73D9]" />
                   공지를 등록할 크루 선택
                 </label>
-                <div className="relative">
-                  <select
-                    id="crew-select"
-                    value={crewId}
-                    onChange={(e) => {
-                      const newCrewId = Number(e.target.value);
-                      router.replace(`/crews/${newCrewId}/host-console/notices/new?from=${from || ''}`);
-                    }}
-                    className="w-full rounded-xl border border-text-secondary/20 bg-white px-3.5 py-3 text-sm font-semibold text-text-primary outline-none focus:border-[#4C73D9] cursor-pointer appearance-none shadow-sm"
-                  >
-                    {hostCrews.map((c) => (
-                      <option key={c.crew_id} value={c.crew_id}>
-                        {c.title}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute inset-y-0 right-3.5 flex items-center pointer-events-none text-text-secondary/70">
-                    <ChevronDown size={16} />
-                  </div>
-                </div>
+                <CrewSelectDropdown
+                  value={crewId}
+                  options={hostCrews}
+                  onChange={(newCrewId) => {
+                    router.replace(`/crews/${newCrewId}/host-console/notices/new?from=${from || ''}`);
+                  }}
+                />
               </div>
             )}
 
