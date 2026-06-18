@@ -418,6 +418,9 @@ export default function FeedPage() {
               isLoading={isNoticesLoading}
               crewName={availableCrews.find((c) => c.crew_id === selectedCrewId)?.crew_name}
               availableCrews={availableCrews}
+              onNoticeUpdate={(updated) => {
+                setNotices((prev) => prev.map((n) => n.notice_id === updated.notice_id ? updated : n));
+              }}
             />
           )}
         </div>

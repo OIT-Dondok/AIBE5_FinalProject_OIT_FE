@@ -1,9 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { MessageSquare, ChevronRight, AlertCircle } from 'lucide-react';
+import { MessageSquare, ChevronRight, AlertCircle, SmilePlus } from 'lucide-react';
 import type { CrewNotice, AvailableCrew } from '@/types/domain';
 import { formatServerTime, getCrewBrandingColor } from '@/components/domain/feed/feedItemMeta';
+import { EmojiPickerSheet } from '@/components/common/EmojiPickerSheet';
+import { addNoticeReaction, removeNoticeReaction } from '@/services/crew';
 
 interface FeedNoticeListProps {
   crewId: number;
@@ -11,6 +14,7 @@ interface FeedNoticeListProps {
   isLoading: boolean;
   crewName?: string;
   availableCrews?: AvailableCrew[];
+  onNoticeUpdate?: (updatedNotice: CrewNotice) => void;
 }
 
 // 개별 공지사항 카드 (프리미엄 리디자인)
@@ -18,17 +22,53 @@ export function NoticeCard({
   crewId,
   notice,
   crewName,
+  onNoticeUpdate,
 }: {
   crewId?: number;
   notice: CrewNotice;
   crewName?: string;
+  onNoticeUpdate?: (updatedNotice: CrewNotice) => void;
 }) {
   const router = useRouter();
   const isImportant = !!notice.is_important;
+  const [isEmojiSheetOpen, setIsEmojiSheetOpen] = useState(false);
 
   const handleGoToDetail = () => {
     const targetCrewId = crewId ?? notice.crew_id;
     router.push(`/crews/${targetCrewId}/notices/${notice.notice_id}`);
+  };
+
+  const handleReactionClick = async (emoji: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const targetCrewId = crewId ?? notice.crew_id;
+    const isReacted = notice.my_reactions?.includes(emoji);
+    try {
+      const res = isReacted
+        ? await removeNoticeReaction(targetCrewId, notice.notice_id, emoji)
+        : await addNoticeReaction(targetCrewId, notice.notice_id, emoji);
+      onNoticeUpdate?.({
+        ...notice,
+        my_reactions: res.data.my_reactions,
+        reaction_counts: res.data.reaction_counts,
+      });
+    } catch {}
+  };
+
+  const handleEmojiSelect = (emoji: string) => {
+    const targetCrewId = crewId ?? notice.crew_id;
+    const isReacted = notice.my_reactions?.includes(emoji);
+    const action = isReacted
+      ? removeNoticeReaction(targetCrewId, notice.notice_id, emoji)
+      : addNoticeReaction(targetCrewId, notice.notice_id, emoji);
+    action
+      .then((res) => {
+        onNoticeUpdate?.({
+          ...notice,
+          my_reactions: res.data.my_reactions,
+          reaction_counts: res.data.reaction_counts,
+        });
+      })
+      .catch(() => {});
   };
 
   return (
@@ -89,22 +129,39 @@ export function NoticeCard({
             .map(([emoji, count]) => {
               const isReacted = notice.my_reactions?.includes(emoji);
               return (
-                <span
+                <button
                   key={emoji}
-                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border transition-colors ${
+                  type="button"
+                  onClick={(e) => void handleReactionClick(emoji, e)}
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border transition-all cursor-pointer active:scale-95 ${
                     isReacted
-                      ? 'bg-primary-green/10 border-primary-green/20 text-text-primary font-bold'
-                      : 'bg-transparent border-text-secondary/15 text-text-primary/80 font-semibold'
+                      ? 'bg-[#E0E8FA] border-[#4D73D9] text-[#4D73D9] font-bold'
+                      : 'bg-transparent border-text-secondary/15 text-text-primary/80 font-semibold hover:bg-text-secondary/5'
                   }`}
                 >
                   <span>{emoji}</span>
                   <span>{count}</span>
-                </span>
+                </button>
               );
             })}
+          <button
+            type="button"
+            aria-label="이모지 추가"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsEmojiSheetOpen(true);
+            }}
+            className="flex h-6 w-7 items-center justify-center rounded-full border border-text-secondary/15 bg-card text-text-secondary hover:bg-text-secondary/5 cursor-pointer active:scale-95 shrink-0"
+          >
+            <SmilePlus size={13.5} strokeWidth={2.2} />
+          </button>
           <div className="flex items-center gap-1.5 text-text-secondary hover:text-text-primary transition-colors shrink-0">
             <MessageSquare size={13.5} className="opacity-70" />
-            <span className="text-[11px] font-bold opacity-80">댓글 작성</span>
+            <span className="text-[11px] font-bold opacity-80">
+              {notice.comment_count !== undefined && notice.comment_count > 0
+                ? `댓글 ${notice.comment_count}`
+                : '댓글 작성'}
+            </span>
           </div>
         </div>
 
@@ -114,6 +171,12 @@ export function NoticeCard({
           <ChevronRight size={13} className="transition-transform group-hover:translate-x-0.5" />
         </div>
       </div>
+      <EmojiPickerSheet
+        isOpen={isEmojiSheetOpen}
+        onClose={() => setIsEmojiSheetOpen(false)}
+        onSelect={handleEmojiSelect}
+        selectedEmojis={notice.my_reactions}
+      />
     </article>
   );
 }
@@ -124,6 +187,7 @@ export default function FeedNoticeList({
   isLoading,
   crewName,
   availableCrews,
+  onNoticeUpdate,
 }: FeedNoticeListProps) {
   if (isLoading) {
     return (
@@ -182,6 +246,7 @@ export default function FeedNoticeList({
               crewId={crewId === 0 ? notice.crew_id : crewId}
               notice={notice}
               crewName={resolvedCrewName}
+              onNoticeUpdate={onNoticeUpdate}
             />
           );
         })}
