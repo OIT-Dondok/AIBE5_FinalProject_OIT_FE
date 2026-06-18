@@ -322,6 +322,7 @@ export interface CrewListItem {
   deposit_amount: number;
   min_participants: number;
   max_participants: number;
+  current_participants: number;
   frequency_type: FrequencyType;
   frequency_count: number | null;
   mission_schedule_days: string[];

@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import { isAxiosError } from 'axios';
+import { useState, useCallback } from 'react';
 import { Toast } from '@/components/common/Toast';
-import { joinCrew, cancelJoinCrew } from '@/services/crew';
+import { ConfirmModal } from '@/components/common/ConfirmModal';
 import type { MyParticipation } from '@/types/domain';
-import type { ErrorResponse } from '@/types/common';
+import { useCrewJoinFlow } from './useCrewJoinFlow';
 
 interface CrewJoinButtonProps {
   crewId: number;
@@ -24,17 +23,9 @@ function Spinner() {
 }
 
 export default function CrewJoinButton({ crewId, depositAmount, myParticipation, onSuccess }: CrewJoinButtonProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'warning'>('success');
   const [isToastOpen, setIsToastOpen] = useState(false);
-
-  useEffect(() => {
-    if (!showSuccessModal) return;
-    const t = setTimeout(() => setShowSuccessModal(false), 4000);
-    return () => clearTimeout(t);
-  }, [showSuccessModal]);
 
   const showToast = useCallback((message: string, type: 'success' | 'error' | 'warning' = 'success') => {
     setToastMessage(message);
@@ -42,55 +33,17 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
     setIsToastOpen(true);
   }, []);
 
+  const {
+    step,
+    isLoading,
+    handleJoin,
+    handleCancel,
+    openJoinConfirm,
+    openCancelConfirm,
+    close,
+  } = useCrewJoinFlow({ crewId, onSuccess, showToast });
+
   const status = myParticipation?.status ?? null;
-
-  const handleJoin = async () => {
-    setIsLoading(true);
-    try {
-      await joinCrew(crewId);
-      setShowSuccessModal(true);
-      onSuccess?.();
-    } catch (err) {
-      if (isAxiosError<ErrorResponse>(err)) {
-        const code = err.response?.data?.code;
-        if (code === 'INSUFFICIENT_BALANCE') {
-          showToast('포인트가 부족합니다. 충전 후 다시 시도해주세요.', 'error');
-        } else if (code === 'CAPACITY_FULL') {
-          showToast('정원이 가득 찼습니다.', 'error');
-        } else if (code === 'CREW_NOT_RECRUITING') {
-          showToast('모집이 마감되었습니다.', 'error');
-        } else {
-          showToast('입장 신청에 실패했습니다.', 'error');
-        }
-      } else {
-        showToast('입장 신청에 실패했습니다.', 'error');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCancel = async () => {
-    setIsLoading(true);
-    try {
-      await cancelJoinCrew(crewId);
-      showToast('신청이 취소되었습니다.', 'success');
-      onSuccess?.();
-    } catch (err) {
-      if (isAxiosError<ErrorResponse>(err)) {
-        const code = err.response?.data?.code;
-        if (code === 'APPLICATION_NOT_CANCELLABLE') {
-          showToast('신청 취소가 불가능한 상태입니다.', 'error');
-        } else {
-          showToast('신청 취소에 실패했습니다.', 'error');
-        }
-      } else {
-        showToast('신청 취소에 실패했습니다.', 'error');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const renderButton = () => {
     /* ── 신청 전 ─────────────────────────────────── */
@@ -98,7 +51,7 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
       return (
         <button
           type="button"
-          onClick={handleJoin}
+          onClick={openJoinConfirm}
           disabled={isLoading}
           className="relative w-full py-4 px-6 rounded-2xl bg-pastel-yellow overflow-hidden shadow-lg shadow-pastel-yellow/40 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none select-none"
         >
@@ -128,7 +81,7 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
           {/* 취소 버튼 */}
           <button
             type="button"
-            onClick={handleCancel}
+            onClick={openCancelConfirm}
             disabled={isLoading}
             className="relative w-full py-3 px-6 rounded-2xl bg-card overflow-hidden border border-text-secondary/20 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none select-none"
           >
@@ -168,10 +121,10 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
       {renderButton()}
 
       {/* 신청 완료 모달 */}
-      {showSuccessModal && (
+      {step === 'SUCCESS_MODAL' && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center px-6"
-          onClick={() => setShowSuccessModal(false)}
+          onClick={close}
         >
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
           <div
@@ -188,7 +141,7 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
               </div>
               <button
                 type="button"
-                onClick={() => setShowSuccessModal(false)}
+                onClick={close}
                 className="mt-1 w-full py-2.5 rounded-xl bg-white/20 text-sm font-semibold text-white hover:bg-white/30 active:scale-[0.98] transition-all"
               >
                 확인
@@ -197,6 +150,42 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
           </div>
         </div>
       )}
+
+      {/* 신청 취소 컨펌 모달 */}
+      <ConfirmModal
+        isOpen={step === 'CANCEL_CONFIRM'}
+        onClose={close}
+        onConfirm={handleCancel}
+        title="정말 신청을 취소하시겠어요?"
+        description={
+          <span>
+            신청 철회 시 <strong className="text-[#DB5C55] font-bold">재참여가 불가능</strong>합니다.
+          </span>
+        }
+        confirmText="네, 취소할게요"
+        cancelText="아니오"
+        confirmVariant="danger"
+        iconType="warning"
+        isLoading={isLoading}
+      />
+
+      {/* 입장 신청 컨펌 모달 */}
+      <ConfirmModal
+        isOpen={step === 'JOIN_CONFIRM'}
+        onClose={close}
+        onConfirm={handleJoin}
+        title="크루에 입장 신청을 하시겠어요?"
+        description={
+          <span>
+            방장 승인 시 보증금 <strong className="text-primary-green font-bold">{depositAmount.toLocaleString()}원</strong>이 예약 잠금 처리됩니다.
+          </span>
+        }
+        confirmText="네, 신청할게요"
+        cancelText="아니오"
+        confirmVariant="primary-green"
+        iconType="none"
+        isLoading={isLoading}
+      />
 
       <Toast
         message={toastMessage}
