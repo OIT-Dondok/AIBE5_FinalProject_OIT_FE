@@ -297,7 +297,7 @@ export default function HostNoticeDetailPage() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-[13px] font-bold text-text-primary">{comment.nickname}</p>
                       <p className="mt-0.5 text-[13px] leading-relaxed text-text-primary">{comment.content}</p>
-                      <p className="mt-0.5 text-[11px] text-text-secondary">{formatDateMinute(comment.created_at)}</p>
+                      <p className="mt-0.5 text-[11px] text-text-secondary">{comment.created_at ? formatDateMinute(comment.created_at) : ''}</p>
                     </div>
                   </div>
                 </article>
