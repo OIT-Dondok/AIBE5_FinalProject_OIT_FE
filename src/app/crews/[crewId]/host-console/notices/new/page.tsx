@@ -208,7 +208,7 @@ export default function HostNoticeNewPage() {
           <div className="px-1">
             {hostCrews.length > 0 && (
               <div className="mb-4">
-                <label className="block text-[11px] font-bold text-text-secondary mb-1.5 flex items-center gap-1.5" htmlFor="crew-select">
+                <label className="block text-[12px] font-bold text-text-primary mb-1.5 flex items-center gap-1.5" htmlFor="crew-select">
                   <Megaphone size={14} strokeWidth={2.3} className="text-[#4C73D9]" />
                   공지를 등록할 크루 선택
                 </label>
@@ -220,11 +220,11 @@ export default function HostNoticeNewPage() {
                       const newCrewId = Number(e.target.value);
                       router.replace(`/crews/${newCrewId}/host-console/notices/new?from=${from || ''}`);
                     }}
-                    className="w-full rounded-xl border border-text-secondary/20 bg-white px-3.5 py-3 text-sm font-extrabold text-text-primary outline-none focus:border-[#4C73D9] cursor-pointer appearance-none shadow-sm"
+                    className="w-full rounded-xl border border-text-secondary/20 bg-white px-3.5 py-3 text-sm font-semibold text-text-primary outline-none focus:border-[#4C73D9] cursor-pointer appearance-none shadow-sm"
                   >
                     {hostCrews.map((c) => (
                       <option key={c.crew_id} value={c.crew_id}>
-                        {c.title} (방장 권한)
+                        {c.title}
                       </option>
                     ))}
                   </select>
