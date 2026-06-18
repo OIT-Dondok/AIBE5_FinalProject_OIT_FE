@@ -325,10 +325,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
       {notices.map((notice) => (
         <div
           key={notice.notice_id}
-          role="link"
-          tabIndex={0}
           onClick={() => router.push(`/crews/${crewId}/notices/${notice.notice_id}`)}
-          onKeyDown={(e) => { if (e.key === 'Enter') router.push(`/crews/${crewId}/notices/${notice.notice_id}`); }}
           className="bg-card rounded-card p-4 shadow-[var(--shadow-card)] flex flex-col gap-3 cursor-pointer active:scale-[0.99] transition-transform"
         >
           <div className="flex items-start justify-between gap-2">
