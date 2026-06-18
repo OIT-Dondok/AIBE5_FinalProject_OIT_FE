@@ -16,9 +16,10 @@ type TabType = (typeof TABS)[number];
 interface CrewDetailTabsProps {
   crew: CrewDetail;
   crewId: number;
+  onConfirmedCountLoaded?: (count: number | null) => void;
 }
 
-export default function CrewDetailTabs({ crew, crewId }: CrewDetailTabsProps) {
+export default function CrewDetailTabs({ crew, crewId, onConfirmedCountLoaded }: CrewDetailTabsProps) {
   const user = useAuthStore((state) => state.user);
   const [activeTab, setActiveTab] = useState<TabType>('정보');
   const [hostProfileUrl, setHostProfileUrl] = useState<string | null>(null);
@@ -30,6 +31,7 @@ export default function CrewDetailTabs({ crew, crewId }: CrewDetailTabsProps) {
     const loadHostMember = async () => {
       setHostProfileUrl(null); // 이전 크루 데이터 클리어
       setConfirmedCount(null);
+      onConfirmedCountLoaded?.(null);
       setPendingCount(null);
       try {
         // 1. LOCKED 참여 멤버 목록 조회
@@ -39,6 +41,7 @@ export default function CrewDetailTabs({ crew, crewId }: CrewDetailTabsProps) {
         const host = items.find((m) => m.role === 'HOST');
         setHostProfileUrl(host?.profile_image_url ?? null);
         setConfirmedCount(items.length);
+        onConfirmedCountLoaded?.(items.length);
 
         // 2. 현재 로그인된 유저가 방장(HOST)인 경우에만 승인 대기자(PENDING) 조회
         const isHost = user?.member_uuid === crew.host_member_uuid;
@@ -50,7 +53,7 @@ export default function CrewDetailTabs({ crew, crewId }: CrewDetailTabsProps) {
           setPendingCount(null);
         }
       } catch {
-        // 무시
+        onConfirmedCountLoaded?.(null);
       }
     };
     const timer = setTimeout(() => {
@@ -60,7 +63,7 @@ export default function CrewDetailTabs({ crew, crewId }: CrewDetailTabsProps) {
       active = false;
       clearTimeout(timer);
     };
-  }, [crewId]);
+  }, [crewId, crew.host_member_uuid, user?.member_uuid, onConfirmedCountLoaded]);
 
   return (
     <div className="flex flex-col">
