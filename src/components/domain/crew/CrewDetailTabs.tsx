@@ -20,16 +20,26 @@ interface CrewDetailTabsProps {
 export default function CrewDetailTabs({ crew, crewId }: CrewDetailTabsProps) {
   const [activeTab, setActiveTab] = useState<TabType>('정보');
   const [hostProfileUrl, setHostProfileUrl] = useState<string | null>(null);
+  const [confirmedCount, setConfirmedCount] = useState<number | null>(null);
+  const [pendingCount, setPendingCount] = useState<number | null>(null);
 
   useEffect(() => {
     let active = true;
     const loadHostMember = async () => {
       setHostProfileUrl(null); // 이전 크루 데이터 클리어
+      setConfirmedCount(null);
+      setPendingCount(null);
       try {
         const res = await getCrewMembers(crewId, undefined, 100);
         if (!active) return;
-        const host = res.data.items.find((m) => m.role === 'HOST');
+        const items = res.data.items;
+        const host = items.find((m) => m.role === 'HOST');
         setHostProfileUrl(host?.profile_image_url ?? null);
+
+        const confirmed = items.filter((m) => m.status !== 'PENDING').length;
+        const pending = items.filter((m) => m.status === 'PENDING').length;
+        setConfirmedCount(confirmed);
+        setPendingCount(pending);
       } catch {
         // 무시
       }
@@ -78,7 +88,11 @@ export default function CrewDetailTabs({ crew, crewId }: CrewDetailTabsProps) {
               endAt={crew.end_at}
             />
 
-            <CrewInfoTable crew={crew} />
+            <CrewInfoTable
+              crew={crew}
+              confirmedCount={confirmedCount}
+              pendingCount={pendingCount}
+            />
           </div>
         )}
         {activeTab === '공지' && (

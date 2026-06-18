@@ -18,9 +18,11 @@ const DAY_LABEL: Record<string, string> = {
 
 interface CrewInfoTableProps {
   crew: CrewDetail;
+  confirmedCount: number | null;
+  pendingCount: number | null;
 }
 
-export default function CrewInfoTable({ crew }: CrewInfoTableProps) {
+export default function CrewInfoTable({ crew, confirmedCount, pendingCount }: CrewInfoTableProps) {
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
   const { daily_settlement_type } = crew;
   const times = SETTLEMENT_TIMES[daily_settlement_type];
@@ -44,6 +46,10 @@ export default function CrewInfoTable({ crew }: CrewInfoTableProps) {
     return '기타';
   };
 
+  const activeCount = confirmedCount !== null ? confirmedCount : (crew.current_participants ?? 0);
+  const isMinAchieved = activeCount >= crew.min_participants;
+  const minAchievedLabel = isMinAchieved ? ' (최소 인원 달성! 🎉)' : '';
+
   const rows: { label: string; value: string }[] = [
     { label: '인증 주기', value: getFrequencyLabel() },
     {
@@ -51,9 +57,10 @@ export default function CrewInfoTable({ crew }: CrewInfoTableProps) {
       value: `${daily_settlement_type} · ${SETTLEMENT_TYPE_LABEL[daily_settlement_type]}`,
     },
     { label: '인증 마감', value: `${times.deadline}까지 완료` },
-    { label: '인원', value: `${crew.current_participants} / ${crew.max_participants}명 (최소 ${crew.min_participants}명)` },
+    { label: '인원 (참여 확정)', value: `${activeCount} / ${crew.max_participants}명 (최소 ${crew.min_participants}명)${minAchievedLabel}` },
+    { label: '승인 대기 인원', value: `${pendingCount !== null ? pendingCount : 0}명` },
     { label: '참여 보증금 💳', value: `${crew.deposit_amount.toLocaleString()}원` },
-    { label: '총 모인 보증금 💰', value: `${(crew.deposit_amount * crew.current_participants).toLocaleString()}원` },
+    { label: '총 모인 보증금 💰', value: `${(crew.deposit_amount * activeCount).toLocaleString()}원` },
   ];
 
   return (
