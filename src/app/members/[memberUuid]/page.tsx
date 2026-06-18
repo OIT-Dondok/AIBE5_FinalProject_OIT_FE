@@ -255,9 +255,9 @@ export default function MemberProfilePage() {
                           : "border border-primary-green/20 shadow-inner"
                       }`}
                     >
-                      {profile.profile_image_url ? (
+                      {(profile.profile_image_url || (profile as any).profileImageUrl) ? (
                         <img
-                          src={profile.profile_image_url}
+                          src={profile.profile_image_url || (profile as any).profileImageUrl || undefined}
                           alt={`${profile.nickname} 프로필 이미지`}
                           className="w-full h-full object-cover"
                         />

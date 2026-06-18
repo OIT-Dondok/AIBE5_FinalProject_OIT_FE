@@ -201,7 +201,7 @@ export default function HostNoticeDetailPage() {
               <div className="min-w-0">
                 <h1 className="text-lg font-extrabold leading-snug text-text-primary">{notice.title}</h1>
                 <div className="mt-3 flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-blue/10 text-xs font-extrabold text-primary-blue">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#5E9B73]/10 text-xs font-extrabold text-[#5E9B73]">
                     {currentProfileInitial}
                   </div>
                   <div className="min-w-0">
@@ -254,7 +254,7 @@ export default function HostNoticeDetailPage() {
                       onClick={() => void handleReactionClick(emoji)}
                       className={`rounded-full border px-3 py-1.5 text-sm font-bold transition active:scale-95 ${
                         isReacted
-                          ? "border-[#4D73D9] bg-[#E0E8FA] text-[#4D73D9]"
+                          ? "border-[#5E9B73] bg-[#E8F2EB] text-[#5E9B73]"
                           : "border-text-secondary/15 bg-white text-text-primary"
                       }`}
                     >

@@ -7,6 +7,7 @@ interface EmptyStateProps {
   description?: string;
   actionButtonText?: string;
   onActionClick?: () => void;
+  className?: string;
 }
 
 export const EmptyState = ({
@@ -15,9 +16,10 @@ export const EmptyState = ({
   description,
   actionButtonText,
   onActionClick,
+  className = "py-12 px-6",
 }: EmptyStateProps) => {
   return (
-    <div className="flex flex-col items-center justify-center gap-4 py-12 px-6 text-center">
+    <div className={`flex flex-col items-center justify-center gap-4 text-center ${className}`}>
       <div className="text-5xl leading-none">{icon}</div>
       <div className="flex flex-col gap-1.5">
         <p className="text-base font-semibold text-text-primary">{title}</p>
