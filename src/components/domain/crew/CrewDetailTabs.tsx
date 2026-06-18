@@ -68,6 +68,7 @@ export default function CrewDetailTabs({ crew, crewId }: CrewDetailTabsProps) {
         {activeTab === '정보' && (
           <div className="flex flex-col gap-4">
             <CrewHostProfile
+              key={hostProfileUrl ?? 'no-avatar'}
               description={crew.description}
               hostNickname={crew.host_nickname}
               hostMemberUuid={crew.host_member_uuid}

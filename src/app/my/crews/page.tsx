@@ -156,7 +156,10 @@ function MyCrewCard({ crew }: { crew: MyCrew }) {
       tabIndex={0}
       onClick={() => router.push(`/crews/${crew.crew_id}`)}
       onKeyDown={(e) => {
-        if (e.key === 'Enter') router.push(`/crews/${crew.crew_id}`);
+        if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === ' ') e.preventDefault();
+          router.push(`/crews/${crew.crew_id}`);
+        }
       }}
       className={`bg-card rounded-[24px] p-5 flex flex-col gap-4 border border-text-secondary/10 shadow-sm hover:shadow-md hover:-translate-y-1 active:scale-[0.985] transition-all duration-300 cursor-pointer group relative overflow-hidden ${
         isClosed ? 'opacity-60' : ''

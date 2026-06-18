@@ -35,7 +35,7 @@ export default function CrewInfoTable({ crew }: CrewInfoTableProps) {
     if (crew.frequency_type === 'DAILY') {
       return '매일 인증';
     }
-    if (crew.frequency_type === 'SPECIFIC_DAYS' && crew.mission_schedule_days) {
+    if (crew.frequency_type === 'SPECIFIC_DAYS' && crew.mission_schedule_days && crew.mission_schedule_days.length > 0) {
       const days = crew.mission_schedule_days
         .map((d) => DAY_LABEL[d] ?? d)
         .join(', ');

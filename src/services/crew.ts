@@ -48,7 +48,7 @@ export const getCrewMembers = (crewId: number, cursor?: string, limit?: number) 
   return api.get<CrewMembersResponse>(`/crews/${crewId}/members`, {
     params: {
       ...(cursor ? { cursor } : {}),
-      ...(limit ? { limit } : {}),
+      ...(limit !== undefined ? { limit } : {}),
     },
   });
 };

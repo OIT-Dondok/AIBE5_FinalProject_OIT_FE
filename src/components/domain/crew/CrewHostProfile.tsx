@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { UserRound, Crown } from 'lucide-react';
 
@@ -16,11 +16,6 @@ export default function CrewHostProfile({
   hostProfileUrl,
 }: CrewHostProfileProps) {
   const [imgError, setImgError] = useState(false);
-
-  // hostProfileUrl이 변경되면 이미지 에러 상태를 초기화합니다.
-  useEffect(() => {
-    setImgError(false);
-  }, [hostProfileUrl]);
 
   return (
     <div className="flex flex-col gap-3">

@@ -144,7 +144,7 @@ export default function CrewMemberList({ crewId }: CrewMemberListProps) {
   }
 
   const activeMembers = members.filter(
-    (member) => member.status === 'LOCKED' || member.role === 'HOST'
+    (member) => member.status !== 'PENDING'
   );
 
   if (activeMembers.length === 0) {
