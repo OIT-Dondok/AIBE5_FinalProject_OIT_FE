@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { MessageSquare, ChevronRight, AlertCircle, SmilePlus } from 'lucide-react';
 import type { CrewNotice, AvailableCrew } from '@/types/domain';
 import { formatServerTime, getCrewBrandingColor } from '@/components/domain/feed/feedItemMeta';
 import { EmojiPickerSheet } from '@/components/common/EmojiPickerSheet';
-import { addNoticeReaction, removeNoticeReaction } from '@/services/crew';
+import { addNoticeReaction, removeNoticeReaction, getNoticeComments } from '@/services/crew';
 
 interface FeedNoticeListProps {
   crewId: number;
@@ -32,15 +32,31 @@ export function NoticeCard({
   const router = useRouter();
   const isImportant = !!notice.is_important;
   const [isEmojiSheetOpen, setIsEmojiSheetOpen] = useState(false);
+  const [commentCount, setCommentCount] = useState<number | null>(null);
 
   const handleGoToDetail = () => {
-    const targetCrewId = crewId ?? notice.crew_id;
+    const targetCrewId = (!crewId || crewId === 0) ? notice.crew_id : crewId;
     router.push(`/crews/${targetCrewId}/notices/${notice.notice_id}`);
   };
 
+  useEffect(() => {
+    const targetCrewId = (!crewId || crewId === 0) ? notice.crew_id : crewId;
+    let active = true;
+    getNoticeComments(targetCrewId, notice.notice_id)
+      .then((res) => {
+        if (active) {
+          setCommentCount(res.data.items.length);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [crewId, notice.crew_id, notice.notice_id]);
+
   const handleReactionClick = async (emoji: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const targetCrewId = crewId ?? notice.crew_id;
+    const targetCrewId = (!crewId || crewId === 0) ? notice.crew_id : crewId;
     const isReacted = notice.my_reactions?.includes(emoji);
     try {
       const res = isReacted
@@ -55,7 +71,7 @@ export function NoticeCard({
   };
 
   const handleEmojiSelect = (emoji: string) => {
-    const targetCrewId = crewId ?? notice.crew_id;
+    const targetCrewId = (!crewId || crewId === 0) ? notice.crew_id : crewId;
     const isReacted = notice.my_reactions?.includes(emoji);
     const action = isReacted
       ? removeNoticeReaction(targetCrewId, notice.notice_id, emoji)
@@ -158,8 +174,8 @@ export function NoticeCard({
           <div className="flex items-center gap-1.5 text-text-secondary hover:text-text-primary transition-colors shrink-0">
             <MessageSquare size={13.5} className="opacity-70" />
             <span className="text-[11px] font-bold opacity-80">
-              {notice.comment_count !== undefined && notice.comment_count > 0
-                ? `댓글 ${notice.comment_count}`
+              {commentCount !== null && commentCount > 0
+                ? `댓글 ${commentCount}`
                 : '댓글 작성'}
             </span>
           </div>
