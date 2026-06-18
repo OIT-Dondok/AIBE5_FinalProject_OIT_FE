@@ -1,4 +1,4 @@
-import { Trophy, WalletCards } from 'lucide-react';
+import { CalendarRange, Trophy, WalletCards } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import type { SettlementDetailViewModel } from './settlementViewModel';
 
@@ -8,16 +8,29 @@ interface SettlementResultCardProps {
   onGoToCrewFeed: () => void;
 }
 
-function CrewMissionMeta({ viewModel }: { viewModel: SettlementDetailViewModel }) {
+function CrewMissionMeta({
+  viewModel,
+  accent,
+}: {
+  viewModel: SettlementDetailViewModel;
+  accent: 'green' | 'blue';
+}) {
   if (!viewModel.crewName && !viewModel.missionPeriod) return null;
 
+  const accentText = accent === 'blue' ? 'text-primary-blue' : 'text-primary-green';
+
   return (
-    <div className="relative mt-3 space-y-0.5">
+    <div className="relative mt-4 flex flex-col items-center gap-2">
       {viewModel.crewName && (
-        <p className="text-sm font-bold text-text-primary">{viewModel.crewName}</p>
+        <p className="text-lg font-extrabold tracking-[-0.02em] text-text-primary">
+          {viewModel.crewName}
+        </p>
       )}
       {viewModel.missionPeriod && (
-        <p className="text-xs font-medium text-text-secondary">{viewModel.missionPeriod}</p>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-text-secondary/5 px-3 py-1 text-xs font-semibold text-text-secondary">
+          <CalendarRange size={13} className={accentText} />
+          {viewModel.missionPeriod}
+        </span>
       )}
     </div>
   );
@@ -35,7 +48,7 @@ function ResultActions({
   return (
     <div className="relative flex gap-2">
       <Button type="button" variant="outline" fullWidth onClick={onGoToCrewFeed}>
-        크루 피드로 이동
+        피드로 이동
       </Button>
       <Button type="button" variant={primaryVariant} fullWidth onClick={onViewResult}>
         결과 보기
@@ -92,17 +105,25 @@ export function SettlementResultCard({
         {viewModel.subtitle}
       </p>
 
-      <CrewMissionMeta viewModel={viewModel} />
+      <CrewMissionMeta viewModel={viewModel} accent="green" />
 
-      <div className="relative my-5 rounded-card bg-success-green/70 px-4 py-4">
+      <div className="relative mx-3 my-5 rounded-card bg-success-green/70 px-4 py-4">
         <p className="text-xs font-bold text-primary-green">최종 환급금</p>
-        <p className="mt-1 text-3xl font-black tracking-[-0.03em] text-primary-green">
+        <p className="mt-0.5 text-[26px] font-black leading-tight tracking-[-0.03em] text-primary-green">
           {viewModel.totalRefundAmount}
         </p>
-        <p className="mt-1 text-xs font-semibold text-primary-green">
-          예치금 {viewModel.totalLockedAmount}
-          {viewModel.myShareRatioPercent && ` · 최종 지분율 ${viewModel.myShareRatioPercent}`}
-        </p>
+        <div className="mt-3 grid grid-cols-2 divide-x divide-primary-green/15 border-t border-primary-green/15 pt-2.5">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[11px] font-semibold text-primary-green/70">예치금</span>
+            <span className="text-sm font-bold text-primary-green">{viewModel.totalLockedAmount}</span>
+          </div>
+          {viewModel.myShareRatioPercent && (
+            <div className="flex flex-col gap-0.5 pl-3">
+              <span className="text-[11px] font-semibold text-primary-green/70">최종 지분율</span>
+              <span className="text-sm font-bold text-primary-green">{viewModel.myShareRatioPercent}</span>
+            </div>
+          )}
+        </div>
       </div>
 
       <ResultActions
@@ -135,14 +156,17 @@ function SettlementAllFailRefundCard({
         {viewModel.subtitle}
       </p>
 
-      <CrewMissionMeta viewModel={viewModel} />
+      <CrewMissionMeta viewModel={viewModel} accent="blue" />
 
-      <div className="my-5 rounded-card bg-primary-blue/10 px-4 py-4">
+      <div className="mx-3 my-5 rounded-card bg-primary-blue/10 px-4 py-4">
         <p className="text-xs font-bold text-primary-blue">최종 환급금</p>
-        <p className="mt-1 text-3xl font-black tracking-[-0.03em] text-primary-blue">
+        <p className="mt-0.5 text-[26px] font-black leading-tight tracking-[-0.03em] text-primary-blue">
           {viewModel.totalRefundAmount}
         </p>
-        <p className="mt-1 text-xs font-semibold text-primary-blue">예치금 {viewModel.totalLockedAmount}</p>
+        <div className="mt-3 flex flex-col gap-0.5 border-t border-primary-blue/15 pt-2.5">
+          <span className="text-[11px] font-semibold text-primary-blue/70">예치금</span>
+          <span className="text-sm font-bold text-primary-blue">{viewModel.totalLockedAmount}</span>
+        </div>
       </div>
 
       <ResultActions
