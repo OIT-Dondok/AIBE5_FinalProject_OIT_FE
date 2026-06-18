@@ -330,20 +330,31 @@ export default function MyCrewsPage() {
 
         {/* 탭 */}
         <div className="mx-5 mt-4 mb-3 flex items-center gap-1.5">
-          {TABS.map((tab) => (
-            <button
-              key={tab.value}
-              type="button"
-              onClick={() => handleTabChange(tab.value)}
-              className={`flex-1 py-2.5 rounded-xl text-[13px] font-semibold transition-colors ${
-                activeTab === tab.value
-                  ? 'bg-[var(--color-primary-green)] text-white shadow-sm'
-                  : 'bg-card text-text-secondary border border-text-secondary/20 hover:text-text-primary'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+          {TABS.map((tab) => {
+            const isActive = activeTab === tab.value;
+            let activeClass = 'bg-primary-green text-white border-primary-green/20 shadow-sm font-bold';
+            
+            if (tab.value === 'HOST') {
+              activeClass = 'bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-900 border-amber-200/60 shadow-sm font-bold';
+            } else if (tab.value === 'MEMBER') {
+              activeClass = 'bg-gradient-to-r from-green-50 to-emerald-100/60 text-green-900 border-green-200/60 shadow-sm font-bold';
+            }
+
+            return (
+              <button
+                key={tab.value}
+                type="button"
+                onClick={() => handleTabChange(tab.value)}
+                className={`flex-1 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 border ${
+                  isActive
+                    ? activeClass
+                    : 'bg-card text-text-secondary border-text-secondary/20 hover:text-text-primary'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
         {/* 카운트 + 상태 드롭다운 */}
