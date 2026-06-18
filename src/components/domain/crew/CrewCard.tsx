@@ -66,7 +66,6 @@ export default function CrewCard({ crew }: CrewCardProps) {
   const {
     currentParticipants,
     fillPercent,
-    isMinAchieved,
     dDayInfo,
     progressBg,
   } = getCrewCardViewModel(crew, status.progress, isClosed);
@@ -109,10 +108,10 @@ export default function CrewCard({ crew }: CrewCardProps) {
             </div>
           </div>
 
-          {/* 참여 인원 현황 프로그레스 바 */}
+          {/* 참여 멤버 현황 프로그레스 바 */}
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] text-text-secondary font-medium">참여 인원 현황</span>
+              <span className="text-[11px] text-text-secondary font-medium">참여 멤버 현황</span>
               <span className="text-[11px] font-bold text-text-primary">
                 {currentParticipants}명 / {crew.max_participants}명 (최소 {crew.min_participants}명)
               </span>
@@ -144,13 +143,6 @@ export default function CrewCard({ crew }: CrewCardProps) {
             )}
           </div>
         </div>
-
-        {/* 최하단 풀 너비 배너 */}
-        {isMinAchieved && !isClosed && (
-          <div className="w-full bg-primary-green/10 text-primary-green text-xs font-bold py-2.5 px-5 text-center border-t border-primary-green/20 flex items-center justify-center gap-1">
-            최소 인원 달성!
-          </div>
-        )}
       </div>
   );
 }

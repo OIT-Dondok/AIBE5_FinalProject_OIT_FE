@@ -91,10 +91,10 @@ export function InstallPrompt() {
       )}
 
       <Toast
-        message="설정(우측 상단 톱니바퀴) 메뉴에서 언제든지 앱을 다시 설치할 수 있습니다!"
+        message="프로필>설정(우측 상단 톱니바퀴)에서 언제든지 앱을 다시 설치할 수 있습니다."
         isOpen={isToastOpen}
         onClose={() => setIsToastOpen(false)}
-        type="warning"
+        type="success"
         duration={3500}
       />
     </>

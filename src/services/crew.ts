@@ -44,9 +44,12 @@ export const cancelJoinCrew = (crewId: number) => {
   return api.delete<ParticipantCancelResponse>(`/crews/${crewId}/participants/me`);
 };
 
-export const getCrewMembers = (crewId: number, cursor?: string) => {
+export const getCrewMembers = (crewId: number, cursor?: string, limit?: number) => {
   return api.get<CrewMembersResponse>(`/crews/${crewId}/members`, {
-    params: cursor ? { cursor } : undefined,
+    params: {
+      ...(cursor ? { cursor } : {}),
+      ...(limit !== undefined ? { limit } : {}),
+    },
   });
 };
 

@@ -23,6 +23,7 @@ export default function CrewDetailPage() {
   const crewId = Number(params.crewId);
 
   const [crew, setCrew] = useState<CrewDetail | null>(null);
+  const [confirmedCount, setConfirmedCount] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -45,6 +46,7 @@ export default function CrewDetailPage() {
 
   useEffect(() => {
     if (Number.isFinite(crewId) && crewId > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       void fetchCrew();
     } else {
       setNotFound(true);
@@ -95,6 +97,7 @@ export default function CrewDetailPage() {
   const emoji = CATEGORY_EMOJI[crew.category] ?? '📌';
   const categoryDisplay = CATEGORY_LABEL[crew.category] ?? crew.category;
   const categoryGradient = CATEGORY_GRADIENT[crew.category] ?? 'from-gray-300 to-gray-200';
+  const isMinAchieved = confirmedCount !== null && confirmedCount >= crew.min_participants;
 
   return (
     <>
@@ -140,14 +143,23 @@ export default function CrewDetailPage() {
           </div>
 
           {/* Settlement type badge — top right */}
-          <div className="absolute top-4 right-4">
+          <div className="absolute top-4 right-4 z-10">
             <span className="inline-flex items-center px-3 py-1 rounded-full bg-black/30 backdrop-blur-sm text-white text-xs font-semibold">
               {crew.daily_settlement_type} · {SETTLEMENT_TYPE_LABEL[crew.daily_settlement_type]}
             </span>
           </div>
+
+          {/* Minimum participants achieved badge — top left */}
+          {isMinAchieved && (
+            <div className="absolute top-4 left-4 z-10">
+              <span className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-primary-green text-white text-xs font-extrabold shadow-md transform hover:scale-105 transition-transform duration-200">
+                최소 인원 달성! 🎉
+              </span>
+            </div>
+          )}
         </div>
 
-        <CrewDetailTabs crew={crew} crewId={crewId} />
+        <CrewDetailTabs crew={crew} crewId={crewId} onConfirmedCountLoaded={setConfirmedCount} />
       </div>
 
       <div className="fixed bottom-24 left-0 right-0 z-30 flex justify-center px-5">
