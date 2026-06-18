@@ -1,18 +1,62 @@
-﻿import { Trophy, WalletCards } from 'lucide-react';
+import { Trophy, WalletCards } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import type { SettlementDetailViewModel } from './settlementViewModel';
 
 interface SettlementResultCardProps {
   viewModel: SettlementDetailViewModel;
-  onPrimaryAction: () => void;
+  onViewResult: () => void;
+  onGoToCrewFeed: () => void;
+}
+
+function CrewMissionMeta({ viewModel }: { viewModel: SettlementDetailViewModel }) {
+  if (!viewModel.crewName && !viewModel.missionPeriod) return null;
+
+  return (
+    <div className="relative mt-3 space-y-0.5">
+      {viewModel.crewName && (
+        <p className="text-sm font-bold text-text-primary">{viewModel.crewName}</p>
+      )}
+      {viewModel.missionPeriod && (
+        <p className="text-xs font-medium text-text-secondary">{viewModel.missionPeriod}</p>
+      )}
+    </div>
+  );
+}
+
+function ResultActions({
+  onViewResult,
+  onGoToCrewFeed,
+  primaryVariant,
+}: {
+  onViewResult: () => void;
+  onGoToCrewFeed: () => void;
+  primaryVariant: 'primary-green' | 'primary-blue';
+}) {
+  return (
+    <div className="relative flex gap-2">
+      <Button type="button" variant="outline" fullWidth onClick={onGoToCrewFeed}>
+        크루 피드로 이동
+      </Button>
+      <Button type="button" variant={primaryVariant} fullWidth onClick={onViewResult}>
+        결과 보기
+      </Button>
+    </div>
+  );
 }
 
 export function SettlementResultCard({
   viewModel,
-  onPrimaryAction,
+  onViewResult,
+  onGoToCrewFeed,
 }: SettlementResultCardProps) {
   if (viewModel.isAllFail) {
-    return <SettlementAllFailRefundCard viewModel={viewModel} onPrimaryAction={onPrimaryAction} />;
+    return (
+      <SettlementAllFailRefundCard
+        viewModel={viewModel}
+        onViewResult={onViewResult}
+        onGoToCrewFeed={onGoToCrewFeed}
+      />
+    );
   }
 
   return (
@@ -42,32 +86,38 @@ export function SettlementResultCard({
       </div>
 
       <h1 id="settlement-complete-title" className="relative mt-3 text-lg font-black tracking-[-0.03em] text-text-primary">
-        최종 정산이 완료됐어요
+        {viewModel.title}
       </h1>
       <p className="relative mt-1 text-xs font-medium text-text-secondary">
-        {viewModel.finishedAtLabel} · {viewModel.totalParticipants}
+        {viewModel.subtitle}
       </p>
 
+      <CrewMissionMeta viewModel={viewModel} />
+
       <div className="relative my-5 rounded-card bg-success-green/70 px-4 py-4">
-        <p className="text-xs font-bold text-primary-green">내 최종 환급액</p>
+        <p className="text-xs font-bold text-primary-green">최종 환급금</p>
         <p className="mt-1 text-3xl font-black tracking-[-0.03em] text-primary-green">
           {viewModel.totalRefundAmount}
         </p>
-        <p className="mt-1 text-xs font-semibold text-primary-green">내 예치금 {viewModel.totalLockedAmount}</p>
+        <p className="mt-1 text-xs font-semibold text-primary-green">
+          예치금 {viewModel.totalLockedAmount}
+          {viewModel.myShareRatioPercent && ` · 최종 지분율 ${viewModel.myShareRatioPercent}`}
+        </p>
       </div>
 
-      <div className="relative">
-        <Button type="button" variant="primary-green" onClick={onPrimaryAction}>
-          크루로 이동
-        </Button>
-      </div>
+      <ResultActions
+        onViewResult={onViewResult}
+        onGoToCrewFeed={onGoToCrewFeed}
+        primaryVariant="primary-green"
+      />
     </section>
   );
 }
 
 function SettlementAllFailRefundCard({
   viewModel,
-  onPrimaryAction,
+  onViewResult,
+  onGoToCrewFeed,
 }: SettlementResultCardProps) {
   return (
     <section
@@ -79,25 +129,27 @@ function SettlementAllFailRefundCard({
       </div>
 
       <h1 id="settlement-all-fail-title" className="mt-3 text-lg font-black tracking-[-0.03em] text-text-primary">
-        전원 원금 환급이 완료됐어요
+        {viewModel.title}
       </h1>
       <p className="mt-2 text-xs font-medium leading-5 text-text-secondary">
-        인정된 성공 기록이 없어 지분 정산 없이 예치금 전액을 돌려드렸어요.
+        {viewModel.subtitle}
       </p>
 
+      <CrewMissionMeta viewModel={viewModel} />
+
       <div className="my-5 rounded-card bg-primary-blue/10 px-4 py-4">
-        <p className="text-xs font-bold text-primary-blue">내 환급액</p>
+        <p className="text-xs font-bold text-primary-blue">최종 환급금</p>
         <p className="mt-1 text-3xl font-black tracking-[-0.03em] text-primary-blue">
           {viewModel.totalRefundAmount}
         </p>
-        <p className="mt-1 text-xs font-semibold text-primary-blue">내 예치금 {viewModel.totalLockedAmount}</p>
+        <p className="mt-1 text-xs font-semibold text-primary-blue">예치금 {viewModel.totalLockedAmount}</p>
       </div>
 
-      <div className="grid gap-2">
-        <Button type="button" variant="primary-blue" onClick={onPrimaryAction}>
-          크루로 이동
-        </Button>
-      </div>
+      <ResultActions
+        onViewResult={onViewResult}
+        onGoToCrewFeed={onGoToCrewFeed}
+        primaryVariant="primary-blue"
+      />
     </section>
   );
 }
