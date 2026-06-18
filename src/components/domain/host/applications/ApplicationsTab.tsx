@@ -161,6 +161,7 @@ export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) 
       );
     } catch (error) {
       setApplications([]);
+      onPendingCountChangeRef.current?.(0);
       setToastMessage(
         getApiErrorMessage(
           error,

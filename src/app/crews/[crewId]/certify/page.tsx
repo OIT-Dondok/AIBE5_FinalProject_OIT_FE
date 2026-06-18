@@ -28,6 +28,7 @@ import type {
   CertifyStep,
   DailySettlementType,
 } from '@/types/domain';
+import { ERROR_CODE } from '@/types/common';
 import type { ErrorResponse } from '@/types/common';
 
 // ────────────────────────────────────────────────────────────
@@ -143,11 +144,11 @@ const ERROR_MESSAGES: Record<string, string> = {
   MISSION_ENDED: '미션이 종료됐어요',
   INVALID_IMAGE_KEY: '이미지 업로드에 실패했어요. 다시 시도해주세요.',
   PARTICIPANT_NOT_ELIGIBLE: '인증 권한이 없어요',
-  IMAGE_DIMENSIONS_TOO_LARGE: '이미지 해상도가 너무 커요. 다른 이미지를 선택해주세요.',
-  IMAGE_DECODE_FAILED: '이미지를 읽을 수 없어요. 다른 이미지를 선택해주세요.',
-  UNSUPPORTED_IMAGE_TYPE: '지원하지 않는 이미지 형식이에요.',
-  IMAGE_TOO_LARGE: '10MB 이하 이미지를 선택해주세요.',
-  EMPTY_IMAGE: '이미지 파일이 비어있어요. 다른 이미지를 선택해주세요.',
+  [ERROR_CODE.IMAGE_DIMENSIONS_TOO_LARGE]: '이미지 해상도가 너무 커요. 다른 이미지를 선택해주세요.',
+  [ERROR_CODE.IMAGE_DECODE_FAILED]: '이미지를 읽을 수 없어요. 다른 이미지를 선택해주세요.',
+  [ERROR_CODE.UNSUPPORTED_IMAGE_TYPE]: '지원하지 않는 이미지 형식이에요.',
+  [ERROR_CODE.IMAGE_TOO_LARGE]: '10MB 이하 이미지를 선택해주세요.',
+  [ERROR_CODE.EMPTY_IMAGE]: '이미지 파일이 비어있어요. 다른 이미지를 선택해주세요.',
 };
 
 // ────────────────────────────────────────────────────────────
