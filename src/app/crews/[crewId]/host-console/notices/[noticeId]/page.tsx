@@ -22,6 +22,7 @@ import {
   getNoticeComments,
   removeNoticeReaction,
 } from "@/services/crew";
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 import { useAuthStore } from "@/store/authStore";
 import type { CrewNotice, NoticeComment } from "@/types/domain";
 
@@ -93,8 +94,17 @@ export default function HostNoticeDetailPage() {
       deleteNavTimerRef.current = window.setTimeout(() => {
         router.push(`/crews/${crewId}/host-console?tab=notices`);
       }, 2000);
-    } catch {
-      setToastMessage("공지 삭제에 실패했어요");
+    } catch (error) {
+      setToastMessage(
+        getApiErrorMessage(
+          error,
+          {
+            FORBIDDEN_NOT_HOST: "방장만 공지를 삭제할 수 있어요.",
+            NOTICE_NOT_FOUND: "이미 삭제된 공지예요.",
+          },
+          "공지 삭제에 실패했어요. 잠시 후 다시 시도해 주세요.",
+        ),
+      );
       setToastType("error");
       setIsToastOpen(true);
     } finally {
@@ -114,8 +124,17 @@ export default function HostNoticeDetailPage() {
           ? { ...prev, my_reactions: res.data.my_reactions, reaction_counts: res.data.reaction_counts }
           : prev,
       );
-    } catch {
-      setToastMessage("리액션 처리에 실패했어요");
+    } catch (error) {
+      setToastMessage(
+        getApiErrorMessage(
+          error,
+          {
+            REACTION_NOT_ALLOWED: "리액션할 수 없는 공지예요.",
+            INVALID_REACTION_TYPE: "사용할 수 없는 리액션이에요.",
+          },
+          "리액션 처리에 실패했어요. 잠시 후 다시 시도해 주세요.",
+        ),
+      );
       setToastType("error");
       setIsToastOpen(true);
     }
@@ -129,8 +148,17 @@ export default function HostNoticeDetailPage() {
       const res = await createNoticeComment(crewId, noticeId, { content });
       setComments((prev) => [...prev, res.data]);
       setCommentInput("");
-    } catch {
-      setToastMessage("댓글 등록에 실패했어요");
+    } catch (error) {
+      setToastMessage(
+        getApiErrorMessage(
+          error,
+          {
+            VALIDATION_ERROR: "댓글 내용을 확인해 주세요.",
+            NOTICE_NOT_FOUND: "이미 삭제된 공지예요.",
+          },
+          "댓글 등록에 실패했어요. 잠시 후 다시 시도해 주세요.",
+        ),
+      );
       setToastType("error");
       setIsToastOpen(true);
     } finally {

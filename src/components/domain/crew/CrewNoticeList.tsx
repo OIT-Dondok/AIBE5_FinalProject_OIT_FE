@@ -17,6 +17,7 @@ import {
   addNoticeReaction,
   removeNoticeReaction,
 } from '@/services/crew';
+import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
 import type { CrewNotice, ReactionCounts } from '@/types/domain';
 import { ERROR_CODE } from '@/types/common';
 import type { ErrorResponse } from '@/types/common';
@@ -171,12 +172,20 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
         await fetchNotices();
       }
       closeModal();
-    } catch {
+    } catch (error) {
       // 모달은 닫지 않아 입력값을 유지하고, 모달 내부에 인라인 에러를 노출한다.
       setFormError(
-        editTarget
-          ? '공지를 수정하지 못했어요. 잠시 후 다시 시도해주세요.'
-          : '공지를 등록하지 못했어요. 잠시 후 다시 시도해주세요.',
+        getApiErrorMessage(
+          error,
+          {
+            VALIDATION_ERROR: '제목·내용 길이를 확인해 주세요.',
+            FORBIDDEN_NOT_HOST: '방장만 공지를 작성·수정할 수 있어요.',
+            NOTICE_NOT_FOUND: '이미 삭제된 공지예요.',
+          },
+          editTarget
+            ? '공지를 수정하지 못했어요. 잠시 후 다시 시도해 주세요.'
+            : '공지를 등록하지 못했어요. 잠시 후 다시 시도해 주세요.',
+        ),
       );
     } finally {
       setIsSubmitting(false);
@@ -190,7 +199,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
       setNotices((prev) => prev.filter((n) => n.notice_id !== noticeId));
     } catch {
       // 실패 시 안내. 성공/실패 모두 모달을 닫아 toast(z-90)가 모달 백드롭(z-100)에 가리지 않게 한다.
-      showToast('공지를 삭제하지 못했어요. 잠시 후 다시 시도해주세요.');
+      showToast('공지를 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.');
     } finally {
       // 성공이든 실패든 삭제 확인 모달은 닫는다.
       setDeleteTarget(null);
@@ -260,7 +269,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
         } else if (code === ERROR_CODE.INVALID_REACTION_TYPE) {
           showToast('사용할 수 없는 이모지예요.');
         } else {
-          showToast('리액션 처리에 실패했어요. 잠시 후 다시 시도해주세요.');
+          showToast('리액션 처리에 실패했어요. 잠시 후 다시 시도해 주세요.');
         }
       } finally {
         reactionInFlightRef.current.delete(key);

@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { isAxiosError } from "axios";
 import { ShieldCheck } from "lucide-react";
 import { useParams } from "next/navigation";
 
@@ -17,12 +16,12 @@ import {
   REVIEW_FILTERS,
   REVIEW_FILTER_STYLES,
 } from "@/components/domain/host/verification/verificationDisplay";
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 import {
   approveMissionLog,
   getReviewableMissionLogs,
   rejectMissionLog,
 } from "@/services/moderation";
-import type { ErrorResponse } from "@/types/common";
 import type {
   MissionLogReviewBucket,
   RejectReasonCode,
@@ -39,6 +38,9 @@ const EMPTY_COUNTS: Record<MissionLogReviewBucket, number> = {
   warning: 0,
   normal: 0,
 };
+
+const VERIFICATION_ERROR_FALLBACK =
+  "검토 처리 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.";
 
 const ERROR_MESSAGES: Record<string, string> = {
   FORBIDDEN_NOT_HOST: "방장만 인증을 검토할 수 있어요.",
@@ -71,13 +73,7 @@ function toCardItem(item: ReviewableMissionLog): HostCertificationMock {
 }
 
 function getErrorMessage(error: unknown) {
-  if (!isAxiosError<ErrorResponse>(error)) {
-    return "검토 처리 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.";
-  }
-
-  const code = error.response?.data?.code;
-  return (code && ERROR_MESSAGES[code]) || error.response?.data?.message ||
-    "검토 처리 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.";
+  return getApiErrorMessage(error, ERROR_MESSAGES, VERIFICATION_ERROR_FALLBACK);
 }
 
 export function VerificationTab({ onPendingCountChange }: VerificationTabProps) {

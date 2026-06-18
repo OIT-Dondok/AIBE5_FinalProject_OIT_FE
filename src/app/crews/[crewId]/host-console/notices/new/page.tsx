@@ -10,6 +10,7 @@ import { HostActionButton } from "@/components/domain/host/common/HostActionButt
 import { Toast } from "@/components/common/Toast";
 import type { ToastType } from "@/components/common/Toast";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 import { createCrewNotice, getCrew } from "@/services/crew";
 
 export default function HostNoticeNewPage() {
@@ -57,8 +58,18 @@ export default function HostNoticeNewPage() {
     try {
       await createCrewNotice(crewId, { title, content: contentHtml.trim() });
       router.push(`/crews/${crewId}/host-console?tab=notices`);
-    } catch {
-      setToastMessage("공지 등록에 실패했어요");
+    } catch (error) {
+      setToastMessage(
+        getApiErrorMessage(
+          error,
+          {
+            VALIDATION_ERROR: "제목·내용 길이를 확인해 주세요.",
+            FORBIDDEN_NOT_HOST: "방장만 공지를 작성할 수 있어요.",
+            CREW_NOT_FOUND: "크루를 찾을 수 없어요.",
+          },
+          "공지 등록에 실패했어요. 잠시 후 다시 시도해 주세요.",
+        ),
+      );
       setToastType("error");
       setIsToastOpen(true);
     } finally {

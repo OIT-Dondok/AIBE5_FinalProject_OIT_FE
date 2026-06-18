@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { api } from '@/lib/axios';
+import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
 import type { AiRecommendationResponse, FrequencyType, DailySettlementType } from '@/types/domain';
 
 interface AiDraft {
@@ -39,8 +40,22 @@ export default function Step1AI({ onComplete }: Step1AIProps) {
         setWarnings(res.data.validation_warnings);
       }
       onComplete(res.data.draft);
-    } catch {
-      setWarnings([{ field: 'general', message: 'AI 추천에 실패했습니다. 다시 시도하거나 직접 입력해주세요.' }]);
+    } catch (error) {
+      setWarnings([
+        {
+          field: 'general',
+          message: getApiErrorMessage(
+            error,
+            {
+              AI_RECOMMENDATION_FAILED:
+                'AI 추천 생성에 실패했어요. 다시 시도하거나 직접 입력해 주세요.',
+              AI_RESPONSE_INVALID:
+                'AI 응답을 처리하지 못했어요. 다시 시도하거나 직접 입력해 주세요.',
+            },
+            'AI 추천에 실패했어요. 다시 시도하거나 직접 입력해 주세요.',
+          ),
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }

@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { isAxiosError } from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CircleAlert, Loader2 } from "lucide-react";
+
+import type { ErrorResponse } from "@/types/common";
 
 import {
   buildPointChargePayload,
@@ -25,7 +28,15 @@ type ConfirmState =
   | "pending_mismatch"
   | "confirming"
   | "confirmed_refreshing"
-  | "confirm_failed_retry_visible";
+  | "confirm_failed_retry_visible"
+  | "confirm_failed_no_retry";
+
+// 재시도해도 동일하게 실패하는(정보 불일치) 코드 — 재시도 대신 문의 안내
+const NON_RETRYABLE_CHARGE_CODES = new Set([
+  "PAYMENT_ID_REUSED_WITH_DIFFERENT_AMOUNT",
+  "INVALID_AMOUNT",
+  "INVALID_PAYMENT_ID",
+]);
 
 export function ChargeSuccessClient({ queryString }: ChargeSuccessClientProps) {
   const router = useRouter();
@@ -64,7 +75,17 @@ export function ChargeSuccessClient({ queryString }: ChargeSuccessClientProps) {
       setState("confirmed_refreshing");
       setMessage("충전이 확인됐어요. 지갑을 새로고침하고 있어요.");
       router.replace(buildWalletConfirmedUrl({ amount: data.amount, pointHistoryId: data.point_history_id }));
-    } catch {
+    } catch (error) {
+      const code = isAxiosError<ErrorResponse>(error)
+        ? error.response?.data?.code
+        : undefined;
+
+      if (code && NON_RETRYABLE_CHARGE_CODES.has(code)) {
+        setState("confirm_failed_no_retry");
+        setMessage("결제 정보가 일치하지 않아요. 고객센터로 문의해 주세요.");
+        return;
+      }
+
       setState("confirm_failed_retry_visible");
       setMessage("결제는 완료됐을 수 있어요. 같은 결제 건으로 서버 확인을 다시 시도해 주세요.");
     }
@@ -92,7 +113,11 @@ export function ChargeSuccessClient({ queryString }: ChargeSuccessClientProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parsedParams]);
 
-  const canRetry = state === "confirm_failed_retry_visible" || state === "invalid_params" || state === "pending_mismatch";
+  const canRetry =
+    state === "confirm_failed_retry_visible" ||
+    state === "confirm_failed_no_retry" ||
+    state === "invalid_params" ||
+    state === "pending_mismatch";
 
   return (
     <main className="min-h-screen w-full bg-background px-5 py-14">
@@ -105,29 +130,37 @@ export function ChargeSuccessClient({ queryString }: ChargeSuccessClientProps) {
         <h1 className="mt-5 text-xl font-black tracking-[-0.04em] text-text-primary">도딘 충전 확인</h1>
         <p className="mt-3 text-sm font-semibold leading-relaxed text-text-secondary">{message}</p>
 
-        {canRetry && (
-          <div className="mt-7 grid w-full grid-cols-2 gap-2">
+        {canRetry &&
+          (state === "confirm_failed_no_retry" ? (
             <Link
               href="/my/dodin"
-              className="rounded-2xl bg-text-secondary/10 px-4 py-3 text-sm font-extrabold text-text-primary"
+              className="mt-7 w-full rounded-2xl bg-primary-blue px-4 py-3 text-center text-sm font-extrabold text-white"
             >
               지갑으로
             </Link>
-            {state === "confirm_failed_retry_visible" ? (
-              <button
-                type="button"
-                onClick={retryConfirm}
-                className="rounded-2xl bg-primary-blue px-4 py-3 text-sm font-extrabold text-white"
+          ) : (
+            <div className="mt-7 grid w-full grid-cols-2 gap-2">
+              <Link
+                href="/my/dodin"
+                className="rounded-2xl bg-text-secondary/10 px-4 py-3 text-sm font-extrabold text-text-primary"
               >
-                확인 재시도
-              </button>
-            ) : (
-              <Link href="/my/dodin" className="rounded-2xl bg-primary-blue px-4 py-3 text-sm font-extrabold text-white">
-                지갑에서 다시 시작
+                지갑으로
               </Link>
-            )}
-          </div>
-        )}
+              {state === "confirm_failed_retry_visible" ? (
+                <button
+                  type="button"
+                  onClick={retryConfirm}
+                  className="rounded-2xl bg-primary-blue px-4 py-3 text-sm font-extrabold text-white"
+                >
+                  확인 재시도
+                </button>
+              ) : (
+                <Link href="/my/dodin" className="rounded-2xl bg-primary-blue px-4 py-3 text-sm font-extrabold text-white">
+                  지갑에서 다시 시작
+                </Link>
+              )}
+            </div>
+          ))}
       </section>
     </main>
   );

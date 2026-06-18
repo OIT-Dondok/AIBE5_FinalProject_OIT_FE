@@ -10,6 +10,7 @@ import { HostActionButton } from "@/components/domain/host/common/HostActionButt
 import { Toast } from "@/components/common/Toast";
 import type { ToastType } from "@/components/common/Toast";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 import { getCrewNoticeDetail, updateCrewNotice } from "@/services/crew";
 import type { CrewNotice } from "@/types/domain";
 
@@ -58,8 +59,18 @@ export default function HostNoticeEditPage() {
         content: content.trim(),
       });
       router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}`);
-    } catch {
-      setToastMessage("공지 수정에 실패했어요");
+    } catch (error) {
+      setToastMessage(
+        getApiErrorMessage(
+          error,
+          {
+            VALIDATION_ERROR: "제목·내용 길이를 확인해 주세요.",
+            FORBIDDEN_NOT_HOST: "방장만 공지를 수정할 수 있어요.",
+            NOTICE_NOT_FOUND: "이미 삭제된 공지예요.",
+          },
+          "공지 수정에 실패했어요. 잠시 후 다시 시도해 주세요.",
+        ),
+      );
       setToastType("error");
       setIsToastOpen(true);
     } finally {

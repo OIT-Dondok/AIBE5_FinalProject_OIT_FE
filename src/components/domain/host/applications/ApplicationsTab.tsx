@@ -13,6 +13,7 @@ import { SectionCard } from "@/components/domain/host/SectionCard";
 import { useAuthStore } from "@/store/authStore";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { Toast } from "@/components/common/Toast";
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 import {
   getCrewApplications as fetchCrewApplications,
   approveCrewApplication,
@@ -158,8 +159,21 @@ export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) 
       onPendingCountChangeRef.current?.(
         pendingRes.data.items.filter((item) => item.member_uuid !== myUuid).length,
       );
-    } catch {
+    } catch (error) {
       setApplications([]);
+      onPendingCountChangeRef.current?.(0);
+      setToastMessage(
+        getApiErrorMessage(
+          error,
+          {
+            CREW_ACCESS_DENIED: "이 크루의 신청 목록에 접근할 수 없어요.",
+            FORBIDDEN_NOT_HOST: "방장만 신청을 관리할 수 있어요.",
+          },
+          "신청 목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.",
+        ),
+      );
+      setToastType("error");
+      setIsToastOpen(true);
     }
   }, [crewId, myUuid]);
 
@@ -209,8 +223,24 @@ export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) 
       setToastType(decision === "approved" ? "success" : "error");
       setIsToastOpen(true);
       await loadApplications();
-    } catch {
-      // API 실패 시 상태 유지
+    } catch (error) {
+      setToastMessage(
+        getApiErrorMessage(
+          error,
+          {
+            CAPACITY_FULL: "정원이 가득 차 승인할 수 없어요.",
+            APPLICATION_NOT_APPROVABLE: "승인할 수 없는 신청이에요.",
+            APPLICATION_NOT_REJECTABLE: "거절할 수 없는 신청이에요.",
+            SETTLEMENT_INPUT_FROZEN: "정산이 시작되어 더 이상 처리할 수 없어요.",
+            FORBIDDEN_NOT_HOST: "방장만 처리할 수 있어요.",
+          },
+          decision === "approved"
+            ? "승인 처리에 실패했어요. 잠시 후 다시 시도해 주세요."
+            : "거절 처리에 실패했어요. 잠시 후 다시 시도해 주세요.",
+        ),
+      );
+      setToastType("error");
+      setIsToastOpen(true);
     } finally {
       setProcessingId(null);
     }
