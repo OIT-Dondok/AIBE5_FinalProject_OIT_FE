@@ -8,7 +8,7 @@ import { Header } from '@/components/common/Header';
 import { Button } from '@/components/common/Button';
 import {
   SettlementBatchErrorView,
-  SettlementResultCard,
+  MissionEndCard,
   SettlementSkeleton,
   SettlementStatusPanel,
 } from '@/components/domain/settlement';
@@ -225,7 +225,7 @@ export default function CrewSettlementPage() {
       <main className="w-full max-w-[430px] mx-auto px-5 py-6 pb-24">
         <div className="flex flex-col gap-4">
           {detailViewModel ? (
-            <SettlementResultCard
+            <MissionEndCard
               viewModel={detailViewModel}
               onViewResult={() => {
                 if (summary.settlement_id !== null) {
