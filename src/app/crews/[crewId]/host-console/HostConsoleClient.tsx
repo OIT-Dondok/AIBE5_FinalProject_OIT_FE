@@ -19,6 +19,7 @@ import { VerificationTab } from "@/components/domain/host/verification/Verificat
 import { HostMoreMenu } from "@/components/domain/host/common/HostMoreMenu";
 import { getHostCrewDetail } from "@/mocks/data/host";
 import { disbandCrew, getCrewApplications, getCrewNotices } from "@/services/crew";
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 
 export default function HostConsoleClient() {
   const params = useParams<{ crewId: string }>();
@@ -46,6 +47,9 @@ export default function HostConsoleClient() {
   const [isDisbandModalOpen, setIsDisbandModalOpen] = useState(false);
   const [isDisbanding, setIsDisbanding] = useState(false);
   const [isDisbandErrorToastOpen, setIsDisbandErrorToastOpen] = useState(false);
+  const [disbandErrorMessage, setDisbandErrorMessage] = useState(
+    "크루 해체에 실패했어요. 다시 시도해주세요.",
+  );
 
   const handleTabChange = (tab: HostTab) => {
     setActiveTab(tab);
@@ -72,8 +76,19 @@ export default function HostConsoleClient() {
     try {
       await disbandCrew(crewId);
       router.push("/");
-    } catch {
+    } catch (error) {
       setIsDisbanding(false);
+      setDisbandErrorMessage(
+        getApiErrorMessage(
+          error,
+          {
+            FORBIDDEN_NOT_HOST: "방장만 크루를 해체할 수 있어요.",
+            CREW_NOT_FOUND: "크루를 찾을 수 없어요.",
+            CREW_NOT_RECRUITING: "모집 중인 크루만 해체할 수 있어요.",
+          },
+          "크루 해체에 실패했어요. 다시 시도해주세요.",
+        ),
+      );
       setIsDisbandErrorToastOpen(true);
     }
   };
@@ -166,7 +181,7 @@ export default function HostConsoleClient() {
       <Toast
         isOpen={isDisbandErrorToastOpen}
         onClose={() => setIsDisbandErrorToastOpen(false)}
-        message="크루 해체에 실패했어요. 다시 시도해주세요."
+        message={disbandErrorMessage}
         type="error"
       />
 

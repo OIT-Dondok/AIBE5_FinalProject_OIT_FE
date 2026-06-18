@@ -17,6 +17,7 @@ import {
   addNoticeReaction,
   removeNoticeReaction,
 } from '@/services/crew';
+import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
 import type { CrewNotice, ReactionCounts } from '@/types/domain';
 import { ERROR_CODE } from '@/types/common';
 import type { ErrorResponse } from '@/types/common';
@@ -171,12 +172,20 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
         await fetchNotices();
       }
       closeModal();
-    } catch {
+    } catch (error) {
       // 모달은 닫지 않아 입력값을 유지하고, 모달 내부에 인라인 에러를 노출한다.
       setFormError(
-        editTarget
-          ? '공지를 수정하지 못했어요. 잠시 후 다시 시도해주세요.'
-          : '공지를 등록하지 못했어요. 잠시 후 다시 시도해주세요.',
+        getApiErrorMessage(
+          error,
+          {
+            VALIDATION_ERROR: '제목·내용 길이를 확인해 주세요.',
+            FORBIDDEN_NOT_HOST: '방장만 공지를 작성·수정할 수 있어요.',
+            NOTICE_NOT_FOUND: '이미 삭제된 공지예요.',
+          },
+          editTarget
+            ? '공지를 수정하지 못했어요. 잠시 후 다시 시도해주세요.'
+            : '공지를 등록하지 못했어요. 잠시 후 다시 시도해주세요.',
+        ),
       );
     } finally {
       setIsSubmitting(false);
