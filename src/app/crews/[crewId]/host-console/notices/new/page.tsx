@@ -35,7 +35,6 @@ export default function HostNoticeNewPage() {
   
   const [title, setTitle] = useState("");
   const [contentHtml, setContentHtml] = useState("");
-  const [isImportant, setIsImportant] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [isToastOpen, setIsToastOpen] = useState(false);
   const [toastType, setToastType] = useState<ToastType>("success");
@@ -48,7 +47,6 @@ export default function HostNoticeNewPage() {
   const [draftToRestore, setDraftToRestore] = useState<{
     title: string;
     content: string;
-    isImportant: boolean;
     savedAt: number;
   } | null>(null);
   const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
@@ -76,7 +74,7 @@ export default function HostNoticeNewPage() {
     if (crewId === null) return;
     if (preventSaveRef.current) return;
 
-    if (!title.trim() && !contentHtml.trim() && !isImportant) {
+    if (!title.trim() && !contentHtml.trim()) {
       localStorage.removeItem(`temp_notice_draft_${crewId}`);
       return;
     }
@@ -85,20 +83,18 @@ export default function HostNoticeNewPage() {
       const draft = {
         title,
         content: contentHtml,
-        isImportant,
         savedAt: Date.now()
       };
       localStorage.setItem(`temp_notice_draft_${crewId}`, JSON.stringify(draft));
     }, 1000);
 
     return () => clearTimeout(handler);
-  }, [title, contentHtml, isImportant, crewId]);
+  }, [title, contentHtml, crewId]);
 
   const handleRestoreConfirm = () => {
     if (draftToRestore) {
       setTitle(draftToRestore.title);
       setContentHtml(draftToRestore.content);
-      setIsImportant(draftToRestore.isImportant);
     }
     preventSaveRef.current = false;
     setIsRestoreModalOpen(false);
@@ -151,7 +147,7 @@ export default function HostNoticeNewPage() {
     }
     setIsSubmitting(true);
     try {
-      await createCrewNotice(crewId, { title, content: contentHtml.trim(), is_important: isImportant });
+      await createCrewNotice(crewId, { title, content: contentHtml.trim(), is_important: false });
       
       // 임시 저장 제거
       localStorage.removeItem(`temp_notice_draft_${crewId}`);
@@ -221,20 +217,6 @@ export default function HostNoticeNewPage() {
               maxLength={65000}
               className="mt-2 w-full resize-none rounded-xl border border-text-secondary/20 bg-white px-3.5 py-3 text-sm font-medium leading-relaxed text-text-primary outline-none placeholder:text-text-secondary/70 focus:border-[#4C73D9]"
             />
-
-            <div className="mt-4 flex items-center justify-between rounded-xl border border-text-secondary/10 bg-white px-4 py-3 shadow-sm">
-              <div className="flex flex-col gap-0.5">
-                <span className="text-xs font-bold text-text-primary">📌 중요 공지로 고정</span>
-                <span className="text-[10px] text-text-secondary">피드 최상단에 필독 공지로 고정됩니다.</span>
-              </div>
-              <input
-                type="checkbox"
-                id="is-important"
-                checked={isImportant}
-                onChange={(e) => setIsImportant(e.target.checked)}
-                className="h-5 w-5 rounded border-text-secondary/30 text-primary-green focus:ring-primary-green cursor-pointer"
-              />
-            </div>
           </div>
 
           <div className="grid grid-cols-[0.85fr_1.15fr] gap-2">

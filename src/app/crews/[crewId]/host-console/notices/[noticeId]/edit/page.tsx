@@ -40,7 +40,6 @@ export default function HostNoticeEditPage() {
   const [hasError, setHasError] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [isImportant, setIsImportant] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [isToastOpen, setIsToastOpen] = useState(false);
   const [toastType, setToastType] = useState<ToastType>("success");
@@ -51,7 +50,6 @@ export default function HostNoticeEditPage() {
   const [draftToRestore, setDraftToRestore] = useState<{
     title: string;
     content: string;
-    isImportant: boolean;
     savedAt: number;
   } | null>(null);
   const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
@@ -72,13 +70,11 @@ export default function HostNoticeEditPage() {
           } catch {
             setTitle(res.data.title);
             setContent(res.data.content);
-            setIsImportant(!!res.data.is_important);
             preventSaveRef.current = false;
           }
         } else {
           setTitle(res.data.title);
           setContent(res.data.content);
-          setIsImportant(!!res.data.is_important);
           preventSaveRef.current = false;
         }
         isInitialLoadRef.current = false;
@@ -94,8 +90,7 @@ export default function HostNoticeEditPage() {
 
     const isSameAsOriginal = notice && 
       title === notice.title && 
-      content === notice.content && 
-      isImportant === !!notice.is_important;
+      content === notice.content;
     
     if (isSameAsOriginal) {
       localStorage.removeItem(`temp_notice_edit_draft_${crewId}_${noticeId}`);
@@ -106,20 +101,18 @@ export default function HostNoticeEditPage() {
       const draft = {
         title,
         content,
-        isImportant,
         savedAt: Date.now()
       };
       localStorage.setItem(`temp_notice_edit_draft_${crewId}_${noticeId}`, JSON.stringify(draft));
     }, 1000);
 
     return () => clearTimeout(handler);
-  }, [title, content, isImportant, crewId, noticeId, notice]);
+  }, [title, content, crewId, noticeId, notice]);
 
   const handleRestoreConfirm = () => {
     if (draftToRestore) {
       setTitle(draftToRestore.title);
       setContent(draftToRestore.content);
-      setIsImportant(draftToRestore.isImportant);
     }
     preventSaveRef.current = false;
     setIsRestoreModalOpen(false);
@@ -132,7 +125,6 @@ export default function HostNoticeEditPage() {
     if (notice) {
       setTitle(notice.title);
       setContent(notice.content);
-      setIsImportant(!!notice.is_important);
     }
     preventSaveRef.current = false;
     setIsRestoreModalOpen(false);
@@ -152,7 +144,7 @@ export default function HostNoticeEditPage() {
       await updateCrewNotice(crewId, notice.notice_id, {
         title: title.trim(),
         content: content.trim(),
-        is_important: isImportant,
+        is_important: false,
       });
       
       localStorage.removeItem(`temp_notice_edit_draft_${crewId}_${noticeId}`);
@@ -261,20 +253,6 @@ export default function HostNoticeEditPage() {
               maxLength={65000}
               className="mt-2 w-full resize-none rounded-xl border border-text-secondary/20 bg-white px-3.5 py-3 text-sm font-medium leading-relaxed text-text-primary outline-none placeholder:text-text-secondary/70 focus:border-[#4C73D9]"
             />
-
-            <div className="mt-4 flex items-center justify-between rounded-xl border border-text-secondary/10 bg-white px-4 py-3 shadow-sm">
-              <div className="flex flex-col gap-0.5">
-                <span className="text-xs font-bold text-text-primary">📌 중요 공지로 고정</span>
-                <span className="text-[10px] text-text-secondary">피드 최상단에 필독 공지로 고정됩니다.</span>
-              </div>
-              <input
-                type="checkbox"
-                id="is-important"
-                checked={isImportant}
-                onChange={(e) => setIsImportant(e.target.checked)}
-                className="h-5 w-5 rounded border-text-secondary/30 text-primary-green focus:ring-primary-green cursor-pointer"
-              />
-            </div>
           </div>
 
           <div className="mt-1 grid grid-cols-[0.85fr_1.15fr] gap-2">
