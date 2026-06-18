@@ -46,8 +46,8 @@ export default function CrewInfoTable({ crew, confirmedCount, pendingCount }: Cr
     return '기타';
   };
 
-  const activeCount = confirmedCount !== null ? confirmedCount : (crew.current_participants ?? 0);
-  const isMinAchieved = activeCount >= crew.min_participants;
+  const activeCount = confirmedCount !== null ? confirmedCount : 1;
+  const isMinAchieved = confirmedCount !== null && activeCount >= crew.min_participants;
   const minAchievedLabel = isMinAchieved ? ' (최소 인원 달성! 🎉)' : '';
 
   const rows: { label: string; value: string }[] = [

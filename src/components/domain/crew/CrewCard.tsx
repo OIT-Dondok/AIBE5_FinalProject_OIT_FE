@@ -145,12 +145,6 @@ export default function CrewCard({ crew }: CrewCardProps) {
           </div>
         </div>
 
-        {/* 최하단 풀 너비 배너 */}
-        {isMinAchieved && !isClosed && (
-          <div className="w-full bg-primary-green/10 text-primary-green text-xs font-bold py-2.5 px-5 text-center border-t border-primary-green/20 flex items-center justify-center gap-1">
-            최소 인원 달성!
-          </div>
-        )}
       </div>
   );
 }
