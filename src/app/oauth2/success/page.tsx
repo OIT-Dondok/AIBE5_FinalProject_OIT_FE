@@ -7,6 +7,14 @@ import { getOAuthLoginErrorHref } from "@/lib/oauth";
 import { exchangeOAuthToken } from "@/services/auth";
 import { useAuthStore } from "@/store/authStore";
 
+function getOAuthErrorReason(error: unknown) {
+  return (
+    (error as { response?: { data?: { reason?: string; code?: string } } })?.response?.data?.reason ??
+    (error as { response?: { data?: { reason?: string; code?: string } } })?.response?.data?.code ??
+    null
+  );
+}
+
 function OAuthSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -32,10 +40,10 @@ function OAuthSuccessContent() {
         setAuth(res.data.member, res.data.access_token);
         window.history.replaceState(null, "", "/oauth2/success");
         router.replace("/crews");
-      } catch {
+      } catch (err) {
         clearAuth();
         window.history.replaceState(null, "", "/oauth2/success");
-        router.replace(getOAuthLoginErrorHref(null));
+        router.replace(getOAuthLoginErrorHref(getOAuthErrorReason(err)));
       }
     };
 
