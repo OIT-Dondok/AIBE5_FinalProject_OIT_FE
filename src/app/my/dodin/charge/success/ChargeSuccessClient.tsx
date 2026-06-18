@@ -130,29 +130,37 @@ export function ChargeSuccessClient({ queryString }: ChargeSuccessClientProps) {
         <h1 className="mt-5 text-xl font-black tracking-[-0.04em] text-text-primary">도딘 충전 확인</h1>
         <p className="mt-3 text-sm font-semibold leading-relaxed text-text-secondary">{message}</p>
 
-        {canRetry && (
-          <div className="mt-7 grid w-full grid-cols-2 gap-2">
+        {canRetry &&
+          (state === "confirm_failed_no_retry" ? (
             <Link
               href="/my/dodin"
-              className="rounded-2xl bg-text-secondary/10 px-4 py-3 text-sm font-extrabold text-text-primary"
+              className="mt-7 w-full rounded-2xl bg-primary-blue px-4 py-3 text-center text-sm font-extrabold text-white"
             >
               지갑으로
             </Link>
-            {state === "confirm_failed_retry_visible" ? (
-              <button
-                type="button"
-                onClick={retryConfirm}
-                className="rounded-2xl bg-primary-blue px-4 py-3 text-sm font-extrabold text-white"
+          ) : (
+            <div className="mt-7 grid w-full grid-cols-2 gap-2">
+              <Link
+                href="/my/dodin"
+                className="rounded-2xl bg-text-secondary/10 px-4 py-3 text-sm font-extrabold text-text-primary"
               >
-                확인 재시도
-              </button>
-            ) : (
-              <Link href="/my/dodin" className="rounded-2xl bg-primary-blue px-4 py-3 text-sm font-extrabold text-white">
-                지갑에서 다시 시작
+                지갑으로
               </Link>
-            )}
-          </div>
-        )}
+              {state === "confirm_failed_retry_visible" ? (
+                <button
+                  type="button"
+                  onClick={retryConfirm}
+                  className="rounded-2xl bg-primary-blue px-4 py-3 text-sm font-extrabold text-white"
+                >
+                  확인 재시도
+                </button>
+              ) : (
+                <Link href="/my/dodin" className="rounded-2xl bg-primary-blue px-4 py-3 text-sm font-extrabold text-white">
+                  지갑에서 다시 시작
+                </Link>
+              )}
+            </div>
+          ))}
       </section>
     </main>
   );

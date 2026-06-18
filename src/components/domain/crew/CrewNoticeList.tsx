@@ -183,8 +183,8 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
             NOTICE_NOT_FOUND: '이미 삭제된 공지예요.',
           },
           editTarget
-            ? '공지를 수정하지 못했어요. 잠시 후 다시 시도해주세요.'
-            : '공지를 등록하지 못했어요. 잠시 후 다시 시도해주세요.',
+            ? '공지를 수정하지 못했어요. 잠시 후 다시 시도해 주세요.'
+            : '공지를 등록하지 못했어요. 잠시 후 다시 시도해 주세요.',
         ),
       );
     } finally {
@@ -199,7 +199,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
       setNotices((prev) => prev.filter((n) => n.notice_id !== noticeId));
     } catch {
       // 실패 시 안내. 성공/실패 모두 모달을 닫아 toast(z-90)가 모달 백드롭(z-100)에 가리지 않게 한다.
-      showToast('공지를 삭제하지 못했어요. 잠시 후 다시 시도해주세요.');
+      showToast('공지를 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.');
     } finally {
       // 성공이든 실패든 삭제 확인 모달은 닫는다.
       setDeleteTarget(null);
@@ -269,7 +269,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
         } else if (code === ERROR_CODE.INVALID_REACTION_TYPE) {
           showToast('사용할 수 없는 이모지예요.');
         } else {
-          showToast('리액션 처리에 실패했어요. 잠시 후 다시 시도해주세요.');
+          showToast('리액션 처리에 실패했어요. 잠시 후 다시 시도해 주세요.');
         }
       } finally {
         reactionInFlightRef.current.delete(key);

@@ -48,7 +48,7 @@ export default function HostConsoleClient() {
   const [isDisbanding, setIsDisbanding] = useState(false);
   const [isDisbandErrorToastOpen, setIsDisbandErrorToastOpen] = useState(false);
   const [disbandErrorMessage, setDisbandErrorMessage] = useState(
-    "크루 해체에 실패했어요. 다시 시도해주세요.",
+    "크루 해체에 실패했어요. 다시 시도해 주세요.",
   );
 
   const handleTabChange = (tab: HostTab) => {
@@ -86,7 +86,7 @@ export default function HostConsoleClient() {
             CREW_NOT_FOUND: "크루를 찾을 수 없어요.",
             CREW_NOT_RECRUITING: "모집 중인 크루만 해체할 수 있어요.",
           },
-          "크루 해체에 실패했어요. 다시 시도해주세요.",
+          "크루 해체에 실패했어요. 다시 시도해 주세요.",
         ),
       );
       setIsDisbandErrorToastOpen(true);
