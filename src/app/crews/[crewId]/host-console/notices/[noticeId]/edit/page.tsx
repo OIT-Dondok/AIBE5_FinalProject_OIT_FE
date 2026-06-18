@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Megaphone } from "lucide-react";
 
@@ -9,10 +9,23 @@ import { Header } from "@/components/common/Header";
 import { HostActionButton } from "@/components/domain/host/common/HostActionButton";
 import { Toast } from "@/components/common/Toast";
 import type { ToastType } from "@/components/common/Toast";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 import { getCrewNoticeDetail, updateCrewNotice } from "@/services/crew";
 import type { CrewNotice } from "@/types/domain";
+
+const getRelativeTimeString = (timestamp: number): string => {
+  const diff = Date.now() - timestamp;
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (minutes < 1) return "방금 전";
+  if (minutes < 60) return `${minutes}분 전`;
+  if (hours < 24) return `${hours}시간 전`;
+  return `${days}일 전`;
+};
 
 export default function HostNoticeEditPage() {
   const router = useRouter();
@@ -27,23 +40,103 @@ export default function HostNoticeEditPage() {
   const [hasError, setHasError] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [isImportant, setIsImportant] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [isToastOpen, setIsToastOpen] = useState(false);
   const [toastType, setToastType] = useState<ToastType>("success");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isTitleReady = title.trim().length > 0;
 
+  // 임시 저장 복원 상태
+  const [draftToRestore, setDraftToRestore] = useState<{
+    title: string;
+    content: string;
+    isImportant: boolean;
+    savedAt: number;
+  } | null>(null);
+  const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
+  const preventSaveRef = useRef(true);
+  const isInitialLoadRef = useRef(true);
+
   useEffect(() => {
     if (crewId === null || noticeId === null) return;
     getCrewNoticeDetail(crewId, noticeId)
       .then((res) => {
         setNotice(res.data);
-        setTitle(res.data.title);
-        setContent(res.data.content);
+        const stored = localStorage.getItem(`temp_notice_edit_draft_${crewId}_${noticeId}`);
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            setDraftToRestore(parsed);
+            setIsRestoreModalOpen(true);
+          } catch {
+            setTitle(res.data.title);
+            setContent(res.data.content);
+            setIsImportant(!!res.data.is_important);
+            preventSaveRef.current = false;
+          }
+        } else {
+          setTitle(res.data.title);
+          setContent(res.data.content);
+          setIsImportant(!!res.data.is_important);
+          preventSaveRef.current = false;
+        }
+        isInitialLoadRef.current = false;
       })
       .catch(() => setHasError(true))
       .finally(() => setIsLoading(false));
   }, [crewId, noticeId]);
+
+  // 실시간 디바운스 임시 저장
+  useEffect(() => {
+    if (crewId === null || noticeId === null) return;
+    if (preventSaveRef.current || isInitialLoadRef.current) return;
+
+    const isSameAsOriginal = notice && 
+      title === notice.title && 
+      content === notice.content && 
+      isImportant === !!notice.is_important;
+    
+    if (isSameAsOriginal) {
+      localStorage.removeItem(`temp_notice_edit_draft_${crewId}_${noticeId}`);
+      return;
+    }
+
+    const handler = setTimeout(() => {
+      const draft = {
+        title,
+        content,
+        isImportant,
+        savedAt: Date.now()
+      };
+      localStorage.setItem(`temp_notice_edit_draft_${crewId}_${noticeId}`, JSON.stringify(draft));
+    }, 1000);
+
+    return () => clearTimeout(handler);
+  }, [title, content, isImportant, crewId, noticeId, notice]);
+
+  const handleRestoreConfirm = () => {
+    if (draftToRestore) {
+      setTitle(draftToRestore.title);
+      setContent(draftToRestore.content);
+      setIsImportant(draftToRestore.isImportant);
+    }
+    preventSaveRef.current = false;
+    setIsRestoreModalOpen(false);
+  };
+
+  const handleRestoreCancel = () => {
+    if (crewId !== null && noticeId !== null) {
+      localStorage.removeItem(`temp_notice_edit_draft_${crewId}_${noticeId}`);
+    }
+    if (notice) {
+      setTitle(notice.title);
+      setContent(notice.content);
+      setIsImportant(!!notice.is_important);
+    }
+    preventSaveRef.current = false;
+    setIsRestoreModalOpen(false);
+  };
 
   const handleSubmit = async () => {
     if (isSubmitting) return;
@@ -59,7 +152,11 @@ export default function HostNoticeEditPage() {
       await updateCrewNotice(crewId, notice.notice_id, {
         title: title.trim(),
         content: content.trim(),
+        is_important: isImportant,
       });
+      
+      localStorage.removeItem(`temp_notice_edit_draft_${crewId}_${noticeId}`);
+
       if (from === "detail") {
         router.push(`/crews/${crewId}/notices/${notice.notice_id}`);
       } else {
@@ -164,6 +261,20 @@ export default function HostNoticeEditPage() {
               maxLength={65000}
               className="mt-2 w-full resize-none rounded-xl border border-text-secondary/20 bg-white px-3.5 py-3 text-sm font-medium leading-relaxed text-text-primary outline-none placeholder:text-text-secondary/70 focus:border-[#4C73D9]"
             />
+
+            <div className="mt-4 flex items-center justify-between rounded-xl border border-text-secondary/10 bg-white px-4 py-3 shadow-sm">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-xs font-bold text-text-primary">📌 중요 공지로 고정</span>
+                <span className="text-[10px] text-text-secondary">피드 최상단에 필독 공지로 고정됩니다.</span>
+              </div>
+              <input
+                type="checkbox"
+                id="is-important"
+                checked={isImportant}
+                onChange={(e) => setIsImportant(e.target.checked)}
+                className="h-5 w-5 rounded border-text-secondary/30 text-primary-green focus:ring-primary-green cursor-pointer"
+              />
+            </div>
           </div>
 
           <div className="mt-1 grid grid-cols-[0.85fr_1.15fr] gap-2">
@@ -187,6 +298,21 @@ export default function HostNoticeEditPage() {
             </HostActionButton>
           </div>
         </form>
+        {/* 임시 저장 복원 컨펌 모달 */}
+        <ConfirmModal
+          isOpen={isRestoreModalOpen}
+          onClose={handleRestoreCancel}
+          onConfirm={handleRestoreConfirm}
+          title="작성 중이던 글을 불러올까요?"
+          description={`${
+            draftToRestore ? getRelativeTimeString(draftToRestore.savedAt) : "이전"
+          }에 작성하던 임시 저장된 수정본이 있습니다. 이어서 작성하시겠습니까?`}
+          confirmText="이어 쓰기"
+          cancelText="새로 작성"
+          confirmVariant="primary-green"
+          iconType="warning"
+        />
+
         <Toast
           message={toastMessage}
           isOpen={isToastOpen}
