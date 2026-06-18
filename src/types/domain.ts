@@ -862,6 +862,9 @@ export interface SettlementDetail {
 export interface SettlementMe {
   settlement_id: number;
   crew_id: number;
+  crew_name: string;
+  crew_started_at: string; // YYYY-MM-DD
+  crew_ended_at: string; // YYYY-MM-DD
   status: SettlementStatus;
   retry_count: number;
   failure_code: SettlementFailureCode | null;
