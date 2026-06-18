@@ -10,6 +10,7 @@ const HIDE_NAV_PATTERNS = [
     "/",
     "/login",
     "/signup",
+    "/oauth2",
     "/onboarding",
 ] as const;
 
