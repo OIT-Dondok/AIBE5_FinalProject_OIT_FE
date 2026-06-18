@@ -39,10 +39,11 @@ export default function FeedPage() {
   const [hostCrews, setHostCrews] = useState<MyCrew[]>([]);
   const [isNoticeModalOpen, setIsNoticeModalOpen] = useState(false);
   const user = useAuthStore((s) => s.user);
+  const isInitialized = useAuthStore((s) => s.isInitialized);
 
   // 방장 권한을 가진 크루 목록 로드
   useEffect(() => {
-    if (!user) {
+    if (!isInitialized || !user) {
       setHostCrews([]);
       return;
     }
@@ -57,7 +58,7 @@ export default function FeedPage() {
     return () => {
       active = false;
     };
-  }, [user]);
+  }, [user, isInitialized]);
 
   const handleCreateNoticeClick = useCallback(() => {
     // 만약 현재 필터링된 크루가 있고, 내가 그 크루의 방장이라면 즉시 이동
@@ -427,7 +428,7 @@ export default function FeedPage() {
         <button
           type="button"
           onClick={handleCreateNoticeClick}
-          className="fixed bottom-24 right-5 md:right-[calc(50%-200px)] z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary-green text-white shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-primary-green/20"
+          className="fixed bottom-24 right-5 md:left-1/2 md:right-auto md:translate-x-[160px] z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary-green text-white shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-primary-green/20"
           aria-label="공지 작성"
         >
           <Plus size={24} strokeWidth={2.5} />
