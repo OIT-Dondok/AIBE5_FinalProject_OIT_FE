@@ -12,6 +12,7 @@ import {
   STATUS_CONFIG,
   formatServerTime,
   getInitial,
+  getCrewBrandingColor,
 } from '@/components/domain/feed/feedItemMeta';
 
 interface FeedItemProps {
@@ -51,9 +52,14 @@ export function FeedItem({ item, onRemove }: FeedItemProps) {
             <p className="text-[15px] font-bold text-text-primary leading-tight truncate">
               {item.nickname}
             </p>
-            <p className="text-[11px] text-text-secondary mt-0.5 truncate">
-              {timeStr} · {item.crew_name}
-            </p>
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="text-[11px] text-text-secondary shrink-0">
+                {timeStr}
+              </span>
+              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-black border tracking-tight shrink-0 transition-colors ${getCrewBrandingColor(item.crew_id).bgClass} ${getCrewBrandingColor(item.crew_id).textClass} ${getCrewBrandingColor(item.crew_id).borderClass}`}>
+                {item.crew_name}
+              </span>
+            </div>
           </div>
         </Link>
         <Link

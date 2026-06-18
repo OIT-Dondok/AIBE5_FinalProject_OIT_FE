@@ -1,7 +1,5 @@
 import { Crown } from "lucide-react";
 
-import { Badge } from "@/components/common/Badge";
-
 interface HostBadgeProps {
   count?: number;
   label?: string;
@@ -13,25 +11,28 @@ export function HostBadge({ count, label, compact = false, className = "" }: Hos
   const hasCount = typeof count === "number";
   const text = hasCount ? `방장 ${count}회` : label;
   const hasText = Boolean(text);
-  const compactClassName = compact ? "relative !h-6 !w-[25px] !px-0" : "";
   const crownSize = compact ? 11 : 12;
 
   if (compact) {
     return (
-      <Badge className={`${compactClassName} ${className}`}>
+      <span
+        className={`relative inline-flex items-center justify-center h-6 w-6 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 text-white shadow-md shadow-amber-300/20 select-none ${className}`}
+      >
         <Crown
           size={crownSize}
-          className="absolute left-1/2 top-1/2 block -translate-y-1/2 translate-x-[calc(-50%-0.5px)]"
-          fill="currentColor"
+          className="absolute left-1/2 top-1/2 block -translate-y-1/2 -translate-x-1/2"
+          fill="white"
         />
-      </Badge>
+      </span>
     );
   }
 
   return (
-    <Badge className={`${compactClassName} ${className}`}>
-      <Crown size={crownSize} className={hasText ? "mr-1" : ""} fill="currentColor" />
+    <span
+      className={`inline-flex items-center justify-center px-2.5 py-0.5 text-[10px] font-black rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 text-white shadow-md shadow-amber-300/30 tracking-wide select-none ${className}`}
+    >
+      <Crown size={crownSize} className={hasText ? "mr-1" : ""} fill="white" />
       {text}
-    </Badge>
+    </span>
   );
 }

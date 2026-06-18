@@ -5,6 +5,7 @@ import { isAxiosError } from 'axios';
 import { UserRound, Crown } from 'lucide-react';
 import Link from 'next/link';
 import { getCrewMembers } from '@/services/crew';
+import { HostBadge } from '@/components/common/HostBadge';
 import type { CrewMember } from '@/types/domain';
 import type { ErrorResponse } from '@/types/common';
 
@@ -180,9 +181,7 @@ export default function CrewMemberList({ crewId }: CrewMemberListProps) {
                     {member.nickname}
                   </span>
                   {member.role === 'HOST' ? (
-                    <span className="bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-900 px-2 py-0.5 rounded-full text-[10px] font-bold border border-amber-200/60 shadow-sm leading-none shrink-0">
-                      방장
-                    </span>
+                    <HostBadge label="방장" className="shrink-0" />
                   ) : (
                     <span className="bg-gradient-to-r from-green-50 to-emerald-100/60 text-green-900 px-2 py-0.5 rounded-full text-[10px] font-bold border border-green-200/60 shadow-sm leading-none shrink-0">
                       크루원
