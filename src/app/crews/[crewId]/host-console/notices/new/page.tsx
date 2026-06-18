@@ -8,7 +8,6 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
 import { HostActionButton } from "@/components/domain/host/common/HostActionButton";
 import { Toast } from "@/components/common/Toast";
-import { Modal } from "@/components/common/Modal";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import type { ToastType } from "@/components/common/Toast";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
@@ -261,31 +260,17 @@ export default function HostNoticeNewPage() {
         </form>
 
         {/* 공지 등록 성공 모달 */}
-        <Modal 
-          isOpen={isSuccessModalOpen} 
+        <ConfirmModal
+          isOpen={isSuccessModalOpen}
           onClose={handleSuccessModalClose}
-          className="bg-primary-green text-white border-none p-0 overflow-hidden max-w-[320px]"
-          ariaLabel="공지 등록 완료"
-        >
-          <div className="relative p-6 py-8 overflow-hidden rounded-card">
-            <div className="absolute inset-[8px] rounded-2xl border-2 border-dashed border-white/30 pointer-events-none" />
-
-            <div className="relative flex flex-col items-center gap-4 text-center">
-              <span className="text-4xl leading-none">🙌</span>
-              <div className="flex flex-col gap-1.5">
-                <p className="text-lg font-bold text-white">공지가 등록되었습니다!</p>
-                <p className="text-sm text-white/75 leading-snug">크루원들에게 소식이 전파됩니다.</p>
-              </div>
-              <button
-                type="button"
-                onClick={handleSuccessModalClose}
-                className="mt-1 w-full py-2.5 rounded-xl bg-white/20 text-sm font-semibold text-white hover:bg-white/30 active:scale-[0.98] transition-all cursor-pointer"
-              >
-                확인
-              </button>
-            </div>
-          </div>
-        </Modal>
+          onConfirm={handleSuccessModalClose}
+          title="공지가 등록되었습니다!"
+          description="크루원들에게 소식이 전파됩니다."
+          confirmText="확인"
+          confirmVariant="primary-green"
+          iconType="success"
+          showCancel={false}
+        />
 
         {/* 임시 저장 복원 컨펌 모달 */}
         <ConfirmModal
