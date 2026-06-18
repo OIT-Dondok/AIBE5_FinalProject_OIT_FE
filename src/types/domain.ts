@@ -508,8 +508,10 @@ export interface NoticeComment {
   comment_id: number;
   notice_id: number;
   author_member_uuid: string;
+  author_nickname?: string;
   nickname: string;
-  author_profile_image_url: string | null;
+  author_profile_image_url?: string | null;
+  profile_image_url?: string | null;
   content: string;
   created_at: string;
 }

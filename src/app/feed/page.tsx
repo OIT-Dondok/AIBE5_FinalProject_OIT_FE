@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { isAxiosError } from 'axios';
 import { Loader2 } from 'lucide-react';
 import { Header } from '@/components/common/Header';
@@ -11,19 +11,54 @@ import { FeedCrewFilter } from '@/components/domain/feed/FeedCrewFilter';
 import { FeedItem } from '@/components/domain/feed/FeedItem';
 import { FeedSkeletonList } from '@/components/domain/feed/FeedItemSkeleton';
 import { FeedPeriodCard } from '@/components/domain/feed/FeedPeriodCard';
+import FeedNoticeList from '@/components/domain/feed/FeedNoticeList';
 import { Toast } from '@/components/common/Toast';
 import type { ToastType } from '@/components/common/Toast';
 import { getFeed } from '@/services/feed';
-import type { AvailableCrew, FeedItem as FeedItemType, FeedPeriod } from '@/types/domain';
+import { getCrewNotices } from '@/services/crew';
+import type { AvailableCrew, FeedItem as FeedItemType, FeedPeriod, CrewNotice } from '@/types/domain';
 import { ERROR_CODE } from '@/types/common';
 import type { ErrorResponse } from '@/types/common';
 
 export default function FeedPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  
   const [selectedCrewId, setSelectedCrewId] = useState<number | null>(null);
   // null = 전체 기간(날짜 필터 없음). 달력에서 선택 시 from/to 적용
   const [period, setPeriod] = useState<FeedPeriod | null>(null);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  // 뷰 모드 및 공지사항 관련 상태
+  const [viewMode, setViewMode] = useState<'feed' | 'notice'>('feed');
+  const [notices, setNotices] = useState<CrewNotice[]>([]);
+  const [isNoticesLoading, setIsNoticesLoading] = useState(false);
+
+  // URL 쿼리 스트링과 동기화하여 뷰 전환 상태 제어
+  const handleSetViewMode = useCallback((mode: 'feed' | 'notice') => {
+    setViewMode(mode);
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (mode === 'notice') {
+        params.set('tab', 'notice');
+      } else {
+        params.delete('tab');
+      }
+      const newSearch = params.toString();
+      const newPath = `${window.location.pathname}${newSearch ? `?${newSearch}` : ''}`;
+      window.history.replaceState(null, '', newPath);
+    }
+  }, []);
+
+  // 최초 진입 시 또는 URL 쿼리 파라미터가 명시적으로 존재할 때 로드
+  useEffect(() => {
+    if (tabParam === 'notice') {
+      setViewMode('notice');
+    } else {
+      setViewMode('feed');
+    }
+  }, [tabParam]);
 
   const [items, setItems] = useState<FeedItemType[]>([]);
   const [availableCrews, setAvailableCrews] = useState<AvailableCrew[]>([]);
@@ -100,6 +135,55 @@ export default function FeedPage() {
     load();
   }, [fetchFeed, reloadKey]);
 
+  const availableCrewIdsStr = availableCrews.map((c) => c.crew_id).join(',');
+
+  // 크루 선택 변경 시 공지사항 목록 조회 및 뷰모드 초기화
+  useEffect(() => {
+    let active = true;
+    const fetchNotices = async () => {
+      setIsNoticesLoading(true);
+      try {
+        if (selectedCrewId === null) {
+          if (availableCrews.length === 0) {
+            setNotices([]);
+            return;
+          }
+          const promises = availableCrews.map((crew) =>
+            getCrewNotices(crew.crew_id)
+              .then((res) => res.data.items)
+              .catch((err) => {
+                console.error(`크루 ${crew.crew_id} 공지 로딩 실패:`, err);
+                return [];
+              })
+          );
+          const allNoticesLists = await Promise.all(promises);
+          if (!active) return;
+          const flatNotices = allNoticesLists.flat();
+          setNotices(flatNotices);
+        } else {
+          const res = await getCrewNotices(selectedCrewId);
+          if (!active) return;
+          setNotices(res.data.items);
+          // 만약 공지가 없고 현재 뷰모드가 notice인 경우 feed로 리다이렉트
+          if (res.data.items.length === 0) {
+            handleSetViewMode('feed');
+          }
+        }
+      } catch (err) {
+        console.error('공지사항 로딩 실패:', err);
+        if (!active) return;
+        setNotices([]);
+        handleSetViewMode('feed');
+      } finally {
+        if (active) setIsNoticesLoading(false);
+      }
+    };
+    void fetchNotices();
+    return () => {
+      active = false;
+    };
+  }, [selectedCrewId, availableCrewIdsStr]);
+
   // 다음 페이지 로드. ref 가드로 옵저버의 연속 콜백에 의한 중복 호출을 막는다.
   const handleLoadMore = useCallback(async () => {
     if (!nextCursor || isFetchingMoreRef.current) return;
@@ -142,6 +226,7 @@ export default function FeedPage() {
     observerRef.current.observe(node);
   }, []);
 
+
   const hasCrews = availableCrews.length > 0;
 
   return (
@@ -156,105 +241,152 @@ export default function FeedPage() {
           onSelect={setSelectedCrewId}
         />
 
-        <div className="px-5 flex flex-col gap-4">
-          {/* 기간 카드 */}
-          <FeedPeriodCard
-            period={period}
-            isCalendarOpen={isCalendarOpen}
-            onOpenCalendar={() => setIsCalendarOpen((v) => !v)}
-          />
+        {/* 뷰 전환 탭 (공지가 1개 이상 있을 때 노출) */}
+        {notices.length > 0 && (
+          <div className="px-5 mb-3 mt-1.5">
+            <div className="flex bg-text-secondary/10 p-1 rounded-full w-full max-w-[260px] mx-auto border border-text-secondary/5">
+              <button
+                type="button"
+                onClick={() => handleSetViewMode('feed')}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-full transition-all cursor-pointer ${
+                  viewMode === 'feed'
+                    ? 'bg-card text-text-primary shadow-sm'
+                    : 'text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                인증 피드
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSetViewMode('notice')}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-full transition-all cursor-pointer ${
+                  viewMode === 'notice'
+                    ? 'bg-card text-text-primary shadow-sm'
+                    : 'text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                공지사항 ({notices.length})
+              </button>
+            </div>
+          </div>
+        )}
 
-          {/* 캘린더 */}
-          {isCalendarOpen && (
-            <FeedCalendar
-              currentPeriod={period}
-              onApply={(newPeriod) => {
-                setPeriod(newPeriod);
-                setIsCalendarOpen(false);
-              }}
-              onClear={() => {
-                setPeriod(null);
-                setIsCalendarOpen(false);
-              }}
-              onClose={() => setIsCalendarOpen(false)}
+        <div className="px-5 flex flex-col gap-4">
+          {viewMode === 'feed' ? (
+            <>
+              {/* 기간 카드 */}
+              <FeedPeriodCard
+                period={period}
+                isCalendarOpen={isCalendarOpen}
+                onOpenCalendar={() => setIsCalendarOpen((v) => !v)}
+              />
+
+              {/* 캘린더 */}
+              {isCalendarOpen && (
+                <FeedCalendar
+                  currentPeriod={period}
+                  onApply={(newPeriod) => {
+                    setPeriod(newPeriod);
+                    setIsCalendarOpen(false);
+                  }}
+                  onClear={() => {
+                    setPeriod(null);
+                    setIsCalendarOpen(false);
+                  }}
+                  onClose={() => setIsCalendarOpen(false)}
+                />
+              )}
+
+              {/* 피드 목록 (필터/기간 변경 시 key 변경으로 재진입 애니메이션) */}
+              <div
+                key={`${selectedCrewId ?? 'all'}-${period?.start_date ?? ''}-${period?.end_date ?? ''}`}
+                aria-busy={isLoading}
+                className="flex flex-col gap-4"
+              >
+                {isLoading ? (
+                  <FeedSkeletonList count={3} />
+                ) : hasError ? (
+                  // 조회 실패
+                  <EmptyState
+                    icon="⚠️"
+                    title="피드를 불러오지 못했어요"
+                    description="잠시 후 다시 시도해주세요"
+                    actionButtonText="다시 시도"
+                    onActionClick={() => setReloadKey((k) => k + 1)}
+                  />
+                ) : accessDenied ? (
+                  // 참여하지 않는 크루를 필터링한 경우
+                  <EmptyState
+                    icon="🔒"
+                    title="이 크루의 피드는 볼 수 없어요"
+                    description="참여 중인 크루의 인증만 조회할 수 있어요"
+                    actionButtonText="전체 크루 보기"
+                    onActionClick={() => setSelectedCrewId(null)}
+                  />
+                ) : !hasCrews ? (
+                  // 가입한 크루가 없음
+                  <EmptyState
+                    icon="🫥"
+                    title="아직 가입한 크루가 없어요"
+                    description="크루에 가입하고 인증을 시작해보세요"
+                    actionButtonText="크루 둘러보기"
+                    onActionClick={() => router.push('/crews')}
+                  />
+                ) : items.length === 0 ? (
+                  selectedCrewId !== null ? (
+                    // 특정 크루 필터인데 결과 없음
+                    <EmptyState
+                      icon="📭"
+                      title="이 크루는 인증 내역이 없어요"
+                      description="다른 크루를 보거나 기간을 바꿔보세요"
+                      actionButtonText="전체 크루 보기"
+                      onActionClick={() => setSelectedCrewId(null)}
+                    />
+                  ) : (
+                    // 전체 크루인데 결과 없음
+                    <EmptyState
+                      icon="📭"
+                      title="아직 인증 내역이 없어요"
+                      description="기간을 바꿔서 다시 확인해보세요"
+                      actionButtonText="기간 변경"
+                      onActionClick={() => setIsCalendarOpen(true)}
+                    />
+                  )
+                ) : (
+                  <>
+                    {items.map((item) => (
+                      <FeedItem
+                        key={`feed-${item.mission_log_id}`}
+                        item={item}
+                        onRemove={handleRemoveItem}
+                      />
+                    ))}
+                    {/* 무한 스크롤 센티넬 (다음 페이지가 있을 때만) */}
+                    {nextCursor && (
+                      <div
+                        ref={sentinelRef}
+                        aria-hidden="true"
+                        className="py-3 flex items-center justify-center"
+                      >
+                        {isLoadingMore && (
+                          <Loader2 size={20} className="animate-spin text-text-secondary/60" />
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </>
+          ) : (
+            /* 공지사항 카드리스트 */
+            <FeedNoticeList
+              crewId={selectedCrewId ?? 0}
+              notices={notices}
+              isLoading={isNoticesLoading}
+              crewName={availableCrews.find((c) => c.crew_id === selectedCrewId)?.crew_name}
+              availableCrews={availableCrews}
             />
           )}
-
-          {/* 피드 목록 (필터/기간 변경 시 key 변경으로 재진입 애니메이션) */}
-          <div
-            key={`${selectedCrewId ?? 'all'}-${period?.start_date ?? ''}-${period?.end_date ?? ''}`}
-            aria-busy={isLoading}
-            className="flex flex-col gap-4"
-          >
-            {isLoading ? (
-              <FeedSkeletonList count={3} />
-            ) : hasError ? (
-              // 조회 실패
-              <EmptyState
-                icon="⚠️"
-                title="피드를 불러오지 못했어요"
-                description="잠시 후 다시 시도해주세요"
-                actionButtonText="다시 시도"
-                onActionClick={() => setReloadKey((k) => k + 1)}
-              />
-            ) : accessDenied ? (
-              // 참여하지 않는 크루를 필터링한 경우
-              <EmptyState
-                icon="🔒"
-                title="이 크루의 피드는 볼 수 없어요"
-                description="참여 중인 크루의 인증만 조회할 수 있어요"
-                actionButtonText="전체 크루 보기"
-                onActionClick={() => setSelectedCrewId(null)}
-              />
-            ) : !hasCrews ? (
-              // 가입한 크루가 없음
-              <EmptyState
-                icon="🫥"
-                title="아직 가입한 크루가 없어요"
-                description="크루에 가입하고 인증을 시작해보세요"
-                actionButtonText="크루 둘러보기"
-                onActionClick={() => router.push('/crews')}
-              />
-            ) : items.length === 0 ? (
-              selectedCrewId !== null ? (
-                // 특정 크루 필터인데 결과 없음
-                <EmptyState
-                  icon="📭"
-                  title="이 크루는 인증 내역이 없어요"
-                  description="다른 크루를 보거나 기간을 바꿔보세요"
-                  actionButtonText="전체 크루 보기"
-                  onActionClick={() => setSelectedCrewId(null)}
-                />
-              ) : (
-                // 전체 크루인데 결과 없음
-                <EmptyState
-                  icon="📭"
-                  title="아직 인증 내역이 없어요"
-                  description="기간을 바꿔서 다시 확인해보세요"
-                  actionButtonText="기간 변경"
-                  onActionClick={() => setIsCalendarOpen(true)}
-                />
-              )
-            ) : (
-              <>
-                {items.map((item) => (
-                  <FeedItem key={item.mission_log_id} item={item} onRemove={handleRemoveItem} />
-                ))}
-                {/* 무한 스크롤 센티넬 (다음 페이지가 있을 때만) */}
-                {nextCursor && (
-                  <div
-                    ref={sentinelRef}
-                    aria-hidden="true"
-                    className="py-3 flex items-center justify-center"
-                  >
-                    {isLoadingMore && (
-                      <Loader2 size={20} className="animate-spin text-text-secondary/60" />
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
         </div>
       </div>
 
