@@ -108,10 +108,10 @@ export default function CrewCard({ crew }: CrewCardProps) {
             </div>
           </div>
 
-          {/* 참여 인원 현황 프로그레스 바 */}
+          {/* 참여 멤버 현황 프로그레스 바 */}
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] text-text-secondary font-medium">참여 인원 현황</span>
+              <span className="text-[11px] text-text-secondary font-medium">참여 멤버 현황</span>
               <span className="text-[11px] font-bold text-text-primary">
                 {currentParticipants}명 / {crew.max_participants}명 (최소 {crew.min_participants}명)
               </span>

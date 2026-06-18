@@ -55,9 +55,9 @@ export default function CrewInfoTable({ crew, confirmedCount, pendingCount }: Cr
       value: `${daily_settlement_type} · ${SETTLEMENT_TYPE_LABEL[daily_settlement_type]}`,
     },
     { label: '인증 마감', value: `${times.deadline}까지 완료` },
-    { label: '인원 (참여 확정)', value: `${activeCount} / ${crew.max_participants}명 (최소 ${crew.min_participants}명)` },
+    { label: '멤버', value: `${activeCount} / ${crew.max_participants}명 (최소 ${crew.min_participants}명)` },
     ...(pendingCount !== null
-      ? [{ label: '승인 대기 인원', value: `${pendingCount}명` }]
+      ? [{ label: '승인 대기 멤버', value: `${pendingCount}명` }]
       : []),
     { label: '참여 보증금 💳', value: `${crew.deposit_amount.toLocaleString()}원` },
     { label: '총 모인 보증금 💰', value: `${(crew.deposit_amount * activeCount).toLocaleString()}원` },
