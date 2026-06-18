@@ -222,6 +222,7 @@ export interface MemberProfileResponse {
 // 전체 프로필 필요 시 MemberProfileResponse 사용
 export interface Member {
   member_uuid: string;
+  memberUuid?: string;
   nickname: string;
 }
 
@@ -503,15 +504,17 @@ export interface NoticeReactionResponse {
   reaction_counts: ReactionCounts;
 }
 
-// GET /api/crews/{crewId}/notices/{noticeId}/comments items[]
 export interface NoticeComment {
   comment_id: number;
   notice_id: number;
   author_member_uuid: string;
+  authorMemberUuid?: string;
   author_nickname?: string;
   nickname: string;
   author_profile_image_url?: string | null;
+  authorProfileImageUrl?: string | null;
   profile_image_url?: string | null;
+  profileImageUrl?: string | null;
   content: string;
   created_at: string;
 }

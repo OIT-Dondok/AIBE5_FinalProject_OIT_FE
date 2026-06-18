@@ -70,8 +70,8 @@ export function NoticeCommentSection({ crewId, noticeId }: NoticeCommentSectionP
     try {
       const res = await getNoticeComments(crewId, noticeId);
       setComments(res.data.items);
-    } catch (err) {
-      console.error("댓글 목록 조회 실패:", err);
+    } catch {
+      // 댓글 목록 조회 실패 시 무시
     }
   }, [crewId, noticeId]);
 
@@ -98,8 +98,7 @@ export function NoticeCommentSection({ crewId, noticeId }: NoticeCommentSectionP
             [uuid]: res.data.profile_image_url ?? null,
           }));
         }
-      } catch (err) {
-        console.error(`댓글 작성자 프로필 조회 실패 (${uuid}):`, err);
+      } catch {
         if (mounted) {
           setCommentProfiles((prev) => ({
             ...prev,
@@ -178,10 +177,10 @@ export function NoticeCommentSection({ crewId, noticeId }: NoticeCommentSectionP
           comments.map((comment, index) => {
             const nickname = comment.nickname || comment.author_nickname || user?.nickname || "사용자";
             const initial = nickname.slice(0, 1);
-            const commentAuthorUuid = comment.author_member_uuid || (comment as any).authorMemberUuid || "";
+            const commentAuthorUuid = comment.author_member_uuid || comment.authorMemberUuid || "";
             const profileUrl = comment.profile_image_url || comment.author_profile_image_url || commentProfiles[commentAuthorUuid] || null;
 
-            const myUuid = user?.member_uuid || (user as any)?.memberUuid || "";
+            const myUuid = user?.member_uuid || user?.memberUuid || "";
             const isMyComment = myUuid && myUuid === commentAuthorUuid;
 
             const handleGoToMemberProfile = () => {

@@ -64,7 +64,6 @@ export default function NoticeDetailPage() {
   const params = useParams<{ crewId: string; noticeId: string }>();
   const crewId = parseRouteNumber(params.crewId);
   const noticeId = parseRouteNumber(params.noticeId);
-  const user = useAuthStore((s) => s.user);
 
   const handleBack = useCallback(() => {
     router.push('/feed?tab=notice');
@@ -90,12 +89,11 @@ export default function NoticeDetailPage() {
           if (mounted) {
             setHostProfile(profileRes.data);
           }
-        } catch (profileErr) {
-          console.error("방장 프로필 조회 실패:", profileErr);
+        } catch {
+          // 방장 프로필 로드 실패 시 무시하고 진행
         }
       })
-      .catch((err) => {
-        console.error("공지 상세 로드 실패:", err);
+      .catch(() => {
         if (mounted) setHasError(true);
       })
       .finally(() => {

@@ -151,8 +151,7 @@ export default function FeedPage() {
           const promises = availableCrews.map((crew) =>
             getCrewNotices(crew.crew_id)
               .then((res) => res.data.items)
-              .catch((err) => {
-                console.error(`크루 ${crew.crew_id} 공지 로딩 실패:`, err);
+              .catch(() => {
                 return [];
               })
           );
@@ -169,8 +168,7 @@ export default function FeedPage() {
             handleSetViewMode('feed');
           }
         }
-      } catch (err) {
-        console.error('공지사항 로딩 실패:', err);
+      } catch {
         if (!active) return;
         setNotices([]);
         handleSetViewMode('feed');
