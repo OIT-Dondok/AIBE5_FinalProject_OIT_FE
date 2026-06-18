@@ -79,7 +79,7 @@ function StatusDropdown({ value, onChange }: StatusDropdownProps) {
         className={`h-9 px-4 flex items-center gap-1.5 text-xs font-bold rounded-full border shadow-sm transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-green focus:ring-offset-1 ${
           isFiltered
             ? 'bg-primary-green/10 border-primary-green/30 text-primary-green'
-            : 'bg-card border-text-secondary/15 text-text-primary'
+            : 'bg-text-secondary/5 hover:bg-text-secondary/10 border-text-secondary/15 text-text-primary'
         }`}
       >
         <span>{selectedLabel}</span>
