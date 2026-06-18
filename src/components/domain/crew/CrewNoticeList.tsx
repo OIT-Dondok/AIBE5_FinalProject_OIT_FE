@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import { isAxiosError } from 'axios';
 import { Plus, Edit2, Trash2, SmilePlus } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
@@ -36,7 +35,6 @@ const formatDate = (isoString: string) => {
 };
 
 export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeListProps) {
-  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const isHost = !!user && user.member_uuid === hostMemberUuid;
 
@@ -325,8 +323,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
       {notices.map((notice) => (
         <div
           key={notice.notice_id}
-          onClick={() => router.push(`/crews/${crewId}/notices/${notice.notice_id}`)}
-          className="bg-card rounded-card p-4 shadow-[var(--shadow-card)] flex flex-col gap-3 cursor-pointer active:scale-[0.99] transition-transform"
+          className="bg-card rounded-card p-4 shadow-[var(--shadow-card)] flex flex-col gap-3"
         >
           <div className="flex items-start justify-between gap-2">
             <h3 className="text-sm font-bold text-text-primary leading-snug flex-1">
@@ -336,7 +333,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
               <div className="flex items-center gap-1 shrink-0">
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); openEditModal(notice); }}
+                  onClick={() => openEditModal(notice)}
                   className="p-1 text-text-secondary hover:text-text-primary transition-colors"
                   aria-label="공지 수정"
                 >
@@ -344,7 +341,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
                 </button>
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); setDeleteTarget(notice.notice_id); }}
+                  onClick={() => setDeleteTarget(notice.notice_id)}
                   className="p-1 text-text-secondary hover:text-red-500 transition-colors"
                   aria-label="공지 삭제"
                 >
@@ -369,7 +366,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
                     <button
                       key={emoji}
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); handleReaction(notice.notice_id, emoji); }}
+                      onClick={() => handleReaction(notice.notice_id, emoji)}
                       aria-pressed={isReacted}
                       aria-label={`${emoji} 반응 ${count}개`}
                       className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs border transition-colors ${
@@ -387,7 +384,7 @@ export default function CrewNoticeList({ crewId, hostMemberUuid }: CrewNoticeLis
               {/* 이모지 추가 버튼 → EmojiPickerSheet 열기 */}
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); setPickerTarget(notice.notice_id); }}
+                onClick={() => setPickerTarget(notice.notice_id)}
                 className="flex items-center justify-center w-7 h-7 rounded-full border border-text-secondary/20 text-text-secondary hover:bg-text-secondary/5 transition-colors"
                 aria-label="리액션 추가"
               >
