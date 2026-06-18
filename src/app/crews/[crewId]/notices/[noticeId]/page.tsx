@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { SmilePlus } from "lucide-react";
+import { SmilePlus, Pencil, Trash2 } from "lucide-react";
 
 import { EmojiPickerSheet } from "@/components/common/EmojiPickerSheet";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -10,11 +10,14 @@ import { Header } from "@/components/common/Header";
 import { HostBadge } from "@/components/common/HostBadge";
 import { Toast } from "@/components/common/Toast";
 import type { ToastType } from "@/components/common/Toast";
+import { HostConfirmDialog } from "@/components/domain/host/common/HostConfirmDialog";
+import { HostMoreMenu } from "@/components/domain/host/common/HostMoreMenu";
 import {
   addNoticeReaction,
   getCrewNoticeDetail,
   removeNoticeReaction,
   getCrew,
+  deleteCrewNotice,
 } from "@/services/crew";
 import { getMemberProfile } from "@/services/member";
 import { useAuthStore } from "@/store/authStore";
@@ -56,9 +59,43 @@ export default function NoticeDetailPage() {
   const [hasError, setHasError] = useState(false);
   const [isEmojiSheetOpen, setIsEmojiSheetOpen] = useState(false);
 
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isNoticeMenuOpen, setIsNoticeMenuOpen] = useState(false);
+
   const [toastMessage, setToastMessage] = useState("");
   const [isToastOpen, setIsToastOpen] = useState(false);
   const [toastType, setToastType] = useState<ToastType>("success");
+
+  const user = useAuthStore((s) => s.user);
+  const deleteNavTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (deleteNavTimerRef.current !== null) clearTimeout(deleteNavTimerRef.current);
+    };
+  }, []);
+
+  const handleDeleteNotice = async () => {
+    if (crewId === null || noticeId === null) return;
+    setIsDeleting(true);
+    try {
+      await deleteCrewNotice(crewId, noticeId);
+      setIsDeleteModalOpen(false);
+      setToastMessage("게시글이 삭제되었습니다");
+      setToastType("success");
+      setIsToastOpen(true);
+      deleteNavTimerRef.current = window.setTimeout(() => {
+        router.push('/feed?tab=notice');
+      }, 2000);
+    } catch {
+      setToastMessage("공지 삭제에 실패했어요. 잠시 후 다시 시도해 주세요.");
+      setToastType("error");
+      setIsToastOpen(true);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const router = useRouter();
   const params = useParams<{ crewId: string; noticeId: string }>();
@@ -197,7 +234,7 @@ export default function NoticeDetailPage() {
           <section className="bg-card rounded-card border border-text-secondary/10 shadow-[var(--shadow-card)] p-5 flex flex-col gap-4">
             <article className="px-0 py-0">
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <h1 className="text-lg font-extrabold leading-snug text-text-primary">{notice.title}</h1>
                   <div className="mt-3 flex items-center gap-2.5">
                     {/* 방장 프로필 이미지 연동 및 프로필 페이지 이동 */}
@@ -229,6 +266,32 @@ export default function NoticeDetailPage() {
                     </div>
                   </div>
                 </div>
+
+                {notice && user && notice.author_member_uuid === user.member_uuid && (
+                  <HostMoreMenu
+                    isOpen={isNoticeMenuOpen}
+                    onToggle={() => setIsNoticeMenuOpen((current) => !current)}
+                    items={[
+                      {
+                        label: "수정",
+                        icon: <Pencil size={16} />,
+                        onClick: () => {
+                          setIsNoticeMenuOpen(false);
+                          router.push(`/crews/${crewId}/host-console/notices/${notice.notice_id}/edit?from=detail`);
+                        },
+                      },
+                      {
+                        label: "삭제",
+                        icon: <Trash2 size={16} />,
+                        tone: "danger",
+                        onClick: () => {
+                          setIsNoticeMenuOpen(false);
+                          setIsDeleteModalOpen(true);
+                        },
+                      },
+                    ]}
+                  />
+                )}
               </div>
 
               <p className="mt-4 text-sm leading-7 text-text-primary whitespace-pre-wrap">{notice.content}</p>
@@ -289,6 +352,26 @@ export default function NoticeDetailPage() {
           type={toastType}
           onClose={() => setIsToastOpen(false)}
         />
+
+        {isDeleteModalOpen && (
+          <HostConfirmDialog
+            title="공지를 삭제할까요?"
+            description={
+              <>
+                삭제한 공지는 되돌릴 수 없습니다.
+                <br />
+                댓글과 이모지 반응도 함께 사라집니다.
+              </>
+            }
+            icon={<Trash2 size={21} strokeWidth={2.6} />}
+            tone="danger"
+            confirmLabel="삭제"
+            onCancel={() => {
+              if (!isDeleting) setIsDeleteModalOpen(false);
+            }}
+            onConfirm={() => void handleDeleteNotice()}
+          />
+        )}
       </div>
     </main>
   );
