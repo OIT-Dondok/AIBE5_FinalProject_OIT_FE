@@ -503,7 +503,7 @@ export default function CrewNewPage() {
           variant="outline"
           size="lg"
           onClick={() => setCurrentStep((s) => s - 1)}
-          disabled={isLastStep && isSubmitting}
+          disabled={(isLastStep && isSubmitting) || isCheckingDeposit}
           className="w-24"
         >
           이전
