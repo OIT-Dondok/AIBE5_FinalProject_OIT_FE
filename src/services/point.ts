@@ -6,6 +6,7 @@ import type {
   PointHistoryResponse,
   WalletHistoryResponse,
 } from "@/types/domain";
+import { compareYmd } from "@/utils/date";
 
 export type WalletHistoryTypeParam =
   | "charge"
@@ -20,6 +21,10 @@ export interface PointHistoryParams {
   type?: WalletHistoryTypeParam;
   /** Wallet history month filter in YYYY-MM format, e.g. 2026-06. */
   month?: string;
+  /** Wallet history range start in YYYY-MM-DD format. */
+  from?: string;
+  /** Wallet history range end in YYYY-MM-DD format. */
+  to?: string;
 }
 
 export interface WalletHistoryMonthParams extends Omit<PointHistoryParams, "month"> {
@@ -32,6 +37,7 @@ interface PointApiClient {
 }
 
 const WALLET_HISTORY_MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
+const WALLET_HISTORY_YMD_PATTERN = /^\d{4}-(0[1-9]|1[0-2])-\d{2}$/;
 
 function assertValidWalletHistoryMonth(month: string | undefined) {
   if (month == null) return;
@@ -48,6 +54,29 @@ function assertWalletHistoryMonthRequired(month: string | undefined) {
   assertValidWalletHistoryMonth(month);
 }
 
+function assertValidWalletHistoryRange(from: string | undefined, to: string | undefined) {
+  if (from == null && to == null) return;
+
+  if (!from || !to) {
+    throw new Error("wallet history range requires both from and to");
+  }
+  if (!WALLET_HISTORY_YMD_PATTERN.test(from) || !WALLET_HISTORY_YMD_PATTERN.test(to)) {
+    throw new Error(`wallet history range must be YYYY-MM-DD: from=${from}, to=${to}`);
+  }
+  if (compareYmd(from, to) >= 0) {
+    throw new Error(`wallet history range must satisfy from < to: from=${from}, to=${to}`);
+  }
+}
+
+function assertWalletHistoryParams(params: PointHistoryParams | undefined) {
+  assertValidWalletHistoryMonth(params?.month);
+  assertValidWalletHistoryRange(params?.from, params?.to);
+
+  if (params?.month && (params.from || params.to)) {
+    throw new Error("wallet history month cannot be combined with from/to range");
+  }
+}
+
 export function createPointService(apiClient: PointApiClient) {
   return {
     getPointAccount: () => apiClient.get("/points") as Promise<{ data: PointAccountResponse }>,
@@ -56,7 +85,7 @@ export function createPointService(apiClient: PointApiClient) {
       apiClient.get("/points/history", { params }) as Promise<{ data: PointHistoryResponse }>,
 
     getWalletHistory: (params?: PointHistoryParams) => {
-      assertValidWalletHistoryMonth(params?.month);
+      assertWalletHistoryParams(params);
       return apiClient.get("/points/wallet-history", { params }) as Promise<{ data: WalletHistoryResponse }>;
     },
 
