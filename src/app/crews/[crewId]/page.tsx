@@ -47,7 +47,7 @@ export default function CrewDetailPage() {
     setIsDisbanding(true);
     try {
       await disbandCrew(crewId);
-      router.push('/');
+      router.push('/crews');
     } catch (error) {
       setIsDisbanding(false);
       setDisbandErrorMessage(
