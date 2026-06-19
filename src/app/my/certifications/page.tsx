@@ -41,7 +41,6 @@ const REJECT_REASON_LABEL: Record<string, string> = {
   MISSION_MISMATCH: "미션 불일치",
   UNCLEAR: "사진 불명확",
   INAPPROPRIATE: "부적절",
-  IMAGE_UNRELATED: "무관한 이미지",
   OTHER: "기타",
 };
 
