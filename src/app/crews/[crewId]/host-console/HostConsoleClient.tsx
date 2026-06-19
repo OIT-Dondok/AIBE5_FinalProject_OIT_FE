@@ -75,7 +75,7 @@ export default function HostConsoleClient() {
     setIsDisbanding(true);
     try {
       await disbandCrew(crewId);
-      router.push("/");
+      router.push("/crews");
     } catch (error) {
       setIsDisbanding(false);
       setDisbandErrorMessage(
