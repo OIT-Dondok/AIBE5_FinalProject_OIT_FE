@@ -26,13 +26,13 @@ export const REVIEW_FILTER_STYLES: Record<MissionLogReviewBucket, { active: stri
 export const exifSummaryLabel: Record<VerificationExifStatus, string> = {
   NORMAL: "정상",
   MISSING: "없음",
-  FAILED: "시간 이상",
+  FAILED: "시각 이상",
 };
 
 export const exifDetailLabel: Record<VerificationExifStatus, string> = {
-  NORMAL: "검증 성공",
+  NORMAL: "정상",
   MISSING: "메타데이터 없음",
-  FAILED: "촬영 시간 확인 필요",
+  FAILED: "촬영 시각 확인 필요",
 };
 
 export const exifDetailStyle: Record<VerificationExifStatus, string> = {
