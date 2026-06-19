@@ -3,11 +3,14 @@ import { describe, it } from "node:test";
 import ts from "typescript";
 
 import {
-  buildRecentMonthOptions,
   createWalletViewModel,
   formatMonthLabel,
+  getCurrentSeoulMonth,
+  getMonthStepperState,
   getWalletHistoryTypeParam,
+  isAfterMonth,
   POINT_HISTORY_FILTERS,
+  shiftMonth,
   toWalletHistoryViewItem,
   type PointHistoryFilter,
 } from "@/components/domain/point/pointViewModel";
@@ -38,25 +41,47 @@ describe("point wallet API mapping", () => {
     );
   });
 
-  it("builds recent month options from a fixed base month without timezone parsing", () => {
-    assert.deepEqual(buildRecentMonthOptions(new Date(2026, 5, 15), 4), [
-      { label: "전체 기간", value: undefined },
-      { label: "2026년 6월", value: "2026-06" },
-      { label: "2026년 5월", value: "2026-05" },
-      { label: "2026년 4월", value: "2026-04" },
-      { label: "2026년 3월", value: "2026-03" },
-    ]);
+  it("calculates current Seoul month and month stepper transitions", () => {
+    assert.equal(getCurrentSeoulMonth(new Date("2026-05-31T15:30:00.000Z")), "2026-06");
+    assert.equal(shiftMonth("2026-01", -1), "2025-12");
+    assert.equal(shiftMonth("2026-12", 1), "2027-01");
+    assert.equal(shiftMonth("1000-01", -1), "0999-12");
+    assert.equal(shiftMonth("0000-01", -1), "0000-01");
+    assert.equal(isAfterMonth("2026-07", "2026-06"), true);
+    assert.equal(isAfterMonth("2026-05", "2026-06"), false);
   });
 
-  it("builds recent month options by Asia/Seoul month near UTC boundaries", () => {
-    assert.deepEqual(buildRecentMonthOptions(new Date("2026-05-31T15:30:00.000Z"), 1), [
-      { label: "전체 기간", value: undefined },
-      { label: "2026년 6월", value: "2026-06" },
-    ]);
+  it("builds month stepper state from current Seoul month boundaries", () => {
+    assert.deepEqual(getMonthStepperState("2026-06", new Date("2026-05-31T15:30:00.000Z")), {
+      canGoPrevious: true,
+      canGoNext: false,
+      currentMonth: "2026-06",
+      label: "2026년 6월",
+      nextMonth: "2026-07",
+      previousMonth: "2026-05",
+    });
+    assert.deepEqual(getMonthStepperState("2026-05", new Date("2026-05-31T15:30:00.000Z")), {
+      canGoPrevious: true,
+      canGoNext: true,
+      currentMonth: "2026-06",
+      label: "2026년 5월",
+      nextMonth: "2026-06",
+      previousMonth: "2026-04",
+    });
+  });
+
+  it("prevents month stepper underflow at the minimum month", () => {
+    assert.deepEqual(getMonthStepperState("0000-01", new Date("2026-05-31T15:30:00.000Z")), {
+      canGoPrevious: false,
+      canGoNext: true,
+      currentMonth: "2026-06",
+      label: "0000년 1월",
+      nextMonth: "0000-02",
+      previousMonth: "0000-01",
+    });
   });
 
   it("formats month labels and falls back safely for invalid values", () => {
-    assert.equal(formatMonthLabel(undefined), "전체 기간");
     assert.equal(formatMonthLabel("2026-06"), "2026년 6월");
     assert.equal(formatMonthLabel("2026-13"), "2026-13");
     assert.equal(formatMonthLabel("invalid"), "invalid");
@@ -92,7 +117,7 @@ describe("point wallet API mapping", () => {
     });
   });
 
-  it("omits month from wallet-history params for the all-period filter", async () => {
+  it("keeps the lower-level wallet-history service compatible when month is omitted", async () => {
     const calls: Array<{ url: string; config: { params?: Record<string, unknown> } }> = [];
     const pointService = createPointService({
       get: (url: string, config?: unknown) => {
@@ -107,6 +132,38 @@ describe("point wallet API mapping", () => {
     assert.equal(calls.length, 1);
     assert.equal(calls[0].url, "/points/wallet-history");
     assert.equal(Object.hasOwn(calls[0].config.params ?? {}, "month"), false);
+  });
+
+  it("requires month on the month-filtered wallet-history helper", async () => {
+    const calls: Array<{ url: string; config: { params?: Record<string, unknown> } }> = [];
+    const pointService = createPointService({
+      get: (url: string, config?: unknown) => {
+        calls.push({ url, config: (config as { params?: Record<string, unknown> } | undefined) ?? {} });
+        return Promise.resolve({ data: { items: [], next_cursor: null } });
+      },
+      post: () => Promise.reject(new Error("unused")),
+    });
+    const getWalletHistoryByMonth = pointService.getWalletHistoryByMonth as (
+      params: { month?: string; limit?: number; type?: string },
+    ) => ReturnType<typeof pointService.getWalletHistory>;
+
+    assert.throws(
+      () =>
+        getWalletHistoryByMonth({
+          limit: 20,
+          type: "deposit",
+        }),
+      /wallet history month is required/,
+    );
+
+    await pointService.getWalletHistoryByMonth({
+      month: "2026-06",
+      limit: 20,
+      type: "deposit",
+    });
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].url, "/points/wallet-history");
+    assert.deepEqual(calls[0].config.params, { month: "2026-06", limit: 20, type: "deposit" });
   });
 
   it("rejects invalid wallet-history month params before calling the API", async () => {
@@ -302,14 +359,28 @@ describe("point wallet API mapping", () => {
     );
   });
 
-  it("keeps month query state robust across no-op changes and stale in-flight requests", () => {
+  it("keeps month query state non-optional and robust across no-op changes", () => {
     const sourceFile = readTsSourceFile("src/app/my/dodin/history/page.tsx");
     const sourceText = sourceFile.getFullText();
 
+    assert.equal(sourceText.includes("useState(() => getCurrentSeoulMonth())"), true);
+    assert.equal(sourceText.includes("month: string"), true);
     assert.equal(sourceText.includes("if (filter === activeFilter) return;"), true);
     assert.equal(sourceText.includes("if (month === activeMonth) return;"), true);
     assert.equal(sourceText.includes("requestIdRef.current += 1;"), true);
-    assert.equal(sourceText.includes("...(month ? { month } : {})"), true);
+    assert.equal(sourceText.includes("...(month ? { month } : {})"), false);
+    assert.equal(sourceText.includes("month,"), true);
+  });
+
+  it("renders the history page month control as a stepper with a month picker", () => {
+    const sourceFile = readTsSourceFile("src/components/domain/point/DodinHistoryList.tsx");
+    const sourceText = sourceFile.getFullText();
+
+    assert.equal(sourceText.includes("DodinHistoryMonthStepper"), true);
+    assert.equal(sourceText.includes("disabled={!canGoNext}"), true);
+    assert.equal(sourceText.includes("monthOptions"), true);
+    assert.equal(sourceText.includes("<BottomSheet"), true);
+    assert.equal(sourceText.includes("aria-label=\"month picker\""), true);
   });
 });
 

@@ -22,6 +22,10 @@ export interface PointHistoryParams {
   month?: string;
 }
 
+export interface WalletHistoryMonthParams extends Omit<PointHistoryParams, "month"> {
+  month: string;
+}
+
 interface PointApiClient {
   get: (url: string, config?: unknown) => Promise<{ data: unknown }>;
   post: (url: string, payload?: unknown) => Promise<{ data: unknown }>;
@@ -36,6 +40,14 @@ function assertValidWalletHistoryMonth(month: string | undefined) {
   throw new Error(`wallet history month must be YYYY-MM with month 01-12: ${month}`);
 }
 
+function assertWalletHistoryMonthRequired(month: string | undefined) {
+  if (!month) {
+    throw new Error("wallet history month is required for wallet-history list page");
+  }
+
+  assertValidWalletHistoryMonth(month);
+}
+
 export function createPointService(apiClient: PointApiClient) {
   return {
     getPointAccount: () => apiClient.get("/points") as Promise<{ data: PointAccountResponse }>,
@@ -45,6 +57,11 @@ export function createPointService(apiClient: PointApiClient) {
 
     getWalletHistory: (params?: PointHistoryParams) => {
       assertValidWalletHistoryMonth(params?.month);
+      return apiClient.get("/points/wallet-history", { params }) as Promise<{ data: WalletHistoryResponse }>;
+    },
+
+    getWalletHistoryByMonth: (params: WalletHistoryMonthParams) => {
+      assertWalletHistoryMonthRequired(params.month);
       return apiClient.get("/points/wallet-history", { params }) as Promise<{ data: WalletHistoryResponse }>;
     },
 
@@ -60,5 +77,6 @@ export const getPointAccount = pointService.getPointAccount;
 export const getPointHistory = pointService.getPointHistory;
 
 export const getWalletHistory = pointService.getWalletHistory;
+export const getWalletHistoryByMonth = pointService.getWalletHistoryByMonth;
 
 export const chargePoints = pointService.chargePoints;
