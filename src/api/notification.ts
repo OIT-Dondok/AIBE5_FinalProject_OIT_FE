@@ -1,5 +1,5 @@
 import { api } from '@/lib/axios';
-import type { NotificationsResponse } from '@/mocks/data/notifications';
+import type { NotificationsResponse } from '@/types/domain';
 
 export const getNotifications = (params?: { cursor?: string; limit?: number }) =>
   api.get<NotificationsResponse>('/notifications', { params });

@@ -14,7 +14,7 @@ import {
 
 import { Header } from "@/components/common/Header";
 import { getNotifications, readAllNotifications } from "@/api/notification";
-import type { NotificationItem } from "@/mocks/data/notifications";
+import type { NotificationItem } from "@/types/domain";
 
 // ── 카테고리 매핑 ────────────────────────────────────────────────────────────
 type BadgeCategory = "미션" | "정산" | "크루" | "리액션";
