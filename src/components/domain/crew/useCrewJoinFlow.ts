@@ -11,9 +11,11 @@ interface UseCrewJoinFlowProps {
   crewId: number;
   onSuccess?: () => void;
   showToast: (message: string, type?: 'success' | 'error' | 'warning') => void;
+  // 잔액 부족 시 도딘 부족 모달 노출 시도. 모달을 띄웠으면 true, 아니면 false(토스트로 폴백)
+  onInsufficientBalance?: () => Promise<boolean>;
 }
 
-export function useCrewJoinFlow({ crewId, onSuccess, showToast }: UseCrewJoinFlowProps) {
+export function useCrewJoinFlow({ crewId, onSuccess, showToast, onInsufficientBalance }: UseCrewJoinFlowProps) {
   const [step, setStep] = useState<JoinStep>('IDLE');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -35,7 +37,10 @@ export function useCrewJoinFlow({ crewId, onSuccess, showToast }: UseCrewJoinFlo
       if (isAxiosError<ErrorResponse>(err)) {
         const code = err.response?.data?.code;
         if (code === 'INSUFFICIENT_BALANCE') {
-          showToast('포인트가 부족합니다. 충전 후 다시 시도해주세요.', 'error');
+          const handled = onInsufficientBalance ? await onInsufficientBalance() : false;
+          if (!handled) {
+            showToast('포인트가 부족합니다. 충전 후 다시 시도해주세요.', 'error');
+          }
         } else if (code === 'CAPACITY_FULL') {
           showToast('정원이 가득 찼습니다.', 'error');
         } else if (code === 'CREW_NOT_RECRUITING') {

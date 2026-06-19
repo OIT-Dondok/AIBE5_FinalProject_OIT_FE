@@ -3,6 +3,8 @@
 import { useState, useCallback } from 'react';
 import { Toast } from '@/components/common/Toast';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
+import { DodinShortageModal } from '@/components/domain/point/DodinShortageModal';
+import { useDodinShortage } from '@/components/domain/point/useDodinShortage';
 import type { MyParticipation } from '@/types/domain';
 import { useCrewJoinFlow } from './useCrewJoinFlow';
 
@@ -33,6 +35,8 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
     setIsToastOpen(true);
   }, []);
 
+  const shortage = useDodinShortage();
+
   const {
     step,
     isLoading,
@@ -41,7 +45,12 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
     openJoinConfirm,
     openCancelConfirm,
     close,
-  } = useCrewJoinFlow({ crewId, onSuccess, showToast });
+  } = useCrewJoinFlow({
+    crewId,
+    onSuccess,
+    showToast,
+    onInsufficientBalance: () => shortage.openIfInsufficient(depositAmount),
+  });
 
   const status = myParticipation?.status ?? null;
 
@@ -192,6 +201,14 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
         isOpen={isToastOpen}
         onClose={() => setIsToastOpen(false)}
         type={toastType}
+      />
+
+      <DodinShortageModal
+        isOpen={shortage.isOpen}
+        onClose={shortage.close}
+        onCharge={shortage.goToCharge}
+        requiredAmount={shortage.requiredAmount}
+        currentBalance={shortage.currentBalance}
       />
     </>
   );
