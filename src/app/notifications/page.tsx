@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 import { Header } from "@/components/common/Header";
-import { getNotifications, readAllNotifications, readNotification } from "@/api/notification";
+import { getNotifications, getUnreadCount, readAllNotifications, readNotification } from "@/api/notification";
 import type { NotificationItem } from "@/types/domain";
 import { useNotificationStore } from "@/store/notificationStore";
 
@@ -196,12 +196,14 @@ export default function NotificationsPage() {
   const fetchInitial = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await getNotifications({ limit: 20 });
-      const unread = data.items.filter((item) => item.read_at === null).length;
+      const [{ data }, { data: unreadData }] = await Promise.all([
+        getNotifications({ limit: 20 }),
+        getUnreadCount(),
+      ]);
       setNotifications(data.items);
       setNextCursor(data.next_cursor);
-      setUnreadCount(unread);
-      setStoreUnreadCount(unread);
+      setUnreadCount(unreadData.unread_count);
+      setStoreUnreadCount(unreadData.unread_count);
     } finally {
       setLoading(false);
     }
@@ -225,7 +227,8 @@ export default function NotificationsPage() {
 
   const markAllRead = async () => {
     await readAllNotifications();
-    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    const now = new Date().toISOString();
+    setNotifications((prev) => prev.map((n) => ({ ...n, read_at: now })));
     setUnreadCount(0);
     setStoreUnreadCount(0);
   };

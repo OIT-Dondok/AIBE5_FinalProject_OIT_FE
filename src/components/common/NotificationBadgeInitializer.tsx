@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { useNotificationStore } from '@/store/notificationStore';
-import { getNotifications } from '@/api/notification';
+import { getUnreadCount } from '@/api/notification';
 
 export function NotificationBadgeInitializer() {
   const user = useAuthStore((s) => s.user);
@@ -13,13 +13,12 @@ export function NotificationBadgeInitializer() {
   useEffect(() => {
     if (!isInitialized || !user) return;
 
-    void getNotifications({ limit: 50 })
+    void getUnreadCount()
       .then(({ data }) => {
-        const count = data.items.filter((item) => item.read_at === null).length;
         if (process.env.NODE_ENV === 'development') {
-          console.log('[NotificationBadge] unread_count:', count);
+          console.log('[NotificationBadge] unread_count:', data.unread_count);
         }
-        setUnreadCount(count);
+        setUnreadCount(data.unread_count);
       })
       .catch((err) => {
         if (process.env.NODE_ENV === 'development') {

@@ -8,6 +8,15 @@ import { registerDevice } from '@/api/notification';
 const VAPID_KEY = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
 const SW_PATH = '/firebase-messaging-sw.js';
 const SESSION_KEY = 'fcm_registered';
+const DEVICE_ID_KEY = 'fcm_device_id';
+
+function getOrCreateDeviceId(): string {
+  const existing = localStorage.getItem(DEVICE_ID_KEY);
+  if (existing) return existing;
+  const id = crypto.randomUUID();
+  localStorage.setItem(DEVICE_ID_KEY, id);
+  return id;
+}
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -38,7 +47,8 @@ export function useFcmToken(enabled: boolean) {
 
         const sw = await navigator.serviceWorker.register(SW_PATH);
         if (dev) console.log('[FCM] SW registered:', sw.scope, '| active:', !!sw.active);
-        sw.active?.postMessage({ type: 'FIREBASE_CONFIG', config: firebaseConfig });
+        const readySw = await navigator.serviceWorker.ready;
+        readySw.active?.postMessage({ type: 'FIREBASE_CONFIG', config: firebaseConfig });
 
         const messaging = getFirebaseMessaging();
         if (dev) console.log('[FCM] messaging instance:', !!messaging);
@@ -52,7 +62,7 @@ export function useFcmToken(enabled: boolean) {
 
         if (!token) return;
 
-        await registerDevice(token);
+        await registerDevice(token, getOrCreateDeviceId());
         if (dev) console.log('[FCM] device registered ✓');
         sessionStorage.setItem(SESSION_KEY, '1');
       } catch (err) {
