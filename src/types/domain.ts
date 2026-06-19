@@ -1075,6 +1075,7 @@ export interface NotificationItem {
   crew_name?: string;
   mission_log_id?: number;
   occurred_at: string;
+  deep_link?: string | null;
 }
 
 export interface NotificationsResponse {
