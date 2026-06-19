@@ -65,7 +65,6 @@ const CATEGORY_META: Record<
 // ── 딥링크 ────────────────────────────────────────────────────────────────────
 function getDeepLink(item: NotificationItem): string | null {
   if (item.deep_link) {
-    // dondok://crews/5/notices/2 → /crews/5/notices/2
     return item.deep_link.replace(/^dondok:\/\//, '/');
   }
   if (!item.crew_id) return null;
