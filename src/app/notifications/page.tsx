@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Heart,
   Settings,
@@ -12,16 +13,8 @@ import {
 } from "lucide-react";
 
 import { Header } from "@/components/common/Header";
-
-interface NotificationItem {
-  id: number;
-  event_type: string;
-  title: string;
-  body: string;
-  crew_name?: string;
-  created_at: string;
-  is_read: boolean;
-}
+import { getNotifications, readAllNotifications } from "@/api/notification";
+import type { NotificationItem } from "@/mocks/data/notifications";
 
 // ── 카테고리 매핑 ────────────────────────────────────────────────────────────
 type BadgeCategory = "미션" | "정산" | "크루" | "리액션";
@@ -68,6 +61,19 @@ const CATEGORY_META: Record<
   },
 };
 
+// ── 딥링크 ────────────────────────────────────────────────────────────────────
+function getDeepLink(item: NotificationItem): string | null {
+  if (!item.crew_id) return null;
+  switch (item.event_type) {
+    case "MISSION_LOG_VERIFICATION_RESULT":
+      return `/crews/${item.crew_id}/dashboard`;
+    case "SETTLEMENT_COMPLETED":
+      return `/crews/${item.crew_id}/settlement`;
+    default:
+      return `/crews/${item.crew_id}`;
+  }
+}
+
 // ── 시간 포맷 ────────────────────────────────────────────────────────────────
 function formatRelativeTime(isoString: string): string {
   const diff = Date.now() - new Date(isoString).getTime();
@@ -90,197 +96,6 @@ function getDateLabel(isoString: string): string {
   return `${target.getFullYear()}년 ${target.getMonth() + 1}월 ${target.getDate()}일`;
 }
 
-// ── 조사 자동 선택 ────────────────────────────────────────────────────────────
-function josa(word: string, form: "이/가" | "은/는" | "을/를" | "으로/로"): string {
-  const code = word.charCodeAt(word.length - 1);
-  const isKorean = code >= 0xac00 && code <= 0xd7a3;
-  const hasBatchim = isKorean && (code - 0xac00) % 28 !== 0;
-  const [withBatchim, withoutBatchim] = form.split("/");
-  if (form === "으로/로") {
-    const isRieul = isKorean && (code - 0xac00) % 28 === 8;
-    return word + (hasBatchim && !isRieul ? withBatchim : withoutBatchim);
-  }
-  return word + (hasBatchim ? withBatchim : withoutBatchim);
-}
-
-// ── 목데이터 ────────────────────────────────────────────────────────────────
-const MOCK_NOTIFICATIONS: NotificationItem[] = [
-  // 오늘
-  {
-    id: 1,
-    event_type: "CREW_APPLICATION_PENDING",
-    title: "크루 가입 신청",
-    body: "홍길동님이 독서 1챕터 가입을 신청했습니다. 지금 확인해보세요 →",
-    crew_name: "독서 1챕터",
-    created_at: new Date(Date.now() - 8 * 60000).toISOString(),
-    is_read: false,
-  },
-  {
-    id: 19,
-    event_type: "CREW_APPLICATION_WITHDRAWN",
-    title: "크루 가입 신청 철회",
-    body: "김철수님이 독서 1챕터 가입 신청을 철회했습니다.",
-    crew_name: "독서 1챕터",
-    created_at: new Date(Date.now() - 20 * 60000).toISOString(),
-    is_read: false,
-  },
-  {
-    id: 9,
-    event_type: "MISSION_DEADLINE_MEMBER",
-    title: "인증 마감 임박",
-    body: "독서 1챕터 인증 마감까지 1시간 남았습니다. 아직 인증을 완료하지 않으셨어요 ⏰",
-    crew_name: "독서 1챕터",
-    created_at: new Date(Date.now() - 35 * 60000).toISOString(),
-    is_read: false,
-  },
-  {
-    id: 22,
-    event_type: "MISSION_LOG_UPLOADED",
-    title: "새 인증 업로드",
-    body: "이영희님이 독서 1챕터에 인증을 업로드했습니다. 검토해주세요 →",
-    crew_name: "독서 1챕터",
-    created_at: new Date(Date.now() - 50 * 60000).toISOString(),
-    is_read: false,
-  },
-  {
-    id: 11,
-    event_type: "MISSION_LOG_VERIFICATION_RESULT",
-    title: "인증 성공",
-    body: "독서 1챕터 5/21 인증이 성공 처리되었습니다 ✅",
-    crew_name: "독서 1챕터",
-    created_at: new Date(Date.now() - 2 * 3600000).toISOString(),
-    is_read: false,
-  },
-  {
-    id: 18,
-    event_type: "FEED_REACTION",
-    title: "새 리액션 등록",
-    body: "홍길동님이 내 인증에 🔥 리액션을 달았습니다",
-    crew_name: "독서 1챕터",
-    created_at: new Date(Date.now() - 4 * 3600000).toISOString(),
-    is_read: true,
-  },
-  // 어제
-  {
-    id: 3,
-    event_type: "CREW_APPLICATION_APPROVED",
-    title: "가입 승인 완료",
-    body: "독서 1챕터 가입이 승인되었습니다!",
-    crew_name: "독서 1챕터",
-    created_at: new Date(Date.now() - 25 * 3600000).toISOString(),
-    is_read: true,
-  },
-  {
-    id: 25,
-    event_type: "CREW_ACTIVATED",
-    title: "미션 시작",
-    body: "독서 1챕터 미션이 시작되었습니다! 오늘부터 인증을 시작하세요 🔥",
-    crew_name: "독서 1챕터",
-    created_at: new Date(Date.now() - 25.5 * 3600000).toISOString(),
-    is_read: true,
-  },
-  {
-    id: 20,
-    event_type: "CREW_APPLICATION_REJECTED",
-    title: "가입 거절",
-    body: "러닝 30분 가입 신청이 거절되었습니다. 다른 크루를 탐색해보세요 →",
-    crew_name: "러닝 30분",
-    created_at: new Date(Date.now() - 26 * 3600000).toISOString(),
-    is_read: true,
-  },
-  {
-    id: 5,
-    event_type: "CREW_NOTICE",
-    title: "새 공지 등록",
-    body: "독서 1챕터에 새로운 공지가 등록되었습니다. 확인해보세요 →",
-    crew_name: "독서 1챕터",
-    created_at: new Date(Date.now() - 27 * 3600000).toISOString(),
-    is_read: true,
-  },
-  {
-    id: 21,
-    event_type: "CREW_NOTICE_COMMENT",
-    title: "공지 댓글 등록",
-    body: "홍길동님이 공지에 댓글을 남겼습니다 →",
-    crew_name: "독서 1챕터",
-    created_at: new Date(Date.now() - 28 * 3600000).toISOString(),
-    is_read: true,
-  },
-  {
-    id: 12,
-    event_type: "MISSION_LOG_VERIFICATION_RESULT",
-    title: "인증 실패",
-    body: "독서 1챕터 5/21 인증이 실패 처리되었습니다 ❌",
-    crew_name: "독서 1챕터",
-    created_at: new Date(Date.now() - 30 * 3600000).toISOString(),
-    is_read: true,
-  },
-  {
-    id: 14,
-    event_type: "MISSION_DEADLINE_HOST",
-    title: "미검토 인증 존재",
-    body: "독서 1챕터 — 인증 마감 30분 전입니다. 아직 검토하지 않은 인증이 3건 있습니다. 정산 전 확인해주세요 →",
-    crew_name: "독서 1챕터",
-    created_at: new Date(Date.now() - 33 * 3600000).toISOString(),
-    is_read: true,
-  },
-  {
-    id: 15,
-    event_type: "SETTLEMENT_DAILY",
-    title: "예상 환급금 변동",
-    body: "독서 1챕터 5/21 미션 성공! 크루원 2명 인증 실패 → 예상 환급금 5,000도딘으로 상승했습니다 💪",
-    crew_name: "독서 1챕터",
-    created_at: new Date(Date.now() - 36 * 3600000).toISOString(),
-    is_read: true,
-  },
-  {
-    id: 23,
-    event_type: "SETTLEMENT_UNCHANGED",
-    title: "예상 환급금 변동",
-    body: "5/21 미션 성공! 크루 전원 인증 완료 → 예상 환급금 50,000도딘 유지 중 👏",
-    crew_name: "독서 1챕터",
-    created_at: new Date(Date.now() - 37 * 3600000).toISOString(),
-    is_read: true,
-  },
-  {
-    id: 24,
-    event_type: "SETTLEMENT_DECREASED",
-    title: "예상 환급금 변동",
-    body: "5/21 미션 인증 실패 → 예상 환급금 45,000도딘으로 하락했습니다 😢",
-    crew_name: "독서 1챕터",
-    created_at: new Date(Date.now() - 38 * 3600000).toISOString(),
-    is_read: true,
-  },
-  // 이틀 전
-  {
-    id: 6,
-    event_type: "CREW_MISSION_END_SOON",
-    title: "크루 종료 예정",
-    body: "독서 1챕터 미션이 3일 후 종료됩니다. 마지막까지 인증을 완료하세요 💪",
-    crew_name: "독서 1챕터",
-    created_at: new Date(Date.now() - 50 * 3600000).toISOString(),
-    is_read: true,
-  },
-  {
-    id: 7,
-    event_type: "CREW_DISSOLVED",
-    title: "크루 해체",
-    body: `${josa("독서 1챕터", "이/가")} 해체되었습니다. 예치하신 보증금 50,000도딘이 환급되었습니다.`,
-    crew_name: "독서 1챕터",
-    created_at: new Date(Date.now() - 52 * 3600000).toISOString(),
-    is_read: true,
-  },
-  {
-    id: 16,
-    event_type: "SETTLEMENT_COMPLETED",
-    title: "최종 정산 완료",
-    body: "독서 1챕터 미션 종료. 최종 환급금 50,000도딘이 지급되었습니다. 결과 보기 →",
-    crew_name: "독서 1챕터",
-    created_at: new Date(Date.now() - 55 * 3600000).toISOString(),
-    is_read: true,
-  },
-];
-
 // ── 날짜별 그루핑 ────────────────────────────────────────────────────────────
 function groupByDate(items: NotificationItem[]): Array<{ label: string; items: NotificationItem[] }> {
   const map = new Map<string, NotificationItem[]>();
@@ -296,10 +111,10 @@ function groupByDate(items: NotificationItem[]): Array<{ label: string; items: N
 // ── 알림 카드 ────────────────────────────────────────────────────────────────
 function NotificationCard({
   item,
-  onRead,
+  onClick,
 }: {
   item: NotificationItem;
-  onRead: (id: number) => void;
+  onClick: (item: NotificationItem) => void;
 }) {
   const category = getCategory(item.event_type);
   const categoryMeta = CATEGORY_META[category];
@@ -311,7 +126,7 @@ function NotificationCard({
   return (
     <button
       type="button"
-      onClick={() => onRead(item.id)}
+      onClick={() => onClick(item)}
       className={`w-full origin-center rounded-2xl px-4 py-3.5 text-left transition-[background-color,transform] duration-150 ease-out active:scale-[0.985] ${
         item.is_read ? "bg-card active:bg-[#F4F4F4]" : "bg-[#F4F7FF] active:bg-[#E9EEFB]"
       }`}
@@ -364,16 +179,52 @@ const FILTER_TABS: Array<{ value: FilterTab; label: string }> = [
 
 // ── 페이지 ────────────────────────────────────────────────────────────────────
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<NotificationItem[]>(MOCK_NOTIFICATIONS);
+  const router = useRouter();
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [activeFilter, setActiveFilter] = useState<FilterTab>("전체");
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
+  const fetchInitial = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await getNotifications({ limit: 20 });
+      setNotifications(data.items);
+      setNextCursor(data.next_cursor);
+      setUnreadCount(data.unread_count);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const markAllRead = () =>
+  useEffect(() => {
+    fetchInitial();
+  }, [fetchInitial]);
+
+  const loadMore = async () => {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const { data } = await getNotifications({ cursor: nextCursor, limit: 20 });
+      setNotifications((prev) => [...prev, ...data.items]);
+      setNextCursor(data.next_cursor);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const markAllRead = async () => {
+    await readAllNotifications();
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    setUnreadCount(0);
+  };
 
-  const markRead = (id: number) =>
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
+  const handleCardClick = (item: NotificationItem) => {
+    const deeplink = getDeepLink(item);
+    if (deeplink) router.push(deeplink);
+  };
 
   const filtered =
     activeFilter === "전체"
@@ -402,9 +253,13 @@ export default function NotificationsPage() {
         {/* 모두 읽음 버튼 */}
         <div className="flex items-center justify-between px-5 pt-4 pb-1">
           <p className="text-sm font-semibold text-text-secondary">
-            {unreadCount > 0 ? `읽지 않은 알림 ${unreadCount}개` : "모두 읽었어요"}
+            {loading
+              ? "알림을 불러오는 중..."
+              : unreadCount > 0
+              ? `읽지 않은 알림 ${unreadCount}개`
+              : "모두 읽었어요"}
           </p>
-          {unreadCount > 0 && (
+          {!loading && unreadCount > 0 && (
             <button
               type="button"
               onClick={markAllRead}
@@ -438,27 +293,43 @@ export default function NotificationsPage() {
 
         {/* 알림 목록 */}
         <div className="flex flex-col gap-4 px-5 pt-3">
-          {groups.length === 0 ? (
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <p className="text-sm font-semibold text-text-secondary">불러오는 중...</p>
+            </div>
+          ) : groups.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <p className="text-sm font-semibold text-text-secondary">
                 {activeFilter === "전체" ? "알림이 없어요" : `${activeFilter} 알림이 없어요`}
               </p>
             </div>
           ) : (
-            groups.map(({ label, items }) => (
-              <section key={label}>
-                <h2 className="mb-2 px-1 text-[11px] font-extrabold text-text-secondary">{label}</h2>
-                <div className="flex flex-col gap-1.5 rounded-2xl border border-text-secondary/10 bg-card overflow-hidden shadow-sm">
-                  {items.map((item) => (
-                    <NotificationCard key={item.id} item={item} onRead={markRead} />
-                  ))}
-                </div>
-              </section>
-            ))
+            <>
+              {groups.map(({ label, items }) => (
+                <section key={label}>
+                  <h2 className="mb-2 px-1 text-[11px] font-extrabold text-text-secondary">{label}</h2>
+                  <div className="flex flex-col gap-1.5 rounded-2xl border border-text-secondary/10 bg-card overflow-hidden shadow-sm">
+                    {items.map((item) => (
+                      <NotificationCard key={item.notification_id} item={item} onClick={handleCardClick} />
+                    ))}
+                  </div>
+                </section>
+              ))}
+
+              {nextCursor && (
+                <button
+                  type="button"
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  className="mx-auto mt-2 rounded-full px-5 py-2 text-xs font-extrabold text-primary-blue bg-card border border-text-secondary/20 hover:opacity-75 transition-opacity disabled:opacity-50"
+                >
+                  {loadingMore ? "불러오는 중..." : "더 보기"}
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
-
     </main>
   );
 }
