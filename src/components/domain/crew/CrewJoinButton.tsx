@@ -46,8 +46,8 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
   const status = myParticipation?.status ?? null;
 
   const renderButton = () => {
-    /* ── 신청 전 ─────────────────────────────────── */
-    if (status === null) {
+    /* ── 신청 전 / 취소 후 재신청 (CANCELLED는 terminal 아님 → reopen 허용) ── */
+    if (status === null || status === 'CANCELLED') {
       return (
         <button
           type="button"
@@ -159,7 +159,7 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
         title="정말 신청을 취소하시겠어요?"
         description={
           <span>
-            신청 철회 시 <strong className="text-[#DB5C55] font-bold">재참여가 불가능</strong>합니다.
+            예약된 보증금은 즉시 해제되며, <strong className="text-primary-green font-bold">취소 후 다시 신청</strong>할 수 있어요.
           </span>
         }
         confirmText="네, 취소할게요"
