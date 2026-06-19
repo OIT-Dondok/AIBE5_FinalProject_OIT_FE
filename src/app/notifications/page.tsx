@@ -14,6 +14,7 @@ import {
 
 import { Header } from "@/components/common/Header";
 import { getNotifications, getUnreadCount, readAllNotifications, readNotification } from "@/api/notification";
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 import type { NotificationItem } from "@/types/domain";
 import { useNotificationStore } from "@/store/notificationStore";
 
@@ -127,6 +128,7 @@ function NotificationCard({
   const category = getCategory(item.event_type);
   const categoryMeta = CATEGORY_META[category];
   const CategoryIcon = categoryMeta.icon;
+  const message = item.display_text;
 
   return (
     <button
@@ -159,7 +161,7 @@ function NotificationCard({
             </span>
           </div>
           <p className="mt-1.5 break-words text-[14px] font-bold leading-snug text-text-primary">
-            {item.display_text}
+            {message}
           </p>
           {item.crew_name && (
             <p className="mt-1.5 break-words text-xs font-semibold leading-tight text-[#666666]">
@@ -187,14 +189,16 @@ export default function NotificationsPage() {
   const router = useRouter();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const setStoreUnreadCount = useNotificationStore((s) => s.setUnreadCount);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterTab>("전체");
+  const setStoreUnreadCount = useNotificationStore((s) => s.setUnreadCount);
 
   const fetchInitial = useCallback(async () => {
     setLoading(true);
+    setErrorMessage(null);
     try {
       const [{ data }, { data: unreadData }] = await Promise.all([
         getNotifications({ limit: 20 }),
@@ -204,10 +208,15 @@ export default function NotificationsPage() {
       setNextCursor(data.next_cursor);
       setUnreadCount(unreadData.unread_count);
       setStoreUnreadCount(unreadData.unread_count);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Notifications] unread_count from API:', unreadData.unread_count);
+      }
+    } catch (error) {
+      setErrorMessage(getApiErrorMessage(error, {}, "알림을 불러오지 못했어요. 잠시 후 다시 시도해 주세요."));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setStoreUnreadCount]);
 
   useEffect(() => {
     fetchInitial();
@@ -234,6 +243,12 @@ export default function NotificationsPage() {
   };
 
   const handleCardClick = (item: NotificationItem) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[handleCardClick]', item.notification_id, item.event_type);
+    }
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[handleCardClick] read_at:', item.read_at, '| type:', typeof item.read_at, '| isNull:', item.read_at === null);
+    }
     if (item.read_at === null) {
       const now = new Date().toISOString();
       setNotifications((prev) =>
@@ -242,6 +257,9 @@ export default function NotificationsPage() {
       const newCount = Math.max(0, unreadCount - 1);
       setUnreadCount(newCount);
       setStoreUnreadCount(newCount);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[handleCardClick] calling readNotification:', item.notification_id);
+      }
       void readNotification(item.notification_id).catch(() => {});
     }
     const deeplink = getDeepLink(item);
@@ -318,6 +336,17 @@ export default function NotificationsPage() {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
               <p className="text-sm font-semibold text-text-secondary">불러오는 중...</p>
+            </div>
+          ) : errorMessage ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <p className="text-sm font-semibold text-text-secondary">{errorMessage}</p>
+              <button
+                type="button"
+                onClick={fetchInitial}
+                className="mt-4 rounded-full bg-primary-blue px-5 py-2 text-xs font-extrabold text-white transition-opacity hover:opacity-75"
+              >
+                다시 시도
+              </button>
             </div>
           ) : groups.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
