@@ -302,10 +302,15 @@ export default function CrewNewPage() {
     if (Object.keys(errors).length === 0) setCurrentStep(3);
   };
 
-  const handleNextFromStep3 = () => {
+  const handleNextFromStep3 = async () => {
     const errors = validateStep3(formData);
     setStep3Errors(errors);
     if (Object.keys(errors).length !== 0) return;
+
+    // 선택한 보증금만큼 도딘이 있는지 사전 확인 — 부족하면 모달을 띄우고 다음 단계로 넘어가지 않는다.
+    const blocked = await shortage.checkAndOpen(formData.deposit_amount);
+    if (blocked) return;
+
     // 특정 요일이면 이미 입력/AI 프리필된 시작·종료일을 (변경됐을 수 있는) 요일 기준으로 재보정한다.
     // snap은 멱등이라 이미 인증 요일이면 그대로 유지된다.
     if (formData.frequency_type === 'SPECIFIC_DAYS') {
@@ -479,7 +484,7 @@ export default function CrewNewPage() {
 
     const handleNext = () => {
       if (currentStep === 2) handleNextFromStep2();
-      else if (currentStep === 3) handleNextFromStep3();
+      else if (currentStep === 3) void handleNextFromStep3();
       else if (currentStep === 4) handleNextFromStep4();
     };
 

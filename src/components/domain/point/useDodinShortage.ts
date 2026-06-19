@@ -26,6 +26,21 @@ export function useDodinShortage() {
     }
   }, []);
 
+  // 잔액을 사전 확인해 부족할 때만 모달을 연다.
+  // 부족 → true(차단), 충분하거나 조회 실패 → false(진행 허용; 실패 시 후속 단계에서 폴백 처리).
+  const checkAndOpen = useCallback(async (requiredAmount: number): Promise<boolean> => {
+    try {
+      const { data } = await getPointAccount();
+      if (data.available_balance < requiredAmount) {
+        setState({ requiredAmount, currentBalance: data.available_balance });
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }, []);
+
   const close = useCallback(() => setState(null), []);
 
   const goToCharge = useCallback(() => {
@@ -38,6 +53,7 @@ export function useDodinShortage() {
     requiredAmount: state?.requiredAmount ?? 0,
     currentBalance: state?.currentBalance ?? 0,
     open,
+    checkAndOpen,
     close,
     goToCharge,
   };
