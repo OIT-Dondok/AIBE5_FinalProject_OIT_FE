@@ -726,6 +726,7 @@ export interface FeedItem {
   reaction_counts: ReactionCounts;
   my_reactions: string[];
   reject_reason_code: RejectReasonCode | null;
+  reject_memo?: string | null;
   decision_type: MissionLogDecisionType | null;
 }
 
