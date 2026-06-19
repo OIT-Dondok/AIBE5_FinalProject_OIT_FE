@@ -326,14 +326,15 @@ describe("point wallet API mapping", () => {
     assert.equal(sourceText.includes("month,"), true);
   });
 
-  it("renders the history page month control as a stepper without all-period options", () => {
+  it("renders the history page month control as a stepper with a month picker", () => {
     const sourceFile = readTsSourceFile("src/components/domain/point/DodinHistoryList.tsx");
     const sourceText = sourceFile.getFullText();
 
     assert.equal(sourceText.includes("DodinHistoryMonthStepper"), true);
     assert.equal(sourceText.includes("disabled={!canGoNext}"), true);
-    assert.equal(sourceText.includes("ALL_PERIOD"), false);
-    assert.equal(sourceText.includes("monthOptions"), false);
+    assert.equal(sourceText.includes("monthOptions"), true);
+    assert.equal(sourceText.includes("<BottomSheet"), true);
+    assert.equal(sourceText.includes("aria-label=\"month picker\""), true);
   });
 });
 
