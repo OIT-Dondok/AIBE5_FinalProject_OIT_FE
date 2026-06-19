@@ -24,7 +24,8 @@ export function downloadBlob(blob: Blob, fileName: string): void {
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
-  URL.revokeObjectURL(url);
+  // 브라우저가 다운로드를 비동기로 처리하므로, 한 틱 뒤에 해제해 간헐적 실패 방지
+  setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
 export type ShareResult = 'shared' | 'downloaded' | 'cancelled';

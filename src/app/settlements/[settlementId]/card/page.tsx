@@ -45,6 +45,8 @@ export default function SettlementResultCardPage() {
 
   const cardRef = useRef<HTMLDivElement>(null);
   const latestRequestIdRef = useRef(0);
+  // 빠른 연속 클릭 시 저장/공유 동시 진입 방지용 동기식 락 (state 가드는 렌더 스냅샷이라 경합 가능)
+  const exportLockRef = useRef(false);
   // 파일명에 다운로드(=오늘) 날짜 사용. 페이지 진입 시점으로 고정
   const [todayYmd] = useState(() => toLocalYmd(new Date()));
 
@@ -87,7 +89,8 @@ export default function SettlementResultCardPage() {
   );
 
   const handleSave = useCallback(async () => {
-    if (!cardRef.current || !cardViewModel || isExporting) return;
+    if (!cardRef.current || !cardViewModel || exportLockRef.current) return;
+    exportLockRef.current = true;
     setIsExporting(true);
     try {
       const blob = await captureNodeToPngBlob(cardRef.current);
@@ -96,12 +99,14 @@ export default function SettlementResultCardPage() {
     } catch {
       setToast({ message: '이미지 저장에 실패했어요. 다시 시도해주세요.', type: 'error' });
     } finally {
+      exportLockRef.current = false;
       setIsExporting(false);
     }
-  }, [cardViewModel, isExporting]);
+  }, [cardViewModel]);
 
   const handleShare = useCallback(async () => {
-    if (!cardRef.current || !cardViewModel || isExporting) return;
+    if (!cardRef.current || !cardViewModel || exportLockRef.current) return;
+    exportLockRef.current = true;
     setIsExporting(true);
     try {
       const blob = await captureNodeToPngBlob(cardRef.current);
@@ -115,9 +120,10 @@ export default function SettlementResultCardPage() {
     } catch {
       setToast({ message: '이미지 공유에 실패했어요. 다시 시도해주세요.', type: 'error' });
     } finally {
+      exportLockRef.current = false;
       setIsExporting(false);
     }
-  }, [cardViewModel, isExporting]);
+  }, [cardViewModel]);
 
   if (isLoading) {
     return (

@@ -361,6 +361,22 @@ describe('settlement view model', () => {
     assert.equal(toSettlementResultCardViewModel(noMine), null);
   });
 
+  it('formats non-integer success rate with two decimals (no integer rounding)', () => {
+    const detail: SettlementDetail = {
+      ...settlementDetailFixtures.succeeded,
+      mission_days: 30,
+      items: settlementDetailFixtures.succeeded.items.map((item) =>
+        item.is_me ? { ...item, recognized_success_count: 29 } : item,
+      ),
+    };
+
+    const card = toSettlementResultCardViewModel(detail);
+
+    assert.ok(card);
+    assert.equal(card.successRateLabel, '96.67%'); // 29/30, 97%로 반올림되지 않음
+    assert.equal(card.successCountLabel, '29 / 30일');
+  });
+
   it('hides period and rate, uses finished_at filename when crew snapshot is missing', () => {
     const legacy: SettlementDetail = {
       ...settlementDetailFixtures.succeeded,

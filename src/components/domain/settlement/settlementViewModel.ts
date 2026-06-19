@@ -480,7 +480,7 @@ export function toSettlementResultCardViewModel(
   const crewName = detail.crew_name ?? '우리 크루';
   const hasMissionDays = detail.mission_days !== null && detail.mission_days > 0;
   const successRateLabel = hasMissionDays
-    ? `${Math.round((myItem.recognized_success_count / (detail.mission_days as number)) * 100)}%`
+    ? formatShareRatioPercent(String(myItem.recognized_success_count / (detail.mission_days as number)))
     : null;
   const successCountLabel = hasMissionDays
     ? `${myItem.recognized_success_count} / ${detail.mission_days}일`
