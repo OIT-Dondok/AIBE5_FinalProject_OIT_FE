@@ -145,7 +145,9 @@ export function formatShareRatioPercent(shareRatio: string): string {
   const value = Number(shareRatio);
   if (!Number.isFinite(value)) return '-';
 
-  return `${(value * 100).toFixed(2)}%`;
+  // 정수 퍼센트(예: 0%, 100%)는 소수점 생략, 그 외에는 소수점 2자리
+  const percent = Math.round(value * 100 * 100) / 100;
+  return Number.isInteger(percent) ? `${percent}%` : `${percent.toFixed(2)}%`;
 }
 
 // 크루 전체 성공률(decimal scale 4 string). 레거시 정산 행은 null → 표시용 '-'
@@ -411,6 +413,96 @@ export function toSettlementResultViewModel(detail: SettlementDetail): Settlemen
       totalParticipantsLabel: formatCount(detail.total_participants, '명'),
     },
     rankRows: sortItemsByRank(detail.items).map(toSettlementResultRankRow),
+  };
+}
+
+// ─── 결과 카드 화면 (/settlements/[settlementId]/card) ──────────────────────
+
+export type RefundDeltaSign = 'up' | 'down' | 'flat';
+
+export interface SettlementResultCardViewModel {
+  brand: string;
+  periodLabel: string; // 미션 기간 'YYYY.MM.DD ~ YYYY.MM.DD' (스냅샷 없으면 '')
+  crewName: string;
+  rankLabel: string; // "1위"
+  totalParticipantsLabel: string; // "5명"
+  refundAmount: string;
+  depositComparePrefix: string; // "보증금 100,000원 대비"
+  refundDeltaLabel: string; // "+3,080원" / "-1,000원" / "±0원"
+  refundDeltaSign: RefundDeltaSign;
+  successRateLabel: string | null; // "100%" (미션일수 없으면 null)
+  successCountLabel: string; // "30 / 30일" (미션일수 없으면 "30회")
+  fileName: string;
+  isAllFail: boolean;
+}
+
+// 파일명 안전화: 공백→_, 경로/특수문자 제거
+function sanitizeForFileName(value: string): string {
+  return value
+    .trim()
+    .replace(/\s+/g, '_')
+    .replace(/[\\/:*?"<>|]/g, '');
+}
+
+// 스냅샷 종료일 우선, 없으면 정산 완료일. ISO 'YYYY-MM-DD' (파일명 폴백용)
+function toRawDate(detail: SettlementDetail): string {
+  if (detail.crew_ended_at) return detail.crew_ended_at;
+  if (detail.finished_at) return detail.finished_at.slice(0, 10);
+  return '';
+}
+
+// Date → 로컬 'YYYY-MM-DD' (파일명에 오늘 날짜를 주입할 때 사용)
+export function toLocalYmd(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+function buildRefundDeltaLabel(delta: number): { label: string; sign: RefundDeltaSign } {
+  if (delta > 0) return { label: `+${formatKrw(delta)}`, sign: 'up' };
+  if (delta < 0) return { label: formatKrw(delta), sign: 'down' }; // formatKrw가 음수 부호 포함
+  return { label: '±0원', sign: 'flat' };
+}
+
+// fileNameDate: 파일명에 쓸 날짜(ISO 'YYYY-MM-DD'). 보통 다운로드 시점의 오늘 날짜를 주입.
+// 생략 시 정산 스냅샷 종료일/완료일로 폴백한다.
+export function toSettlementResultCardViewModel(
+  detail: SettlementDetail,
+  fileNameDate?: string,
+): SettlementResultCardViewModel | null {
+  const myItem = detail.items.find((item) => item.is_me);
+  if (!myItem) return null;
+
+  const myRank = detail.my_rank ?? myItem.rank;
+  const delta = myItem.refund_amount - myItem.deposit_amount;
+  const { label: refundDeltaLabel, sign: refundDeltaSign } = buildRefundDeltaLabel(delta);
+  const fileDate = fileNameDate ?? toRawDate(detail);
+  const crewName = detail.crew_name ?? '우리 크루';
+  const hasMissionDays = detail.mission_days !== null && detail.mission_days > 0;
+  const successRateLabel = hasMissionDays
+    ? `${Math.round((myItem.recognized_success_count / (detail.mission_days as number)) * 100)}%`
+    : null;
+  const successCountLabel = hasMissionDays
+    ? `${myItem.recognized_success_count} / ${detail.mission_days}일`
+    : formatCount(myItem.recognized_success_count);
+
+  return {
+    brand: 'dondok',
+    periodLabel:
+      detail.crew_started_at || detail.crew_ended_at
+        ? formatMissionPeriod(detail.crew_started_at, detail.crew_ended_at)
+        : '',
+    crewName,
+    rankLabel: formatRankLabel(myRank),
+    totalParticipantsLabel: formatCount(detail.total_participants, '명'),
+    refundAmount: formatKrw(myItem.refund_amount),
+    depositComparePrefix: `보증금 ${formatKrw(myItem.deposit_amount)} 대비`,
+    refundDeltaLabel,
+    refundDeltaSign,
+    successRateLabel,
+    successCountLabel,
+    fileName: `dondok_result_${sanitizeForFileName(crewName)}${fileDate ? `_${fileDate}` : ''}.png`,
+    isAllFail: isAllFailSettlement(detail),
   };
 }
 

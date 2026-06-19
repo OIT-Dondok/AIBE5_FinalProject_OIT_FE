@@ -14,6 +14,7 @@ import {
   toParticipantViewItem,
   toSettlementDetailViewModel,
   toSettlementMeViewModel,
+  toSettlementResultCardViewModel,
   toSettlementResultViewModel,
 } from './settlementViewModel';
 
@@ -130,7 +131,8 @@ describe('settlement view model', () => {
 
     assert.equal(viewItem.shareRatioRaw, '0.461538');
     assert.equal(viewItem.shareRatioPercent, '46.15%');
-    assert.equal(formatShareRatioPercent('0.000000'), '0.00%');
+    assert.equal(formatShareRatioPercent('0.000000'), '0%'); // 정수 퍼센트는 소수점 생략
+    assert.equal(formatShareRatioPercent('1.000000'), '100%');
     assert.equal(formatShareRatioPercent('not-a-number'), '-');
   });
 
@@ -317,6 +319,65 @@ describe('settlement view model', () => {
 
     assert.equal(view.crewTier, 'EXCELLENT');
     assert.equal(view.closingMessage, '끝까지 함께한 우리, 정말 멋진 크루예요 👏');
+  });
+
+  it('builds a shareable result card from my settlement item', () => {
+    const card = toSettlementResultCardViewModel(settlementDetailFixtures.succeeded);
+
+    assert.ok(card);
+    assert.equal(card.brand, 'dondok');
+    assert.equal(card.periodLabel, '2026.05.01 ~ 2026.05.30');
+    assert.equal(card.crewName, '아침 갓생 30일');
+    assert.equal(card.rankLabel, '1위');
+    assert.equal(card.totalParticipantsLabel, '3명');
+    assert.equal(card.refundAmount, '138,463원');
+    assert.equal(card.depositComparePrefix, '보증금 100,000원 대비');
+    assert.equal(card.refundDeltaLabel, '+38,463원');
+    assert.equal(card.refundDeltaSign, 'up');
+    assert.equal(card.successRateLabel, '100%');
+    assert.equal(card.successCountLabel, '30 / 30일');
+    assert.equal(card.fileName, 'dondok_result_아침_갓생_30일_2026-05-30.png');
+    assert.equal(card.isAllFail, false);
+  });
+
+  it('shows a flat delta and computed rate for all-fail principal refunds', () => {
+    const card = toSettlementResultCardViewModel(settlementDetailFixtures.allFail);
+
+    assert.ok(card);
+    assert.equal(card.depositComparePrefix, '보증금 100,000원 대비');
+    assert.equal(card.refundDeltaLabel, '±0원');
+    assert.equal(card.refundDeltaSign, 'flat');
+    assert.equal(card.successRateLabel, '0%');
+    assert.equal(card.successCountLabel, '0 / 30일');
+    assert.equal(card.isAllFail, true);
+  });
+
+  it('returns null result card when there is no participating row', () => {
+    const noMine: SettlementDetail = {
+      ...settlementDetailFixtures.succeeded,
+      items: settlementDetailFixtures.succeeded.items.map((item) => ({ ...item, is_me: false })),
+    };
+
+    assert.equal(toSettlementResultCardViewModel(noMine), null);
+  });
+
+  it('hides period and rate, uses finished_at filename when crew snapshot is missing', () => {
+    const legacy: SettlementDetail = {
+      ...settlementDetailFixtures.succeeded,
+      crew_name: null,
+      crew_started_at: null,
+      crew_ended_at: null,
+      mission_days: null,
+    };
+
+    const card = toSettlementResultCardViewModel(legacy);
+
+    assert.ok(card);
+    assert.equal(card.periodLabel, '');
+    assert.equal(card.successRateLabel, null);
+    assert.equal(card.successCountLabel, '30회');
+    // 파일명 날짜는 finished_at(2026-06-01T13:12:18+09:00) 폴백
+    assert.equal(card.fileName, 'dondok_result_우리_크루_2026-06-01.png');
   });
 
   it('uses non-blaming copy for failed and retry-wait statuses', () => {
