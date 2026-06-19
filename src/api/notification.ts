@@ -13,3 +13,6 @@ export const registerDevice = (token: string) =>
     fcm_token: token,
     device_id: crypto.randomUUID(),
   });
+
+export const readNotification = (notificationId: string) =>
+  api.patch<void>(`/notifications/${notificationId}/read`);

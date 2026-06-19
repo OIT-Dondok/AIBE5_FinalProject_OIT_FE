@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 import { Header } from "@/components/common/Header";
-import { getNotifications, readAllNotifications } from "@/api/notification";
+import { getNotifications, readAllNotifications, readNotification } from "@/api/notification";
 import type { NotificationItem } from "@/types/domain";
 import { useNotificationStore } from "@/store/notificationStore";
 
@@ -231,6 +231,16 @@ export default function NotificationsPage() {
   };
 
   const handleCardClick = (item: NotificationItem) => {
+    if (item.read_at === null) {
+      const now = new Date().toISOString();
+      setNotifications((prev) =>
+        prev.map((n) => n.notification_id === item.notification_id ? { ...n, read_at: now } : n)
+      );
+      const newCount = Math.max(0, unreadCount - 1);
+      setUnreadCount(newCount);
+      setStoreUnreadCount(newCount);
+      void readNotification(item.notification_id).catch(() => {});
+    }
     const deeplink = getDeepLink(item);
     if (deeplink) router.push(deeplink);
   };
