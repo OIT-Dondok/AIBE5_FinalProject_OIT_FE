@@ -26,6 +26,7 @@ export interface HostCertificationMock {
   crew_id: number;
   member_uuid: string;
   nickname: string;
+  profile_image_url?: string | null;
   image_url: string | null;
   submitted_at: string;
   captured_at: string;
@@ -163,7 +164,7 @@ export const MOCK_CREW_APPLICATIONS: HostApplicationMock[] = [
     crew_participant_id: 301,
     member_uuid: "018f4fd2-6d7a-7a41-9f58-apply001",
     nickname: "한비",
-    profile_image_url: null,
+    profile_image_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
     status: "PENDING",
     applied_at: "2026-06-01T13:00:00+09:00",
     decided_at: null,
@@ -173,7 +174,7 @@ export const MOCK_CREW_APPLICATIONS: HostApplicationMock[] = [
     crew_participant_id: 302,
     member_uuid: "018f4fd2-6d7a-7a41-9f58-apply002",
     nickname: "지윤",
-    profile_image_url: null,
+    profile_image_url: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80",
     status: "PENDING",
     applied_at: "2026-06-01T13:20:00+09:00",
     decided_at: null,

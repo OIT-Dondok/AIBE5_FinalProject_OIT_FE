@@ -242,7 +242,7 @@ export default function HostNoticeEditPage() {
         <form className="px-5 pt-5 flex flex-col gap-4">
           <div className="px-1">
             <p className="mb-3 flex items-center gap-1.5 text-xs font-medium text-text-secondary">
-              <Megaphone size={14} strokeWidth={2.3} className="text-[#4C73D9]" />
+              <Megaphone size={14} strokeWidth={2.3} className="text-[#5E9B73]" />
               공지를 수정합니다
             </p>
             <label className="block text-[12px] font-bold text-text-primary" htmlFor="notice-title">
@@ -254,7 +254,7 @@ export default function HostNoticeEditPage() {
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               placeholder="공지 제목을 입력해주세요"
-              className="mt-2 w-full rounded-xl border border-text-secondary/20 bg-white px-3.5 py-3 text-sm font-medium text-text-primary outline-none placeholder:text-text-secondary/70 focus:border-[#4C73D9]"
+              className="mt-2 w-full rounded-xl border border-text-secondary/20 bg-white px-3.5 py-3 text-sm font-medium text-text-primary outline-none placeholder:text-text-secondary/70 focus:border-[#5E9B73]"
             />
 
             <label className="mt-4 block text-[12px] font-bold text-text-primary" htmlFor="notice-content">
@@ -267,7 +267,7 @@ export default function HostNoticeEditPage() {
               placeholder="크루원에게 전할 내용을 작성하세요"
               rows={10}
               maxLength={65000}
-              className="mt-2 w-full resize-none rounded-xl border border-text-secondary/20 bg-white px-3.5 py-3 text-sm font-medium leading-relaxed text-text-primary outline-none placeholder:text-text-secondary/70 focus:border-[#4C73D9]"
+              className="mt-2 w-full resize-none rounded-xl border border-text-secondary/20 bg-white px-3.5 py-3 text-sm font-medium leading-relaxed text-text-primary outline-none placeholder:text-text-secondary/70 focus:border-[#5E9B73]"
             />
           </div>
 
