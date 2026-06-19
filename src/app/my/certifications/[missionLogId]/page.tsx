@@ -149,30 +149,38 @@ function VerificationInfoSection({ item }: { item: MissionLogDetail }) {
   const decisionType = formatDecisionType(item.decision_type);
 
   return (
-    <section className="rounded-xl bg-text-secondary/5 border border-text-secondary/10 px-4 py-3 flex flex-col gap-2">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-bold text-text-primary">검증 정보</p>
+    <section className="rounded-xl bg-text-secondary/5 border border-text-secondary/10 px-4 py-3 flex flex-col">
+      <div className="flex items-center justify-between gap-3 pb-2.5 border-b border-text-secondary/15">
+        <p className="text-xs font-semibold text-text-primary">검증 정보</p>
         <p className="text-[11px] text-text-secondary">검토 보조 신호</p>
       </div>
-      <dl className="grid grid-cols-[96px_1fr] gap-x-3 gap-y-1.5 text-xs">
-        <dt className="text-text-secondary">EXIF 시각</dt>
-        <dd className="font-medium text-text-primary text-right">
-          {formatOptionalDateTime(item.exif_taken_at)}
-        </dd>
-        <dt className="text-text-secondary">EXIF 결과</dt>
-        <dd className="font-medium text-text-primary text-right">{formatExifRisk(item.exif_risk)}</dd>
-        <dt className="text-text-secondary">중복 검사</dt>
-        <dd className="font-medium text-text-primary text-right">
-          {formatDuplicateResult(item.is_duplicate)}
-        </dd>
+      <dl className="text-xs divide-y divide-text-secondary/15">
+        <div className="grid grid-cols-[92px_1fr] gap-x-3 py-2">
+          <dt className="text-text-secondary">촬영 시각</dt>
+          <dd className="font-semibold text-text-primary text-right text-[13px]">
+            {formatOptionalDateTime(item.exif_taken_at)}
+          </dd>
+        </div>
+        <div className="grid grid-cols-[92px_1fr] gap-x-3 py-2">
+          <dt className="text-text-secondary">Exif 검증</dt>
+          <dd className="font-semibold text-text-primary text-right text-[13px]">{formatExifRisk(item.exif_risk)}</dd>
+        </div>
+        <div className="grid grid-cols-[92px_1fr] gap-x-3 py-2">
+          <dt className="text-text-secondary">중복</dt>
+          <dd className="font-semibold text-text-primary text-right text-[13px]">
+            {formatDuplicateResult(item.is_duplicate)}
+          </dd>
+        </div>
         {decisionType && (
-          <>
+          <div className="grid grid-cols-[92px_1fr] gap-x-3 py-2">
             <dt className="text-text-secondary">검수 방식</dt>
-            <dd className="font-medium text-text-primary text-right">{decisionType}</dd>
-          </>
+            <dd className="font-semibold text-text-primary text-right text-[13px]">{decisionType}</dd>
+          </div>
         )}
-        <dt className="text-text-secondary">방장 거절 사유</dt>
-        <dd className="font-medium text-text-primary text-right">{rejectReason}</dd>
+        <div className="grid grid-cols-[92px_1fr] gap-x-3 py-2">
+          <dt className="text-text-secondary">방장 거절 사유</dt>
+          <dd className="font-semibold text-text-primary text-right text-[13px]">{rejectReason}</dd>
+        </div>
       </dl>
     </section>
   );
@@ -268,28 +276,28 @@ export default function MissionLogDetailPage() {
                     href={`/members/${item.member_uuid}`}
                     className="flex items-center gap-3 min-w-0 flex-1 hover:opacity-80 active:opacity-60 transition-opacity"
                   >
-                  <div
-                    className={`shrink-0 w-11 h-11 rounded-full overflow-hidden flex items-center justify-center text-sm font-bold ${getAvatarClass(item.crew_id)}`}
-                  >
-                    {item.profile_image_url ? (
-                      <Image
-                        src={item.profile_image_url}
-                        alt={item.nickname}
-                        width={44}
-                        height={44}
-                        className="object-cover"
-                        unoptimized
-                      />
-                    ) : (
-                      (item.nickname.charAt(0).toUpperCase() || "?")
-                    )}
-                  </div>
-                  <div className="min-w-0 flex flex-col gap-0.5">
-                    <p className="text-[15px] font-bold text-text-primary truncate leading-tight">
-                      {item.nickname}
-                    </p>
-                    <p className="text-[11px] text-text-secondary truncate">{item.crew_name}</p>
-                  </div>
+                    <div
+                      className={`shrink-0 w-11 h-11 rounded-full overflow-hidden flex items-center justify-center text-sm font-bold ${getAvatarClass(item.crew_id)}`}
+                    >
+                      {item.profile_image_url ? (
+                        <Image
+                          src={item.profile_image_url}
+                          alt={item.nickname}
+                          width={44}
+                          height={44}
+                          className="object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        (item.nickname.charAt(0).toUpperCase() || "?")
+                      )}
+                    </div>
+                    <div className="min-w-0 flex flex-col gap-0.5">
+                      <p className="text-[15px] font-bold text-text-primary truncate leading-tight">
+                        {item.nickname}
+                      </p>
+                      <p className="text-[11px] text-text-secondary truncate">{item.crew_name}</p>
+                    </div>
                   </Link>
                   {(() => {
                     const meta = STATUS_META[item.certification_status];
