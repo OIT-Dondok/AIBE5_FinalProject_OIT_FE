@@ -384,9 +384,6 @@ interface InlineFilterBarProps {
   showMyOnly: boolean;
   onToggleMyOnly: () => void;
   myMemberUuid: string | undefined;
-  period: FeedPeriod | null;
-  isCalendarOpen: boolean;
-  onToggleCalendar: () => void;
 }
 
 function InlineFilterBar({
@@ -396,12 +393,7 @@ function InlineFilterBar({
   showMyOnly,
   onToggleMyOnly,
   myMemberUuid,
-  period,
-  isCalendarOpen,
-  onToggleCalendar,
 }: InlineFilterBarProps) {
-  const periodActive = period !== null;
-
   return (
     <div className="px-4 flex items-center gap-2">
       {/* 크루 커스텀 드롭다운 */}
@@ -424,20 +416,6 @@ function InlineFilterBar({
       >
         <User size={11} />
         내 인증만
-      </button>
-
-      {/* 기간 버튼 */}
-      <button
-        type="button"
-        onClick={onToggleCalendar}
-        className={`shrink-0 flex items-center gap-1 h-8 px-3 rounded-lg text-xs font-semibold transition-colors ${
-          periodActive || isCalendarOpen
-            ? "bg-[var(--color-primary-green)]/10 border border-[var(--color-primary-green)] text-[var(--color-primary-green)]"
-            : "bg-card border border-text-secondary/20 text-text-secondary"
-        }`}
-      >
-        {formatPeriodLabel(period)}
-        <ChevronDown size={11} />
       </button>
     </div>
   );
@@ -729,6 +707,17 @@ export default function CertificationsPage() {
             onNextDay={handleNextDay}
             onOpenCalendar={() => setIsCalendarOpen((v) => !v)}
           />
+          {isCalendarOpen && (
+            <div className="px-4">
+              <CertificationCalendar
+                currentPeriod={queryPeriod}
+                todayYmd={today}
+                onApply={handlePeriodApply}
+                onClear={handlePeriodClear}
+                onClose={() => setIsCalendarOpen(false)}
+              />
+            </div>
+          )}
           {isLoading ? (
             <>
               <div className="grid grid-cols-4 gap-2 px-4">
@@ -758,7 +747,7 @@ export default function CertificationsPage() {
                 />
               </div>
 
-              {/* 2. 한 줄 필터 바: 크루 ▼ / 내 인증만 / 기간 ▼ */}
+              {/* 2. 한 줄 필터 바: 크루 ▼ / 내 인증만 */}
               <InlineFilterBar
                 availableCrews={availableCrews}
                 selectedCrewId={selectedCrewId}
@@ -766,21 +755,7 @@ export default function CertificationsPage() {
                 showMyOnly={showMyOnly}
                 onToggleMyOnly={() => setShowMyOnly((v) => !v)}
                 myMemberUuid={myMemberUuid}
-                period={period}
-                isCalendarOpen={isCalendarOpen}
-                onToggleCalendar={() => setIsCalendarOpen((v) => !v)}
               />
-              {isCalendarOpen && (
-                <div className="px-4">
-                  <CertificationCalendar
-                    currentPeriod={queryPeriod}
-                    todayYmd={today}
-                    onApply={handlePeriodApply}
-                    onClear={handlePeriodClear}
-                    onClose={() => setIsCalendarOpen(false)}
-                  />
-                </div>
-              )}
 
               {/* 3. 인증 리스트 */}
               <div className="px-4 flex flex-col gap-4 pb-4">
