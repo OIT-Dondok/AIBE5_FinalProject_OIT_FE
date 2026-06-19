@@ -141,7 +141,14 @@ export default function HostConsoleClient() {
           title="운영 콘솔"
           rightElement={
             <div className="flex items-center gap-1">
-              <Bell size={22} className="text-text-primary" />
+              <button
+                type="button"
+                aria-label="알림 열기"
+                className="p-1 hover:opacity-75 active:scale-95 transition-all"
+                onClick={() => router.push("/notifications")}
+              >
+                <Bell size={22} className="text-text-primary" />
+              </button>
               <HostMoreMenu
                 isOpen={isMoreMenuOpen}
                 onToggle={() => setIsMoreMenuOpen((prev) => !prev)}
