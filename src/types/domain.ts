@@ -861,6 +861,12 @@ export interface CrewSettlementSummary {
 export interface SettlementDetail {
   settlement_id: number;
   crew_id: number;
+  // 정산 시점 스냅샷 표시용 값. 레거시(스냅샷 도입 이전) 정산 행은 null일 수 있음
+  crew_name: string | null;
+  crew_started_at: string | null; // YYYY-MM-DD
+  crew_ended_at: string | null; // YYYY-MM-DD
+  mission_days: number | null; // 기간 내 실제 미션 진행일 수 (DAILY=전체, 요일지정=스케줄 요일 수)
+  crew_success_rate: string | null; // decimal scale 4 string, 분모 0이면 "0"
   status: SettlementStatus;
   retry_count: number;
   total_participants: number;
@@ -873,6 +879,7 @@ export interface SettlementDetail {
   failure_message: string | null;
   started_at: string;
   finished_at: string | null;
+  my_rank: number | null; // 인증 사용자의 최종 순위. 참여 row 없으면 null
   items: SettlementItem[];
 }
 
@@ -895,6 +902,8 @@ export interface SettlementMe {
 export interface SettlementItem {
   settlement_item_id: number;
   crew_participant_id: number;
+  nickname: string; // 정산 시점 스냅샷된 참여자 닉네임
+  is_me: boolean; // 인증 사용자 본인 행 여부
   participant_status_snapshot: ParticipantStatus;
   deposit_amount: number;
   success_count_raw: number;
@@ -903,6 +912,7 @@ export interface SettlementItem {
   excluded_success_count: number;
   // withdrawn_at_snapshot 제거됨 (API 문서 확정)
   share_ratio: string; // string decimal
+  rank: number; // share_ratio DESC, 동률 시 crew_participant_id ASC, 공동 순위 가능(예: 1,2,2)
   base_refund_amount: number;
   remainder_bonus_amount: number; // HOST_REMAINDER 정책에서 방장에게만 지급, 나머지는 0
   refund_amount: number; // base_refund_amount + remainder_bonus_amount (최종 환급 source of truth)

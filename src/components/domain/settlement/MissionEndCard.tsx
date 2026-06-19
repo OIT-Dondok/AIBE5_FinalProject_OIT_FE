@@ -5,22 +5,21 @@ import type { SettlementDetailViewModel } from './settlementViewModel';
 interface MissionEndCardProps {
   viewModel: SettlementDetailViewModel;
   onViewResult: () => void;
-  onGoToCrewFeed: () => void;
 }
 
 // 트로피(중앙 상단)와 겹치지 않도록 좌우 가장자리에만 배치
 const CONFETTI = [
-  'left-[40px] top-[20px] bg-[#FFC57A]',
-  'left-[66px] top-[58px] bg-[#7FB271]',
-  'left-[46px] top-[96px] bg-[#D9A93D]',
-  'right-[40px] top-[26px] bg-[#9F95D4]',
-  'right-[68px] top-[62px] bg-[#E59A6F]',
-  'right-[48px] top-[98px] bg-[#4C73D9]',
+  'left-[24px] top-[8px] bg-[#FFC57A]',
+  'left-[52px] top-[52px] bg-[#7FB271]',
+  'left-[32px] top-[96px] bg-[#D9A93D]',
+  'right-[24px] top-[14px] bg-[#9F95D4]',
+  'right-[54px] top-[56px] bg-[#E59A6F]',
+  'right-[34px] top-[98px] bg-[#4C73D9]',
 ];
 
 function Confetti() {
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[20px]" aria-hidden>
+    <div className="pointer-events-none absolute inset-x-0 top-0 h-[140px] overflow-hidden" aria-hidden>
       {CONFETTI.map((cls, index) => (
         <span
           key={cls}
@@ -45,9 +44,9 @@ function CrewMissionMeta({
   const accentText = accent === 'blue' ? 'text-primary-blue' : 'text-primary-green';
 
   return (
-    <div className="relative mt-4 flex flex-col items-center gap-2">
+    <div className="relative mt-5 flex flex-col items-center gap-2">
       {viewModel.crewName && (
-        <p className="text-lg font-extrabold tracking-[-0.02em] text-text-primary">
+        <p className="text-xl font-extrabold tracking-[-0.02em] text-text-primary">
           {viewModel.crewName}
         </p>
       )}
@@ -61,129 +60,103 @@ function CrewMissionMeta({
   );
 }
 
+// 페이지 하단 단일 풀폭 CTA — 결과 상세로 진입 (피드는 전역 BottomNav 피드 탭으로 이동)
 function ResultActions({
   onViewResult,
-  onGoToCrewFeed,
   primaryVariant,
 }: {
   onViewResult: () => void;
-  onGoToCrewFeed: () => void;
   primaryVariant: 'primary-green' | 'primary-blue';
 }) {
   return (
-    <div className="relative flex gap-2">
-      <Button type="button" variant="outline" fullWidth onClick={onGoToCrewFeed}>
-        피드로 이동
-      </Button>
-      <Button type="button" variant={primaryVariant} fullWidth onClick={onViewResult}>
+    <div className="mt-8">
+      <Button type="button" variant={primaryVariant} size="lg" fullWidth onClick={onViewResult}>
         결과 보기
       </Button>
     </div>
   );
 }
 
-export function MissionEndCard({
-  viewModel,
-  onViewResult,
-  onGoToCrewFeed,
-}: MissionEndCardProps) {
+export function MissionEndCard({ viewModel, onViewResult }: MissionEndCardProps) {
   if (viewModel.isAllFail) {
-    return (
-      <MissionEndAllFailCard
-        viewModel={viewModel}
-        onViewResult={onViewResult}
-        onGoToCrewFeed={onGoToCrewFeed}
-      />
-    );
+    return <MissionEndAllFailCard viewModel={viewModel} onViewResult={onViewResult} />;
   }
 
   return (
-    <section
-      aria-labelledby="mission-end-title"
-      className="relative w-full overflow-hidden rounded-[20px] bg-white p-6 text-center shadow-card"
-    >
-      <Confetti />
+    <section aria-labelledby="mission-end-title" className="relative">
+      <div className="relative pt-2 text-center">
+        <Confetti />
 
-      <div className="relative mx-auto flex h-[76px] w-[76px] items-center justify-center rounded-full bg-gradient-to-br from-primary-green to-primary-blue text-white shadow-[0_14px_28px_rgba(76,115,217,0.32)]">
-        <Trophy size={40} />
+        <div className="relative mx-auto flex h-[88px] w-[88px] items-center justify-center rounded-full bg-gradient-to-br from-primary-green to-primary-blue text-white shadow-[0_16px_32px_rgba(76,115,217,0.32)]">
+          <Trophy size={44} />
+        </div>
+
+        <h1
+          id="mission-end-title"
+          className="relative mt-5 text-2xl font-black tracking-[-0.03em] text-text-primary"
+        >
+          {viewModel.title}
+        </h1>
+        <p className="relative mt-2 text-sm font-medium text-text-secondary">{viewModel.subtitle}</p>
+
+        <CrewMissionMeta viewModel={viewModel} accent="green" />
       </div>
 
-      <h1 id="mission-end-title" className="relative mt-3 text-lg font-black tracking-[-0.03em] text-text-primary">
-        {viewModel.title}
-      </h1>
-      <p className="relative mt-1 text-xs font-medium text-text-secondary">
-        {viewModel.subtitle}
-      </p>
-
-      <CrewMissionMeta viewModel={viewModel} accent="green" />
-
-      <div className="relative mx-3 my-5 rounded-card bg-success-green/70 px-4 py-4">
+      <div className="mt-7 rounded-card bg-success-green/70 px-5 py-5">
         <p className="text-xs font-bold text-primary-green">최종 환급금</p>
-        <p className="mt-0.5 text-[26px] font-black leading-tight tracking-[-0.03em] text-primary-green">
+        <p className="mt-1 text-[32px] font-black leading-tight tracking-[-0.03em] text-primary-green">
           {viewModel.totalRefundAmount}
         </p>
-        <div className="mt-3 grid grid-cols-2 divide-x divide-primary-green/15 border-t border-primary-green/15 pt-2.5">
+        <div className="mt-4 grid grid-cols-2 divide-x divide-primary-green/15 border-t border-primary-green/15 pt-3.5">
           <div className="flex flex-col gap-0.5">
             <span className="text-[11px] font-semibold text-primary-green/70">예치금</span>
-            <span className="text-sm font-bold text-primary-green">{viewModel.totalLockedAmount}</span>
+            <span className="text-base font-bold text-primary-green">{viewModel.totalLockedAmount}</span>
           </div>
           {viewModel.myShareRatioPercent && (
-            <div className="flex flex-col gap-0.5 pl-3">
+            <div className="flex flex-col gap-0.5 pl-4">
               <span className="text-[11px] font-semibold text-primary-green/70">최종 지분율</span>
-              <span className="text-sm font-bold text-primary-green">{viewModel.myShareRatioPercent}</span>
+              <span className="text-base font-bold text-primary-green">{viewModel.myShareRatioPercent}</span>
             </div>
           )}
         </div>
       </div>
 
-      <ResultActions
-        onViewResult={onViewResult}
-        onGoToCrewFeed={onGoToCrewFeed}
-        primaryVariant="primary-green"
-      />
+      <ResultActions onViewResult={onViewResult} primaryVariant="primary-green" />
     </section>
   );
 }
 
-function MissionEndAllFailCard({
-  viewModel,
-  onViewResult,
-  onGoToCrewFeed,
-}: MissionEndCardProps) {
+function MissionEndAllFailCard({ viewModel, onViewResult }: MissionEndCardProps) {
   return (
-    <section
-      aria-labelledby="mission-end-all-fail-title"
-      className="relative w-full overflow-hidden rounded-[20px] bg-white p-6 text-center shadow-card"
-    >
-      <div className="mx-auto flex h-[76px] w-[76px] items-center justify-center rounded-full bg-primary-blue/10 text-primary-blue shadow-[0_12px_24px_rgba(76,115,217,0.16)]">
-        <WalletCards size={38} />
+    <section aria-labelledby="mission-end-all-fail-title" className="relative">
+      <div className="pt-2 text-center">
+        <div className="mx-auto flex h-[88px] w-[88px] items-center justify-center rounded-full bg-primary-blue/10 text-primary-blue shadow-[0_14px_28px_rgba(76,115,217,0.16)]">
+          <WalletCards size={42} />
+        </div>
+
+        <h1
+          id="mission-end-all-fail-title"
+          className="mt-5 text-2xl font-black tracking-[-0.03em] text-text-primary"
+        >
+          {viewModel.title}
+        </h1>
+        <p className="mt-2 text-sm font-medium leading-6 text-text-secondary">{viewModel.subtitle}</p>
+
+        <CrewMissionMeta viewModel={viewModel} accent="blue" />
       </div>
 
-      <h1 id="mission-end-all-fail-title" className="mt-3 text-lg font-black tracking-[-0.03em] text-text-primary">
-        {viewModel.title}
-      </h1>
-      <p className="mt-2 text-xs font-medium leading-5 text-text-secondary">
-        {viewModel.subtitle}
-      </p>
-
-      <CrewMissionMeta viewModel={viewModel} accent="blue" />
-
-      <div className="mx-3 my-5 rounded-card bg-primary-blue/10 px-4 py-4">
+      <div className="mt-7 rounded-card bg-primary-blue/10 px-5 py-5">
         <p className="text-xs font-bold text-primary-blue">최종 환급금</p>
-        <p className="mt-0.5 text-[26px] font-black leading-tight tracking-[-0.03em] text-primary-blue">
+        <p className="mt-1 text-[32px] font-black leading-tight tracking-[-0.03em] text-primary-blue">
           {viewModel.totalRefundAmount}
         </p>
-        <div className="mt-3 flex flex-col gap-0.5 border-t border-primary-blue/15 pt-2.5">
+        <div className="mt-4 flex flex-col gap-0.5 border-t border-primary-blue/15 pt-3.5">
           <span className="text-[11px] font-semibold text-primary-blue/70">예치금</span>
-          <span className="text-sm font-bold text-primary-blue">{viewModel.totalLockedAmount}</span>
+          <span className="text-base font-bold text-primary-blue">{viewModel.totalLockedAmount}</span>
         </div>
       </div>
 
-      <ResultActions
-        onViewResult={onViewResult}
-        onGoToCrewFeed={onGoToCrewFeed}
-        primaryVariant="primary-blue"
-      />
+      <ResultActions onViewResult={onViewResult} primaryVariant="primary-blue" />
     </section>
   );
 }
