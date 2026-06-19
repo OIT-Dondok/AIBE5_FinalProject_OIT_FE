@@ -221,8 +221,8 @@ export default function CrewSettlementPage() {
 
   return (
     <>
-      <Header showBackButton title="정산" />
-      <main className="w-full max-w-[430px] mx-auto px-5 py-6 pb-24">
+      <Header showBackButton title={detailViewModel ? '미션 종료' : '정산'} />
+      <main className="w-full max-w-[430px] mx-auto px-5 py-6 pb-16">
         <div className="flex flex-col gap-4">
           {detailViewModel ? (
             <MissionEndCard
@@ -232,7 +232,6 @@ export default function CrewSettlementPage() {
                   router.push(`/settlements/${summary.settlement_id}`);
                 }
               }}
-              onGoToCrewFeed={() => router.push(`/crews/${crewId}`)}
             />
           ) : (
             <>

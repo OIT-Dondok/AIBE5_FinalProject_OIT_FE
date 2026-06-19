@@ -145,7 +145,19 @@ export function formatShareRatioPercent(shareRatio: string): string {
   const value = Number(shareRatio);
   if (!Number.isFinite(value)) return '-';
 
-  return `${(value * 100).toFixed(2)}%`;
+  // 정수 퍼센트(예: 0%, 100%)는 소수점 생략, 그 외에는 소수점 2자리
+  const percent = Math.round(value * 100 * 100) / 100;
+  return Number.isInteger(percent) ? `${percent}%` : `${percent.toFixed(2)}%`;
+}
+
+// 크루 전체 성공률(decimal scale 4 string). 레거시 정산 행은 null → 표시용 '-'
+export function formatSuccessRatePercent(value: string | null): string {
+  if (value === null) return '-';
+  return formatShareRatioPercent(value);
+}
+
+export function formatRankLabel(rank: number | null): string {
+  return rank === null ? '-' : `${rank}위`;
 }
 
 export function getFailureLabel(code: SettlementFailureCode | null): string {
@@ -231,6 +243,267 @@ export function isAllFailMySettlement(item: SettlementItem): boolean {
     item.remainder_bonus_amount === 0 &&
     item.refund_amount === item.deposit_amount
   );
+}
+
+// ─── 미션 결과 화면 (/settlements/[settlementId]) ───────────────────────────
+
+export interface SettlementResultMyView {
+  nickname: string;
+  rankLabel: string;
+  shareRatioPercent: string;
+  refundAmount: string;
+  recognizedSuccessLabel: string;
+}
+
+export interface SettlementResultCrewView {
+  crewName: string;
+  missionPeriod: string;
+  missionDaysLabel: string;
+  successRatePercent: string;
+  totalRecognizedSuccessLabel: string;
+  totalParticipantsLabel: string;
+}
+
+export interface SettlementResultRankRow {
+  id: number;
+  rank: number;
+  rankLabel: string;
+  nickname: string;
+  shareRatioPercent: string;
+  refundAmount: string;
+  isMe: boolean;
+}
+
+// 크루 전체 성공률(상생/유대 지표) 기준 축하 티어. ALL_FAIL은 전원 원금 환급(0%) 특수 케이스
+export type CrewCelebrationTier = 'PERFECT' | 'EXCELLENT' | 'GREAT' | 'NEUTRAL' | 'ALL_FAIL';
+
+interface CrewCelebrationCopy {
+  summaryHeading: string;
+  closingMessage: string;
+  showCelebration: boolean; // 크루 요약 통계에 축하 이모지 노출 여부
+}
+
+const CREW_CELEBRATION_COPY: Record<CrewCelebrationTier, CrewCelebrationCopy> = {
+  PERFECT: {
+    summaryHeading: '우리 크루가 함께 만든 결과',
+    closingMessage: '한 명도 빠짐없이 완주했어요 — 완벽한 시즌이었어요 🎉',
+    showCelebration: true,
+  },
+  EXCELLENT: {
+    summaryHeading: '우리 크루가 함께 만든 결과',
+    closingMessage: '끝까지 함께한 우리, 정말 멋진 크루예요 👏',
+    showCelebration: true,
+  },
+  GREAT: {
+    summaryHeading: '우리 크루가 함께 만든 결과',
+    closingMessage: '함께라서 끝까지 올 수 있었어요 🙌',
+    showCelebration: true,
+  },
+  NEUTRAL: {
+    summaryHeading: '이번 시즌 크루 기록',
+    closingMessage: '끝까지 달려온 당신, 수고했어요 👍',
+    showCelebration: false,
+  },
+  ALL_FAIL: {
+    summaryHeading: '이번 시즌 크루 기록',
+    closingMessage: '예치금은 그대로 돌려드렸어요 — 다음엔 함께 완주해요 💪',
+    showCelebration: false,
+  },
+};
+
+// 80%가 축하 분기선. 레거시(성공률 null)는 측정 불가 → NEUTRAL 폴백
+export function getCrewCelebrationTier(detail: SettlementDetail, isAllFail: boolean): CrewCelebrationTier {
+  if (isAllFail) return 'ALL_FAIL';
+  if (detail.crew_success_rate === null) return 'NEUTRAL';
+  const rate = Number(detail.crew_success_rate);
+  if (!Number.isFinite(rate)) return 'NEUTRAL';
+  if (rate >= 1) return 'PERFECT';
+  if (rate >= 0.9) return 'EXCELLENT';
+  if (rate >= 0.8) return 'GREAT';
+  return 'NEUTRAL';
+}
+
+export interface SettlementResultViewModel {
+  settlementId: number;
+  crewId: number;
+  isAllFail: boolean;
+  crewTier: CrewCelebrationTier;
+  showCelebration: boolean;
+  crewSummaryHeading: string;
+  heroHeadline: string;
+  heroRefundAmount: string | null;
+  heroCrewName: string | null; // 긴 이름 대응을 위해 별도 줄로 노출
+  heroSubMeta: string; // "기간 · 일수" 보조 줄
+  closingMessage: string;
+  my: SettlementResultMyView | null;
+  crew: SettlementResultCrewView;
+  rankRows: SettlementResultRankRow[];
+}
+
+// items[]는 settlement_item_id ASC 안정 정렬 → rank 기준 표시 정렬(동률 시 원본 순서 유지, JS sort는 stable)
+export function sortItemsByRank(items: SettlementItem[]): SettlementItem[] {
+  return [...items].sort((a, b) => a.rank - b.rank);
+}
+
+export function toSettlementResultRankRow(item: SettlementItem): SettlementResultRankRow {
+  return {
+    id: item.settlement_item_id,
+    rank: item.rank,
+    rankLabel: formatRankLabel(item.rank),
+    nickname: item.nickname,
+    shareRatioPercent: formatShareRatioPercent(item.share_ratio),
+    refundAmount: formatKrw(item.refund_amount),
+    isMe: item.is_me,
+  };
+}
+
+// 히어로 보조 줄 "2026.05.01 ~ 2026.05.30 · 30일" (크루명은 별도 줄, 레거시 null 필드는 생략)
+export function buildCrewSubMeta(detail: SettlementDetail): string {
+  const parts: string[] = [];
+  if (detail.crew_started_at || detail.crew_ended_at) {
+    parts.push(formatMissionPeriod(detail.crew_started_at, detail.crew_ended_at));
+  }
+  if (detail.mission_days !== null) parts.push(`${detail.mission_days}일`);
+  return parts.join(' · ');
+}
+
+function buildHeroHeadline(isAllFail: boolean, myRank: number | null): string {
+  if (isAllFail) return '원금을 모두 돌려받았어요';
+  if (myRank !== null) return `${myRank}위로 완주했어요!`;
+  return '미션이 마무리됐어요';
+}
+
+export function toSettlementResultViewModel(detail: SettlementDetail): SettlementResultViewModel {
+  const isAllFail = isAllFailSettlement(detail);
+  const myItem = detail.items.find((item) => item.is_me) ?? null;
+  const myRank = detail.my_rank ?? myItem?.rank ?? null;
+
+  const my: SettlementResultMyView | null = myItem
+    ? {
+        nickname: myItem.nickname,
+        rankLabel: formatRankLabel(myRank),
+        shareRatioPercent: formatShareRatioPercent(myItem.share_ratio),
+        refundAmount: formatKrw(myItem.refund_amount),
+        recognizedSuccessLabel: formatCount(myItem.recognized_success_count),
+      }
+    : null;
+
+  const tier = getCrewCelebrationTier(detail, isAllFail);
+  const celebration = CREW_CELEBRATION_COPY[tier];
+
+  return {
+    settlementId: detail.settlement_id,
+    crewId: detail.crew_id,
+    isAllFail,
+    crewTier: tier,
+    showCelebration: celebration.showCelebration,
+    crewSummaryHeading: celebration.summaryHeading,
+    heroHeadline: buildHeroHeadline(isAllFail, myRank),
+    heroRefundAmount: my ? my.refundAmount : null,
+    heroCrewName: detail.crew_name,
+    heroSubMeta: buildCrewSubMeta(detail),
+    closingMessage: celebration.closingMessage,
+    my,
+    crew: {
+      crewName: detail.crew_name ?? '크루 정보 없음',
+      missionPeriod: formatMissionPeriod(detail.crew_started_at, detail.crew_ended_at),
+      missionDaysLabel: detail.mission_days !== null ? `${detail.mission_days}일` : '-',
+      successRatePercent: formatSuccessRatePercent(detail.crew_success_rate),
+      totalRecognizedSuccessLabel: formatCount(detail.total_recognized_success),
+      totalParticipantsLabel: formatCount(detail.total_participants, '명'),
+    },
+    rankRows: sortItemsByRank(detail.items).map(toSettlementResultRankRow),
+  };
+}
+
+// ─── 결과 카드 화면 (/settlements/[settlementId]/card) ──────────────────────
+
+export type RefundDeltaSign = 'up' | 'down' | 'flat';
+
+export interface SettlementResultCardViewModel {
+  brand: string;
+  periodLabel: string; // 미션 기간 'YYYY.MM.DD ~ YYYY.MM.DD' (스냅샷 없으면 '')
+  crewName: string;
+  rankLabel: string; // "1위"
+  totalParticipantsLabel: string; // "5명"
+  refundAmount: string;
+  depositComparePrefix: string; // "보증금 100,000원 대비"
+  refundDeltaLabel: string; // "+3,080원" / "-1,000원" / "±0원"
+  refundDeltaSign: RefundDeltaSign;
+  successRateLabel: string | null; // "100%" (미션일수 없으면 null)
+  successCountLabel: string; // "30 / 30일" (미션일수 없으면 "30회")
+  fileName: string;
+  isAllFail: boolean;
+}
+
+// 파일명 안전화: 공백→_, 경로/특수문자 제거
+function sanitizeForFileName(value: string): string {
+  return value
+    .trim()
+    .replace(/\s+/g, '_')
+    .replace(/[\\/:*?"<>|]/g, '');
+}
+
+// 스냅샷 종료일 우선, 없으면 정산 완료일. ISO 'YYYY-MM-DD' (파일명 폴백용)
+function toRawDate(detail: SettlementDetail): string {
+  if (detail.crew_ended_at) return detail.crew_ended_at;
+  if (detail.finished_at) return detail.finished_at.slice(0, 10);
+  return '';
+}
+
+// Date → 로컬 'YYYY-MM-DD' (파일명에 오늘 날짜를 주입할 때 사용)
+export function toLocalYmd(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+function buildRefundDeltaLabel(delta: number): { label: string; sign: RefundDeltaSign } {
+  if (delta > 0) return { label: `+${formatKrw(delta)}`, sign: 'up' };
+  if (delta < 0) return { label: formatKrw(delta), sign: 'down' }; // formatKrw가 음수 부호 포함
+  return { label: '±0원', sign: 'flat' };
+}
+
+// fileNameDate: 파일명에 쓸 날짜(ISO 'YYYY-MM-DD'). 보통 다운로드 시점의 오늘 날짜를 주입.
+// 생략 시 정산 스냅샷 종료일/완료일로 폴백한다.
+export function toSettlementResultCardViewModel(
+  detail: SettlementDetail,
+  fileNameDate?: string,
+): SettlementResultCardViewModel | null {
+  const myItem = detail.items.find((item) => item.is_me);
+  if (!myItem) return null;
+
+  const myRank = detail.my_rank ?? myItem.rank;
+  const delta = myItem.refund_amount - myItem.deposit_amount;
+  const { label: refundDeltaLabel, sign: refundDeltaSign } = buildRefundDeltaLabel(delta);
+  const fileDate = fileNameDate ?? toRawDate(detail);
+  const crewName = detail.crew_name ?? '우리 크루';
+  const hasMissionDays = detail.mission_days !== null && detail.mission_days > 0;
+  const successRateLabel = hasMissionDays
+    ? formatShareRatioPercent(String(myItem.recognized_success_count / (detail.mission_days as number)))
+    : null;
+  const successCountLabel = hasMissionDays
+    ? `${myItem.recognized_success_count} / ${detail.mission_days}일`
+    : formatCount(myItem.recognized_success_count);
+
+  return {
+    brand: 'dondok',
+    periodLabel:
+      detail.crew_started_at || detail.crew_ended_at
+        ? formatMissionPeriod(detail.crew_started_at, detail.crew_ended_at)
+        : '',
+    crewName,
+    rankLabel: formatRankLabel(myRank),
+    totalParticipantsLabel: formatCount(detail.total_participants, '명'),
+    refundAmount: formatKrw(myItem.refund_amount),
+    depositComparePrefix: `보증금 ${formatKrw(myItem.deposit_amount)} 대비`,
+    refundDeltaLabel,
+    refundDeltaSign,
+    successRateLabel,
+    successCountLabel,
+    fileName: `dondok_result_${sanitizeForFileName(crewName)}${fileDate ? `_${fileDate}` : ''}.png`,
+    isAllFail: isAllFailSettlement(detail),
+  };
 }
 
 export function toSettlementMeViewModel(response: SettlementMe): SettlementDetailViewModel | null {
