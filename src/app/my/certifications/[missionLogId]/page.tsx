@@ -70,7 +70,7 @@ function formatOptionalDateTime(isoString: string | null | undefined): string {
 
 function formatDuplicateResult(isDuplicate: boolean | null | undefined): string {
   if (isDuplicate === undefined || isDuplicate === null) return "-";
-  return isDuplicate ? "중복 의심" : "중복 아님";
+  return isDuplicate ? "있음" : "없음";
 }
 
 // ─── 날짜 포맷 (YYYY.MM.DD HH:mm) ──────────────────────────────
@@ -150,10 +150,6 @@ function VerificationInfoSection({ item }: { item: MissionLogDetail }) {
 
   return (
     <section className="rounded-xl bg-text-secondary/5 border border-text-secondary/10 px-4 py-3 flex flex-col">
-      <div className="flex items-center justify-between gap-3 pb-2.5 border-b border-text-secondary/15">
-        <p className="text-xs font-semibold text-text-primary">검증 정보</p>
-        <p className="text-[11px] text-text-secondary">검토 보조 신호</p>
-      </div>
       <dl className="text-xs divide-y divide-text-secondary/15">
         <div className="grid grid-cols-[92px_1fr] gap-x-3 py-2">
           <dt className="text-text-secondary">촬영 시각</dt>
@@ -314,15 +310,15 @@ export default function MissionLogDetailPage() {
                 {/* 인증 시간 */}
                 <p className="text-xs text-text-secondary">{formatDateTime(item.server_time)}</p>
 
-                {/* 검증 정보 */}
-                <VerificationInfoSection item={item} />
-
                 {/* 캡션 */}
                 {item.caption && (
                   <p className="text-sm text-text-primary leading-relaxed whitespace-pre-line">
                     {item.caption}
                   </p>
                 )}
+
+                {/* 검증 정보 */}
+                <VerificationInfoSection item={item} />
 
                 {/* 리액션 */}
                 <ReactionRow counts={item.reaction_counts} />
