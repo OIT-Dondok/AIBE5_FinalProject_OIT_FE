@@ -6,3 +6,6 @@ export const getNotifications = (params?: { cursor?: string; limit?: number }) =
 
 export const readAllNotifications = () =>
   api.patch<void>('/notifications/read-all');
+
+export const registerDevice = (token: string) =>
+  api.post<void>('/notifications/devices', { token });

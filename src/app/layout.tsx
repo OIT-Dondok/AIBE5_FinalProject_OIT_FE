@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { LayoutWrapper } from "@/components/common/LayoutWrapper";
 import { AuthInitializer } from "@/components/common/AuthInitializer";
+import { FcmInitializer } from "@/components/common/FcmInitializer";
 
 export const metadata: Metadata = {
     title: "Dondok",
@@ -25,6 +26,7 @@ export default function RootLayout({
         <html lang="en" className="h-full antialiased">
         <body className="min-h-screen bg-background text-text-primary flex flex-col">
         <AuthInitializer />
+        <FcmInitializer />
         <LayoutWrapper>
             {children}
         </LayoutWrapper>
