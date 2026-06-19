@@ -1,30 +1,153 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState, useRef } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Megaphone } from "lucide-react";
+import type { MyCrew } from "@/types/domain";
+import CrewSelectDropdown from "@/components/domain/crew/CrewSelectDropdown";
 
 import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
 import { HostActionButton } from "@/components/domain/host/common/HostActionButton";
 import { Toast } from "@/components/common/Toast";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import type { ToastType } from "@/components/common/Toast";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
-import { createCrewNotice, getCrew } from "@/services/crew";
+import { createCrewNotice, getCrew, getMyCrew } from "@/services/crew";
+
+const isValidDraft = (data: any): data is { title: string; content: string; savedAt: number } => {
+  return (
+    data &&
+    typeof data === "object" &&
+    typeof data.title === "string" &&
+    typeof data.content === "string" &&
+    typeof data.savedAt === "number"
+  );
+};
+
+const getRelativeTimeString = (timestamp: number): string => {
+  const diff = Date.now() - timestamp;
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (minutes < 1) return "방금 전";
+  if (minutes < 60) return `${minutes}분 전`;
+  if (hours < 24) return `${hours}시간 전`;
+  return `${days}일 전`;
+};
 
 export default function HostNoticeNewPage() {
   const router = useRouter();
   const params = useParams<{ crewId: string }>();
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from");
   const crewId = parseRouteNumber(params.crewId);
+  
   const [title, setTitle] = useState("");
   const [contentHtml, setContentHtml] = useState("");
   const [toastMessage, setToastMessage] = useState("");
   const [isToastOpen, setIsToastOpen] = useState(false);
   const [toastType, setToastType] = useState<ToastType>("success");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [crewName, setCrewName] = useState<string | null>(null);
+  const [hostCrews, setHostCrews] = useState<MyCrew[]>([]);
   const isTitleReady = title.trim().length > 0;
+
+  // 임시 저장 복원 상태
+  const [draftToRestore, setDraftToRestore] = useState<{
+    title: string;
+    content: string;
+    savedAt: number;
+  } | null>(null);
+  const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
+  const preventSaveRef = useRef(true); // 복원 팝업 처리 전 자동 저장 덮어쓰기 가드
+
+  // 내가 방장인 크루 목록 로드
+  useEffect(() => {
+    let active = true;
+    getMyCrew("HOST")
+      .then((res) => {
+        if (active) {
+          setHostCrews(res.data.items);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // 진입 시 임시 저장 검사
+  useEffect(() => {
+    if (crewId === null) return;
+    const stored = localStorage.getItem(`temp_notice_draft_${crewId}`);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (isValidDraft(parsed)) {
+          setDraftToRestore(parsed);
+          setIsRestoreModalOpen(true);
+        } else {
+          preventSaveRef.current = false;
+        }
+      } catch {
+        preventSaveRef.current = false;
+      }
+    } else {
+      preventSaveRef.current = false;
+    }
+  }, [crewId]);
+
+  // 실시간 디바운스 임시 저장
+  useEffect(() => {
+    if (crewId === null) return;
+    if (preventSaveRef.current) return;
+
+    if (!title.trim() && !contentHtml.trim()) {
+      localStorage.removeItem(`temp_notice_draft_${crewId}`);
+      return;
+    }
+
+    const handler = setTimeout(() => {
+      const draft = {
+        title,
+        content: contentHtml,
+        savedAt: Date.now()
+      };
+      localStorage.setItem(`temp_notice_draft_${crewId}`, JSON.stringify(draft));
+    }, 1000);
+
+    return () => clearTimeout(handler);
+  }, [title, contentHtml, crewId]);
+
+  const handleRestoreConfirm = () => {
+    if (draftToRestore) {
+      setTitle(draftToRestore.title);
+      setContentHtml(draftToRestore.content);
+    }
+    preventSaveRef.current = false;
+    setIsRestoreModalOpen(false);
+  };
+
+  const handleRestoreCancel = () => {
+    if (crewId !== null) {
+      localStorage.removeItem(`temp_notice_draft_${crewId}`);
+    }
+    preventSaveRef.current = false;
+    setIsRestoreModalOpen(false);
+  };
+
+  const handleSuccessModalClose = () => {
+    setIsSuccessModalOpen(false);
+    if (from === "feed") {
+      router.push("/feed?tab=notice");
+    } else {
+      router.push(`/crews/${crewId}/host-console?tab=notices`);
+    }
+  };
 
   useEffect(() => {
     if (crewId === null) return;
@@ -56,8 +179,22 @@ export default function HostNoticeNewPage() {
     }
     setIsSubmitting(true);
     try {
-      await createCrewNotice(crewId, { title, content: contentHtml.trim() });
-      router.push(`/crews/${crewId}/host-console?tab=notices`);
+      await createCrewNotice(crewId, { title, content: contentHtml.trim(), is_important: false });
+      
+      // 임시 저장 제거
+      localStorage.removeItem(`temp_notice_draft_${crewId}`);
+      
+      // 자주 사용하는 크루 목록 갱신
+      try {
+        const stored = localStorage.getItem("frequent_notice_crew_ids");
+        let frequentIds: number[] = stored ? JSON.parse(stored) : [];
+        frequentIds = frequentIds.filter((id) => id !== crewId);
+        frequentIds.unshift(crewId);
+        frequentIds = frequentIds.slice(0, 5);
+        localStorage.setItem("frequent_notice_crew_ids", JSON.stringify(frequentIds));
+      } catch {}
+
+      setIsSuccessModalOpen(true);
     } catch (error) {
       setToastMessage(
         getApiErrorMessage(
@@ -84,10 +221,22 @@ export default function HostNoticeNewPage() {
 
         <form className="px-5 pt-5 flex flex-col gap-4">
           <div className="px-1">
-            <p className="mb-3 flex items-center gap-1.5 text-xs font-medium text-text-secondary">
-              <Megaphone size={14} strokeWidth={2.3} className="text-[#4C73D9]" />
-              {crewName && <span className="font-extrabold text-text-primary">{crewName}</span>}{crewName ? " 크루에 공지를 올립니다" : "공지를 올립니다"}
-            </p>
+            {hostCrews.length > 0 && (
+              <div className="mb-4">
+                <label className="block text-[12px] font-bold text-text-primary mb-1.5 flex items-center gap-1.5" htmlFor="crew-select-dropdown-btn">
+                  <Megaphone size={14} strokeWidth={2.3} className="text-[#5E9B73]" />
+                  공지를 등록할 크루 선택
+                </label>
+                <CrewSelectDropdown
+                  value={crewId}
+                  options={hostCrews}
+                  onChange={(newCrewId) => {
+                    router.replace(`/crews/${newCrewId}/host-console/notices/new?from=${from || ''}`);
+                  }}
+                />
+              </div>
+            )}
+
             <label className="block text-[12px] font-bold text-text-primary" htmlFor="notice-title">
               제목
             </label>
@@ -97,7 +246,7 @@ export default function HostNoticeNewPage() {
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               placeholder="공지 제목을 입력해주세요"
-              className="mt-2 w-full rounded-xl border border-text-secondary/20 bg-white px-3.5 py-3 text-sm font-medium text-text-primary outline-none placeholder:text-text-secondary/70 focus:border-[#4C73D9]"
+              className="mt-2 w-full rounded-xl border border-text-secondary/20 bg-white px-3.5 py-3 text-sm font-medium text-text-primary outline-none placeholder:text-text-secondary/70 focus:border-[#5E9B73]"
             />
 
             <label className="mt-4 block text-[12px] font-bold text-text-primary" htmlFor="notice-content">
@@ -110,22 +259,60 @@ export default function HostNoticeNewPage() {
               placeholder="크루원에게 전할 내용을 작성하세요"
               rows={10}
               maxLength={65000}
-              className="mt-2 w-full resize-none rounded-xl border border-text-secondary/20 bg-white px-3.5 py-3 text-sm font-medium leading-relaxed text-text-primary outline-none placeholder:text-text-secondary/70 focus:border-[#4C73D9]"
+              className="mt-2 w-full resize-none rounded-xl border border-text-secondary/20 bg-white px-3.5 py-3 text-sm font-medium leading-relaxed text-text-primary outline-none placeholder:text-text-secondary/70 focus:border-[#5E9B73]"
             />
           </div>
 
           <div className="grid grid-cols-[0.85fr_1.15fr] gap-2">
-            <HostActionButton variant="cancel" onClick={() => router.push(`/crews/${crewId}/host-console?tab=notices`)}>
+            <HostActionButton
+              variant="cancel"
+              onClick={() => {
+                if (from === "feed") {
+                  router.push("/feed?tab=notice");
+                } else {
+                  router.push(`/crews/${crewId}/host-console?tab=notices`);
+                }
+              }}
+            >
               취소
             </HostActionButton>
             <HostActionButton
-              variant={isTitleReady && !isSubmitting ? "primary" : "primaryDisabled"}
+              variant={isTitleReady && !isSubmitting ? "approve" : "approveDisabled"}
               onClick={() => void handleSubmit()}
             >
               공지 등록
             </HostActionButton>
           </div>
         </form>
+
+        {/* 공지 등록 성공 모달 */}
+        <ConfirmModal
+          isOpen={isSuccessModalOpen}
+          onClose={handleSuccessModalClose}
+          onConfirm={handleSuccessModalClose}
+          title="공지가 등록되었습니다!"
+          description="크루원들에게 소식이 전파됩니다."
+          confirmText="확인"
+          confirmVariant="primary-green"
+          iconType="success"
+          showCancel={false}
+        />
+
+        {/* 임시 저장 복원 컨펌 모달 */}
+        <ConfirmModal
+          isOpen={isRestoreModalOpen}
+          onClose={handleRestoreCancel}
+          onConfirm={handleRestoreConfirm}
+          title="작성 중이던 글을 불러올까요?"
+          description={`${
+            draftToRestore ? getRelativeTimeString(draftToRestore.savedAt) : "이전"
+          }에 작성하던 임시 저장된 글이 있습니다. 이어서 작성하시겠습니까?`}
+          confirmText="이어 쓰기"
+          cancelText="새로 작성"
+          confirmVariant="primary-green"
+          iconType="warning"
+        />
+
         <Toast
           message={toastMessage}
           isOpen={isToastOpen}

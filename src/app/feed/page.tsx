@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { isAxiosError } from 'axios';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 import { Header } from '@/components/common/Header';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FeedCalendar } from '@/components/domain/feed/FeedCalendar';
@@ -15,8 +15,9 @@ import FeedNoticeList from '@/components/domain/feed/FeedNoticeList';
 import { Toast } from '@/components/common/Toast';
 import type { ToastType } from '@/components/common/Toast';
 import { getFeed } from '@/services/feed';
-import { getCrewNotices } from '@/services/crew';
-import type { AvailableCrew, FeedItem as FeedItemType, FeedPeriod, CrewNotice } from '@/types/domain';
+import { getCrewNotices, getMyCrew } from '@/services/crew';
+import type { AvailableCrew, FeedItem as FeedItemType, FeedPeriod, CrewNotice, MyCrew } from '@/types/domain';
+import { useAuthStore } from '@/store/authStore';
 import { ERROR_CODE } from '@/types/common';
 import type { ErrorResponse } from '@/types/common';
 
@@ -34,6 +35,42 @@ export default function FeedPage() {
   const [viewMode, setViewMode] = useState<'feed' | 'notice'>('feed');
   const [notices, setNotices] = useState<CrewNotice[]>([]);
   const [isNoticesLoading, setIsNoticesLoading] = useState(false);
+  const [hostCrews, setHostCrews] = useState<MyCrew[]>([]);
+  const user = useAuthStore((s) => s.user);
+  const isInitialized = useAuthStore((s) => s.isInitialized);
+
+  // 방장 권한을 가진 크루 목록 로드
+  useEffect(() => {
+    if (!isInitialized || !user) {
+      setHostCrews([]);
+      return;
+    }
+    let active = true;
+    getMyCrew('HOST')
+      .then((res) => {
+        if (active) {
+          setHostCrews(res.data.items);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setHostCrews([]);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [user, isInitialized]);
+
+  const handleCreateNoticeClick = useCallback(() => {
+    // 만약 현재 필터링된 크루가 있고, 내가 그 크루의 방장이라면 즉시 이동
+    const isHostOfSelected = selectedCrewId !== null && hostCrews.some((c) => c.crew_id === selectedCrewId);
+    if (isHostOfSelected) {
+      router.push(`/crews/${selectedCrewId}/host-console/notices/new?from=feed`);
+    } else if (hostCrews.length > 0) {
+      router.push(`/crews/${hostCrews[0].crew_id}/host-console/notices/new?from=feed`);
+    }
+  }, [selectedCrewId, hostCrews, router]);
 
   // URL 쿼리 스트링과 동기화하여 뷰 전환 상태 제어
   const handleSetViewMode = useCallback((mode: 'feed' | 'notice') => {
@@ -163,15 +200,10 @@ export default function FeedPage() {
           const res = await getCrewNotices(selectedCrewId);
           if (!active) return;
           setNotices(res.data.items);
-          // 만약 공지가 없고 현재 뷰모드가 notice인 경우 feed로 리다이렉트
-          if (res.data.items.length === 0) {
-            handleSetViewMode('feed');
-          }
         }
       } catch {
         if (!active) return;
         setNotices([]);
-        handleSetViewMode('feed');
       } finally {
         if (active) setIsNoticesLoading(false);
       }
@@ -239,8 +271,8 @@ export default function FeedPage() {
           onSelect={setSelectedCrewId}
         />
 
-        {/* 뷰 전환 탭 (공지가 1개 이상 있을 때 노출) */}
-        {notices.length > 0 && (
+        {/* 뷰 전환 탭 (참여 중인 크루가 있거나 내가 방장인 크루가 있을 때 노출) */}
+        {(availableCrews.length > 0 || hostCrews.length > 0) && (
           <div className="px-5 mb-3 mt-1.5">
             <div className="flex bg-text-secondary/10 p-1 rounded-full w-full max-w-[260px] mx-auto border border-text-secondary/5">
               <button
@@ -383,10 +415,27 @@ export default function FeedPage() {
               isLoading={isNoticesLoading}
               crewName={availableCrews.find((c) => c.crew_id === selectedCrewId)?.crew_name}
               availableCrews={availableCrews}
+              onNoticeUpdate={(updated) => {
+                setNotices((prev) => prev.map((n) => n.notice_id === updated.notice_id ? updated : n));
+              }}
             />
           )}
         </div>
       </div>
+
+      {/* 공지 작성 플로팅 버튼 (FAB) */}
+      {viewMode === 'notice' && hostCrews.length > 0 && (
+        <button
+          type="button"
+          onClick={handleCreateNoticeClick}
+          className="fixed bottom-24 right-5 md:left-1/2 md:right-auto md:translate-x-[160px] z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary-green text-white shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-primary-green/20"
+          aria-label="공지 작성"
+        >
+          <Plus size={24} strokeWidth={2.5} />
+        </button>
+      )}
+
+
 
       <Toast
         message={toastMessage}

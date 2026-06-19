@@ -44,6 +44,9 @@ export interface SettlementDetailViewModel {
   totalParticipants: string;
   finishedAtLabel: string;
   remainderPolicyLabel: string;
+  crewName?: string;
+  missionPeriod?: string;
+  myShareRatioPercent?: string;
   participants: SettlementParticipantViewItem[];
 }
 
@@ -126,6 +129,16 @@ export function formatDateTime(value: string | null): string {
     hour: '2-digit',
     minute: '2-digit',
   }).format(date);
+}
+
+export function formatYmd(value: string | null): string {
+  if (!value) return '-';
+  // 'YYYY-MM-DD' → 'YYYY.MM.DD' (date-only는 new Date() 타임존 보정 회피 위해 문자열 치환)
+  return value.replaceAll('-', '.');
+}
+
+export function formatMissionPeriod(startedAt: string | null, endedAt: string | null): string {
+  return `${formatYmd(startedAt)} ~ ${formatYmd(endedAt)}`;
 }
 
 export function formatShareRatioPercent(shareRatio: string): string {
@@ -227,10 +240,10 @@ export function toSettlementMeViewModel(response: SettlementMe): SettlementDetai
   const isAllFail = isAllFailMySettlement(item);
 
   return {
-    title: isAllFail ? '내 예치금 환급이 완료됐어요' : '최종 정산이 완료됐어요',
+    title: '미션이 종료되었어요',
     subtitle: isAllFail
-      ? '인정된 성공 기록이 없어 지분 정산 없이 내 예치금 전액이 환급됐어요.'
-      : '내 최종 환급액이 확정됐어요.',
+      ? '인정된 성공 기록이 없어 예치금 전액이 환급됐어요.'
+      : '최종 정산까지 완료됐어요. 내 결과를 확인해 보세요.',
     status: response.status,
     isAllFail,
     totalRefundAmount: formatKrw(item.refund_amount),
@@ -240,6 +253,9 @@ export function toSettlementMeViewModel(response: SettlementMe): SettlementDetai
     totalParticipants: '내 정산 결과',
     finishedAtLabel: formatDateTime(response.finished_at),
     remainderPolicyLabel: item.remainder_bonus_amount > 0 ? '방장 잔여금 포함' : '개인 환급액',
+    crewName: response.crew_name,
+    missionPeriod: formatMissionPeriod(response.crew_started_at, response.crew_ended_at),
+    myShareRatioPercent: formatShareRatioPercent(item.share_ratio),
     participants: [],
   };
 }

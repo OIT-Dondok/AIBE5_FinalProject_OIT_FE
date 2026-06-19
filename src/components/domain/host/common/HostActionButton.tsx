@@ -2,6 +2,7 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 type HostActionButtonVariant =
   | "approve"
+  | "approveDisabled"
   | "reject"
   | "danger"
   | "cancel"
@@ -17,6 +18,7 @@ interface HostActionButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> 
 
 const variantClassNames: Record<HostActionButtonVariant, string> = {
   approve: "bg-primary-green text-white shadow-sm shadow-primary-green/20 hover:bg-[#3F7A55]",
+  approveDisabled: "bg-primary-green/45 text-white/80 cursor-not-allowed shadow-none",
   reject: "bg-[#FCEDEC] text-[#DB5C55] hover:bg-[#F8DEDC]",
   danger: "bg-[#DB5C55] text-white hover:bg-[#C84D46]",
   cancel: "border-2 border-[#EDE8DF] bg-card text-text-primary hover:bg-[#EDE8DF]",

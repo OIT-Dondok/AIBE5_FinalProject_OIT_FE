@@ -19,6 +19,7 @@ import {
   approveCrewApplication,
   rejectCrewApplication,
 } from "@/services/crew";
+import { getMemberProfile } from "@/services/member";
 import type { ApplicationListItem } from "@/types/domain";
 
 type ApplicationFilter = ApplicationVisibleStatus | "ALL";
@@ -35,22 +36,22 @@ const APPLICATION_FILTERS: Array<{ value: ApplicationFilter; label: string }> = 
 const TOAST_DURATION_MS = 2400;
 
 const allFilterStyle = {
-  active: "bg-[#4d73d9] text-white",
-  inactive: "bg-[#E0E8FA] text-[#4d73d9]",
+  active: "bg-[#4C73D9]/10 text-[#4C73D9] border border-[#4C73D9]/25 font-extrabold shadow-sm",
+  inactive: "bg-white text-text-secondary border border-text-secondary/15 hover:bg-slate-50",
 };
 
 const applicationFilterStyles: Record<ApplicationVisibleStatus, { active: string; inactive: string }> = {
   PENDING: {
-    active: "bg-[#D89B4C] text-white",
-    inactive: "bg-[#FBF1E1] text-[#D89B4C]",
+    active: "bg-[#D89B4C]/10 text-[#D89B4C] border border-[#D89B4C]/25 font-extrabold shadow-sm",
+    inactive: "bg-white text-text-secondary border border-text-secondary/15 hover:bg-slate-50",
   },
   LOCKED: {
-    active: "bg-primary-green text-white",
-    inactive: "bg-[#E8F2EB] text-primary-green",
+    active: "bg-primary-green/10 text-primary-green border border-primary-green/25 font-extrabold shadow-sm",
+    inactive: "bg-white text-text-secondary border border-text-secondary/15 hover:bg-slate-50",
   },
   REJECTED: {
-    active: "bg-[#D9534C] text-white",
-    inactive: "bg-[#FCEDEC] text-[#D9534C]",
+    active: "bg-[#D9534C]/10 text-[#D9534C] border border-[#D9534C]/25 font-extrabold shadow-sm",
+    inactive: "bg-white text-text-secondary border border-text-secondary/15 hover:bg-slate-50",
   },
 };
 
@@ -77,7 +78,7 @@ function ApplicationCard({
 
   return (
     <article
-      className={`rounded-card border border-text-secondary/10 bg-card px-4 py-3.5 shadow-sm transition-opacity ${
+      className={`rounded-[24px] border border-text-secondary/10 bg-card px-5 py-4 shadow-sm transition-opacity ${
         visibleStatus !== "PENDING" ? "opacity-55 grayscale-[15%]" : ""
       }`}
     >
@@ -87,8 +88,16 @@ function ApplicationCard({
           className="flex min-w-0 items-center gap-3 hover:opacity-80 active:opacity-60 transition-opacity"
           onClick={(e) => e.stopPropagation()}
         >
-          <div aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-blue/10 text-sm font-extrabold text-primary-blue">
-            {item.nickname.slice(0, 1)}
+          <div aria-hidden="true" className="h-10 w-10 shrink-0 rounded-full flex items-center justify-center overflow-hidden text-sm font-extrabold text-primary-blue bg-primary-blue/10 border border-primary-blue/10 shadow-inner">
+            {item.profile_image_url ? (
+              <img
+                src={item.profile_image_url}
+                alt={`${item.nickname} 프로필 이미지`}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              item.nickname.slice(0, 1)
+            )}
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-extrabold text-text-primary">{item.nickname}</p>
@@ -155,7 +164,46 @@ export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) 
         ...lockedRes.data.items,
         ...rejectedRes.data.items,
       ].filter((item) => item.member_uuid !== myUuid);
-      setApplications(all);
+
+      // 프로필 이미지 누락 보완 (백엔드에서 profile_image_url이 null로 내려오는 현상 방어)
+      // 중복 member_uuid를 제거한 후 3개씩 배치 처리하여 과도한 병렬 네트워크 요청 방지
+      const missingProfileUuids = Array.from(
+        new Set(
+          all
+            .filter((item) => !item.profile_image_url)
+            .map((item) => item.member_uuid)
+        )
+      );
+
+      const uuidToProfileMap = new Map<string, string | null>();
+      const batchSize = 3;
+
+      for (let i = 0; i < missingProfileUuids.length; i += batchSize) {
+        const batch = missingProfileUuids.slice(i, i + batchSize);
+        await Promise.all(
+          batch.map(async (uuid) => {
+            try {
+              const profileRes = await getMemberProfile(uuid);
+              uuidToProfileMap.set(uuid, profileRes.data.profile_image_url || null);
+            } catch (err) {
+              uuidToProfileMap.set(uuid, null);
+            }
+          })
+        );
+      }
+
+      const allWithProfiles = all.map((item) => {
+        if (!item.profile_image_url) {
+          const profileImg = uuidToProfileMap.get(item.member_uuid);
+          return {
+            ...item,
+            profile_image_url: profileImg || null,
+          };
+        }
+        return item;
+      });
+
+      setApplications(allWithProfiles);
       onPendingCountChangeRef.current?.(
         pendingRes.data.items.filter((item) => item.member_uuid !== myUuid).length,
       );
@@ -247,7 +295,7 @@ export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) 
   };
 
   return (
-    <div className="flex flex-col gap-3">
+    <SectionCard className="p-5 flex flex-col gap-4">
       <div className="flex flex-col gap-3">
         <div className="py-1">
           <h2 className="text-sm font-bold text-text-primary">가입 신청 목록</h2>
@@ -276,7 +324,7 @@ export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) 
       </div>
 
       {filteredItems.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-card border border-text-secondary/10 bg-card px-4 py-5 text-center shadow-sm">
+        <div className="flex flex-col items-center justify-center rounded-[20px] border border-[#E5DEC9] bg-slate-50/50 px-4 py-5 text-center shadow-sm">
           <div className="mb-1.5 flex items-center justify-center text-primary-green">
             <Check size={22} strokeWidth={3} />
           </div>
@@ -315,6 +363,6 @@ export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) 
         message={toastMessage}
         type={toastType}
       />
-    </div>
+    </SectionCard>
   );
 }

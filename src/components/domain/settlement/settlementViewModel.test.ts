@@ -37,6 +37,9 @@ describe('settlement view model', () => {
     const response: SettlementMe = {
       settlement_id: 501,
       crew_id: 42,
+      crew_name: '아침 갓생 30일',
+      crew_started_at: '2026-05-01',
+      crew_ended_at: '2026-05-30',
       status: 'SUCCEEDED',
       retry_count: 1,
       failure_code: null,
@@ -47,12 +50,18 @@ describe('settlement view model', () => {
         ...settlementDetailFixtures.succeeded.items[1],
         refund_amount: 115384,
         deposit_amount: 100000,
+        share_ratio: '0.230769',
       },
     };
 
     const view = toSettlementMeViewModel(response);
 
     assert.ok(view);
+    assert.equal(view.title, '미션이 종료되었어요');
+    assert.equal(view.subtitle, '최종 정산까지 완료됐어요. 내 결과를 확인해 보세요.');
+    assert.equal(view.crewName, '아침 갓생 30일');
+    assert.equal(view.missionPeriod, '2026.05.01 ~ 2026.05.30');
+    assert.equal(view.myShareRatioPercent, '23.08%');
     assert.equal(view.totalRefundAmount, '115,384원');
     assert.equal(view.totalLockedAmount, '100,000원');
     assert.equal(view.totalParticipants, '내 정산 결과');
@@ -63,6 +72,9 @@ describe('settlement view model', () => {
     const response: SettlementMe = {
       settlement_id: 504,
       crew_id: 42,
+      crew_name: '아침 갓생 30일',
+      crew_started_at: '2026-05-01',
+      crew_ended_at: '2026-05-30',
       status: 'SUCCEEDED',
       retry_count: 0,
       failure_code: null,
@@ -76,6 +88,8 @@ describe('settlement view model', () => {
 
     assert.ok(view);
     assert.equal(view.isAllFail, true);
+    assert.equal(view.title, '미션이 종료되었어요');
+    assert.equal(view.subtitle, '인정된 성공 기록이 없어 예치금 전액이 환급됐어요.');
     assert.equal(view.totalRefundAmount, '100,000원');
     assert.equal(view.totalLockedAmount, '100,000원');
   });
@@ -84,6 +98,9 @@ describe('settlement view model', () => {
     const response: SettlementMe = {
       settlement_id: 501,
       crew_id: 42,
+      crew_name: '아침 갓생 30일',
+      crew_started_at: '2026-05-01',
+      crew_ended_at: '2026-05-30',
       status: 'SUCCEEDED',
       retry_count: 1,
       failure_code: null,

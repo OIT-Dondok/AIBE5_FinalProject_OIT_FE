@@ -10,6 +10,7 @@ interface HostMoreMenuItem {
   icon: ReactNode;
   tone?: HostMoreMenuItemTone;
   onClick: () => void;
+  disabled?: boolean;
 }
 
 interface HostMoreMenuProps {
@@ -62,9 +63,12 @@ export function HostMoreMenu({ isOpen, onToggle, items, alignClassName = "right-
             <button
               key={item.label}
               type="button"
+              disabled={item.disabled}
               onClick={item.onClick}
               className={`flex w-full items-center gap-2.5 px-4 py-3 text-left text-sm font-medium transition ${
-                itemClassNames[item.tone ?? "default"]
+                item.disabled
+                  ? "text-text-secondary/40 cursor-not-allowed bg-transparent"
+                  : itemClassNames[item.tone ?? "default"]
               }`}
             >
               {item.icon}

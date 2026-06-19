@@ -493,6 +493,8 @@ export interface CrewNotice {
   created_at: string;
   my_reactions: string[];
   reaction_counts: ReactionCounts;
+  is_important?: boolean;
+  comment_count?: number;
 }
 
 export type CrewNoticesResponse = CursorPageResponse<CrewNotice>;
@@ -860,6 +862,9 @@ export interface SettlementDetail {
 export interface SettlementMe {
   settlement_id: number;
   crew_id: number;
+  crew_name: string;
+  crew_started_at: string; // YYYY-MM-DD
+  crew_ended_at: string; // YYYY-MM-DD
   status: SettlementStatus;
   retry_count: number;
   failure_code: SettlementFailureCode | null;
