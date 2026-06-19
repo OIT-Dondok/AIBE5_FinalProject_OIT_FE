@@ -19,8 +19,19 @@ import { shouldOpenChargeConfirmedToast } from "@/components/domain/point/pointC
 import { useChargeBottomSheet } from "@/components/domain/point/useChargeBottomSheet";
 import { getPointAccount, getWalletHistory } from "@/services/point";
 import type { PointAccountResponse, WalletHistoryItem } from "@/types/domain";
+import { addDaysToYmd, getKstTodayYmd } from "@/utils/date";
 
 const RECENT_HISTORY_LIMIT = 5;
+const RECENT_HISTORY_RANGE_DAYS = 90;
+
+function getRecentHistoryRange(now: Date = new Date()) {
+  const today = getKstTodayYmd(now);
+
+  return {
+    from: addDaysToYmd(today, -RECENT_HISTORY_RANGE_DAYS),
+    to: addDaysToYmd(today, 1),
+  };
+}
 
 export default function DodinWalletPage() {
   const router = useRouter();
@@ -68,8 +79,11 @@ export default function DodinWalletPage() {
     setHistoryError("");
 
     try {
+      const range = getRecentHistoryRange();
       const { data } = await getWalletHistory({
+        from: range.from,
         limit: RECENT_HISTORY_LIMIT,
+        to: range.to,
         type: getWalletHistoryTypeParam(filter),
       });
       if (historyRequestIdRef.current !== requestId) return;

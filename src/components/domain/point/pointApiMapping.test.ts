@@ -87,7 +87,7 @@ describe("point wallet API mapping", () => {
     assert.equal(formatMonthLabel("invalid"), "invalid");
   });
 
-  it("calls the wallet-history endpoint with documented params", async () => {
+  it("calls the wallet-history endpoint with documented range params", async () => {
     const calls: Array<{ url: string; config: unknown }> = [];
     const pointService = createPointService({
       get: (url: string, config?: unknown) => {
@@ -99,8 +99,9 @@ describe("point wallet API mapping", () => {
 
     const response = await pointService.getWalletHistory({
         cursor: "cursor-1",
+        from: "2026-06-01",
         limit: 20,
-        month: "2026-06",
+        to: "2026-07-01",
         type: "deposit",
       });
 
@@ -110,8 +111,9 @@ describe("point wallet API mapping", () => {
     assert.deepEqual(calls[0].config, {
       params: {
         cursor: "cursor-1",
+        from: "2026-06-01",
         limit: 20,
-        month: "2026-06",
+        to: "2026-07-01",
         type: "deposit",
       },
     });
@@ -132,6 +134,8 @@ describe("point wallet API mapping", () => {
     assert.equal(calls.length, 1);
     assert.equal(calls[0].url, "/points/wallet-history");
     assert.equal(Object.hasOwn(calls[0].config.params ?? {}, "month"), false);
+    assert.equal(Object.hasOwn(calls[0].config.params ?? {}, "from"), false);
+    assert.equal(Object.hasOwn(calls[0].config.params ?? {}, "to"), false);
   });
 
   it("requires month on the month-filtered wallet-history helper", async () => {
@@ -175,6 +179,30 @@ describe("point wallet API mapping", () => {
     assert.throws(
       () => pointService.getWalletHistory({ month: "2026-13" }),
       /wallet history month must be YYYY-MM/,
+    );
+  });
+
+  it("rejects invalid wallet-history range params before calling the API", async () => {
+    const pointService = createPointService({
+      get: () => Promise.resolve({ data: { items: [], next_cursor: null } }),
+      post: () => Promise.reject(new Error("unused")),
+    });
+
+    assert.throws(
+      () => pointService.getWalletHistory({ from: "2026-06-01" }),
+      /requires both from and to/,
+    );
+    assert.throws(
+      () => pointService.getWalletHistory({ from: "2026-07-01", to: "2026-06-01" }),
+      /from < to/,
+    );
+    assert.throws(
+      () => pointService.getWalletHistory({ from: "2026-02-31", to: "2026-03-01" }),
+      /invalid date string/,
+    );
+    assert.throws(
+      () => pointService.getWalletHistory({ from: "2026-06-01", month: "2026-06", to: "2026-07-01" }),
+      /cannot be combined/,
     );
   });
 
