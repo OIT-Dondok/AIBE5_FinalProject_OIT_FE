@@ -8,4 +8,8 @@ export const readAllNotifications = () =>
   api.patch<void>('/notifications/read-all');
 
 export const registerDevice = (token: string) =>
-  api.post<void>('/notifications/devices', { token });
+  api.post<void>('/notifications/devices', {
+    platform: 'WEB',
+    fcm_token: token,
+    device_id: crypto.randomUUID(),
+  });
