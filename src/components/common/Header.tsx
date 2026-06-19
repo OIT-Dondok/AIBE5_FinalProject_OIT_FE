@@ -68,6 +68,7 @@ export const Header = ({
                             type="button"
                             aria-label="알림 열기"
                             className="p-1 -mr-1 hover:opacity-75 active:scale-95 transition-all"
+                            onClick={() => router.push("/notifications")}
                         >
                             <Bell size={24} className="text-text-primary" />
                         </button>

@@ -70,3 +70,6 @@ tsconfig.tsbuildinfo
 
 # 시안 모음 - 김한비 추가
 .local-designs/
+
+# Java symlinks (Homebrew openjdk - must not sit in project root)
+*.jdk
