@@ -54,9 +54,9 @@ function formatDecisionType(type: string | null | undefined): string | null {
 }
 
 const EXIF_RISK_LABEL: Record<string, string> = {
-  NORMAL: "정상",
-  MISSING: "EXIF 없음",
-  TIME_INVALID: "촬영 시각 확인 필요",
+  NORMAL: "검증 성공",
+  MISSING: "메타데이터 없음",
+  TIME_INVALID: "촬영 시간 확인 필요",
 };
 
 function formatExifRisk(risk: string | null | undefined): string {
