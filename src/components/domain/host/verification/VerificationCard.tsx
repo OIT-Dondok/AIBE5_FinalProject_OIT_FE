@@ -57,7 +57,7 @@ export function VerificationCard({
         ? "rejected"
         : null;
 
-  const handleHeaderClick = (e: React.MouseEvent) => {
+  const handleHeaderClick = (e: React.MouseEvent | React.KeyboardEvent) => {
     if ((e.target as HTMLElement).closest("a")) {
       return;
     }
@@ -126,7 +126,7 @@ export function VerificationCard({
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
-              handleHeaderClick(e as any);
+              handleHeaderClick(e);
             }
           }}
           className="w-full px-4 py-3.5 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#4d73d9] focus:ring-inset rounded-t-[22px]"

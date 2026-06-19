@@ -84,6 +84,7 @@ export function HostSummaryCard({ crewDetail }: { crewDetail: HostCrewDetailMock
   const [crewStatus, setCrewStatus] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<string>("");
   const [participantsInfo, setParticipantsInfo] = useState<{ current: number; max: number } | null>(null);
+  const [isCardExpanded, setIsCardExpanded] = useState(false);
 
   useEffect(() => {
     if (!isListOpen) return;
@@ -163,9 +164,11 @@ export function HostSummaryCard({ crewDetail }: { crewDetail: HostCrewDetailMock
   const categoryBg = category ? (CATEGORY_BG[category] ?? "bg-slate-50 text-slate-600") : "bg-slate-50 text-slate-600";
   const showImage = selectedCrew?.image_url;
 
-  const statusLabel = selectedCrew ? (STATUS_CONFIG[selectedCrew.status]?.label ?? "종료됨") : "모집중";
-  const statusColor = selectedCrew ? (STATUS_CONFIG[selectedCrew.status]?.text ?? "text-text-secondary") : "text-primary-blue";
-  const statusDot = selectedCrew ? (STATUS_CONFIG[selectedCrew.status]?.dot ?? "bg-text-secondary/50") : "bg-primary-green/60";
+  const currentStatus = selectedCrew?.status ?? crewStatus ?? crewDetail.status ?? "CLOSED";
+  const statusConfig = STATUS_CONFIG[currentStatus] ?? STATUS_CONFIG.CLOSED;
+  const statusLabel = statusConfig.label;
+  const statusColor = statusConfig.text;
+  const statusDot = statusConfig.dot;
 
   return (
     <div className="flex flex-col gap-2">
@@ -251,14 +254,14 @@ export function HostSummaryCard({ crewDetail }: { crewDetail: HostCrewDetailMock
       <div
         role="button"
         tabIndex={0}
-        onClick={() => router.push(`/crews/${crewDetail.crew_id}`)}
+        onClick={() => setIsCardExpanded((prev) => !prev)}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            router.push(`/crews/${crewDetail.crew_id}`);
+            setIsCardExpanded((prev) => !prev);
           }
         }}
-        className="bg-card rounded-[24px] flex flex-col border border-text-secondary/10 shadow-sm relative overflow-hidden p-5 gap-4 cursor-pointer select-none active:scale-[0.995] hover:border-text-secondary/20 hover:shadow-md transition-all duration-200"
+        className="bg-card rounded-[24px] flex flex-col border border-text-secondary/10 shadow-sm relative overflow-hidden p-5 gap-4 cursor-pointer select-none active:scale-[0.995] hover:border-text-secondary/20 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-green focus:ring-offset-2"
       >
         {/* 상단: 이모지 + 크루명/상태 + 보증금 */}
         <div className="flex items-center gap-3.5">
@@ -279,7 +282,22 @@ export function HostSummaryCard({ crewDetail }: { crewDetail: HostCrewDetailMock
           </div>
 
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1 mb-1.5 min-w-0">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(`/crews/${crewDetail.crew_id}`);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  router.push(`/crews/${crewDetail.crew_id}`);
+                }
+              }}
+              className="flex items-center gap-1 mb-1.5 min-w-0 cursor-pointer hover:opacity-75 active:opacity-50 transition-opacity focus:outline-none focus:underline"
+            >
               <p className="text-[15px] font-bold text-text-primary leading-tight truncate">
                 {displayTitle}
               </p>
@@ -291,12 +309,20 @@ export function HostSummaryCard({ crewDetail }: { crewDetail: HostCrewDetailMock
             </div>
           </div>
 
-          <div className="text-right flex-shrink-0">
-            <p className="text-[15px] font-extrabold text-primary-green leading-tight">
-              {selectedCrew ? selectedCrew.deposit_amount.toLocaleString() : "0"}
-              <span className="text-xs font-semibold ml-0.5">원</span>
-            </p>
-            <p className="text-[10px] text-text-secondary mt-0.5 tracking-tight">보증금 💰</p>
+          <div className="flex items-center gap-2 flex-shrink-0 text-right">
+            <div>
+              <p className="text-[15px] font-extrabold text-primary-green leading-tight">
+                {selectedCrew ? selectedCrew.deposit_amount.toLocaleString() : "0"}
+                <span className="text-xs font-semibold ml-0.5">원</span>
+              </p>
+              <p className="text-[10px] text-text-secondary mt-0.5 tracking-tight">보증금 💰</p>
+            </div>
+            <ChevronDown
+              size={16}
+              className={`text-text-secondary/50 transition-transform duration-300 ${
+                isCardExpanded ? "rotate-180" : ""
+              }`}
+            />
           </div>
         </div>
 
@@ -316,9 +342,9 @@ export function HostSummaryCard({ crewDetail }: { crewDetail: HostCrewDetailMock
           </div>
         </div>
 
-        {/* 하단: 기간 및 멤버 수 */}
-        {selectedCrew && (
-          <div className="flex items-center justify-between pt-2.5 border-t border-text-secondary/10">
+        {/* 하단: 기간 및 멤버 수 (아코디언 토글 노출) */}
+        {isCardExpanded && selectedCrew && (
+          <div className="flex items-center justify-between pt-2.5 border-t border-text-secondary/10 animate-dropdown-open">
             <div className="relative bg-[#FFFEEA] border border-amber-200/50 shadow-sm rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 shrink-0">
               <Pin size={11} className="text-amber-600/70 rotate-45 shrink-0" />
               <span className="text-[11px] font-bold text-amber-800 tracking-tight">

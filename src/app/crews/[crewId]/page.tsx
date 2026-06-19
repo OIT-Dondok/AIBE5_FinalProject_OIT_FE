@@ -43,7 +43,7 @@ export default function CrewDetailPage() {
   );
 
   const handleDisband = async () => {
-    if (!crewId || isDisbanding) return;
+    if (!Number.isFinite(crewId) || crewId <= 0 || isDisbanding) return;
     setIsDisbanding(true);
     try {
       await disbandCrew(crewId);

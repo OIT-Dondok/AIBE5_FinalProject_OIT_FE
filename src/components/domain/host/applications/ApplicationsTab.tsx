@@ -89,9 +89,9 @@ function ApplicationCard({
           onClick={(e) => e.stopPropagation()}
         >
           <div aria-hidden="true" className="h-10 w-10 shrink-0 rounded-full flex items-center justify-center overflow-hidden text-sm font-extrabold text-primary-blue bg-primary-blue/10 border border-primary-blue/10 shadow-inner">
-            {(item.profile_image_url || (item as any).profileImageUrl) ? (
+            {item.profile_image_url ? (
               <img
-                src={item.profile_image_url || (item as any).profileImageUrl || undefined}
+                src={item.profile_image_url}
                 alt={`${item.nickname} 프로필 이미지`}
                 className="w-full h-full object-cover"
               />
@@ -166,23 +166,42 @@ export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) 
       ].filter((item) => item.member_uuid !== myUuid);
 
       // 프로필 이미지 누락 보완 (백엔드에서 profile_image_url이 null로 내려오는 현상 방어)
-      const allWithProfiles = await Promise.all(
-        all.map(async (item) => {
-          if (!item.profile_image_url) {
-            try {
-              const profileRes = await getMemberProfile(item.member_uuid);
-              const profileImg = profileRes.data.profile_image_url || (profileRes.data as any).profileImageUrl;
-              return {
-                ...item,
-                profile_image_url: profileImg || null,
-              };
-            } catch (err) {
-              return item;
-            }
-          }
-          return item;
-        })
+      // 중복 member_uuid를 제거한 후 3개씩 배치 처리하여 과도한 병렬 네트워크 요청 방지
+      const missingProfileUuids = Array.from(
+        new Set(
+          all
+            .filter((item) => !item.profile_image_url)
+            .map((item) => item.member_uuid)
+        )
       );
+
+      const uuidToProfileMap = new Map<string, string | null>();
+      const batchSize = 3;
+
+      for (let i = 0; i < missingProfileUuids.length; i += batchSize) {
+        const batch = missingProfileUuids.slice(i, i + batchSize);
+        await Promise.all(
+          batch.map(async (uuid) => {
+            try {
+              const profileRes = await getMemberProfile(uuid);
+              uuidToProfileMap.set(uuid, profileRes.data.profile_image_url || null);
+            } catch (err) {
+              uuidToProfileMap.set(uuid, null);
+            }
+          })
+        );
+      }
+
+      const allWithProfiles = all.map((item) => {
+        if (!item.profile_image_url) {
+          const profileImg = uuidToProfileMap.get(item.member_uuid);
+          return {
+            ...item,
+            profile_image_url: profileImg || null,
+          };
+        }
+        return item;
+      });
 
       setApplications(allWithProfiles);
       onPendingCountChangeRef.current?.(
