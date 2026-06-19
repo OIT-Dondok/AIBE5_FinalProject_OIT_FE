@@ -142,15 +142,14 @@ describe("point wallet API mapping", () => {
         return Promise.resolve({ data: { items: [], next_cursor: null } });
       },
       post: () => Promise.reject(new Error("unused")),
-    }) as {
-      getWalletHistoryByMonth: (params: { month?: string; limit?: number; type?: string }) => Promise<{
-        data: { items: []; next_cursor: string | null };
-      }>;
-    };
+    });
+    const getWalletHistoryByMonth = pointService.getWalletHistoryByMonth as (
+      params: { month?: string; limit?: number; type?: string },
+    ) => ReturnType<typeof pointService.getWalletHistory>;
 
     assert.throws(
       () =>
-        pointService.getWalletHistoryByMonth({
+        getWalletHistoryByMonth({
           limit: 20,
           type: "deposit",
         }),
