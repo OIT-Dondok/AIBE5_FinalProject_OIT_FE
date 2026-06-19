@@ -99,9 +99,9 @@ function getDateLabel(isoString: string): string {
 // ── 날짜별 그루핑 ────────────────────────────────────────────────────────────
 function groupByDate(items: NotificationItem[]): Array<{ label: string; items: NotificationItem[] }> {
   const map = new Map<string, NotificationItem[]>();
-  const sorted = [...items].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  const sorted = [...items].sort((a, b) => new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime());
   for (const item of sorted) {
-    const label = getDateLabel(item.created_at);
+    const label = getDateLabel(item.occurred_at);
     if (!map.has(label)) map.set(label, []);
     map.get(label)!.push(item);
   }
@@ -119,9 +119,6 @@ function NotificationCard({
   const category = getCategory(item.event_type);
   const categoryMeta = CATEGORY_META[category];
   const CategoryIcon = categoryMeta.icon;
-  const message = item.crew_name && item.body.startsWith(`${item.crew_name} — `)
-    ? item.body.slice(`${item.crew_name} — `.length)
-    : item.body;
 
   return (
     <button
@@ -150,17 +147,12 @@ function NotificationCard({
               )}
             </div>
             <span className="text-[11px] font-medium text-text-secondary">
-              {formatRelativeTime(item.created_at)}
+              {formatRelativeTime(item.occurred_at)}
             </span>
           </div>
           <p className="mt-1.5 break-words text-[14px] font-bold leading-snug text-text-primary">
-            {message}
+            {item.display_text}
           </p>
-          {item.crew_name && (
-            <p className="mt-1.5 break-words text-xs font-semibold leading-tight text-[#666666]">
-              {item.crew_name}
-            </p>
-          )}
         </div>
       </div>
     </button>

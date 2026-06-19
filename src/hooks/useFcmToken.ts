@@ -22,32 +22,41 @@ export function useFcmToken(enabled: boolean) {
   const attemptedRef = useRef(false);
 
   useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[FCM] enabled:', enabled);
+    }
     if (!enabled || attemptedRef.current) return;
     if (sessionStorage.getItem(SESSION_KEY)) return;
     attemptedRef.current = true;
 
     void (async () => {
+      const dev = process.env.NODE_ENV === 'development';
       try {
         const permission = await Notification.requestPermission();
+        if (dev) console.log('[FCM] permission:', permission);
         if (permission !== 'granted') return;
 
         const sw = await navigator.serviceWorker.register(SW_PATH);
+        if (dev) console.log('[FCM] SW registered:', sw.scope, '| active:', !!sw.active);
         sw.active?.postMessage({ type: 'FIREBASE_CONFIG', config: firebaseConfig });
 
         const messaging = getFirebaseMessaging();
+        if (dev) console.log('[FCM] messaging instance:', !!messaging);
         if (!messaging) return;
 
         const token = await getToken(messaging, {
           vapidKey: VAPID_KEY,
           serviceWorkerRegistration: sw,
         });
+        if (dev) console.log('[FCM] token:', token ? token.slice(0, 20) + '…' : 'null');
 
         if (!token) return;
 
         await registerDevice(token);
+        if (dev) console.log('[FCM] device registered ✓');
         sessionStorage.setItem(SESSION_KEY, '1');
-      } catch {
-        // 알림 거부 또는 SW 등록 실패는 무시
+      } catch (err) {
+        if (dev) console.error('[FCM]', err);
       }
     })();
   }, [enabled]);
