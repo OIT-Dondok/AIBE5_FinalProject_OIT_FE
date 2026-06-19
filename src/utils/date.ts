@@ -34,6 +34,70 @@ export function formatFullDate(dateStr: string): string {
   return `${d.getUTCFullYear()}.${mm}.${dd}`;
 }
 
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function formatUtcYmd(d: Date): string {
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function parseYmd(dateStr: string): { year: number; month: number; day: number } {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  if (!year || !month || !day) {
+    throw new Error(`[parseYmd] invalid date string: ${dateStr}`);
+  }
+  return { year, month, day };
+}
+
+/**
+ * 현재 시각을 KST(Asia/Seoul) 캘린더 날짜 `YYYY-MM-DD`로 반환합니다.
+ * 테스트에서는 기준 시각을 주입해 UTC 경계 근처 날짜 밀림을 검증할 수 있습니다.
+ */
+export function getKstTodayYmd(now: Date = new Date()): string {
+  return formatUtcYmd(new Date(now.getTime() + KST_OFFSET_MS));
+}
+
+export function getMsUntilNextKstDay(now: Date = new Date()): number {
+  const kstNow = new Date(now.getTime() + KST_OFFSET_MS);
+  const nextKstMidnightUtcMs =
+    Date.UTC(kstNow.getUTCFullYear(), kstNow.getUTCMonth(), kstNow.getUTCDate() + 1) -
+    KST_OFFSET_MS;
+  return Math.max(0, nextKstMidnightUtcMs - now.getTime());
+}
+
+/**
+ * `YYYY-MM-DD` 캘린더 날짜에 일수를 더합니다.
+ * 입력/출력은 타임존 없는 KST 날짜 키로 취급하고 UTC 자정 기준으로 계산해
+ * 브라우저 로컬 타임존에 따른 날짜 밀림을 방지합니다.
+ */
+export function addDaysToYmd(dateStr: string, days: number): string {
+  const { year, month, day } = parseYmd(dateStr);
+  return formatUtcYmd(new Date(Date.UTC(year, month - 1, day) + days * DAY_MS));
+}
+
+/**
+ * `YYYY-MM-DD` 날짜 키를 `YYYY.MM.DD` 표시 문자열로 변환합니다.
+ */
+export function formatYmdDot(dateStr: string): string {
+  const { year, month, day } = parseYmd(dateStr);
+  return `${year}.${String(month).padStart(2, '0')}.${String(day).padStart(2, '0')}`;
+}
+
+/**
+ * ISO `server_time`을 KST 기준 `YYYY-MM-DD` 날짜 키로 변환합니다.
+ */
+export function getKstDateKeyFromIso(isoString: string): string {
+  return formatUtcYmd(toKstDate(isoString));
+}
+
+export function compareYmd(a: string, b: string): number {
+  if (a === b) return 0;
+  return a < b ? -1 : 1;
+}
+
 /**
  * YYYY-MM-DD 두 날짜 사이의 일수를 UTC 기준으로 계산합니다.
  * 브라우저 로컬 타임존에 관계없이 일관된 결과를 반환합니다.
