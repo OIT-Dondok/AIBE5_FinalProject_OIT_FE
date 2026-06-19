@@ -65,7 +65,11 @@ const CATEGORY_META: Record<
 // ── 딥링크 ────────────────────────────────────────────────────────────────────
 function getDeepLink(item: NotificationItem): string | null {
   if (item.deep_link) {
-    return item.deep_link.replace(/^dondok:\/\//, '/');
+    const converted = item.deep_link.replace(/^dondok:\/\//, '/');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[DeepLink]', item.deep_link, '→', converted);
+    }
+    return converted;
   }
   if (!item.crew_id) return null;
   switch (item.event_type) {
