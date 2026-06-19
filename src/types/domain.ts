@@ -1093,3 +1093,19 @@ export interface NotificationsResponse {
   next_cursor: string | null;
   unread_count: number;
 }
+
+// GET/PATCH /api/notification-settings
+export interface NotificationSettingsRequest {
+  emoji_reaction_enabled: boolean;
+  host_verification_enabled: boolean;
+  mission_deadline_enabled: boolean;
+  daily_result_enabled: boolean;
+  final_settlement_enabled: boolean;
+  crew_dissolved_enabled: boolean;
+  crew_news_enabled: boolean;
+  dnd_enabled: boolean;
+  dnd_start: string;
+  dnd_end: string;
+}
+
+export interface NotificationSettingsResponse extends NotificationSettingsRequest {}

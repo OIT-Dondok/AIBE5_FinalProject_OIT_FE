@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ChevronRight, Moon, X } from "lucide-react";
+import { getNotificationSettings, updateNotificationSettings } from "@/api/notification";
 import { BottomSheet } from "@/components/common/BottomSheet";
 import { Modal } from "@/components/common/Modal";
+import { Toast, type ToastType } from "@/components/common/Toast";
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
+import type { NotificationSettingsRequest, NotificationSettingsResponse } from "@/types/domain";
 
 interface NotificationSettings {
   emojiReaction: boolean;
@@ -18,19 +22,6 @@ interface NotificationSettings {
   dndEnd: string;
 }
 
-const DEFAULT_SETTINGS: NotificationSettings = {
-  emojiReaction: true,
-  hostVerification: true,
-  missionDeadline: true,
-  dailyResult: true,
-  finalSettlement: true,
-  crewDissolved: true,
-  crewNews: true,
-  dndEnabled: false,
-  dndStart: "22:00",
-  dndEnd: "08:00",
-};
-
 const TOGGLE_ROWS: Array<{ key: keyof NotificationSettings; label: string; desc: string }> = [
   { key: "emojiReaction", label: "이모지 리액션", desc: "새 리액션 등록" },
   { key: "hostVerification", label: "방장 검증 대기", desc: "새 인증 업로드, 미검토 인증 존재" },
@@ -40,6 +31,51 @@ const TOGGLE_ROWS: Array<{ key: keyof NotificationSettings; label: string; desc:
   { key: "crewDissolved", label: "크루 해체", desc: "" },
   { key: "crewNews", label: "크루 소식", desc: "크루 종료 예정, 새 공지 등록, 공지 댓글 등록" },
 ];
+
+type FlexibleSettingsResponse = NotificationSettingsResponse & Partial<Record<string, boolean | string | null>>;
+
+const FALLBACK_DND_START = "22:00";
+const FALLBACK_DND_END = "08:00";
+
+function boolValue(data: FlexibleSettingsResponse, primary: keyof NotificationSettingsResponse, fallback: string) {
+  return Boolean(data[primary] ?? data[fallback]);
+}
+
+function timeValue(value: string | null | undefined, fallback: string) {
+  return value?.slice(0, 5) || fallback;
+}
+
+function toSettings(data: NotificationSettingsResponse): NotificationSettings {
+  const source = data as FlexibleSettingsResponse;
+
+  return {
+    emojiReaction: boolValue(source, "emoji_reaction_enabled", "emoji_reaction"),
+    hostVerification: boolValue(source, "host_verification_enabled", "host_verification"),
+    missionDeadline: boolValue(source, "mission_deadline_enabled", "mission_deadline"),
+    dailyResult: boolValue(source, "daily_result_enabled", "daily_result"),
+    finalSettlement: boolValue(source, "final_settlement_enabled", "final_settlement"),
+    crewDissolved: boolValue(source, "crew_dissolved_enabled", "crew_dissolved"),
+    crewNews: boolValue(source, "crew_news_enabled", "crew_news"),
+    dndEnabled: boolValue(source, "dnd_enabled", "dnd"),
+    dndStart: timeValue(source.dnd_start as string | null | undefined, FALLBACK_DND_START),
+    dndEnd: timeValue(source.dnd_end as string | null | undefined, FALLBACK_DND_END),
+  };
+}
+
+function toRequest(settings: NotificationSettings): NotificationSettingsRequest {
+  return {
+    emoji_reaction_enabled: settings.emojiReaction,
+    host_verification_enabled: settings.hostVerification,
+    mission_deadline_enabled: settings.missionDeadline,
+    daily_result_enabled: settings.dailyResult,
+    final_settlement_enabled: settings.finalSettlement,
+    crew_dissolved_enabled: settings.crewDissolved,
+    crew_news_enabled: settings.crewNews,
+    dnd_enabled: settings.dndEnabled,
+    dnd_start: settings.dndStart,
+    dnd_end: settings.dndEnd,
+  };
+}
 
 function Toggle({ checked, onChange, ariaLabel }: { checked: boolean; onChange: (v: boolean) => void; ariaLabel: string }) {
   return (
@@ -73,15 +109,55 @@ export function NotificationSettingsPanel({
   onSave,
   showHeading = false,
 }: NotificationSettingsPanelProps) {
-  const [settings, setSettings] = useState<NotificationSettings>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<NotificationSettings | null>(null);
   const [isDndSheetOpen, setIsDndSheetOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<ToastType>("success");
+  const [isToastOpen, setIsToastOpen] = useState(false);
+
+  const showToast = useCallback((message: string, type: ToastType = "success") => {
+    setToastMessage(message);
+    setToastType(type);
+    setIsToastOpen(true);
+  }, []);
+
+  const fetchSettings = useCallback(async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const { data } = await getNotificationSettings();
+      setSettings(toSettings(data));
+    } catch (error) {
+      setErrorMessage(getApiErrorMessage(error, {}, "알림 설정을 불러오지 못했어요. 잠시 후 다시 시도해 주세요."));
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void fetchSettings();
+  }, [fetchSettings]);
 
   const set = <K extends keyof NotificationSettings>(key: K, value: NotificationSettings[K]) =>
-    setSettings((prev) => ({ ...prev, [key]: value }));
+    setSettings((prev) => prev && { ...prev, [key]: value });
 
-  const handleSave = () => {
-    // TODO: API 연결
-    onSave?.();
+  const handleSave = async () => {
+    if (!settings || isSaving) return;
+
+    setIsSaving(true);
+    try {
+      const { data } = await updateNotificationSettings(toRequest(settings));
+      setSettings(toSettings(data));
+      showToast("알림 설정을 저장했어요.");
+      onSave?.();
+    } catch (error) {
+      showToast(getApiErrorMessage(error, {}, "알림 설정 저장에 실패했어요. 잠시 후 다시 시도해 주세요."), "error");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -95,121 +171,150 @@ export function NotificationSettingsPanel({
         </div>
       )}
 
-      <section className="overflow-hidden rounded-2xl bg-card shadow-card">
-        <div className="flex flex-col divide-y divide-text-secondary/10">
-          {TOGGLE_ROWS.map(({ key, label, desc }) => (
-            <div key={key} className="flex items-center justify-between gap-3 px-4 py-3.5">
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-text-primary">{label}</p>
-                {desc && <p className="mt-0.5 text-[11px] font-medium text-text-secondary">{desc}</p>}
-              </div>
-              <Toggle checked={settings[key] as boolean} onChange={(v) => set(key, v)} ariaLabel={label} />
-            </div>
-          ))}
+      {isLoading ? (
+        <div className="flex items-center justify-center rounded-2xl bg-card py-20 shadow-card">
+          <p className="text-sm font-semibold text-text-secondary">불러오는 중...</p>
         </div>
-      </section>
+      ) : errorMessage || !settings ? (
+        <div className="flex flex-col items-center justify-center rounded-2xl bg-card px-4 py-16 text-center shadow-card">
+          <p className="text-sm font-semibold text-text-secondary">
+            {errorMessage ?? "알림 설정을 불러오지 못했어요."}
+          </p>
+          <button
+            type="button"
+            onClick={fetchSettings}
+            className="mt-4 rounded-full bg-primary-green px-5 py-2 text-xs font-extrabold text-white transition-colors hover:bg-[#3F7A55]"
+          >
+            다시 시도
+          </button>
+        </div>
+      ) : (
+        <>
+          <section className="overflow-hidden rounded-2xl bg-card shadow-card">
+            <div className="flex flex-col divide-y divide-text-secondary/10">
+              {TOGGLE_ROWS.map(({ key, label, desc }) => (
+                <div key={key} className="flex items-center justify-between gap-3 px-4 py-3.5">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-text-primary">{label}</p>
+                    {desc && <p className="mt-0.5 text-[11px] font-medium text-text-secondary">{desc}</p>}
+                  </div>
+                  <Toggle checked={settings[key] as boolean} onChange={(v) => set(key, v)} ariaLabel={label} />
+                </div>
+              ))}
+            </div>
+          </section>
 
-      <button
-        type="button"
-        onClick={() => setIsDndSheetOpen(true)}
-        className="mt-4 flex w-full items-center gap-3 rounded-2xl bg-card px-4 py-4 text-left shadow-card transition-[background-color,transform] duration-150 ease-out hover:bg-white active:scale-[0.985] active:bg-[#F7F7F3]"
-        aria-label="방해금지 시간 설정"
-      >
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EEF5EE] text-primary-green">
-          <Moon size={18} strokeWidth={2.2} />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-bold text-text-primary">방해금지 시간</span>
-          <span className="mt-0.5 block text-xs font-semibold text-text-secondary">
-            {settings.dndStart} - {settings.dndEnd}
-          </span>
-        </span>
-        <span
-          className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-extrabold ${
-            settings.dndEnabled
-              ? "bg-[#E8F2EB] text-primary-green"
-              : "bg-text-secondary/10 text-text-secondary"
-          }`}
-        >
-          {settings.dndEnabled ? "활성" : "꺼짐"}
-        </span>
-        <ChevronRight size={18} className="shrink-0 text-text-secondary/70" />
-      </button>
+          <button
+            type="button"
+            onClick={() => setIsDndSheetOpen(true)}
+            className="mt-4 flex w-full items-center gap-3 rounded-2xl bg-card px-4 py-4 text-left shadow-card transition-[background-color,transform] duration-150 ease-out hover:bg-white active:scale-[0.985] active:bg-[#F7F7F3]"
+            aria-label="방해금지 시간 설정"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EEF5EE] text-primary-green">
+              <Moon size={18} strokeWidth={2.2} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-bold text-text-primary">방해금지 시간</span>
+              <span className="mt-0.5 block text-xs font-semibold text-text-secondary">
+                {settings.dndStart} - {settings.dndEnd}
+              </span>
+            </span>
+            <span
+              className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-extrabold ${
+                settings.dndEnabled
+                  ? "bg-[#E8F2EB] text-primary-green"
+                  : "bg-text-secondary/10 text-text-secondary"
+              }`}
+            >
+              {settings.dndEnabled ? "활성" : "꺼짐"}
+            </span>
+            <ChevronRight size={18} className="shrink-0 text-text-secondary/70" />
+          </button>
 
-      <BottomSheet
-        isOpen={isDndSheetOpen}
-        onClose={() => setIsDndSheetOpen(false)}
-        title="방해금지 시간"
-        subtitle="설정한 시간에는 알림을 받지 않아요."
-        ariaLabel="방해금지 시간 설정"
-      >
-        <div className="px-5 pb-6 pt-2">
-          <div className="rounded-2xl bg-background/70 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-bold text-text-primary">방해금지 활성화</p>
-                <p className="mt-0.5 text-[11px] font-medium text-text-secondary">
-                  {settings.dndStart} - {settings.dndEnd}
-                </p>
+          <BottomSheet
+            isOpen={isDndSheetOpen}
+            onClose={() => setIsDndSheetOpen(false)}
+            title="방해금지 시간"
+            subtitle="설정한 시간에는 알림을 받지 않아요."
+            ariaLabel="방해금지 시간 설정"
+          >
+            <div className="px-5 pb-6 pt-2">
+              <div className="rounded-2xl bg-background/70 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-bold text-text-primary">방해금지 활성화</p>
+                    <p className="mt-0.5 text-[11px] font-medium text-text-secondary">
+                      {settings.dndStart} - {settings.dndEnd}
+                    </p>
+                  </div>
+                  <Toggle checked={settings.dndEnabled} onChange={(v) => set("dndEnabled", v)} ariaLabel="방해금지 활성화" />
+                </div>
+
+                <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-end gap-2">
+                  <label className="min-w-0">
+                    <span className="mb-1.5 block text-[11px] font-bold text-text-secondary">시작</span>
+                    <input
+                      type="time"
+                      value={settings.dndStart}
+                      onChange={(e) => set("dndStart", e.target.value)}
+                      aria-label="방해금지 시작 시간"
+                      className="h-12 w-full min-w-0 rounded-xl border border-text-secondary/15 bg-card px-3 text-center text-sm font-extrabold text-text-primary shadow-sm focus:border-primary-green focus:outline-none focus:ring-2 focus:ring-primary-green/15 disabled:opacity-50"
+                      disabled={!settings.dndEnabled}
+                    />
+                  </label>
+                  <span className="pb-3.5 text-sm font-bold text-text-secondary/70">~</span>
+                  <label className="min-w-0">
+                    <span className="mb-1.5 block text-[11px] font-bold text-text-secondary">종료</span>
+                    <input
+                      type="time"
+                      value={settings.dndEnd}
+                      onChange={(e) => set("dndEnd", e.target.value)}
+                      aria-label="방해금지 종료 시간"
+                      className="h-12 w-full min-w-0 rounded-xl border border-text-secondary/15 bg-card px-3 text-center text-sm font-extrabold text-text-primary shadow-sm focus:border-primary-green focus:outline-none focus:ring-2 focus:ring-primary-green/15 disabled:opacity-50"
+                      disabled={!settings.dndEnabled}
+                    />
+                  </label>
+                </div>
               </div>
-              <Toggle checked={settings.dndEnabled} onChange={(v) => set("dndEnabled", v)} ariaLabel="방해금지 활성화" />
-            </div>
 
-            <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-end gap-2">
-              <label className="min-w-0">
-                <span className="mb-1.5 block text-[11px] font-bold text-text-secondary">시작</span>
-                <input
-                  type="time"
-                  value={settings.dndStart}
-                  onChange={(e) => set("dndStart", e.target.value)}
-                  aria-label="방해금지 시작 시간"
-                  className="h-12 w-full min-w-0 rounded-xl border border-text-secondary/15 bg-card px-3 text-center text-sm font-extrabold text-text-primary shadow-sm focus:border-primary-green focus:outline-none focus:ring-2 focus:ring-primary-green/15 disabled:opacity-50"
-                  disabled={!settings.dndEnabled}
-                />
-              </label>
-              <span className="pb-3.5 text-sm font-bold text-text-secondary/70">~</span>
-              <label className="min-w-0">
-                <span className="mb-1.5 block text-[11px] font-bold text-text-secondary">종료</span>
-                <input
-                  type="time"
-                  value={settings.dndEnd}
-                  onChange={(e) => set("dndEnd", e.target.value)}
-                  aria-label="방해금지 종료 시간"
-                  className="h-12 w-full min-w-0 rounded-xl border border-text-secondary/15 bg-card px-3 text-center text-sm font-extrabold text-text-primary shadow-sm focus:border-primary-green focus:outline-none focus:ring-2 focus:ring-primary-green/15 disabled:opacity-50"
-                  disabled={!settings.dndEnabled}
-                />
-              </label>
+              <button
+                type="button"
+                onClick={() => setIsDndSheetOpen(false)}
+                className="mt-4 h-12 w-full rounded-xl bg-primary-green text-sm font-extrabold text-white transition-colors hover:bg-[#3F7A55]"
+              >
+                적용
+              </button>
             </div>
+          </BottomSheet>
+
+          <div className={`mt-5 grid gap-3 ${onCancel ? "grid-cols-2" : "grid-cols-1"}`}>
+            {onCancel && (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="h-12 rounded-xl border-2 border-text-secondary/20 bg-card text-sm font-extrabold text-text-primary transition-colors hover:bg-text-secondary/5"
+              >
+                취소
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={isSaving}
+              className="h-12 rounded-xl bg-primary-green text-sm font-extrabold text-white transition-colors hover:bg-[#3F7A55] disabled:opacity-60"
+            >
+              {isSaving ? "저장 중..." : "저장"}
+            </button>
           </div>
+        </>
+      )}
 
-          <button
-            type="button"
-            onClick={() => setIsDndSheetOpen(false)}
-            className="mt-4 h-12 w-full rounded-xl bg-primary-green text-sm font-extrabold text-white transition-colors hover:bg-[#3F7A55]"
-          >
-            적용
-          </button>
-        </div>
-      </BottomSheet>
-
-      <div className={`mt-5 grid gap-3 ${onCancel ? "grid-cols-2" : "grid-cols-1"}`}>
-        {onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-12 rounded-xl border-2 border-text-secondary/20 bg-card text-sm font-extrabold text-text-primary transition-colors hover:bg-text-secondary/5"
-          >
-            취소
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={handleSave}
-          className="h-12 rounded-xl bg-primary-green text-sm font-extrabold text-white transition-colors hover:bg-[#3F7A55]"
-        >
-          저장
-        </button>
-      </div>
+      <Toast
+        message={toastMessage}
+        isOpen={isToastOpen}
+        onClose={() => setIsToastOpen(false)}
+        type={toastType}
+      />
     </div>
   );
 }
