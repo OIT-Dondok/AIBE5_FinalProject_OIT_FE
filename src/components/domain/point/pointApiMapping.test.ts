@@ -120,6 +120,39 @@ describe("point wallet API mapping", () => {
     assert.equal(Object.hasOwn(calls[0].config.params ?? {}, "month"), false);
   });
 
+  it("requires month on the month-filtered wallet-history helper", async () => {
+    const calls: Array<{ url: string; config: { params?: Record<string, unknown> } }> = [];
+    const pointService = createPointService({
+      get: (url: string, config?: unknown) => {
+        calls.push({ url, config: (config as { params?: Record<string, unknown> } | undefined) ?? {} });
+        return Promise.resolve({ data: { items: [], next_cursor: null } });
+      },
+      post: () => Promise.reject(new Error("unused")),
+    }) as {
+      getWalletHistoryByMonth: (params: { month?: string; limit?: number; type?: string }) => Promise<{
+        data: { items: []; next_cursor: string | null };
+      }>;
+    };
+
+    assert.throws(
+      () =>
+        pointService.getWalletHistoryByMonth({
+          limit: 20,
+          type: "deposit",
+        }),
+      /wallet history month is required/,
+    );
+
+    await pointService.getWalletHistoryByMonth({
+      month: "2026-06",
+      limit: 20,
+      type: "deposit",
+    });
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].url, "/points/wallet-history");
+    assert.deepEqual(calls[0].config.params, { month: "2026-06", limit: 20, type: "deposit" });
+  });
+
   it("rejects invalid wallet-history month params before calling the API", async () => {
     const pointService = createPointService({
       get: () => Promise.resolve({ data: { items: [], next_cursor: null } }),

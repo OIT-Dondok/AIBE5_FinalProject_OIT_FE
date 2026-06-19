@@ -10,7 +10,7 @@ import {
   getWalletHistoryTypeParam,
   toWalletHistoryViewItem,
 } from "@/components/domain/point/pointViewModel";
-import { getWalletHistory } from "@/services/point";
+import { getWalletHistoryByMonth } from "@/services/point";
 import type { WalletHistoryItem } from "@/types/domain";
 
 const HISTORY_PAGE_SIZE = 20;
@@ -48,7 +48,7 @@ export default function DodinHistoryPage() {
       setErrorMessage("");
 
       try {
-        const { data } = await getWalletHistory({
+        const { data } = await getWalletHistoryByMonth({
           cursor,
           limit: HISTORY_PAGE_SIZE,
           month,
