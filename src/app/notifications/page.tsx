@@ -126,7 +126,7 @@ function NotificationCard({
       type="button"
       onClick={() => onClick(item)}
       className={`w-full origin-center rounded-2xl px-4 py-3.5 text-left transition-[background-color,transform] duration-150 ease-out active:scale-[0.985] ${
-        item.is_read ? "bg-card active:bg-[#F4F4F4]" : "bg-[#F4F7FF] active:bg-[#E9EEFB]"
+        item.read_at !== null ? "bg-card active:bg-[#F4F4F4]" : "bg-[#F4F7FF] active:bg-[#E9EEFB]"
       }`}
     >
       <div className="flex items-start gap-3">
@@ -143,7 +143,7 @@ function NotificationCard({
               <span className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${categoryMeta.badgeClassName}`}>
                 {category}
               </span>
-              {!item.is_read && (
+              {item.read_at === null && (
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary-blue" aria-label="읽지 않음" />
               )}
             </div>
