@@ -7,6 +7,7 @@ export interface NotificationItem {
   display_text: string;
   is_read: boolean;
   crew_id?: number;
+  crew_name?: string;
   mission_log_id?: number;
   occurred_at: string;
 }

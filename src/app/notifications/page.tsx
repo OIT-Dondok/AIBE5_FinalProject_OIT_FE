@@ -153,6 +153,11 @@ function NotificationCard({
           <p className="mt-1.5 break-words text-[14px] font-bold leading-snug text-text-primary">
             {item.display_text}
           </p>
+          {item.crew_name && (
+            <p className="mt-1.5 break-words text-xs font-semibold leading-tight text-[#666666]">
+              {item.crew_name}
+            </p>
+          )}
         </div>
       </div>
     </button>
