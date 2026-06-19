@@ -34,16 +34,88 @@ export function formatFullDate(dateStr: string): string {
   return `${d.getUTCFullYear()}.${mm}.${dd}`;
 }
 
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function formatUtcYmd(d: Date): string {
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function parseYmd(dateStr: string): { year: number; month: number; day: number } {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    throw new Error(`[parseYmd] invalid date string: ${dateStr}`);
+  }
+
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const maxDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+
+  if (!year || month < 1 || month > 12 || day < 1 || day > maxDay) {
+    throw new Error(`[parseYmd] invalid date string: ${dateStr}`);
+  }
+  return { year, month, day };
+}
+
+/**
+ * 현재 시각을 KST(Asia/Seoul) 캘린더 날짜 `YYYY-MM-DD`로 반환합니다.
+ * 테스트에서는 기준 시각을 주입해 UTC 경계 근처 날짜 밀림을 검증할 수 있습니다.
+ */
+export function getKstTodayYmd(now: Date = new Date()): string {
+  return formatUtcYmd(new Date(now.getTime() + KST_OFFSET_MS));
+}
+
+export function getMsUntilNextKstDay(now: Date = new Date()): number {
+  const kstNow = new Date(now.getTime() + KST_OFFSET_MS);
+  const nextKstMidnightUtcMs =
+    Date.UTC(kstNow.getUTCFullYear(), kstNow.getUTCMonth(), kstNow.getUTCDate() + 1) -
+    KST_OFFSET_MS;
+  return Math.max(0, nextKstMidnightUtcMs - now.getTime());
+}
+
+/**
+ * `YYYY-MM-DD` 캘린더 날짜에 일수를 더합니다.
+ * 입력/출력은 타임존 없는 KST 날짜 키로 취급하고 UTC 자정 기준으로 계산해
+ * 브라우저 로컬 타임존에 따른 날짜 밀림을 방지합니다.
+ */
+export function addDaysToYmd(dateStr: string, days: number): string {
+  const { year, month, day } = parseYmd(dateStr);
+  return formatUtcYmd(new Date(Date.UTC(year, month - 1, day) + days * DAY_MS));
+}
+
+/**
+ * `YYYY-MM-DD` 날짜 키를 `YYYY.MM.DD` 표시 문자열로 변환합니다.
+ */
+export function formatYmdDot(dateStr: string): string {
+  const { year, month, day } = parseYmd(dateStr);
+  return `${year}.${String(month).padStart(2, '0')}.${String(day).padStart(2, '0')}`;
+}
+
+/**
+ * ISO `server_time`을 KST 기준 `YYYY-MM-DD` 날짜 키로 변환합니다.
+ */
+export function getKstDateKeyFromIso(isoString: string): string {
+  return formatUtcYmd(toKstDate(isoString));
+}
+
+export function compareYmd(a: string, b: string): number {
+  parseYmd(a);
+  parseYmd(b);
+  if (a === b) return 0;
+  return a < b ? -1 : 1;
+}
+
 /**
  * YYYY-MM-DD 두 날짜 사이의 일수를 UTC 기준으로 계산합니다.
  * 브라우저 로컬 타임존에 관계없이 일관된 결과를 반환합니다.
  */
 export function calcDurationDays(start: string, end: string): number | null {
   if (!start || !end) return null;
-  const [sy, sm, sd] = start.split('-').map(Number);
-  const [ey, em, ed] = end.split('-').map(Number);
-  const startMs = Date.UTC(sy, sm - 1, sd);
-  const endMs = Date.UTC(ey, em - 1, ed);
+  const startYmd = parseYmd(start);
+  const endYmd = parseYmd(end);
+  const startMs = Date.UTC(startYmd.year, startYmd.month - 1, startYmd.day);
+  const endMs = Date.UTC(endYmd.year, endYmd.month - 1, endYmd.day);
   return Math.round((endMs - startMs) / (1000 * 60 * 60 * 24));
 }
 
@@ -82,9 +154,9 @@ export function snapToScheduledDay(
 ): string {
   if (!date || scheduleDays.length === 0) return date;
   const allowed = new Set(scheduleDays);
-  const [y, m, d] = date.split('-').map(Number);
+  const { year, month, day } = parseYmd(date);
   const step = direction === 'forward' ? 1 : -1;
-  const cursor = new Date(Date.UTC(y, m - 1, d));
+  const cursor = new Date(Date.UTC(year, month - 1, day));
 
   // 요일이 1개 이상이면 7일 내에 반드시 매칭되므로 최대 7회만 탐색한다.
   for (let i = 0; i < 7; i += 1) {

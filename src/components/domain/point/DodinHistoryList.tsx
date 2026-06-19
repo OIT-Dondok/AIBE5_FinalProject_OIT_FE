@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { ChevronDown } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 
 import {
   HistoryFilterTabs,
@@ -9,24 +10,56 @@ import {
   type HistoryFilter,
   type HistoryFilterOption,
 } from "@/components/domain/point/WalletHistorySection";
+import { BottomSheet } from "@/components/common/BottomSheet";
 import {
   formatMonthLabel,
-  type MonthFilterOption,
+  getCurrentSeoulMonth,
+  isAfterMonth,
+  getMonthStepperState,
+  shiftMonth,
   type WalletHistoryViewItem,
 } from "@/components/domain/point/pointViewModel";
 
+interface MonthOption {
+  label: string;
+  value: string;
+}
+
+const MONTH_OPTIONS_LOOKBACK = 24;
+
+function getMonthOptions(activeMonth: string) {
+  const nowMonth = getCurrentSeoulMonth();
+  const startMonth = isAfterMonth(activeMonth, nowMonth) ? activeMonth : nowMonth;
+
+  const options: MonthOption[] = Array.from({ length: MONTH_OPTIONS_LOOKBACK + 1 }, (_, index) => {
+    const value = shiftMonth(startMonth, -index);
+    return {
+      value,
+      label: formatMonthLabel(value),
+    };
+  });
+
+  if (!options.some((item) => item.value === activeMonth)) {
+    options.unshift({
+      value: activeMonth,
+      label: formatMonthLabel(activeMonth),
+    });
+  }
+
+  return options;
+}
+
 interface DodinHistoryListProps {
   activeFilter: HistoryFilter;
-  activeMonth?: string;
+  activeMonth: string;
   filters?: HistoryFilterOption[];
   hasMore: boolean;
   historyItems: WalletHistoryViewItem[];
   isLoading: boolean;
-  monthOptions: MonthFilterOption[];
   errorMessage?: string;
   onFilterChange: (filter: HistoryFilter) => void;
   onLoadMore: () => void;
-  onMonthChange: (month?: string) => void;
+  onMonthChange: (month: string) => void;
   onRetry: () => void;
 }
 
@@ -82,91 +115,90 @@ function DodinHistoryFooter({
   );
 }
 
-function DodinHistoryMonthFilter({
+function DodinHistoryMonthStepper({
   activeMonth,
-  monthOptions,
   onMonthChange,
 }: {
-  activeMonth?: string;
-  monthOptions: MonthFilterOption[];
-  onMonthChange: (month?: string) => void;
+  activeMonth: string;
+  onMonthChange: (month: string) => void;
 }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const selectedLabel = formatMonthLabel(activeMonth);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const closeOnOutsidePointer = (event: MouseEvent | TouchEvent) => {
-      const target = event.target;
-      if (!(target instanceof Node)) return;
-      if (containerRef.current?.contains(target)) return;
-
-      setIsOpen(false);
-    };
-
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", closeOnOutsidePointer);
-    document.addEventListener("touchstart", closeOnOutsidePointer);
-    document.addEventListener("keydown", closeOnEscape);
-
-    return () => {
-      document.removeEventListener("mousedown", closeOnOutsidePointer);
-      document.removeEventListener("touchstart", closeOnOutsidePointer);
-      document.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [isOpen]);
+  const [isMonthSheetOpen, setIsMonthSheetOpen] = useState(false);
+  const { canGoNext, canGoPrevious, label: selectedLabel, nextMonth, previousMonth } =
+    getMonthStepperState(activeMonth);
+  const monthOptions = useMemo(() => getMonthOptions(activeMonth), [activeMonth]);
 
   return (
-    <div ref={containerRef} className="relative">
+    <div className="flex items-center justify-between gap-3 rounded-2xl bg-background/70 px-3 py-2">
       <button
         type="button"
-        aria-expanded={isOpen}
-        aria-controls="dodin-history-month-options"
-        onClick={() => setIsOpen((current) => !current)}
-        className="inline-flex items-center gap-1 rounded-full bg-primary-green px-3.5 py-2 text-xs font-extrabold text-white shadow-sm shadow-primary-green/20 transition-colors hover:bg-primary-green/90"
+        onClick={() => {
+          if (canGoPrevious) onMonthChange(previousMonth);
+        }}
+        disabled={!canGoPrevious}
+        aria-label="이전 월 내역 보기"
+        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-card text-lg font-extrabold text-text-primary shadow-sm transition-colors hover:bg-primary-green hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-green disabled:cursor-not-allowed disabled:bg-text-secondary/10 disabled:text-text-secondary/45 disabled:shadow-none disabled:hover:bg-text-secondary/10 disabled:hover:text-text-secondary/45"
       >
-        {selectedLabel}
-        <span aria-hidden="true" className={`transition-transform ${isOpen ? "rotate-180" : ""}`}>
-          ▼
-        </span>
+        <span aria-hidden="true">‹</span>
       </button>
 
-      {isOpen && (
-        <div
-          id="dodin-history-month-options"
-          className="absolute left-0 top-full z-10 mt-2 grid max-h-72 w-36 gap-1 overflow-y-auto rounded-2xl border border-text-secondary/10 bg-card p-2 shadow-card"
+      <div className="min-w-0 text-center">
+        <button
+          type="button"
+          onClick={() => setIsMonthSheetOpen(true)}
+          aria-label="month picker"
+          className="inline-flex items-center gap-1.5 rounded-xl px-2 py-1 transition-colors hover:bg-text-secondary/5"
         >
-          {monthOptions.map((option) => {
-            const isActive = option.value === activeMonth || (!option.value && !activeMonth);
+          <span className="mt-0.5 text-[18px] font-extrabold text-text-primary tabular-nums">
+            {selectedLabel}
+          </span>
+          <ChevronDown size={14} aria-hidden="true" className="text-text-secondary" />
+        </button>
+      </div>
 
-            return (
-              <button
-                key={option.value ?? "ALL_PERIOD"}
-                type="button"
-                aria-pressed={isActive}
-                onClick={() => {
-                  onMonthChange(option.value);
-                  setIsOpen(false);
-                }}
-                className={`rounded-xl px-3 py-2 text-left text-xs font-extrabold transition-colors ${
-                  isActive
-                    ? "bg-primary-green text-white shadow-sm shadow-primary-green/20"
-                    : "text-text-secondary hover:bg-background hover:text-text-primary"
-                }`}
-              >
-                {option.label}
-              </button>
-            );
-          })}
+      <button
+        type="button"
+        onClick={() => {
+          if (canGoNext) onMonthChange(nextMonth);
+        }}
+        disabled={!canGoNext}
+        aria-label="다음 월 내역 보기"
+        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-card text-lg font-extrabold text-text-primary shadow-sm transition-colors hover:bg-primary-green hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-green disabled:cursor-not-allowed disabled:bg-text-secondary/10 disabled:text-text-secondary/45 disabled:shadow-none disabled:hover:bg-text-secondary/10 disabled:hover:text-text-secondary/45"
+      >
+        <span aria-hidden="true">›</span>
+      </button>
+
+      <BottomSheet
+        isOpen={isMonthSheetOpen}
+        onClose={() => setIsMonthSheetOpen(false)}
+        title="월별 도딘 내역"
+        ariaLabel="Select month"
+      >
+        <div className="px-5 pb-6 pt-2">
+          <div className="no-scrollbar flex max-h-[55vh] flex-col gap-1.5 overflow-y-auto">
+            {monthOptions.map((month) => {
+              const isSelected = month.value === activeMonth;
+              return (
+                <button
+                  type="button"
+                  key={month.value}
+                  onClick={() => {
+                    setIsMonthSheetOpen(false);
+                    if (!isSelected) onMonthChange(month.value);
+                  }}
+                  className={`rounded-2xl border px-4 py-3 text-left text-sm font-bold transition-colors ${
+                    isSelected
+                      ? "border-primary-green bg-primary-green/[0.09] text-primary-green"
+                      : "border-text-secondary/20 bg-card text-text-primary hover:bg-background/70"
+                  }`}
+                  aria-pressed={isSelected}
+                >
+                  {month.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      )}
+      </BottomSheet>
     </div>
   );
 }
@@ -179,7 +211,6 @@ export function DodinHistoryList({
   hasMore,
   historyItems,
   isLoading,
-  monthOptions,
   onFilterChange,
   onLoadMore,
   onMonthChange,
@@ -212,11 +243,7 @@ export function DodinHistoryList({
   return (
     <section className="overflow-hidden rounded-[24px] border border-text-secondary/10 bg-card shadow-card">
       <div className="px-4 py-4">
-        <DodinHistoryMonthFilter
-          activeMonth={activeMonth}
-          monthOptions={monthOptions}
-          onMonthChange={onMonthChange}
-        />
+        <DodinHistoryMonthStepper activeMonth={activeMonth} onMonthChange={onMonthChange} />
         <HistoryFilterTabs
           activeClassName="bg-primary-green text-white shadow-sm shadow-primary-green/20"
           activeFilter={activeFilter}
