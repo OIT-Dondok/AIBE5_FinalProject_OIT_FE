@@ -773,7 +773,7 @@ export default function CertificationsPage() {
               {isCalendarOpen && (
                 <div className="px-4">
                   <CertificationCalendar
-                    currentPeriod={selectedDate ? { start_date: selectedDate, end_date: selectedDate } : period}
+                    currentPeriod={queryPeriod}
                     todayYmd={today}
                     onApply={handlePeriodApply}
                     onClear={handlePeriodClear}

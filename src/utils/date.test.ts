@@ -22,6 +22,13 @@ describe('KST date helpers', () => {
     assert.equal(addDaysToYmd('2026-03-01', -1), '2026-02-28');
   });
 
+  it('rejects invalid calendar dates before date arithmetic', () => {
+    assert.throws(() => addDaysToYmd('2026-02-31', 1), /invalid date string/);
+    assert.throws(() => addDaysToYmd('2026-13-01', 1), /invalid date string/);
+    assert.throws(() => addDaysToYmd('2026-00-01', 1), /invalid date string/);
+    assert.throws(() => addDaysToYmd('2026-6-1', 1), /invalid date string/);
+  });
+
   it('formats API dates and server_time with KST semantics', () => {
     assert.equal(formatYmdDot('2026-06-18'), '2026.06.18');
     assert.equal(getKstDateKeyFromIso('2026-06-18T23:30:00+09:00'), '2026-06-18');

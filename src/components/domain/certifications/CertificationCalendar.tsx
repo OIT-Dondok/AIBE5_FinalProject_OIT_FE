@@ -90,6 +90,8 @@ export function CertificationCalendar({
 
   const handleDayClick = (day: number) => {
     const dateStr = toDateStr(viewYear, viewMonth, day);
+    if (dateStr > todayYmd) return;
+
     if (tab === 'date') {
       setSelStart(dateStr);
       setSelEnd(dateStr);
@@ -112,10 +114,16 @@ export function CertificationCalendar({
     }
   };
 
+  const isFutureDay = (day: number): boolean => toDateStr(viewYear, viewMonth, day) > todayYmd;
+
+  const isSelectedDay = (day: number): boolean => {
+    const dateStr = toDateStr(viewYear, viewMonth, day);
+    return dateStr === selStart || dateStr === selEnd;
+  };
+
   const getDayClassName = (day: number): string => {
     const dateStr = toDateStr(viewYear, viewMonth, day);
-    const isStart = dateStr === selStart;
-    const isEnd = dateStr === selEnd;
+    const isSelected = isSelectedDay(day);
     const inRange =
       selStart !== null &&
       selEnd !== null &&
@@ -123,7 +131,8 @@ export function CertificationCalendar({
       dateStr < selEnd;
 
     const base = 'w-8 h-8 text-xs flex items-center justify-center rounded-full transition-colors';
-    if (isStart || isEnd) return `${base} bg-primary-green text-white font-bold`;
+    if (isFutureDay(day)) return `${base} text-text-secondary/30 cursor-not-allowed`;
+    if (isSelected) return `${base} bg-primary-green text-white font-bold`;
     if (inRange) return `${base} bg-primary-green/20 text-primary-green font-medium`;
     return `${base} text-text-primary hover:bg-text-secondary/10`;
   };
@@ -199,6 +208,8 @@ export function CertificationCalendar({
                   <button
                     type="button"
                     onClick={() => handleDayClick(day)}
+                    disabled={isFutureDay(day)}
+                    aria-pressed={isSelectedDay(day)}
                     className={getDayClassName(day)}
                   >
                     {day}
