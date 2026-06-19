@@ -5,7 +5,6 @@ import { isAxiosError } from 'axios';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/common/Header';
 import { Button } from '@/components/common/Button';
-import { Modal } from '@/components/common/Modal';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { Toast } from '@/components/common/Toast';
 import StepIndicator from './_components/StepIndicator';
@@ -14,6 +13,8 @@ import Step2Identity from './_components/Step2Identity';
 import Step3Mission from './_components/Step3Mission';
 import Step4Info from './_components/Step4Info';
 import Step5Agreement from './_components/Step5Agreement';
+import { DodinShortageModal } from '@/components/domain/point/DodinShortageModal';
+import { useDodinShortage } from '@/components/domain/point/useDodinShortage';
 import { createCrew } from '@/services/crew';
 import { getPresignedUrl, uploadToS3 } from '@/services/upload';
 import { prepareImageForUpload, UnsupportedImageError } from '@/lib/prepareImageForUpload';
@@ -138,6 +139,7 @@ function validateStep4(form: CrewFormData): Step4Errors {
 
 export default function CrewNewPage() {
   const router = useRouter();
+  const shortage = useDodinShortage();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<CrewFormData>(initialFormData);
   const [step2Errors, setStep2Errors] = useState<Step2Errors>({});
@@ -385,7 +387,10 @@ export default function CrewNewPage() {
     } catch (err) {
       const code = isAxiosError<ErrorResponse>(err) ? err.response?.data?.code : undefined;
       if (code === 'INSUFFICIENT_BALANCE') {
-        showToast('크루 생성에 필요한 잔액이 부족합니다. 충전 후 다시 시도해주세요.', 'error');
+        const opened = await shortage.open(formData.deposit_amount);
+        if (!opened) {
+          showToast('크루 생성에 필요한 잔액이 부족합니다. 충전 후 다시 시도해주세요.', 'error');
+        }
       } else if (code === 'INVALID_DEPOSIT_AMOUNT') {
         showToast('보증금은 1,000원 단위, 1,000~100,000원이어야 합니다.', 'error');
       } else if (code === 'HOST_CREW_LIMIT_EXCEEDED') {
@@ -532,6 +537,14 @@ export default function CrewNewPage() {
         onClose={() => setIsToastOpen(false)}
         message={toastMessage}
         type={toastType}
+      />
+
+      <DodinShortageModal
+        isOpen={shortage.isOpen}
+        onClose={shortage.close}
+        onCharge={shortage.goToCharge}
+        requiredAmount={shortage.requiredAmount}
+        currentBalance={shortage.currentBalance}
       />
 
       <ConfirmModal
