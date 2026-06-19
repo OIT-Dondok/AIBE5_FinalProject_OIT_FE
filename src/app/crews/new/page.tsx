@@ -140,6 +140,7 @@ function validateStep4(form: CrewFormData): Step4Errors {
 export default function CrewNewPage() {
   const router = useRouter();
   const shortage = useDodinShortage();
+  const [isCheckingDeposit, setIsCheckingDeposit] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<CrewFormData>(initialFormData);
   const [step2Errors, setStep2Errors] = useState<Step2Errors>({});
@@ -303,12 +304,20 @@ export default function CrewNewPage() {
   };
 
   const handleNextFromStep3 = async () => {
+    if (isCheckingDeposit) return; // 잔액 확인 중 중복 클릭 가드
     const errors = validateStep3(formData);
     setStep3Errors(errors);
     if (Object.keys(errors).length !== 0) return;
 
     // 선택한 보증금만큼 도딘이 있는지 사전 확인 — 부족하면 모달을 띄우고 다음 단계로 넘어가지 않는다.
-    const blocked = await shortage.checkAndOpen(formData.deposit_amount);
+    // 같은 플로우 내 스텝 왕복 시 재조회를 피하도록 캐시 사용.
+    setIsCheckingDeposit(true);
+    let blocked: boolean;
+    try {
+      blocked = await shortage.openIfInsufficient(formData.deposit_amount, { useCache: true });
+    } finally {
+      setIsCheckingDeposit(false);
+    }
     if (blocked) return;
 
     // 특정 요일이면 이미 입력/AI 프리필된 시작·종료일을 (변경됐을 수 있는) 요일 기준으로 재보정한다.
@@ -392,7 +401,7 @@ export default function CrewNewPage() {
     } catch (err) {
       const code = isAxiosError<ErrorResponse>(err) ? err.response?.data?.code : undefined;
       if (code === 'INSUFFICIENT_BALANCE') {
-        const opened = await shortage.open(formData.deposit_amount);
+        const opened = await shortage.openIfInsufficient(formData.deposit_amount);
         if (!opened) {
           showToast('크루 생성에 필요한 잔액이 부족합니다. 충전 후 다시 시도해주세요.', 'error');
         }
@@ -511,7 +520,13 @@ export default function CrewNewPage() {
             크루 생성하기
           </Button>
         ) : (
-          <Button variant="primary-green" size="lg" fullWidth onClick={handleNext}>
+          <Button
+            variant="primary-green"
+            size="lg"
+            fullWidth
+            onClick={handleNext}
+            isLoading={currentStep === 3 && isCheckingDeposit}
+          >
             다음
           </Button>
         )}

@@ -49,7 +49,7 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
     crewId,
     onSuccess,
     showToast,
-    onInsufficientBalance: () => shortage.open(depositAmount),
+    onInsufficientBalance: () => shortage.openIfInsufficient(depositAmount),
   });
 
   const status = myParticipation?.status ?? null;
