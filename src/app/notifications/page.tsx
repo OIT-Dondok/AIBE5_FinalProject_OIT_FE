@@ -15,6 +15,7 @@ import {
 import { Header } from "@/components/common/Header";
 import { getNotifications, readAllNotifications } from "@/api/notification";
 import type { NotificationItem } from "@/mocks/data/notifications";
+import { useNotificationStore } from "@/store/notificationStore";
 
 // ── 카테고리 매핑 ────────────────────────────────────────────────────────────
 type BadgeCategory = "미션" | "정산" | "크루" | "리액션";
@@ -186,6 +187,7 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [activeFilter, setActiveFilter] = useState<FilterTab>("전체");
+  const setStoreUnreadCount = useNotificationStore((s) => s.setUnreadCount);
 
   const fetchInitial = useCallback(async () => {
     setLoading(true);
@@ -194,10 +196,11 @@ export default function NotificationsPage() {
       setNotifications(data.items);
       setNextCursor(data.next_cursor);
       setUnreadCount(data.unread_count);
+      setStoreUnreadCount(data.unread_count);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setStoreUnreadCount]);
 
   useEffect(() => {
     fetchInitial();
