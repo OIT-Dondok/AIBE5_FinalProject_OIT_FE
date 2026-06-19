@@ -715,16 +715,34 @@ export interface FeedItem {
   crew_participant_id: number;
   member_uuid: string;
   nickname: string;
-  profile_image_url: string | null; // 없으면 null
+  profile_image_url: string | null;
   image_url: string | null;
   caption: string | null;
-  server_time: string; // 표시 시각·날짜 필터·정렬/커서 기준
-  certification_status: CertificationStatus; // 상태 뱃지 표시용 (필터는 제공 X)
-  reaction_counts: ReactionCounts; // 모든 상태에 대해 채워짐
-  my_reactions: string[]; // 내가 누른 emoji token 목록
-  reject_reason_code?: string | null; // 거절 사유 코드 (FAILED 상태일 때)
-  reject_memo?: string | null; // 거절 상세 사유 (OTHER일 때)
-  decision_type?: string | null; // 검수 결정 유형 (MANUAL_APPROVE 등)
+  server_time: string;
+  exif_taken_at: string | null;
+  exif_risk: MissionLogExifRisk;
+  is_duplicate: boolean;
+  certification_status: CertificationStatus;
+  reaction_counts: ReactionCounts;
+  my_reactions: string[];
+  reject_reason_code: RejectReasonCode | null;
+  reject_memo?: string | null;
+  decision_type: MissionLogDecisionType | null;
+}
+
+// GET /api/mission-logs/{missionLogId}
+// NOTE: 일부 응답에서 상세 항목(exif/중복/거절/판정 정보)이 누락될 수 있어
+//       상세 페이지 렌더링이 깨지지 않도록 항목을 optional로 둠.
+export interface MissionLogDetail extends Omit<
+  FeedItem,
+  "exif_taken_at" | "exif_risk" | "is_duplicate" | "reject_reason_code" | "decision_type"
+> {
+  exif_taken_at?: string | null;
+  exif_risk?: MissionLogExifRisk | null;
+  is_duplicate?: boolean;
+  reject_reason_code?: RejectReasonCode | null;
+  decision_type?: MissionLogDecisionType | null;
+  reject_memo?: string | null;
 }
 
 // GET /api/feed → 200
