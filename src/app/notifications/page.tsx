@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 import { Header } from "@/components/common/Header";
-import { getNotifications, readAllNotifications } from "@/api/notification";
+import { getNotifications, getUnreadCount, readAllNotifications, readNotification } from "@/api/notification";
 import type { NotificationItem } from "@/mocks/data/notifications";
 import { useNotificationStore } from "@/store/notificationStore";
 
@@ -64,6 +64,13 @@ const CATEGORY_META: Record<
 
 // ── 딥링크 ────────────────────────────────────────────────────────────────────
 function getDeepLink(item: NotificationItem): string | null {
+  if (item.deep_link) {
+    const converted = item.deep_link.replace(/^dondok:\/\//, '/');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[DeepLink]', item.deep_link, '→', converted);
+    }
+    return converted;
+  }
   if (!item.crew_id) return null;
   switch (item.event_type) {
     case "MISSION_LOG_VERIFICATION_RESULT":
@@ -100,9 +107,9 @@ function getDateLabel(isoString: string): string {
 // ── 날짜별 그루핑 ────────────────────────────────────────────────────────────
 function groupByDate(items: NotificationItem[]): Array<{ label: string; items: NotificationItem[] }> {
   const map = new Map<string, NotificationItem[]>();
-  const sorted = [...items].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  const sorted = [...items].sort((a, b) => new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime());
   for (const item of sorted) {
-    const label = getDateLabel(item.created_at);
+    const label = getDateLabel(item.occurred_at);
     if (!map.has(label)) map.set(label, []);
     map.get(label)!.push(item);
   }
@@ -120,16 +127,14 @@ function NotificationCard({
   const category = getCategory(item.event_type);
   const categoryMeta = CATEGORY_META[category];
   const CategoryIcon = categoryMeta.icon;
-  const message = item.crew_name && item.body.startsWith(`${item.crew_name} — `)
-    ? item.body.slice(`${item.crew_name} — `.length)
-    : item.body;
+  const message = item.display_text;
 
   return (
     <button
       type="button"
       onClick={() => onClick(item)}
       className={`w-full origin-center rounded-2xl px-4 py-3.5 text-left transition-[background-color,transform] duration-150 ease-out active:scale-[0.985] ${
-        item.is_read ? "bg-card active:bg-[#F4F4F4]" : "bg-[#F4F7FF] active:bg-[#E9EEFB]"
+        item.read_at !== null ? "bg-card active:bg-[#F4F4F4]" : "bg-[#F4F7FF] active:bg-[#E9EEFB]"
       }`}
     >
       <div className="flex items-start gap-3">
@@ -146,12 +151,12 @@ function NotificationCard({
               <span className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${categoryMeta.badgeClassName}`}>
                 {category}
               </span>
-              {!item.is_read && (
+              {item.read_at === null && (
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary-blue" aria-label="읽지 않음" />
               )}
             </div>
             <span className="text-[11px] font-medium text-text-secondary">
-              {formatRelativeTime(item.created_at)}
+              {formatRelativeTime(item.occurred_at)}
             </span>
           </div>
           <p className="mt-1.5 break-words text-[14px] font-bold leading-snug text-text-primary">
@@ -192,11 +197,17 @@ export default function NotificationsPage() {
   const fetchInitial = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await getNotifications({ limit: 20 });
+      const [{ data }, { data: unreadData }] = await Promise.all([
+        getNotifications({ limit: 20 }),
+        getUnreadCount(),
+      ]);
       setNotifications(data.items);
       setNextCursor(data.next_cursor);
-      setUnreadCount(data.unread_count);
-      setStoreUnreadCount(data.unread_count);
+      setUnreadCount(unreadData.unread_count);
+      setStoreUnreadCount(unreadData.unread_count);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Notifications] unread_count from API:', unreadData.unread_count);
+      }
     } finally {
       setLoading(false);
     }
@@ -220,11 +231,32 @@ export default function NotificationsPage() {
 
   const markAllRead = async () => {
     await readAllNotifications();
-    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    const now = new Date().toISOString();
+    setNotifications((prev) => prev.map((n) => ({ ...n, read_at: now })));
     setUnreadCount(0);
+    setStoreUnreadCount(0);
   };
 
   const handleCardClick = (item: NotificationItem) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[handleCardClick]', item.notification_id, item.event_type);
+    }
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[handleCardClick] read_at:', item.read_at, '| type:', typeof item.read_at, '| isNull:', item.read_at === null);
+    }
+    if (item.read_at === null) {
+      const now = new Date().toISOString();
+      setNotifications((prev) =>
+        prev.map((n) => n.notification_id === item.notification_id ? { ...n, read_at: now } : n)
+      );
+      const newCount = Math.max(0, unreadCount - 1);
+      setUnreadCount(newCount);
+      setStoreUnreadCount(newCount);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[handleCardClick] calling readNotification:', item.notification_id);
+      }
+      void readNotification(item.notification_id).catch(() => {});
+    }
     const deeplink = getDeepLink(item);
     if (deeplink) router.push(deeplink);
   };
