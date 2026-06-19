@@ -1069,3 +1069,27 @@ export interface MyCrewsResponse {
   items: MyCrew[];
   next_cursor: string | null;
 }
+
+// ════════════════════════════════════════════════════════════
+// § 알림
+// ════════════════════════════════════════════════════════════
+
+export interface NotificationItem {
+  notification_id: string;
+  event_type: NotificationEventType;
+  title: string;
+  display_text: string;
+  is_read: boolean;
+  read_at: string | null;
+  crew_id?: number;
+  crew_name?: string;
+  mission_log_id?: number;
+  occurred_at: string;
+  deep_link?: string | null;
+}
+
+export interface NotificationsResponse {
+  items: NotificationItem[];
+  next_cursor: string | null;
+  unread_count: number;
+}
