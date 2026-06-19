@@ -25,8 +25,12 @@ export default function FeedPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
-  
-  const [selectedCrewId, setSelectedCrewId] = useState<number | null>(null);
+
+  // ?crew={crewId}로 진입 시 해당 크루 필터로 초기화 (예: 정산 결과 → 피드 보기)
+  const crewParam = Number(searchParams.get('crew'));
+  const initialCrewId = Number.isInteger(crewParam) && crewParam > 0 ? crewParam : null;
+
+  const [selectedCrewId, setSelectedCrewId] = useState<number | null>(initialCrewId);
   // null = 전체 기간(날짜 필터 없음). 달력에서 선택 시 from/to 적용
   const [period, setPeriod] = useState<FeedPeriod | null>(null);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
