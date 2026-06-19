@@ -1070,6 +1070,7 @@ export interface NotificationItem {
   title: string;
   display_text: string;
   is_read: boolean;
+  read_at: string | null;
   crew_id?: number;
   crew_name?: string;
   mission_log_id?: number;

@@ -3,6 +3,7 @@ import "./globals.css";
 import { LayoutWrapper } from "@/components/common/LayoutWrapper";
 import { AuthInitializer } from "@/components/common/AuthInitializer";
 import { FcmInitializer } from "@/components/common/FcmInitializer";
+import { NotificationBadgeInitializer } from "@/components/common/NotificationBadgeInitializer";
 
 export const metadata: Metadata = {
     title: "Dondok",
@@ -27,6 +28,7 @@ export default function RootLayout({
         <body className="min-h-screen bg-background text-text-primary flex flex-col">
         <AuthInitializer />
         <FcmInitializer />
+        <NotificationBadgeInitializer />
         <LayoutWrapper>
             {children}
         </LayoutWrapper>

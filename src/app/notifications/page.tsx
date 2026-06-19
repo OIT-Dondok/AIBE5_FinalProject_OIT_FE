@@ -15,6 +15,7 @@ import {
 import { Header } from "@/components/common/Header";
 import { getNotifications, readAllNotifications } from "@/api/notification";
 import type { NotificationItem } from "@/types/domain";
+import { useNotificationStore } from "@/store/notificationStore";
 
 // ── 카테고리 매핑 ────────────────────────────────────────────────────────────
 type BadgeCategory = "미션" | "정산" | "크루" | "리액션";
@@ -179,6 +180,7 @@ export default function NotificationsPage() {
   const router = useRouter();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const setStoreUnreadCount = useNotificationStore((s) => s.setUnreadCount);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -188,9 +190,11 @@ export default function NotificationsPage() {
     setLoading(true);
     try {
       const { data } = await getNotifications({ limit: 20 });
+      const unread = data.items.filter((item) => item.read_at === null).length;
       setNotifications(data.items);
       setNextCursor(data.next_cursor);
-      setUnreadCount(data.unread_count);
+      setUnreadCount(unread);
+      setStoreUnreadCount(unread);
     } finally {
       setLoading(false);
     }
@@ -216,6 +220,7 @@ export default function NotificationsPage() {
     await readAllNotifications();
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
     setUnreadCount(0);
+    setStoreUnreadCount(0);
   };
 
   const handleCardClick = (item: NotificationItem) => {
