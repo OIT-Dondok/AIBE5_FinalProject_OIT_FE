@@ -17,11 +17,6 @@ export type PointHistoryFilter = "ALL" | PointHistoryTypeFilter;
 export type WalletHistoryCategory = PointHistoryTypeFilter | "unknown";
 export type WalletHistoryDisplayType = WalletDisplayType | "UNKNOWN";
 
-export interface MonthFilterOption {
-  label: string;
-  value?: string;
-}
-
 export const POINT_HISTORY_FILTERS: Array<{
   label: string;
   value: PointHistoryFilter;
@@ -136,9 +131,7 @@ export function getWalletHistoryTypeParam(filter: PointHistoryFilter) {
 
 export const getPointHistoryTypeParam = getWalletHistoryTypeParam;
 
-export function formatMonthLabel(value?: string) {
-  if (!value) return "전체 기간";
-
+export function formatMonthLabel(value: string) {
   const match = /^(\d{4})-(\d{2})$/.exec(value);
   if (!match) return value;
 
@@ -168,22 +161,57 @@ function getSeoulYearMonth(date: Date) {
   };
 }
 
-export function buildRecentMonthOptions(baseDate: Date, count = 12): MonthFilterOption[] {
-  const { year: baseYear, month: baseMonth } = getSeoulYearMonth(baseDate);
-  const totalMonths = baseYear * 12 + (baseMonth - 1);
-  const months = Array.from({ length: count }, (_, index) => {
-    const currentTotal = totalMonths - index;
-    const year = Math.floor(currentTotal / 12);
-    const month = (currentTotal % 12) + 1;
-    const value = `${year}-${String(month).padStart(2, "0")}`;
+function toMonthValue(year: number, month: number) {
+  return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}`;
+}
 
-    return {
-      label: formatMonthLabel(value),
-      value,
-    };
-  });
+function getMonthSerial(value: string) {
+  const match = /^(\d{4})-(\d{2})$/.exec(value);
+  if (!match) {
+    throw new Error(`Invalid month value: ${value}`);
+  }
 
-  return [{ label: formatMonthLabel(), value: undefined }, ...months];
+  const month = Number(match[2]);
+  if (!Number.isInteger(month) || month < 1 || month > 12) {
+    throw new Error(`Invalid month value: ${value}`);
+  }
+
+  return Number(match[1]) * 12 + (month - 1);
+}
+
+export function getCurrentSeoulMonth(baseDate = new Date()) {
+  const { year, month } = getSeoulYearMonth(baseDate);
+  return toMonthValue(year, month);
+}
+
+export function shiftMonth(value: string, delta: number) {
+  const shiftedSerial = getMonthSerial(value) + delta;
+  if (shiftedSerial < 0) {
+    throw new Error(`Invalid shifted month value: ${value}`);
+  }
+
+  const year = Math.floor(shiftedSerial / 12);
+  const month = (shiftedSerial % 12) + 1;
+
+  return toMonthValue(year, month);
+}
+
+export function isAfterMonth(value: string, comparison: string) {
+  return getMonthSerial(value) > getMonthSerial(comparison);
+}
+
+export function getMonthStepperState(activeMonth: string, baseDate = new Date()) {
+  const currentMonth = getCurrentSeoulMonth(baseDate);
+  const previousMonth = shiftMonth(activeMonth, -1);
+  const nextMonth = shiftMonth(activeMonth, 1);
+
+  return {
+    canGoNext: !isAfterMonth(nextMonth, currentMonth),
+    currentMonth,
+    label: formatMonthLabel(activeMonth),
+    nextMonth,
+    previousMonth,
+  };
 }
 
 export function formatKrw(amount: number) {
