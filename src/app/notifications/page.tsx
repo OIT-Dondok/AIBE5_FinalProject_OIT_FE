@@ -14,7 +14,8 @@ import {
 
 import { Header } from "@/components/common/Header";
 import { getNotifications, getUnreadCount, readAllNotifications, readNotification } from "@/api/notification";
-import type { NotificationItem } from "@/mocks/data/notifications";
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
+import type { NotificationItem } from "@/types/domain";
 import { useNotificationStore } from "@/store/notificationStore";
 
 // ── 카테고리 매핑 ────────────────────────────────────────────────────────────
@@ -191,11 +192,13 @@ export default function NotificationsPage() {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterTab>("전체");
   const setStoreUnreadCount = useNotificationStore((s) => s.setUnreadCount);
 
   const fetchInitial = useCallback(async () => {
     setLoading(true);
+    setErrorMessage(null);
     try {
       const [{ data }, { data: unreadData }] = await Promise.all([
         getNotifications({ limit: 20 }),
@@ -208,6 +211,8 @@ export default function NotificationsPage() {
       if (process.env.NODE_ENV === 'development') {
         console.log('[Notifications] unread_count from API:', unreadData.unread_count);
       }
+    } catch (error) {
+      setErrorMessage(getApiErrorMessage(error, {}, "알림을 불러오지 못했어요. 잠시 후 다시 시도해 주세요."));
     } finally {
       setLoading(false);
     }
@@ -331,6 +336,17 @@ export default function NotificationsPage() {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
               <p className="text-sm font-semibold text-text-secondary">불러오는 중...</p>
+            </div>
+          ) : errorMessage ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <p className="text-sm font-semibold text-text-secondary">{errorMessage}</p>
+              <button
+                type="button"
+                onClick={fetchInitial}
+                className="mt-4 rounded-full bg-primary-blue px-5 py-2 text-xs font-extrabold text-white transition-opacity hover:opacity-75"
+              >
+                다시 시도
+              </button>
             </div>
           ) : groups.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
