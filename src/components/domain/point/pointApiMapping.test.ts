@@ -46,12 +46,14 @@ describe("point wallet API mapping", () => {
     assert.equal(shiftMonth("2026-01", -1), "2025-12");
     assert.equal(shiftMonth("2026-12", 1), "2027-01");
     assert.equal(shiftMonth("1000-01", -1), "0999-12");
+    assert.equal(shiftMonth("0000-01", -1), "0000-01");
     assert.equal(isAfterMonth("2026-07", "2026-06"), true);
     assert.equal(isAfterMonth("2026-05", "2026-06"), false);
   });
 
   it("builds month stepper state from current Seoul month boundaries", () => {
     assert.deepEqual(getMonthStepperState("2026-06", new Date("2026-05-31T15:30:00.000Z")), {
+      canGoPrevious: true,
       canGoNext: false,
       currentMonth: "2026-06",
       label: "2026년 6월",
@@ -59,11 +61,23 @@ describe("point wallet API mapping", () => {
       previousMonth: "2026-05",
     });
     assert.deepEqual(getMonthStepperState("2026-05", new Date("2026-05-31T15:30:00.000Z")), {
+      canGoPrevious: true,
       canGoNext: true,
       currentMonth: "2026-06",
       label: "2026년 5월",
       nextMonth: "2026-06",
       previousMonth: "2026-04",
+    });
+  });
+
+  it("prevents month stepper underflow at the minimum month", () => {
+    assert.deepEqual(getMonthStepperState("0000-01", new Date("2026-05-31T15:30:00.000Z")), {
+      canGoPrevious: false,
+      canGoNext: true,
+      currentMonth: "2026-06",
+      label: "0000년 1월",
+      nextMonth: "0000-02",
+      previousMonth: "0000-01",
     });
   });
 

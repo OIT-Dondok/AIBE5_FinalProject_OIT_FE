@@ -123,16 +123,20 @@ function DodinHistoryMonthStepper({
   onMonthChange: (month: string) => void;
 }) {
   const [isMonthSheetOpen, setIsMonthSheetOpen] = useState(false);
-  const { canGoNext, label: selectedLabel, nextMonth, previousMonth } = getMonthStepperState(activeMonth);
+  const { canGoNext, canGoPrevious, label: selectedLabel, nextMonth, previousMonth } =
+    getMonthStepperState(activeMonth);
   const monthOptions = useMemo(() => getMonthOptions(activeMonth), [activeMonth]);
 
   return (
     <div className="flex items-center justify-between gap-3 rounded-2xl bg-background/70 px-3 py-2">
       <button
         type="button"
-        onClick={() => onMonthChange(previousMonth)}
+        onClick={() => {
+          if (canGoPrevious) onMonthChange(previousMonth);
+        }}
+        disabled={!canGoPrevious}
         aria-label="이전 월 내역 보기"
-        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-card text-lg font-extrabold text-text-primary shadow-sm transition-colors hover:bg-primary-green hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-green"
+        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-card text-lg font-extrabold text-text-primary shadow-sm transition-colors hover:bg-primary-green hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-green disabled:cursor-not-allowed disabled:bg-text-secondary/10 disabled:text-text-secondary/45 disabled:shadow-none disabled:hover:bg-text-secondary/10 disabled:hover:text-text-secondary/45"
       >
         <span aria-hidden="true">‹</span>
       </button>

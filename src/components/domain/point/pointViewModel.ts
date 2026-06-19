@@ -187,7 +187,7 @@ export function getCurrentSeoulMonth(baseDate = new Date()) {
 export function shiftMonth(value: string, delta: number) {
   const shiftedSerial = getMonthSerial(value) + delta;
   if (shiftedSerial < 0) {
-    throw new Error(`Invalid shifted month value: ${value}`);
+    return "0000-01";
   }
 
   const year = Math.floor(shiftedSerial / 12);
@@ -204,8 +204,10 @@ export function getMonthStepperState(activeMonth: string, baseDate = new Date())
   const currentMonth = getCurrentSeoulMonth(baseDate);
   const previousMonth = shiftMonth(activeMonth, -1);
   const nextMonth = shiftMonth(activeMonth, 1);
+  const canGoPrevious = previousMonth !== activeMonth;
 
   return {
+    canGoPrevious,
     canGoNext: !isAfterMonth(nextMonth, currentMonth),
     currentMonth,
     label: formatMonthLabel(activeMonth),
