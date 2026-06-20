@@ -27,6 +27,7 @@ export function HostConfirmDialog({
   onCancel,
   onConfirm,
   isSubmitting = false,
+  icon,
 }: HostConfirmDialogProps) {
 
   const getIconType = (): "success" | "error" | "warning" | "none" => {
@@ -65,6 +66,7 @@ export function HostConfirmDialog({
       isLoading={isSubmitting}
       confirmVariant={getConfirmVariant()}
       iconType={getIconType()}
+      customIcon={icon}
     />
   );
 }
