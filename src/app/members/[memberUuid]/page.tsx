@@ -5,9 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import {
   Calendar,
   Crown,
-  TrendingUp,
+  ShieldCheck,
   UserRound,
-  Users,
 } from "lucide-react";
 
 import { Header } from "@/components/common/Header";
@@ -53,7 +52,7 @@ function MemberProfileSkeleton() {
             <Skeleton className="h-7 w-24 rounded-full" />
           </div>
         </div>
-        <Skeleton className="mt-5 h-16 w-full rounded-2xl" />
+        <Skeleton className="mt-5 h-10 w-full rounded-2xl" />
         <Skeleton className="mt-4 h-4 w-32 rounded" />
       </div>
 
@@ -65,114 +64,121 @@ function MemberProfileSkeleton() {
           ))}
         </div>
       </div>
-
-      <div className="bg-card rounded-card p-4 shadow-card border border-text-secondary/10">
-        <Skeleton className="h-5 w-20 rounded mb-3" />
-        <div className="flex flex-col gap-2.5">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 w-full rounded-2xl" />
-          ))}
-        </div>
-      </div>
     </div>
   );
 }
 
-function ActivityInfoCard({ profile }: { profile: MemberPublicProfile }) {
-  const { crew, total_verification_count } = profile.activity_info;
 
-  return (
-    <section className="bg-card rounded-card p-4 shadow-card border border-text-secondary/10">
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <h2 className="text-sm font-extrabold text-text-primary">활동 정보</h2>
-          <p className="text-[11px] text-text-secondary mt-0.5">크루 참여 및 인증 현황</p>
-        </div>
-        <Users size={18} className="text-primary-green" />
-      </div>
-
-      <div className="grid grid-cols-2 gap-2.5">
-        <div className="relative overflow-hidden rounded-2xl border p-3.5 min-h-24 flex flex-col justify-between bg-[#FFF4D6]/70 border-[#E4C978]/40">
-          <span className="absolute -right-5 -top-5 h-16 w-16 rounded-full bg-[#F1CA55]/25" />
-          <span className="relative text-[11px] font-extrabold text-[#8A5E1E]">전체 크루</span>
-          <strong className="relative mt-2 text-2xl font-black tracking-tight text-[#2D2516]">
-            {crew.total_crew_count}개
-          </strong>
-          <span className="relative mt-1 text-[10px] font-medium leading-tight text-[#8A5E1E]/75">
-            진행 {crew.active_crew_count} · 완료 {crew.completed_crew_count}
-          </span>
-        </div>
-
-        <div className="relative overflow-hidden rounded-2xl border p-3.5 min-h-24 flex flex-col justify-between bg-success-green/55 border-primary-green/20">
-          <span className="absolute -right-5 -top-5 h-16 w-16 rounded-full bg-primary-green/15" />
-          <span className="relative text-[11px] font-extrabold text-primary-green">총 인증 횟수</span>
-          <strong className="relative mt-2 text-2xl font-black tracking-tight text-[#1F3F2D]">
-            {total_verification_count}회
-          </strong>
-          <span className="relative mt-1 text-[10px] font-medium leading-tight text-primary-green/75">
-            전체 기간 기준
-          </span>
-        </div>
-      </div>
-    </section>
-  );
-}
 
 function ActivityStatsCard({ profile }: { profile: MemberPublicProfile }) {
   const stats = profile.activity_stats;
-  const highestRatio = formatPercent(stats.highest_share_ratio);
-  const avgRate = formatPercent(stats.average_success_rate);
+
+  type StatTone = "gold" | "green" | "blue" | "sepia";
+
+  const statToneStyles: Record<
+    StatTone,
+    { card: string; label: string; value: string; caption: string; glow: string }
+  > = {
+    gold: {
+      card: "bg-[#FBF4DC]/70 border-[#D4AF37]/40",
+      label: "text-[#7A6010]",
+      value: "text-[#2D2200]",
+      caption: "text-[#7A6010]/75",
+      glow: "bg-[#D4AF37]/25",
+    },
+    green: {
+      card: "bg-[#E8F5E9]/70 border-[#2E7D32]/20",
+      label: "text-[#2E7D32]",
+      value: "text-[#1A3B1C]",
+      caption: "text-[#2E7D32]/75",
+      glow: "bg-[#2E7D32]/15",
+    },
+    blue: {
+      card: "bg-[#E3EEF9]/70 border-[#1565C0]/20",
+      label: "text-[#1565C0]",
+      value: "text-[#0A2F6E]",
+      caption: "text-[#1565C0]/70",
+      glow: "bg-[#1565C0]/15",
+    },
+    sepia: {
+      card: "bg-[#F5EDE9]/70 border-[#8D6E63]/20",
+      label: "text-[#8D6E63]",
+      value: "text-[#3D2B25]",
+      caption: "text-[#8D6E63]/75",
+      glow: "bg-[#8D6E63]/15",
+    },
+  };
+
+  const statItems: { label: string; value: string; caption: string; tone: StatTone }[] = [
+    {
+      label: "참여 크루 수",
+      value: `${profile.activity_info.crew.total_crew_count}개`,
+      caption: `진행 ${profile.activity_info.crew.active_crew_count} · 종료 ${profile.activity_info.crew.completed_crew_count}`,
+      tone: "gold",
+    },
+    {
+      label: "총 성공 횟수",
+      value: `${stats.total_recognized_success_count}회`,
+      caption: "인정된 인증 기준",
+      tone: "green",
+    },
+    {
+      label: "최고 지분율",
+      value: formatPercent(stats.highest_share_ratio),
+      caption: stats.highest_share_ratio_crew_title ?? "정산 완료 크루 없음",
+      tone: "blue",
+    },
+    {
+      label: "평균 성공률",
+      value: formatPercent(stats.average_success_rate),
+      caption: "종료 크루 평균",
+      tone: "sepia",
+    },
+  ];
 
   return (
     <section className="bg-card rounded-card p-4 shadow-card border border-text-secondary/10">
       <div className="flex items-center justify-between mb-3">
         <div>
           <h2 className="text-sm font-extrabold text-text-primary">활동 통계</h2>
-          <p className="text-[11px] text-text-secondary mt-0.5">정산 완료 기준 집계 지표</p>
+          <p className="text-[11px] text-text-secondary mt-0.5">공개 프로필에 표시되는 요약 지표</p>
         </div>
-        <TrendingUp size={18} className="text-primary-blue" />
+        <ShieldCheck size={18} className="text-primary-green" />
       </div>
 
-      <div className="flex flex-col gap-2.5">
-        <div className="relative overflow-hidden rounded-2xl border p-3.5 flex items-center justify-between bg-success-green/55 border-primary-green/20">
-          <span className="absolute -right-5 -top-5 h-16 w-16 rounded-full bg-primary-green/15" />
-          <div className="relative">
-            <span className="text-[11px] font-extrabold text-primary-green block">총 인정 성공 횟수</span>
-            <span className="text-[10px] font-medium text-primary-green/75 mt-0.5 block">인정된 인증 기준</span>
-          </div>
-          <strong className="relative text-2xl font-black tracking-tight text-[#1F3F2D]">
-            {stats.total_recognized_success_count}회
-          </strong>
-        </div>
+      <div className="grid grid-cols-2 gap-2.5">
+        {statItems.map((stat) => {
+          const tone = statToneStyles[stat.tone];
+          const isValueEmpty = stat.value === "-";
+          const displayValue = isValueEmpty ? "정산 대기" : stat.value;
 
-        {stats.highest_share_ratio && (
-          <div className="relative overflow-hidden rounded-2xl border p-3.5 flex items-center justify-between bg-primary-blue/10 border-primary-blue/20">
-            <span className="absolute -right-5 -top-5 h-16 w-16 rounded-full bg-primary-blue/15" />
-            <div className="relative min-w-0 flex-1">
-              <span className="text-[11px] font-extrabold text-primary-blue block">최고 지분율</span>
-              <span className="text-[10px] font-medium text-primary-blue/70 mt-0.5 block truncate">
-                {stats.highest_share_ratio_crew_title ?? "정산 완료 크루"}
+          return (
+            <article
+              key={stat.label}
+              className={`relative overflow-hidden rounded-2xl border p-3.5 min-h-24 flex flex-col justify-between ${tone.card}`}
+            >
+              <span className={`absolute -right-5 -top-5 h-16 w-16 rounded-full ${tone.glow}`} />
+              <span className={`relative text-[11px] font-extrabold ${tone.label}`}>
+                {stat.label}
               </span>
-            </div>
-            <strong className="relative ml-3 shrink-0 text-2xl font-black tracking-tight text-[#263D85]">
-              {highestRatio}
-            </strong>
-          </div>
-        )}
-
-        {stats.average_success_rate && (
-          <div className="relative overflow-hidden rounded-2xl border p-3.5 flex items-center justify-between bg-[#E8F4E3] border-primary-green/15">
-            <span className="absolute -right-5 -top-5 h-16 w-16 rounded-full bg-primary-green/10" />
-            <div className="relative">
-              <span className="text-[11px] font-extrabold text-[#4A7A5B] block">평균 성공률</span>
-              <span className="text-[10px] font-medium text-[#4A7A5B]/75 mt-0.5 block">종료 크루 평균</span>
-            </div>
-            <strong className="relative text-2xl font-black tracking-tight text-[#254D36]">
-              {avgRate}
-            </strong>
-          </div>
-        )}
+              <strong
+                className={`relative mt-2 tracking-tight ${
+                  isValueEmpty
+                    ? "text-sm font-bold text-text-secondary/70"
+                    : "text-2xl font-black"
+                } ${tone.value}`}
+              >
+                {displayValue}
+              </strong>
+              <span className={`relative mt-1 text-[10px] font-medium leading-tight ${tone.caption}`}>
+                {stat.caption}
+              </span>
+            </article>
+          );
+        })}
       </div>
+
+
     </section>
   );
 }
@@ -241,11 +247,17 @@ export default function MemberProfilePage() {
           </div>
         ) : profile ? (
           <div className="px-5 pt-5 flex flex-col gap-5">
-            <div className={`bg-card rounded-card shadow-card overflow-hidden border ${profile.is_host_ever ? "border-amber-200/60" : "border-text-secondary/10"}`}>
+            {/* ── 프로필 카드 ── */}
+            <div
+              className={`bg-card rounded-card shadow-card overflow-hidden border ${
+                profile.is_host_ever ? "border-amber-200/60" : "border-text-secondary/10"
+              }`}
+            >
               {profile.is_host_ever && (
                 <div className="h-1 bg-gradient-to-r from-yellow-400 to-amber-500" />
               )}
               <div className="px-5 py-6">
+                {/* 아바타 + 닉네임 */}
                 <div className="flex items-center gap-4">
                   <div className="relative shrink-0">
                     <div
@@ -256,6 +268,7 @@ export default function MemberProfilePage() {
                       }`}
                     >
                       {profile.profile_image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={profile.profile_image_url}
                           alt={`${profile.nickname} 프로필 이미지`}
@@ -291,14 +304,16 @@ export default function MemberProfilePage() {
                   </div>
                 </div>
 
-                <div className="mt-5 rounded-2xl bg-background/60 border border-text-secondary/10 px-4 py-3">
-                  <p className="text-sm leading-relaxed text-text-secondary whitespace-pre-wrap break-words">
+                {/* 자기소개 — 내 프로필과 동일하게 박스 없이 텍스트만 */}
+                <div className="mt-5 px-1 py-1">
+                  <p className="break-words whitespace-pre-wrap text-sm leading-relaxed text-text-primary/90">
                     {profile.status_message?.trim()
                       ? profile.status_message
                       : "자기소개를 아직 작성하지 않았어요."}
                   </p>
                 </div>
 
+                {/* 방장 경험 표시 */}
                 {profile.is_host_ever && (
                   <div className="mt-3 flex items-center gap-1.5">
                     <Crown size={12} className="text-amber-600 shrink-0" />
@@ -308,6 +323,7 @@ export default function MemberProfilePage() {
                   </div>
                 )}
 
+                {/* 가입일 */}
                 <div className="mt-3 flex items-center gap-1.5 text-text-secondary">
                   <Calendar size={13} className="shrink-0" />
                   <span className="text-xs font-medium">
@@ -317,7 +333,7 @@ export default function MemberProfilePage() {
               </div>
             </div>
 
-            <ActivityInfoCard profile={profile} />
+            {/* ── 활동 통계 ── */}
             <ActivityStatsCard profile={profile} />
           </div>
         ) : null}

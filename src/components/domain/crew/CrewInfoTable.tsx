@@ -46,7 +46,7 @@ export default function CrewInfoTable({ crew, confirmedCount, pendingCount }: Cr
     return '기타';
   };
 
-  const activeCount = confirmedCount !== null ? confirmedCount : 1;
+  const activeCount = crew.current_participants;
 
   const rows: { label: string; value: string }[] = [
     { label: '인증 주기', value: getFrequencyLabel() },
