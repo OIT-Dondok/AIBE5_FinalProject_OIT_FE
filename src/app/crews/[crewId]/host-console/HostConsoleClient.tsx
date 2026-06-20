@@ -61,29 +61,6 @@ export default function HostConsoleClient() {
       .catch(() => setPendingApplicationCount(0));
   }, [crewId]);
 
-  const handleDisband = async () => {
-    if (crewId === null || isDisbanding) return;
-    setIsDisbanding(true);
-    try {
-      await disbandCrew(crewId);
-      router.push("/crews");
-    } catch (error) {
-      setIsDisbanding(false);
-      setDisbandErrorMessage(
-        getApiErrorMessage(
-          error,
-          {
-            FORBIDDEN_NOT_HOST: "방장만 크루를 해체할 수 있어요.",
-            CREW_NOT_FOUND: "크루를 찾을 수 없어요.",
-            CREW_NOT_RECRUITING: "모집 중인 크루만 해체할 수 있어요.",
-          },
-          "크루 해체에 실패했어요. 다시 시도해 주세요.",
-        ),
-      );
-      setIsDisbandErrorToastOpen(true);
-    }
-  };
-
   if (crewId === null) {
     return (
       <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
