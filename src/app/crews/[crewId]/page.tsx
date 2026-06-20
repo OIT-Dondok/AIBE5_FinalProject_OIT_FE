@@ -134,7 +134,7 @@ export default function CrewDetailPage() {
   const emoji = CATEGORY_EMOJI[crew.category] ?? '📌';
   const categoryDisplay = CATEGORY_LABEL[crew.category] ?? crew.category;
   const categoryGradient = CATEGORY_GRADIENT[crew.category] ?? 'from-gray-300 to-gray-200';
-  const isMinAchieved = confirmedCount !== null && confirmedCount >= crew.min_participants;
+  const isMinAchieved = crew.current_participants >= crew.min_participants;
 
   return (
     <>

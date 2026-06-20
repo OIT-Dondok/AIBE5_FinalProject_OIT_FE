@@ -2,10 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Bell, ShieldCheck, Trash2 } from "lucide-react";
+import { Bell, ShieldCheck, HelpCircle } from "lucide-react";
 
-import { ConfirmModal } from "@/components/common/ConfirmModal";
-import { Toast } from "@/components/common/Toast";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
 import { ApplicationsTab } from "@/components/domain/host/applications/ApplicationsTab";
@@ -16,10 +14,9 @@ import { NoticesTab } from "@/components/domain/host/notices/NoticesTab";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { SectionCard } from "@/components/domain/host/SectionCard";
 import { VerificationTab } from "@/components/domain/host/verification/VerificationTab";
-import { HostMoreMenu } from "@/components/domain/host/common/HostMoreMenu";
+import { HostGuideModal } from "@/components/domain/host/HostGuideModal";
 import { getHostCrewDetail } from "@/mocks/data/host";
-import { disbandCrew, getCrewApplications, getCrewNotices } from "@/services/crew";
-import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
+import { getCrewApplications, getCrewNotices } from "@/services/crew";
 
 export default function HostConsoleClient() {
   const params = useParams<{ crewId: string }>();
@@ -43,13 +40,7 @@ export default function HostConsoleClient() {
   const [pendingApplicationCount, setPendingApplicationCount] = useState(0);
   const [noticeCount, setNoticeCount] = useState(0);
   const [tabRefreshKey, setTabRefreshKey] = useState(0);
-  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
-  const [isDisbandModalOpen, setIsDisbandModalOpen] = useState(false);
-  const [isDisbanding, setIsDisbanding] = useState(false);
-  const [isDisbandErrorToastOpen, setIsDisbandErrorToastOpen] = useState(false);
-  const [disbandErrorMessage, setDisbandErrorMessage] = useState(
-    "크루 해체에 실패했어요. 다시 시도해 주세요.",
-  );
+  const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
 
   const handleTabChange = (tab: HostTab) => {
     setActiveTab(tab);
@@ -69,29 +60,6 @@ export default function HostConsoleClient() {
       .then((res) => setPendingApplicationCount(res.data.items.length))
       .catch(() => setPendingApplicationCount(0));
   }, [crewId]);
-
-  const handleDisband = async () => {
-    if (crewId === null || isDisbanding) return;
-    setIsDisbanding(true);
-    try {
-      await disbandCrew(crewId);
-      router.push("/crews");
-    } catch (error) {
-      setIsDisbanding(false);
-      setDisbandErrorMessage(
-        getApiErrorMessage(
-          error,
-          {
-            FORBIDDEN_NOT_HOST: "방장만 크루를 해체할 수 있어요.",
-            CREW_NOT_FOUND: "크루를 찾을 수 없어요.",
-            CREW_NOT_RECRUITING: "모집 중인 크루만 해체할 수 있어요.",
-          },
-          "크루 해체에 실패했어요. 다시 시도해 주세요.",
-        ),
-      );
-      setIsDisbandErrorToastOpen(true);
-    }
-  };
 
   if (crewId === null) {
     return (
@@ -140,7 +108,15 @@ export default function HostConsoleClient() {
           showBackButton
           title="운영 콘솔"
           rightElement={
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                aria-label="운영 가이드 열기"
+                className="p-1 hover:opacity-75 active:scale-95 transition-all"
+                onClick={() => setIsGuideModalOpen(true)}
+              >
+                <HelpCircle size={22} className="text-text-primary" />
+              </button>
               <button
                 type="button"
                 aria-label="알림 열기"
@@ -149,18 +125,6 @@ export default function HostConsoleClient() {
               >
                 <Bell size={22} className="text-text-primary" />
               </button>
-              <HostMoreMenu
-                isOpen={isMoreMenuOpen}
-                onToggle={() => setIsMoreMenuOpen((prev) => !prev)}
-                items={[
-                  {
-                    label: "크루 해체",
-                    icon: <Trash2 size={15} strokeWidth={2.2} />,
-                    tone: "danger",
-                    onClick: () => { setIsMoreMenuOpen(false); setIsDisbandModalOpen(true); },
-                  },
-                ]}
-              />
             </div>
           }
         />
@@ -184,26 +148,7 @@ export default function HostConsoleClient() {
           {activeTab === "notices" && <NoticesTab key={tabRefreshKey} />}
         </div>
       </div>
-
-      <Toast
-        isOpen={isDisbandErrorToastOpen}
-        onClose={() => setIsDisbandErrorToastOpen(false)}
-        message={disbandErrorMessage}
-        type="error"
-      />
-
-      <ConfirmModal
-        isOpen={isDisbandModalOpen}
-        onClose={() => setIsDisbandModalOpen(false)}
-        onConfirm={handleDisband}
-        title="크루를 해체할까요?"
-        description={"해체한 크루는 복구할 수 없어요.\n모든 멤버의 참여가 종료됩니다."}
-        confirmText="해체하기"
-        cancelText="취소"
-        isLoading={isDisbanding}
-        confirmVariant="danger"
-        iconType="warning"
-      />
+      <HostGuideModal isOpen={isGuideModalOpen} onClose={() => setIsGuideModalOpen(false)} />
     </main>
   );
 }

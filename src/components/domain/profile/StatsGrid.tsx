@@ -7,32 +7,32 @@ const statToneStyles: Record<
   { card: string; label: string; value: string; caption: string; glow: string }
 > = {
   gold: {
-    card: "bg-[#FFF4D6]/70 border-[#E4C978]/40",
-    label: "text-[#8A5E1E]",
-    value: "text-[#2D2516]",
-    caption: "text-[#8A5E1E]/75",
-    glow: "bg-[#F1CA55]/25",
+    card: "bg-[#FBF4DC]/70 border-[#D4AF37]/40",
+    label: "text-[#7A6010]",
+    value: "text-[#2D2200]",
+    caption: "text-[#7A6010]/75",
+    glow: "bg-[#D4AF37]/25",
   },
   green: {
-    card: "bg-success-green/55 border-primary-green/20",
-    label: "text-primary-green",
-    value: "text-[#1F3F2D]",
-    caption: "text-primary-green/75",
-    glow: "bg-primary-green/15",
+    card: "bg-[#E8F5E9]/70 border-[#2E7D32]/20",
+    label: "text-[#2E7D32]",
+    value: "text-[#1A3B1C]",
+    caption: "text-[#2E7D32]/75",
+    glow: "bg-[#2E7D32]/15",
   },
   blue: {
-    card: "bg-primary-blue/10 border-primary-blue/20",
-    label: "text-primary-blue",
-    value: "text-[#263D85]",
-    caption: "text-primary-blue/70",
-    glow: "bg-primary-blue/15",
+    card: "bg-[#E3EEF9]/70 border-[#1565C0]/20",
+    label: "text-[#1565C0]",
+    value: "text-[#0A2F6E]",
+    caption: "text-[#1565C0]/70",
+    glow: "bg-[#1565C0]/15",
   },
   mint: {
-    card: "bg-[#E8F4E3] border-primary-green/15",
-    label: "text-[#4A7A5B]",
-    value: "text-[#254D36]",
-    caption: "text-[#4A7A5B]/75",
-    glow: "bg-primary-green/10",
+    card: "bg-[#F5EDE9]/70 border-[#8D6E63]/20",
+    label: "text-[#8D6E63]",
+    value: "text-[#3D2B25]",
+    caption: "text-[#8D6E63]/75",
+    glow: "bg-[#8D6E63]/15",
   },
   neutral: {
     card: "bg-background/65 border-text-secondary/10",
@@ -57,6 +57,10 @@ export function StatsGrid({ stats }: StatsGridProps) {
         { label: "평균 성공률", value: "-", caption: "데이터 없음", tone: "neutral" },
       ];
 
+  const hasNoRecord = filledStats.some(
+    (s) => (s.label === "최고 지분율" || s.label === "평균 성공률") && s.value === "-"
+  );
+
   return (
     <section className="bg-card rounded-card p-4 shadow-card border border-text-secondary/10">
       <div className="flex items-center justify-between mb-3">
@@ -70,6 +74,9 @@ export function StatsGrid({ stats }: StatsGridProps) {
       <div className="grid grid-cols-2 gap-2.5">
         {filledStats.map((stat) => {
           const tone = statToneStyles[stat.tone];
+          const isValueEmpty = stat.value === "-";
+          const displayValue = isValueEmpty ? "정산 대기" : stat.value;
+          const displayCaption = isValueEmpty ? "첫 정산 시 공개" : stat.caption;
 
           return (
             <article
@@ -80,16 +87,28 @@ export function StatsGrid({ stats }: StatsGridProps) {
               <span className={`relative text-[11px] font-extrabold ${tone.label}`}>
                 {stat.label}
               </span>
-              <strong className={`relative mt-2 text-2xl font-black tracking-tight ${tone.value}`}>
-                {stat.value}
+              <strong className={`relative mt-2 tracking-tight ${
+                isValueEmpty
+                  ? "text-sm font-bold text-text-secondary/70"
+                  : "text-2xl font-black"
+              } ${tone.value}`}>
+                {displayValue}
               </strong>
               <span className={`relative mt-1 text-[10px] font-medium leading-tight ${tone.caption}`}>
-                {stat.caption}
+                {displayCaption}
               </span>
             </article>
           );
         })}
       </div>
+
+      {hasNoRecord && (
+        <div className="mt-3.5 flex items-center justify-center p-3 rounded-2xl bg-primary-green/5 border border-primary-green/10 text-center">
+          <p className="text-xs font-semibold text-[#426E51]">
+            첫 크루를 정산하고 나만의 활동 기록을 쌓아보세요! 🌱
+          </p>
+        </div>
+      )}
     </section>
   );
 }

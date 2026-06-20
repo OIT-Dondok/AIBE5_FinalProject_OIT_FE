@@ -19,6 +19,7 @@ export type ProfileViewModel = {
   avatarImageUrl: string | null;
   nickname: string;
   statusMessage: string | null;
+  joinedAt: string;
   isHostEver: boolean;
   hostedCrewCount: number;
   unreadNotificationCount: number;
@@ -65,6 +66,7 @@ export function buildProfileViewModel(
     avatarImageUrl: profile.profile_image_url,
     nickname: profile.nickname,
     statusMessage: profile.status_message,
+    joinedAt: profile.created_at,
     isHostEver: profile.is_host_ever,
     hostedCrewCount: profile.hosted_crew_count,
     unreadNotificationCount: activitySummary.activity_info.unread_notification_count,
