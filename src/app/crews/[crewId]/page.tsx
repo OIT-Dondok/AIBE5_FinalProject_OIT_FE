@@ -3,11 +3,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { isAxiosError } from 'axios';
-import { MoreHorizontal } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { Header } from '@/components/common/Header';
+import { ConfirmModal } from '@/components/common/ConfirmModal';
+import { Toast } from '@/components/common/Toast';
+import { HostMoreMenu } from '@/components/domain/host/common/HostMoreMenu';
 import CrewDetailTabs from '@/components/domain/crew/CrewDetailTabs';
 import CrewJoinButton from '@/components/domain/crew/CrewJoinButton';
-import { getCrew } from '@/services/crew';
+import { getCrew, disbandCrew } from '@/services/crew';
+import { useAuthStore } from '@/store/authStore';
+import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
 import type { CrewDetail } from '@/types/domain';
 import type { ErrorResponse } from '@/types/common';
 import {
@@ -27,6 +32,38 @@ export default function CrewDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [hasError, setHasError] = useState(false);
+
+  const { user } = useAuthStore();
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const [isDisbandModalOpen, setIsDisbandModalOpen] = useState(false);
+  const [isDisbanding, setIsDisbanding] = useState(false);
+  const [isDisbandErrorToastOpen, setIsDisbandErrorToastOpen] = useState(false);
+  const [disbandErrorMessage, setDisbandErrorMessage] = useState(
+    '크루 해체에 실패했어요. 다시 시도해 주세요.'
+  );
+
+  const handleDisband = async () => {
+    if (!Number.isFinite(crewId) || crewId <= 0 || isDisbanding) return;
+    setIsDisbanding(true);
+    try {
+      await disbandCrew(crewId);
+      router.push('/crews');
+    } catch (error) {
+      setIsDisbanding(false);
+      setDisbandErrorMessage(
+        getApiErrorMessage(
+          error,
+          {
+            FORBIDDEN_NOT_HOST: '방장만 크루를 해체할 수 있어요.',
+            CREW_NOT_FOUND: '크루를 찾을 수 없어요.',
+            CREW_NOT_RECRUITING: '모집 중인 크루만 해체할 수 있어요.',
+          },
+          '크루 해체에 실패했어요. 다시 시도해 주세요.'
+        )
+      );
+      setIsDisbandErrorToastOpen(true);
+    }
+  };
 
   const fetchCrew = useCallback(async () => {
     setIsLoading(true);
@@ -97,7 +134,7 @@ export default function CrewDetailPage() {
   const emoji = CATEGORY_EMOJI[crew.category] ?? '📌';
   const categoryDisplay = CATEGORY_LABEL[crew.category] ?? crew.category;
   const categoryGradient = CATEGORY_GRADIENT[crew.category] ?? 'from-gray-300 to-gray-200';
-  const isMinAchieved = confirmedCount !== null && confirmedCount >= crew.min_participants;
+  const isMinAchieved = crew.current_participants >= crew.min_participants;
 
   return (
     <>
@@ -105,13 +142,24 @@ export default function CrewDetailPage() {
         showBackButton
         title={crew.title}
         rightElement={
-          <button
-            type="button"
-            aria-label="더보기"
-            className="p-1 -mr-1 hover:opacity-75 active:scale-95 transition-all"
-          >
-            <MoreHorizontal size={22} className="text-text-primary" />
-          </button>
+          crew.host_member_uuid === user?.member_uuid ? (
+            <HostMoreMenu
+              isOpen={isMoreMenuOpen}
+              onToggle={() => setIsMoreMenuOpen((prev) => !prev)}
+              items={[
+                {
+                  label: '크루 해체',
+                  icon: <Trash2 size={15} strokeWidth={2.2} />,
+                  tone: 'danger',
+                  disabled: crew.status !== 'RECRUITING',
+                  onClick: () => {
+                    setIsMoreMenuOpen(false);
+                    setIsDisbandModalOpen(true);
+                  },
+                },
+              ]}
+            />
+          ) : null
         }
       />
 
@@ -172,6 +220,25 @@ export default function CrewDetailPage() {
           />
         </div>
       </div>
+      <Toast
+        isOpen={isDisbandErrorToastOpen}
+        onClose={() => setIsDisbandErrorToastOpen(false)}
+        message={disbandErrorMessage}
+        type="error"
+      />
+
+      <ConfirmModal
+        isOpen={isDisbandModalOpen}
+        onClose={() => setIsDisbandModalOpen(false)}
+        onConfirm={handleDisband}
+        title="크루를 해체할까요?"
+        description={'해체한 크루는 복구할 수 없어요.\n모든 멤버의 참여가 종료됩니다.'}
+        confirmText="해체하기"
+        cancelText="취소"
+        isLoading={isDisbanding}
+        confirmVariant="danger"
+        iconType="warning"
+      />
     </>
   );
 }

@@ -11,6 +11,9 @@ describe('settlement API mapping', () => {
     const responseData = {
       settlement_id: 501,
       crew_id: 401,
+      crew_name: '테스트 크루',
+      crew_started_at: '2026-01-01',
+      crew_ended_at: '2026-01-31',
       status: 'SUCCEEDED',
       retry_count: 0,
       failure_code: null,
@@ -20,6 +23,9 @@ describe('settlement API mapping', () => {
       my_item: {
         settlement_item_id: 1001,
         crew_participant_id: 777,
+        nickname: '테스터',
+        is_me: true,
+        rank: 1,
         participant_status_snapshot: 'LOCKED',
         deposit_amount: 20000,
         success_count_raw: 3,

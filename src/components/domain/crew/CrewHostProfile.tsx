@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { UserRound, Crown } from 'lucide-react';
+import { HostBadge } from '@/components/common/HostBadge';
 
 interface CrewHostProfileProps {
   description: string | null;
@@ -58,9 +59,7 @@ export default function CrewHostProfile({
           <span className="text-[15px] font-extrabold text-text-primary leading-none group-hover/host:text-primary-green transition-colors">
             {hostNickname}
           </span>
-          <span className="bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-900 px-2 py-0.5 rounded-full text-[10px] font-bold border border-amber-200/60 shadow-sm leading-none shrink-0">
-            방장
-          </span>
+          <HostBadge label="방장" className="shrink-0" />
         </div>
       </Link>
     </div>

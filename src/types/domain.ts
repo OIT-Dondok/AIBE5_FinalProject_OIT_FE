@@ -222,6 +222,7 @@ export interface MemberProfileResponse {
 // 전체 프로필 필요 시 MemberProfileResponse 사용
 export interface Member {
   member_uuid: string;
+  memberUuid?: string;
   nickname: string;
 }
 
@@ -492,6 +493,8 @@ export interface CrewNotice {
   created_at: string;
   my_reactions: string[];
   reaction_counts: ReactionCounts;
+  is_important?: boolean;
+  comment_count?: number;
 }
 
 export type CrewNoticesResponse = CursorPageResponse<CrewNotice>;
@@ -503,13 +506,17 @@ export interface NoticeReactionResponse {
   reaction_counts: ReactionCounts;
 }
 
-// GET /api/crews/{crewId}/notices/{noticeId}/comments items[]
 export interface NoticeComment {
   comment_id: number;
   notice_id: number;
   author_member_uuid: string;
+  authorMemberUuid?: string;
+  author_nickname?: string;
   nickname: string;
-  author_profile_image_url: string | null;
+  author_profile_image_url?: string | null;
+  authorProfileImageUrl?: string | null;
+  profile_image_url?: string | null;
+  profileImageUrl?: string | null;
   content: string;
   created_at: string;
 }
@@ -708,16 +715,34 @@ export interface FeedItem {
   crew_participant_id: number;
   member_uuid: string;
   nickname: string;
-  profile_image_url: string | null; // 없으면 null
+  profile_image_url: string | null;
   image_url: string | null;
   caption: string | null;
-  server_time: string; // 표시 시각·날짜 필터·정렬/커서 기준
-  certification_status: CertificationStatus; // 상태 뱃지 표시용 (필터는 제공 X)
-  reaction_counts: ReactionCounts; // 모든 상태에 대해 채워짐
-  my_reactions: string[]; // 내가 누른 emoji token 목록
-  reject_reason_code?: string | null; // 거절 사유 코드 (FAILED 상태일 때)
-  reject_memo?: string | null; // 거절 상세 사유 (OTHER일 때)
-  decision_type?: string | null; // 검수 결정 유형 (MANUAL_APPROVE 등)
+  server_time: string;
+  exif_taken_at: string | null;
+  exif_risk: MissionLogExifRisk;
+  is_duplicate: boolean;
+  certification_status: CertificationStatus;
+  reaction_counts: ReactionCounts;
+  my_reactions: string[];
+  reject_reason_code: RejectReasonCode | null;
+  reject_memo?: string | null;
+  decision_type: MissionLogDecisionType | null;
+}
+
+// GET /api/mission-logs/{missionLogId}
+// NOTE: 일부 응답에서 상세 항목(exif/중복/거절/판정 정보)이 누락될 수 있어
+//       상세 페이지 렌더링이 깨지지 않도록 항목을 optional로 둠.
+export interface MissionLogDetail extends Omit<
+  FeedItem,
+  "exif_taken_at" | "exif_risk" | "is_duplicate" | "reject_reason_code" | "decision_type"
+> {
+  exif_taken_at?: string | null;
+  exif_risk?: MissionLogExifRisk | null;
+  is_duplicate?: boolean;
+  reject_reason_code?: RejectReasonCode | null;
+  decision_type?: MissionLogDecisionType | null;
+  reject_memo?: string | null;
 }
 
 // GET /api/feed → 200
@@ -836,6 +861,12 @@ export interface CrewSettlementSummary {
 export interface SettlementDetail {
   settlement_id: number;
   crew_id: number;
+  // 정산 시점 스냅샷 표시용 값. 레거시(스냅샷 도입 이전) 정산 행은 null일 수 있음
+  crew_name: string | null;
+  crew_started_at: string | null; // YYYY-MM-DD
+  crew_ended_at: string | null; // YYYY-MM-DD
+  mission_days: number | null; // 기간 내 실제 미션 진행일 수 (DAILY=전체, 요일지정=스케줄 요일 수)
+  crew_success_rate: string | null; // decimal scale 4 string, 분모 0이면 "0"
   status: SettlementStatus;
   retry_count: number;
   total_participants: number;
@@ -848,6 +879,7 @@ export interface SettlementDetail {
   failure_message: string | null;
   started_at: string;
   finished_at: string | null;
+  my_rank: number | null; // 인증 사용자의 최종 순위. 참여 row 없으면 null
   items: SettlementItem[];
 }
 
@@ -855,6 +887,9 @@ export interface SettlementDetail {
 export interface SettlementMe {
   settlement_id: number;
   crew_id: number;
+  crew_name: string;
+  crew_started_at: string; // YYYY-MM-DD
+  crew_ended_at: string; // YYYY-MM-DD
   status: SettlementStatus;
   retry_count: number;
   failure_code: SettlementFailureCode | null;
@@ -867,6 +902,8 @@ export interface SettlementMe {
 export interface SettlementItem {
   settlement_item_id: number;
   crew_participant_id: number;
+  nickname: string; // 정산 시점 스냅샷된 참여자 닉네임
+  is_me: boolean; // 인증 사용자 본인 행 여부
   participant_status_snapshot: ParticipantStatus;
   deposit_amount: number;
   success_count_raw: number;
@@ -875,6 +912,7 @@ export interface SettlementItem {
   excluded_success_count: number;
   // withdrawn_at_snapshot 제거됨 (API 문서 확정)
   share_ratio: string; // string decimal
+  rank: number; // share_ratio DESC, 동률 시 crew_participant_id ASC, 공동 순위 가능(예: 1,2,2)
   base_refund_amount: number;
   remainder_bonus_amount: number; // HOST_REMAINDER 정책에서 방장에게만 지급, 나머지는 0
   refund_amount: number; // base_refund_amount + remainder_bonus_amount (최종 환급 source of truth)
@@ -1030,4 +1068,28 @@ export interface MyCrew {
 export interface MyCrewsResponse {
   items: MyCrew[];
   next_cursor: string | null;
+}
+
+// ════════════════════════════════════════════════════════════
+// § 알림
+// ════════════════════════════════════════════════════════════
+
+export interface NotificationItem {
+  notification_id: string;
+  event_type: NotificationEventType;
+  title: string;
+  display_text: string;
+  is_read: boolean;
+  read_at: string | null;
+  crew_id?: number;
+  crew_name?: string;
+  mission_log_id?: number;
+  occurred_at: string;
+  deep_link?: string | null;
+}
+
+export interface NotificationsResponse {
+  items: NotificationItem[];
+  next_cursor: string | null;
+  unread_count: number;
 }

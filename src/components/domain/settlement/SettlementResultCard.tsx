@@ -1,103 +1,87 @@
-﻿import { Trophy, WalletCards } from 'lucide-react';
-import { Button } from '@/components/common/Button';
-import type { SettlementDetailViewModel } from './settlementViewModel';
+import { forwardRef } from 'react';
+import { TrendingDown, TrendingUp } from 'lucide-react';
+import type { SettlementResultCardViewModel } from './settlementViewModel';
 
 interface SettlementResultCardProps {
-  viewModel: SettlementDetailViewModel;
-  onPrimaryAction: () => void;
+  viewModel: SettlementResultCardViewModel;
 }
 
-export function SettlementResultCard({
-  viewModel,
-  onPrimaryAction,
-}: SettlementResultCardProps) {
-  if (viewModel.isAllFail) {
-    return <SettlementAllFailRefundCard viewModel={viewModel} onPrimaryAction={onPrimaryAction} />;
-  }
+const DELTA_TEXT = {
+  up: 'text-[#8FE0AC]',
+  down: 'text-[#FF9C94]',
+  flat: 'text-white/55',
+} as const;
 
-  return (
-    <section
-      aria-labelledby="settlement-complete-title"
-      className="relative w-full overflow-hidden rounded-[20px] bg-white p-6 text-center shadow-card"
-    >
-      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[20px]" aria-hidden>
-        {[
-          ['#FFC57A', '20px', '15px'],
-          ['#9F95D4', '280px', '30px'],
-          ['#7FB271', '24px', '60px'],
-          ['#E59A6F', '290px', '80px'],
-          ['#D9A93D', '60px', '12px'],
-          ['#4C73D9', '250px', '55px'],
-        ].map(([color, left, top], index) => (
-          <span
-            key={`${color}-${left}-${top}`}
-            className="absolute h-1.5 w-1.5 rotate-45 rounded-[2px]"
-            style={{ left, top, backgroundColor: color, opacity: index % 2 === 0 ? 0.95 : 0.8 }}
-          />
-        ))}
+// 1:1 공유용 결과 카드 — 이 노드가 PNG 캡처 대상이다 (ref 전달 필수)
+export const SettlementResultCard = forwardRef<HTMLDivElement, SettlementResultCardProps>(
+  function SettlementResultCard({ viewModel }, ref) {
+    return (
+      <div
+        ref={ref}
+        className="relative flex aspect-square w-full flex-col overflow-hidden rounded-[24px] bg-[linear-gradient(135deg,#0B1117_0%,#101B22_45%,#28403C_70%,#518666_100%)] p-6"
+      >
+        {/* 바둑판 그리드 (가로세로 선) */}
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[length:26px_26px]" />
+
+        {/* 헤더 */}
+        <div className="relative flex items-center justify-between">
+          <span className="text-lg font-black tracking-[-0.01em] text-white">Dondok</span>
+          {viewModel.periodLabel && (
+            <span className="text-xs font-semibold text-white/55">{viewModel.periodLabel}</span>
+          )}
+        </div>
+
+        {/* 크루명 + 순위 */}
+        <div className="relative mt-3">
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#7FBF95]">
+            Mission Complete
+          </p>
+          <p className="mt-1.5 break-keep text-lg font-bold leading-snug tracking-[-0.01em] text-white/90">
+            {viewModel.crewName}
+          </p>
+          <p className="mt-3 text-xs font-semibold text-white/55">최종 순위</p>
+          <p className="mt-1 flex items-baseline gap-1.5">
+            <span className="text-[32px] font-black leading-none tracking-[-0.02em] text-white">
+              {viewModel.rankLabel}
+            </span>
+            <span className="text-base font-semibold text-white/55">
+              / {viewModel.totalParticipantsLabel}
+            </span>
+          </p>
+        </div>
+
+        {/* 환급금 + 보증금 대비 */}
+        <div className="relative mt-auto">
+          <p className="text-xs font-semibold text-white/55">최종 환급금</p>
+          <p className="mt-1 text-[32px] font-black leading-none tracking-[-0.03em] text-[#8FE0AC]">
+            {viewModel.refundAmount}
+          </p>
+          <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-white/55">
+            {viewModel.depositComparePrefix}
+            <span className={`inline-flex items-center gap-0.5 font-bold ${DELTA_TEXT[viewModel.refundDeltaSign]}`}>
+              {viewModel.refundDeltaSign === 'down' ? (
+                <TrendingDown size={12} />
+              ) : viewModel.refundDeltaSign === 'up' ? (
+                <TrendingUp size={12} />
+              ) : null}
+              {viewModel.refundDeltaLabel}
+            </span>
+          </p>
+
+          {/* 인증 성공률 */}
+          <div className="mt-4 flex items-baseline gap-2 border-t border-white/15 pt-4">
+            <span className="text-xs font-semibold text-white/55">인증 성공률</span>
+            {viewModel.successRateLabel && (
+              <span className="text-xl font-black tracking-[-0.02em] text-white">
+                {viewModel.successRateLabel}
+              </span>
+            )}
+            <span className="ml-auto text-sm font-bold text-white/70">
+              {viewModel.successCountLabel}
+            </span>
+          </div>
+        </div>
       </div>
-
-      <div className="relative mx-auto flex h-[76px] w-[76px] items-center justify-center rounded-full bg-gradient-to-br from-primary-green to-primary-blue text-white shadow-[0_14px_28px_rgba(76,115,217,0.32)]">
-        <Trophy size={40} />
-      </div>
-
-      <h1 id="settlement-complete-title" className="relative mt-3 text-lg font-black tracking-[-0.03em] text-text-primary">
-        최종 정산이 완료됐어요
-      </h1>
-      <p className="relative mt-1 text-xs font-medium text-text-secondary">
-        {viewModel.finishedAtLabel} · {viewModel.totalParticipants}
-      </p>
-
-      <div className="relative my-5 rounded-card bg-success-green/70 px-4 py-4">
-        <p className="text-xs font-bold text-primary-green">내 최종 환급액</p>
-        <p className="mt-1 text-3xl font-black tracking-[-0.03em] text-primary-green">
-          {viewModel.totalRefundAmount}
-        </p>
-        <p className="mt-1 text-xs font-semibold text-primary-green">내 예치금 {viewModel.totalLockedAmount}</p>
-      </div>
-
-      <div className="relative">
-        <Button type="button" variant="primary-green" onClick={onPrimaryAction}>
-          크루로 이동
-        </Button>
-      </div>
-    </section>
-  );
-}
-
-function SettlementAllFailRefundCard({
-  viewModel,
-  onPrimaryAction,
-}: SettlementResultCardProps) {
-  return (
-    <section
-      aria-labelledby="settlement-all-fail-title"
-      className="relative w-full overflow-hidden rounded-[20px] bg-white p-6 text-center shadow-card"
-    >
-      <div className="mx-auto flex h-[76px] w-[76px] items-center justify-center rounded-full bg-primary-blue/10 text-primary-blue shadow-[0_12px_24px_rgba(76,115,217,0.16)]">
-        <WalletCards size={38} />
-      </div>
-
-      <h1 id="settlement-all-fail-title" className="mt-3 text-lg font-black tracking-[-0.03em] text-text-primary">
-        전원 원금 환급이 완료됐어요
-      </h1>
-      <p className="mt-2 text-xs font-medium leading-5 text-text-secondary">
-        인정된 성공 기록이 없어 지분 정산 없이 예치금 전액을 돌려드렸어요.
-      </p>
-
-      <div className="my-5 rounded-card bg-primary-blue/10 px-4 py-4">
-        <p className="text-xs font-bold text-primary-blue">내 환급액</p>
-        <p className="mt-1 text-3xl font-black tracking-[-0.03em] text-primary-blue">
-          {viewModel.totalRefundAmount}
-        </p>
-        <p className="mt-1 text-xs font-semibold text-primary-blue">내 예치금 {viewModel.totalLockedAmount}</p>
-      </div>
-
-      <div className="grid gap-2">
-        <Button type="button" variant="primary-blue" onClick={onPrimaryAction}>
-          크루로 이동
-        </Button>
-      </div>
-    </section>
-  );
-}
+    );
+  },
+);

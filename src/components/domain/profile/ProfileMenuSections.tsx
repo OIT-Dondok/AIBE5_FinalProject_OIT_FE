@@ -79,10 +79,10 @@ function MenuItem({ item }: { item: MenuItemData }) {
   );
 }
 
-function MenuSection({ section }: { section: MenuSectionData }) {
+function MenuSection({ section, showBorderTop }: { section: MenuSectionData; showBorderTop: boolean }) {
   return (
-    <div className="bg-card rounded-card shadow-card border border-text-secondary/10 overflow-hidden">
-      <p className="px-4 pt-4 pb-2 text-xs font-bold text-text-secondary tracking-wide">
+    <div className={showBorderTop ? "border-t border-text-secondary/[0.08]" : ""}>
+      <p className="px-4 pt-4 pb-2 text-[10px] font-extrabold text-text-secondary/60 tracking-wider uppercase">
         {section.sectionTitle}
       </p>
       <div className="divide-y divide-text-secondary/[0.08]">
@@ -109,7 +109,7 @@ export function ProfileMenuSections({
 
   const sections: MenuSectionData[] = [
     {
-      sectionTitle: "활동",
+      sectionTitle: "내 활동",
       items: [
         {
           icon: Users,
@@ -120,20 +120,25 @@ export function ProfileMenuSections({
           onClick: () => router.push("/my/crews"),
         },
         {
-          icon: BarChart3,
-          iconBg: "bg-blue-50",
-          iconColor: "text-primary-blue",
-          title: "대시보드",
-          subtitle: "도전 참여 · 출석 조회",
-          onClick: () => router.push("/dashboard"),
-        },
-        {
           icon: ClipboardCheck,
           iconBg: "bg-violet-50",
           iconColor: "text-violet-500",
           title: "인증 이력",
           subtitle: `인증 ${totalVerificationCount}건`,
           onClick: () => router.push("/my/certifications"),
+        },
+      ],
+    },
+    {
+      sectionTitle: "관리 및 자산",
+      items: [
+        {
+          icon: BarChart3,
+          iconBg: "bg-blue-50",
+          iconColor: "text-primary-blue",
+          title: "대시보드",
+          subtitle: "도전 참여 · 출석 조회",
+          onClick: () => router.push("/dashboard"),
         },
         {
           icon: Wallet,
@@ -143,6 +148,11 @@ export function ProfileMenuSections({
           subtitle: "현재 잔액 · 최근 충전 내역",
           onClick: () => router.push("/my/dodin"),
         },
+      ],
+    },
+    {
+      sectionTitle: "기타",
+      items: [
         {
           icon: Bell,
           iconBg: "bg-rose-50",
@@ -190,9 +200,15 @@ export function ProfileMenuSections({
 
   return (
     <>
-      {sections.map((section) => (
-        <MenuSection key={section.sectionTitle} section={section} />
-      ))}
+      <div className="bg-card rounded-card shadow-card border border-text-secondary/10 overflow-hidden flex flex-col">
+        {sections.map((section, idx) => (
+          <MenuSection
+            key={section.sectionTitle}
+            section={section}
+            showBorderTop={idx > 0}
+          />
+        ))}
+      </div>
       <Toast
         message={toastMessage}
         isOpen={isToastOpen}

@@ -6,11 +6,11 @@ import { Header } from "@/components/common/Header";
 import { DodinHistoryList } from "@/components/domain/point/DodinHistoryList";
 import type { HistoryFilter } from "@/components/domain/point/WalletHistorySection";
 import {
-  buildRecentMonthOptions,
+  getCurrentSeoulMonth,
   getWalletHistoryTypeParam,
   toWalletHistoryViewItem,
 } from "@/components/domain/point/pointViewModel";
-import { getWalletHistory } from "@/services/point";
+import { getWalletHistoryByMonth } from "@/services/point";
 import type { WalletHistoryItem } from "@/types/domain";
 
 const HISTORY_PAGE_SIZE = 20;
@@ -18,12 +18,11 @@ const INITIAL_CURSOR_KEY = "__initial__";
 
 export default function DodinHistoryPage() {
   const [activeFilter, setActiveFilter] = useState<HistoryFilter>("ALL");
-  const [activeMonth, setActiveMonth] = useState<string | undefined>(undefined);
+  const [activeMonth, setActiveMonth] = useState(() => getCurrentSeoulMonth());
   const [historyItems, setHistoryItems] = useState<WalletHistoryItem[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-  const [monthOptions] = useState(() => buildRecentMonthOptions(new Date()));
   const requestIdRef = useRef(0);
   const lastRequestedCursorRef = useRef<string | null>(null);
 
@@ -36,7 +35,7 @@ export default function DodinHistoryPage() {
     }: {
       cursor?: string;
       filter: HistoryFilter;
-      month?: string;
+      month: string;
       reset: boolean;
     }) => {
       const cursorKey = cursor ?? INITIAL_CURSOR_KEY;
@@ -49,10 +48,10 @@ export default function DodinHistoryPage() {
       setErrorMessage("");
 
       try {
-        const { data } = await getWalletHistory({
+        const { data } = await getWalletHistoryByMonth({
           cursor,
           limit: HISTORY_PAGE_SIZE,
-          ...(month ? { month } : {}),
+          month,
           type: getWalletHistoryTypeParam(filter),
         });
 
@@ -101,7 +100,7 @@ export default function DodinHistoryPage() {
   );
 
   const handleMonthChange = useCallback(
-    (month?: string) => {
+    (month: string) => {
       if (month === activeMonth) return;
       resetHistoryQuery();
       setActiveMonth(month);
@@ -137,7 +136,6 @@ export default function DodinHistoryPage() {
             hasMore={nextCursor != null}
             historyItems={walletHistoryItems}
             isLoading={isLoading}
-            monthOptions={monthOptions}
             onFilterChange={handleFilterChange}
             onLoadMore={handleLoadMore}
             onMonthChange={handleMonthChange}

@@ -6,11 +6,10 @@ import type { CrewDetail } from '@/types/domain';
 import { useAuthStore } from '@/store/authStore';
 import CrewInfoTable from './CrewInfoTable';
 import CrewMemberList from './CrewMemberList';
-import CrewNoticeList from './CrewNoticeList';
 import CrewHostProfile from './CrewHostProfile';
 import CrewDurationCard from './CrewDurationCard';
 
-const TABS = ['정보', '공지', '멤버'] as const;
+const TABS = ['정보', '멤버'] as const;
 type TabType = (typeof TABS)[number];
 
 interface CrewDetailTabsProps {
@@ -106,9 +105,6 @@ export default function CrewDetailTabs({ crew, crewId, onConfirmedCountLoaded }:
               pendingCount={pendingCount}
             />
           </div>
-        )}
-        {activeTab === '공지' && (
-          <CrewNoticeList crewId={crewId} hostMemberUuid={crew.host_member_uuid} />
         )}
         {activeTab === '멤버' && (
           <CrewMemberList crewId={crewId} />

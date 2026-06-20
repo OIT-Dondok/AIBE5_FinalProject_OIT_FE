@@ -59,6 +59,13 @@ export function VerificationCard({
         ? "rejected"
         : null;
 
+  const handleHeaderClick = (e: React.MouseEvent | React.KeyboardEvent) => {
+    if ((e.target as HTMLElement).closest("a")) {
+      return;
+    }
+    onToggle();
+  };
+
   const selectedRejectReasonLabel =
     rejectReasonOptions.find((option) => option.value === selectedRejectReason)?.label ?? "사유 미선택";
 
@@ -110,19 +117,38 @@ export function VerificationCard({
   return (
     <>
       <article
-        className={`overflow-hidden rounded-card bg-card shadow-sm transition-opacity ${
+        className={`overflow-hidden rounded-[24px] bg-card shadow-sm transition-opacity ${
           isExpanded ? "border-2 border-[#4d73d9]" : "border border-text-secondary/10"
         } ${isDecided ? "opacity-40" : ""}`}
       >
-        <button type="button" onClick={onToggle} className="w-full px-4 py-3.5 text-left">
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={handleHeaderClick}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              handleHeaderClick(e);
+            }
+          }}
+          className="w-full px-4 py-3.5 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#4d73d9] focus:ring-inset rounded-t-[22px]"
+        >
           <div className="flex items-center justify-between gap-3">
             <Link
               href={`/members/${item.member_uuid}`}
               className="flex min-w-0 items-center gap-3 hover:opacity-80 active:opacity-60 transition-opacity"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-blue/10 text-sm font-extrabold text-primary-blue">
-                {item.nickname.slice(0, 1)}
+              <div className="h-10 w-10 shrink-0 rounded-full flex items-center justify-center overflow-hidden text-sm font-extrabold text-primary-blue bg-primary-blue/10 border border-primary-blue/10 shadow-inner">
+                {item.profile_image_url ? (
+                  <img
+                    src={item.profile_image_url}
+                    alt={`${item.nickname} 프로필 이미지`}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  item.nickname.slice(0, 1)
+                )}
               </div>
               <div className="min-w-0">
                 <p className="truncate text-sm font-extrabold text-text-primary">{item.nickname}</p>
@@ -153,7 +179,7 @@ export function VerificationCard({
               </span>
             </div>
           </div>
-        </button>
+        </div>
 
         {isExpanded && (
           <div className="border-t border-text-secondary/10 bg-[#FAFCFF] px-4 pb-4 pt-3">
@@ -347,9 +373,20 @@ export function VerificationCard({
         <div className="fixed inset-0 z-[80] flex justify-center bg-black/70" onClick={() => setIsLightboxOpen(false)}>
           <div className="relative flex h-full w-full max-w-[430px] flex-col bg-black text-white">
             <div className="absolute left-0 right-0 top-0 z-10 flex items-center justify-between bg-black/45 px-5 py-4 backdrop-blur-sm">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-sm font-extrabold text-white">
-                  {item.nickname.slice(0, 1)}
+              <Link
+                href={`/members/${item.member_uuid}`}
+                className="flex min-w-0 items-center gap-3 hover:opacity-80 active:opacity-60 transition-opacity"
+              >
+                <div className="h-9 w-9 shrink-0 rounded-full flex items-center justify-center overflow-hidden text-sm font-extrabold text-white bg-white/15">
+                  {item.profile_image_url ? (
+                    <img
+                      src={item.profile_image_url}
+                      alt={`${item.nickname} 프로필 이미지`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    item.nickname.slice(0, 1)
+                  )}
                 </div>
                 <div className="min-w-0">
                   <p className="truncate text-sm font-extrabold text-white">{item.nickname}</p>
@@ -357,7 +394,7 @@ export function VerificationCard({
                     {item.exif_status === "MISSING" ? "-" : formatDateMinute(item.captured_at)}
                   </p>
                 </div>
-              </div>
+              </Link>
               <button
                 type="button"
                 onClick={(event) => {

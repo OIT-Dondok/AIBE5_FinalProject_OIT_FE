@@ -10,7 +10,7 @@ import { Header } from "@/components/common/Header";
 import { Skeleton } from "@/components/common/Skeleton";
 import { ReportSuspicionCallout } from "@/components/domain/dashboard/ReportSuspicionCallout";
 import { getMissionLogDetail } from "@/services/feed";
-import type { CertificationStatus, FeedItem } from "@/types/domain";
+import type { CertificationStatus, MissionLogDetail } from "@/types/domain";
 
 // ─── 상태 배지 설정 ────────────────────────────────────────────
 
@@ -29,7 +29,11 @@ const STATUS_META: Record<CertificationStatus, StatusMeta> = {
 
 const REJECT_REASON_LABEL: Record<string, string> = {
   TIME_VIOLATION: "시간 위반",
-  IMAGE_UNRELATED: "무관한 이미지",
+  DUPLICATE: "중복 업로드",
+  MISSION_MISMATCH: "미션 불일치",
+  UNCLEAR: "사진 불명확",
+  INAPPROPRIATE: "부적절",
+  OTHER: "기타",
 };
 
 const DECISION_TYPE_LABEL: Record<string, string> = {
@@ -47,6 +51,26 @@ function formatRejectReason(code: string | null | undefined): string | null {
 function formatDecisionType(type: string | null | undefined): string | null {
   if (!type) return null;
   return DECISION_TYPE_LABEL[type] ?? null;
+}
+
+const EXIF_RISK_LABEL: Record<string, string> = {
+  NORMAL: "정상",
+  MISSING: "메타데이터 없음",
+  TIME_INVALID: "촬영 시각 확인 필요",
+};
+
+function formatExifRisk(risk: string | null | undefined): string {
+  if (!risk) return "-";
+  return EXIF_RISK_LABEL[risk] ?? risk;
+}
+
+function formatOptionalDateTime(isoString: string | null | undefined): string {
+  return isoString ? formatDateTime(isoString) : "-";
+}
+
+function formatDuplicateResult(isDuplicate: boolean | null | undefined): string {
+  if (isDuplicate === undefined || isDuplicate === null) return "-";
+  return isDuplicate ? "있음" : "없음";
 }
 
 // ─── 날짜 포맷 (YYYY.MM.DD HH:mm) ──────────────────────────────
@@ -120,6 +144,44 @@ function ReactionRow({ counts }: { counts: Record<string, number> }) {
   );
 }
 
+function VerificationInfoSection({ item }: { item: MissionLogDetail }) {
+  const rejectReason = formatRejectReason(item.reject_reason_code) ?? "없음";
+  const decisionType = formatDecisionType(item.decision_type);
+
+  return (
+    <section className="rounded-xl bg-text-secondary/5 border border-text-secondary/10 px-4 py-3 flex flex-col">
+      <dl className="text-xs divide-y divide-text-secondary/15">
+        <div className="grid grid-cols-[92px_1fr] gap-x-3 py-2">
+          <dt className="text-text-secondary">촬영 시각</dt>
+          <dd className="font-semibold text-text-primary text-right text-[13px]">
+            {formatOptionalDateTime(item.exif_taken_at)}
+          </dd>
+        </div>
+        <div className="grid grid-cols-[92px_1fr] gap-x-3 py-2">
+          <dt className="text-text-secondary">Exif 검증</dt>
+          <dd className="font-semibold text-text-primary text-right text-[13px]">{formatExifRisk(item.exif_risk)}</dd>
+        </div>
+        <div className="grid grid-cols-[92px_1fr] gap-x-3 py-2">
+          <dt className="text-text-secondary">중복</dt>
+          <dd className="font-semibold text-text-primary text-right text-[13px]">
+            {formatDuplicateResult(item.is_duplicate)}
+          </dd>
+        </div>
+        {decisionType && (
+          <div className="grid grid-cols-[92px_1fr] gap-x-3 py-2">
+            <dt className="text-text-secondary">검수 방식</dt>
+            <dd className="font-semibold text-text-primary text-right text-[13px]">{decisionType}</dd>
+          </div>
+        )}
+        <div className="grid grid-cols-[92px_1fr] gap-x-3 py-2">
+          <dt className="text-text-secondary">방장 거절 사유</dt>
+          <dd className="font-semibold text-text-primary text-right text-[13px]">{rejectReason}</dd>
+        </div>
+      </dl>
+    </section>
+  );
+}
+
 // ─── 페이지 ────────────────────────────────────────────────────
 
 export default function MissionLogDetailPage() {
@@ -127,24 +189,26 @@ export default function MissionLogDetailPage() {
   const router = useRouter();
   const missionLogId = Number(params.missionLogId);
 
-  const [item, setItem] = useState<FeedItem | null>(null);
+  const [item, setItem] = useState<MissionLogDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!Number.isFinite(missionLogId) || missionLogId <= 0) {
-      setErrorMessage("유효하지 않은 인증 ID예요.");
-      setIsLoading(false);
-      return;
-    }
+    const loadDetail = async () => {
+      if (!Number.isFinite(missionLogId) || missionLogId <= 0) {
+        setErrorMessage("유효하지 않은 인증 ID예요.");
+        setIsLoading(false);
+        return;
+      }
 
-    setIsLoading(true);
-    setErrorMessage(null);
+      setIsLoading(true);
+      setErrorMessage(null);
 
-    getMissionLogDetail(missionLogId)
-      .then(({ data }) => setItem(data))
-      .catch((err: { response?: { status?: number } }) => {
-        const status = err?.response?.status;
+      try {
+        const { data } = await getMissionLogDetail(missionLogId);
+        setItem(data);
+      } catch (err: unknown) {
+        const status = (err as { response?: { status?: number } })?.response?.status;
         if (status === 404) {
           setErrorMessage("인증 기록을 찾을 수 없어요.");
         } else if (status === 403) {
@@ -152,8 +216,12 @@ export default function MissionLogDetailPage() {
         } else {
           setErrorMessage("인증 상세를 불러오지 못했어요.");
         }
-      })
-      .finally(() => setIsLoading(false));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadDetail();
   }, [missionLogId]);
 
   return (
@@ -204,28 +272,28 @@ export default function MissionLogDetailPage() {
                     href={`/members/${item.member_uuid}`}
                     className="flex items-center gap-3 min-w-0 flex-1 hover:opacity-80 active:opacity-60 transition-opacity"
                   >
-                  <div
-                    className={`shrink-0 w-11 h-11 rounded-full overflow-hidden flex items-center justify-center text-sm font-bold ${getAvatarClass(item.crew_id)}`}
-                  >
-                    {item.profile_image_url ? (
-                      <Image
-                        src={item.profile_image_url}
-                        alt={item.nickname}
-                        width={44}
-                        height={44}
-                        className="object-cover"
-                        unoptimized
-                      />
-                    ) : (
-                      (item.nickname.charAt(0).toUpperCase() || "?")
-                    )}
-                  </div>
-                  <div className="min-w-0 flex flex-col gap-0.5">
-                    <p className="text-[15px] font-bold text-text-primary truncate leading-tight">
-                      {item.nickname}
-                    </p>
-                    <p className="text-[11px] text-text-secondary truncate">{item.crew_name}</p>
-                  </div>
+                    <div
+                      className={`shrink-0 w-11 h-11 rounded-full overflow-hidden flex items-center justify-center text-sm font-bold ${getAvatarClass(item.crew_id)}`}
+                    >
+                      {item.profile_image_url ? (
+                        <Image
+                          src={item.profile_image_url}
+                          alt={item.nickname}
+                          width={44}
+                          height={44}
+                          className="object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        (item.nickname.charAt(0).toUpperCase() || "?")
+                      )}
+                    </div>
+                    <div className="min-w-0 flex flex-col gap-0.5">
+                      <p className="text-[15px] font-bold text-text-primary truncate leading-tight">
+                        {item.nickname}
+                      </p>
+                      <p className="text-[11px] text-text-secondary truncate">{item.crew_name}</p>
+                    </div>
                   </Link>
                   {(() => {
                     const meta = STATUS_META[item.certification_status];
@@ -242,30 +310,15 @@ export default function MissionLogDetailPage() {
                 {/* 인증 시간 */}
                 <p className="text-xs text-text-secondary">{formatDateTime(item.server_time)}</p>
 
-                {/* 거절 사유 (FAILED 시만) */}
-                {item.certification_status === "FAILED" && formatRejectReason(item.reject_reason_code) && (
-                  <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 flex flex-col gap-0.5">
-                    <p className="text-xs font-semibold text-red-500">거절 사유</p>
-                    <p className="text-sm text-red-700">{formatRejectReason(item.reject_reason_code)}</p>
-                  </div>
-                )}
-
-                {/* 결정 방식 */}
-                {formatDecisionType(item.decision_type) && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-text-secondary">검수 방식</span>
-                    <span className="text-xs font-medium text-text-primary">
-                      {formatDecisionType(item.decision_type)}
-                    </span>
-                  </div>
-                )}
-
                 {/* 캡션 */}
                 {item.caption && (
                   <p className="text-sm text-text-primary leading-relaxed whitespace-pre-line">
                     {item.caption}
                   </p>
                 )}
+
+                {/* 검증 정보 */}
+                <VerificationInfoSection item={item} />
 
                 {/* 리액션 */}
                 <ReactionRow counts={item.reaction_counts} />

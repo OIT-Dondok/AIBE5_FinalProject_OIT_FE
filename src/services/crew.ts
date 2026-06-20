@@ -59,14 +59,17 @@ export const getCrewNotices = (crewId: number, cursor?: string) => {
   });
 };
 
-export const createCrewNotice = (crewId: number, data: { title: string; content: string }) => {
+export const createCrewNotice = (
+  crewId: number,
+  data: { title: string; content: string; is_important?: boolean },
+) => {
   return api.post(`/crews/${crewId}/notices`, data);
 };
 
 export const updateCrewNotice = (
   crewId: number,
   noticeId: number,
-  data: { title?: string; content?: string },
+  data: { title?: string; content?: string; is_important?: boolean },
 ) => {
   return api.patch(`/crews/${crewId}/notices/${noticeId}`, data);
 };
@@ -99,6 +102,17 @@ export const getNoticeComments = (crewId: number, noticeId: number, cursor?: str
 
 export const createNoticeComment = (crewId: number, noticeId: number, data: { content: string }) =>
   api.post<NoticeComment>(`/crews/${crewId}/notices/${noticeId}/comments`, data);
+
+export const deleteNoticeComment = (crewId: number, noticeId: number, commentId: number) =>
+  api.delete(`/crews/${crewId}/notices/${noticeId}/comments/${commentId}`);
+
+export const updateNoticeComment = (
+  crewId: number,
+  noticeId: number,
+  commentId: number,
+  data: { content: string },
+) =>
+  api.patch<NoticeComment>(`/crews/${crewId}/notices/${noticeId}/comments/${commentId}`, data);
 
 export const getMyCrew = (role?: 'ALL' | 'HOST' | 'MEMBER', cursor?: string, signal?: AbortSignal) => {
   return api.get<MyCrewsResponse>('/me/crews', {

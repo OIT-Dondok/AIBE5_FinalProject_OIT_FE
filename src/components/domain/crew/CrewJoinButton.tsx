@@ -3,6 +3,8 @@
 import { useState, useCallback } from 'react';
 import { Toast } from '@/components/common/Toast';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
+import { DodinShortageModal } from '@/components/domain/point/DodinShortageModal';
+import { useDodinShortage } from '@/components/domain/point/useDodinShortage';
 import type { MyParticipation } from '@/types/domain';
 import { useCrewJoinFlow } from './useCrewJoinFlow';
 
@@ -33,6 +35,8 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
     setIsToastOpen(true);
   }, []);
 
+  const shortage = useDodinShortage();
+
   const {
     step,
     isLoading,
@@ -41,13 +45,18 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
     openJoinConfirm,
     openCancelConfirm,
     close,
-  } = useCrewJoinFlow({ crewId, onSuccess, showToast });
+  } = useCrewJoinFlow({
+    crewId,
+    onSuccess,
+    showToast,
+    onInsufficientBalance: () => shortage.openIfInsufficient(depositAmount),
+  });
 
   const status = myParticipation?.status ?? null;
 
   const renderButton = () => {
-    /* ── 신청 전 ─────────────────────────────────── */
-    if (status === null) {
+    /* ── 신청 전 / 취소 후 재신청 (CANCELLED는 terminal 아님 → reopen 허용) ── */
+    if (status === null || status === 'CANCELLED') {
       return (
         <button
           type="button"
@@ -159,7 +168,7 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
         title="정말 신청을 취소하시겠어요?"
         description={
           <span>
-            신청 철회 시 <strong className="text-[#DB5C55] font-bold">재참여가 불가능</strong>합니다.
+            예약된 보증금은 즉시 해제되며, <strong className="text-primary-green font-bold">취소 후 다시 신청</strong>할 수 있어요.
           </span>
         }
         confirmText="네, 취소할게요"
@@ -192,6 +201,14 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
         isOpen={isToastOpen}
         onClose={() => setIsToastOpen(false)}
         type={toastType}
+      />
+
+      <DodinShortageModal
+        isOpen={shortage.isOpen}
+        onClose={shortage.close}
+        onCharge={shortage.goToCharge}
+        requiredAmount={shortage.requiredAmount}
+        currentBalance={shortage.currentBalance}
       />
     </>
   );

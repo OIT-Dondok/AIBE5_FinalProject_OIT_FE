@@ -10,29 +10,29 @@ export const REVIEW_FILTERS: Array<{ value: MissionLogReviewBucket; label: strin
 
 export const REVIEW_FILTER_STYLES: Record<MissionLogReviewBucket, { active: string; inactive: string }> = {
   urgent: {
-    active: "bg-[#D9534C] text-white shadow-sm shadow-[#FCEDEC]/70",
-    inactive: "bg-[#FCEDEC] text-[#D9534C] hover:bg-[#F8DEDC]",
+    active: "bg-[#D9534C]/10 text-[#D9534C] border border-[#D9534C]/25 font-extrabold shadow-sm",
+    inactive: "bg-white text-text-secondary border border-text-secondary/15 hover:bg-slate-50",
   },
   warning: {
-    active: "bg-[#D89B4C] text-white shadow-sm shadow-[#FBF1E1]/70",
-    inactive: "bg-[#FBF1E1] text-[#D89B4C] hover:bg-[#F6E7CD]",
+    active: "bg-[#D89B4C]/10 text-[#D89B4C] border border-[#D89B4C]/25 font-extrabold shadow-sm",
+    inactive: "bg-white text-text-secondary border border-text-secondary/15 hover:bg-slate-50",
   },
   normal: {
-    active: "bg-[#777777] text-white shadow-sm shadow-[#F3F0E9]/70",
-    inactive: "bg-[#F3F0E9] text-[#777777] hover:bg-[#E9E4DA]",
+    active: "bg-[#777777]/10 text-[#777777] border border-[#777777]/25 font-extrabold shadow-sm",
+    inactive: "bg-white text-text-secondary border border-text-secondary/15 hover:bg-slate-50",
   },
 };
 
 export const exifSummaryLabel: Record<VerificationExifStatus, string> = {
   NORMAL: "정상",
   MISSING: "없음",
-  FAILED: "시간 이상",
+  FAILED: "시각 이상",
 };
 
 export const exifDetailLabel: Record<VerificationExifStatus, string> = {
-  NORMAL: "검증 성공",
+  NORMAL: "정상",
   MISSING: "메타데이터 없음",
-  FAILED: "촬영 시간 확인 필요",
+  FAILED: "촬영 시각 확인 필요",
 };
 
 export const exifDetailStyle: Record<VerificationExifStatus, string> = {

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Pencil, Send, SmilePlus, Trash2, X } from "lucide-react";
+import { Pencil, SmilePlus, Trash2 } from "lucide-react";
 
 import { EmojiPickerSheet } from "@/components/common/EmojiPickerSheet";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -16,31 +16,28 @@ import { formatDateMinute } from "@/components/domain/host/hostFormatters";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import {
   addNoticeReaction,
-  createNoticeComment,
   deleteCrewNotice,
   getCrewNoticeDetail,
-  getNoticeComments,
   removeNoticeReaction,
 } from "@/services/crew";
 import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 import { useAuthStore } from "@/store/authStore";
-import type { CrewNotice, NoticeComment } from "@/types/domain";
+import { NoticeCommentSection } from "@/components/domain/crew/NoticeCommentSection";
+import type { CrewNotice } from "@/types/domain";
 
 export default function HostNoticeDetailPage() {
   const [notice, setNotice] = useState<CrewNotice | null>(null);
-  const [comments, setComments] = useState<NoticeComment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEmojiSheetOpen, setIsEmojiSheetOpen] = useState(false);
   const [isNoticeMenuOpen, setIsNoticeMenuOpen] = useState(false);
-  const [commentInput, setCommentInput] = useState("");
-  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [isToastOpen, setIsToastOpen] = useState(false);
   const [toastType, setToastType] = useState<ToastType>("success");
   const deleteNavTimerRef = useRef<number | null>(null);
+
   const router = useRouter();
   const params = useParams<{ crewId: string; noticeId: string }>();
   const crewId = parseRouteNumber(params.crewId);
@@ -54,14 +51,10 @@ export default function HostNoticeDetailPage() {
 
     let mounted = true;
 
-    Promise.all([
-      getCrewNoticeDetail(crewId, noticeId),
-      getNoticeComments(crewId, noticeId)
-    ])
-      .then(([noticeRes, commentsRes]) => {
+    getCrewNoticeDetail(crewId, noticeId)
+      .then((noticeRes) => {
         if (mounted) {
           setNotice(noticeRes.data);
-          setComments(commentsRes.data.items);
         }
       })
       .catch((err) => {
@@ -140,32 +133,6 @@ export default function HostNoticeDetailPage() {
     }
   };
 
-  const handleCommentSubmit = async () => {
-    const content = commentInput.trim();
-    if (!content || crewId === null || noticeId === null || isSubmittingComment) return;
-    setIsSubmittingComment(true);
-    try {
-      const res = await createNoticeComment(crewId, noticeId, { content });
-      setComments((prev) => [...prev, res.data]);
-      setCommentInput("");
-    } catch (error) {
-      setToastMessage(
-        getApiErrorMessage(
-          error,
-          {
-            VALIDATION_ERROR: "댓글 내용을 확인해 주세요.",
-            NOTICE_NOT_FOUND: "이미 삭제된 공지예요.",
-          },
-          "댓글 등록에 실패했어요. 잠시 후 다시 시도해 주세요.",
-        ),
-      );
-      setToastType("error");
-      setIsToastOpen(true);
-    } finally {
-      setIsSubmittingComment(false);
-    }
-  };
-
   if (crewId === null || noticeId === null) {
     return (
       <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
@@ -234,7 +201,7 @@ export default function HostNoticeDetailPage() {
               <div className="min-w-0">
                 <h1 className="text-lg font-extrabold leading-snug text-text-primary">{notice.title}</h1>
                 <div className="mt-3 flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-blue/10 text-xs font-extrabold text-primary-blue">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#5E9B73]/10 text-xs font-extrabold text-[#5E9B73]">
                     {currentProfileInitial}
                   </div>
                   <div className="min-w-0">
@@ -287,7 +254,7 @@ export default function HostNoticeDetailPage() {
                       onClick={() => void handleReactionClick(emoji)}
                       className={`rounded-full border px-3 py-1.5 text-sm font-bold transition active:scale-95 ${
                         isReacted
-                          ? "border-[#4D73D9] bg-[#E0E8FA] text-[#4D73D9]"
+                          ? "border-[#5E9B73] bg-[#E8F2EB] text-[#5E9B73]"
                           : "border-text-secondary/15 bg-white text-text-primary"
                       }`}
                     >
@@ -308,54 +275,7 @@ export default function HostNoticeDetailPage() {
 
           <div className="h-px bg-text-secondary/10" />
 
-          <section className="px-1 py-1">
-            <h2 className="text-sm font-bold text-text-primary">댓글 {comments.length}</h2>
-
-            <div className="mt-3 flex flex-col gap-1">
-              {comments.map((comment) => (
-                <article key={comment.comment_id} className="py-1">
-                  <div className="flex gap-2.5">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-blue/10 text-xs font-extrabold text-primary-blue overflow-hidden">
-                      {comment.author_profile_image_url ? (
-                        <img src={comment.author_profile_image_url} alt={comment.nickname ?? ''} className="h-full w-full object-cover" />
-                      ) : (
-                        comment.nickname?.slice(0, 1) ?? '?'
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[13px] font-bold text-text-primary">{comment.nickname}</p>
-                      <p className="mt-0.5 text-[13px] leading-relaxed text-text-primary">{comment.content}</p>
-                      <p className="mt-0.5 text-[11px] text-text-secondary">{comment.created_at ? formatDateMinute(comment.created_at) : ''}</p>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-
-            <div className="mt-4 flex items-center gap-2">
-              <input
-                type="text"
-                value={commentInput}
-                onChange={(event) => setCommentInput(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && !isSubmittingComment) {
-                    void handleCommentSubmit();
-                  }
-                }}
-                placeholder="댓글을 입력해주세요"
-                className="min-w-0 flex-1 rounded-full border border-text-secondary/10 bg-white px-4 py-2.5 text-sm text-text-primary outline-none transition placeholder:text-text-secondary/70 focus:border-[#4C73D9]"
-              />
-              <button
-                type="button"
-                aria-label="댓글 등록"
-                onClick={() => void handleCommentSubmit()}
-                disabled={isSubmittingComment}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#4C73D9] text-white shadow-sm transition hover:bg-[#3358BD] active:scale-95 disabled:opacity-50"
-              >
-                <Send size={17} strokeWidth={1.8} fill="none" />
-              </button>
-            </div>
-          </section>
+          <NoticeCommentSection crewId={crewId} noticeId={noticeId} />
         </div>
 
         <EmojiPickerSheet

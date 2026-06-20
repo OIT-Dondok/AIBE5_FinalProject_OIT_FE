@@ -57,6 +57,7 @@ function toCardItem(item: ReviewableMissionLog): HostCertificationMock {
     crew_id: item.crew_id,
     member_uuid: item.member_uuid,
     nickname: item.nickname,
+    profile_image_url: item.profile_image_url,
     image_url: item.image_url,
     submitted_at: item.server_time,
     captured_at: item.captured_at ?? item.server_time,
@@ -176,8 +177,8 @@ export function VerificationTab({ onPendingCountChange }: VerificationTabProps) 
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-3">
+    <SectionCard className="p-4 flex flex-col gap-4">
+      <div className="flex items-center gap-2">
         {REVIEW_FILTERS.map((filter) => {
           const isActive = reviewFilter === filter.value;
           const styles = REVIEW_FILTER_STYLES[filter.value];
@@ -197,13 +198,11 @@ export function VerificationTab({ onPendingCountChange }: VerificationTabProps) 
       </div>
 
       {isLoading ? (
-        <SectionCard>
-          <div className="py-12 text-center text-sm font-medium text-text-secondary">인증 목록을 불러오는 중...</div>
-        </SectionCard>
+        <div className="py-12 text-center text-sm font-medium text-text-secondary">
+          인증 목록을 불러오는 중...
+        </div>
       ) : items.length === 0 ? (
-        <SectionCard>
-          <EmptyState icon={<ShieldCheck size={44} className="text-primary-green" />} title="검토할 인증이 없어요" />
-        </SectionCard>
+        <EmptyState icon={<ShieldCheck size={44} className="text-primary-green" />} title="검토할 인증이 없어요" />
       ) : (
         <div className="flex flex-col gap-3">
           {items.map((item) => (
@@ -238,6 +237,6 @@ export function VerificationTab({ onPendingCountChange }: VerificationTabProps) 
         type={toastType}
         onClose={() => setIsToastOpen(false)}
       />
-    </div>
+    </SectionCard>
   );
 }

@@ -16,6 +16,7 @@ interface ConfirmModalProps {
   isLoading?: boolean;
   confirmVariant?: "primary-green" | "primary-blue" | "danger" | "outline";
   iconType?: "success" | "error" | "warning" | "none";
+  showCancel?: boolean;
 }
 
 export function ConfirmModal({
@@ -29,6 +30,7 @@ export function ConfirmModal({
   isLoading = false,
   confirmVariant = "primary-green",
   iconType = "none",
+  showCancel = true,
 }: ConfirmModalProps) {
 
   const getIcon = () => {
@@ -67,16 +69,18 @@ export function ConfirmModal({
           </p>
         </div>
         <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="md"
-            fullWidth
-            onClick={onClose}
-            disabled={isLoading}
-          >
-            {cancelText}
-          </Button>
+          {showCancel && (
+            <Button
+              type="button"
+              variant="outline"
+              size="md"
+              fullWidth
+              onClick={onClose}
+              disabled={isLoading}
+            >
+              {cancelText}
+            </Button>
+          )}
           <Button
             type="button"
             variant={confirmVariant}

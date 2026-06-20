@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ChevronLeft, Bell } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useNotificationStore } from "@/store/notificationStore";
 
 interface HeaderProps {
     title?: string; // 중앙 타이틀
@@ -20,6 +21,7 @@ export const Header = ({
                            rightElement,
                        }: HeaderProps) => {
     const router = useRouter();
+    const unreadCount = useNotificationStore((s) => s.unreadCount);
 
     return (
         <header className="sticky top-0 z-40 w-full flex justify-center bg-background/80 backdrop-blur-md">
@@ -67,9 +69,13 @@ export const Header = ({
                         <button
                             type="button"
                             aria-label="알림 열기"
-                            className="p-1 -mr-1 hover:opacity-75 active:scale-95 transition-all"
+                            className="relative p-1 -mr-1 hover:opacity-75 active:scale-95 transition-all"
+                            onClick={() => router.push("/notifications")}
                         >
                             <Bell size={24} className="text-text-primary" />
+                            {unreadCount > 0 && (
+                                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500" aria-label={`읽지 않은 알림 ${unreadCount}개`} />
+                            )}
                         </button>
                     )}
                 </div>

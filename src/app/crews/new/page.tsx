@@ -5,7 +5,6 @@ import { isAxiosError } from 'axios';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/common/Header';
 import { Button } from '@/components/common/Button';
-import { Modal } from '@/components/common/Modal';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { Toast } from '@/components/common/Toast';
 import StepIndicator from './_components/StepIndicator';
@@ -14,6 +13,8 @@ import Step2Identity from './_components/Step2Identity';
 import Step3Mission from './_components/Step3Mission';
 import Step4Info from './_components/Step4Info';
 import Step5Agreement from './_components/Step5Agreement';
+import { DodinShortageModal } from '@/components/domain/point/DodinShortageModal';
+import { useDodinShortage } from '@/components/domain/point/useDodinShortage';
 import { createCrew } from '@/services/crew';
 import { getPresignedUrl, uploadToS3 } from '@/services/upload';
 import { prepareImageForUpload, UnsupportedImageError } from '@/lib/prepareImageForUpload';
@@ -138,6 +139,8 @@ function validateStep4(form: CrewFormData): Step4Errors {
 
 export default function CrewNewPage() {
   const router = useRouter();
+  const shortage = useDodinShortage();
+  const [isCheckingDeposit, setIsCheckingDeposit] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<CrewFormData>(initialFormData);
   const [step2Errors, setStep2Errors] = useState<Step2Errors>({});
@@ -300,10 +303,23 @@ export default function CrewNewPage() {
     if (Object.keys(errors).length === 0) setCurrentStep(3);
   };
 
-  const handleNextFromStep3 = () => {
+  const handleNextFromStep3 = async () => {
+    if (isCheckingDeposit) return; // 잔액 확인 중 중복 클릭 가드
     const errors = validateStep3(formData);
     setStep3Errors(errors);
     if (Object.keys(errors).length !== 0) return;
+
+    // 선택한 보증금만큼 도딘이 있는지 사전 확인 — 부족하면 모달을 띄우고 다음 단계로 넘어가지 않는다.
+    // 같은 플로우 내 스텝 왕복 시 재조회를 피하도록 캐시 사용.
+    setIsCheckingDeposit(true);
+    let blocked: boolean;
+    try {
+      blocked = await shortage.openIfInsufficient(formData.deposit_amount, { useCache: true });
+    } finally {
+      setIsCheckingDeposit(false);
+    }
+    if (blocked) return;
+
     // 특정 요일이면 이미 입력/AI 프리필된 시작·종료일을 (변경됐을 수 있는) 요일 기준으로 재보정한다.
     // snap은 멱등이라 이미 인증 요일이면 그대로 유지된다.
     if (formData.frequency_type === 'SPECIFIC_DAYS') {
@@ -385,7 +401,10 @@ export default function CrewNewPage() {
     } catch (err) {
       const code = isAxiosError<ErrorResponse>(err) ? err.response?.data?.code : undefined;
       if (code === 'INSUFFICIENT_BALANCE') {
-        showToast('크루 생성에 필요한 잔액이 부족합니다. 충전 후 다시 시도해주세요.', 'error');
+        const opened = await shortage.openIfInsufficient(formData.deposit_amount);
+        if (!opened) {
+          showToast('크루 생성에 필요한 잔액이 부족합니다. 충전 후 다시 시도해주세요.', 'error');
+        }
       } else if (code === 'INVALID_DEPOSIT_AMOUNT') {
         showToast('보증금은 1,000원 단위, 1,000~100,000원이어야 합니다.', 'error');
       } else if (code === 'HOST_CREW_LIMIT_EXCEEDED') {
@@ -474,7 +493,7 @@ export default function CrewNewPage() {
 
     const handleNext = () => {
       if (currentStep === 2) handleNextFromStep2();
-      else if (currentStep === 3) handleNextFromStep3();
+      else if (currentStep === 3) void handleNextFromStep3();
       else if (currentStep === 4) handleNextFromStep4();
     };
 
@@ -484,7 +503,7 @@ export default function CrewNewPage() {
           variant="outline"
           size="lg"
           onClick={() => setCurrentStep((s) => s - 1)}
-          disabled={isLastStep && isSubmitting}
+          disabled={(isLastStep && isSubmitting) || isCheckingDeposit}
           className="w-24"
         >
           이전
@@ -501,7 +520,13 @@ export default function CrewNewPage() {
             크루 생성하기
           </Button>
         ) : (
-          <Button variant="primary-green" size="lg" fullWidth onClick={handleNext}>
+          <Button
+            variant="primary-green"
+            size="lg"
+            fullWidth
+            onClick={handleNext}
+            isLoading={currentStep === 3 && isCheckingDeposit}
+          >
             다음
           </Button>
         )}
@@ -532,6 +557,14 @@ export default function CrewNewPage() {
         onClose={() => setIsToastOpen(false)}
         message={toastMessage}
         type={toastType}
+      />
+
+      <DodinShortageModal
+        isOpen={shortage.isOpen}
+        onClose={shortage.close}
+        onCharge={shortage.goToCharge}
+        requiredAmount={shortage.requiredAmount}
+        currentBalance={shortage.currentBalance}
       />
 
       <ConfirmModal
