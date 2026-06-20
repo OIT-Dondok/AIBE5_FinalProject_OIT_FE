@@ -1094,18 +1094,26 @@ export interface NotificationsResponse {
   unread_count: number;
 }
 
-// GET/PATCH /api/notification-settings
+// PATCH /api/notification-settings
 export interface NotificationSettingsRequest {
-  emoji_reaction_enabled: boolean;
-  host_verification_enabled: boolean;
-  mission_deadline_enabled: boolean;
-  daily_result_enabled: boolean;
-  final_settlement_enabled: boolean;
-  crew_dissolved_enabled: boolean;
-  crew_news_enabled: boolean;
-  dnd_enabled: boolean;
-  dnd_start: string;
-  dnd_end: string;
+  categories: Record<NotificationCategoryKey, boolean>;
+  quiet_start_time: string | null;
+  quiet_end_time: string | null;
 }
 
-export interface NotificationSettingsResponse extends NotificationSettingsRequest {}
+export type NotificationCategoryKey =
+  | 'EMOJI_REACTION'
+  | 'HOST_VERIFICATION'
+  | 'DEADLINE_APPROACHING'
+  | 'DAILY_RESULT'
+  | 'SETTLEMENT'
+  | 'CREW_DISBANDED'
+  | 'CREW_NEWS';
+
+export interface NotificationSettingsResponse {
+  categories: Record<NotificationCategoryKey, boolean>;
+  quiet_hours_enabled?: boolean;
+  dnd_enabled?: boolean;
+  quiet_start_time: string | null;
+  quiet_end_time: string | null;
+}

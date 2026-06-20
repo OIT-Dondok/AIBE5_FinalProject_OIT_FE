@@ -32,48 +32,44 @@ const TOGGLE_ROWS: Array<{ key: keyof NotificationSettings; label: string; desc:
   { key: "crewNews", label: "크루 소식", desc: "크루 종료 예정, 새 공지 등록, 공지 댓글 등록" },
 ];
 
-type FlexibleSettingsResponse = NotificationSettingsResponse & Partial<Record<string, boolean | string | null>>;
-
 const FALLBACK_DND_START = "22:00";
 const FALLBACK_DND_END = "08:00";
 
-function boolValue(data: FlexibleSettingsResponse, primary: keyof NotificationSettingsResponse, fallback: string) {
-  return Boolean(data[primary] ?? data[fallback]);
-}
+let cachedSettings: NotificationSettings | null = null;
 
 function timeValue(value: string | null | undefined, fallback: string) {
   return value?.slice(0, 5) || fallback;
 }
 
 function toSettings(data: NotificationSettingsResponse): NotificationSettings {
-  const source = data as FlexibleSettingsResponse;
-
+  const cats = data.categories ?? ({} as Record<string, boolean>);
   return {
-    emojiReaction: boolValue(source, "emoji_reaction_enabled", "emoji_reaction"),
-    hostVerification: boolValue(source, "host_verification_enabled", "host_verification"),
-    missionDeadline: boolValue(source, "mission_deadline_enabled", "mission_deadline"),
-    dailyResult: boolValue(source, "daily_result_enabled", "daily_result"),
-    finalSettlement: boolValue(source, "final_settlement_enabled", "final_settlement"),
-    crewDissolved: boolValue(source, "crew_dissolved_enabled", "crew_dissolved"),
-    crewNews: boolValue(source, "crew_news_enabled", "crew_news"),
-    dndEnabled: boolValue(source, "dnd_enabled", "dnd"),
-    dndStart: timeValue(source.dnd_start as string | null | undefined, FALLBACK_DND_START),
-    dndEnd: timeValue(source.dnd_end as string | null | undefined, FALLBACK_DND_END),
+    emojiReaction: Boolean(cats.EMOJI_REACTION),
+    hostVerification: Boolean(cats.HOST_VERIFICATION),
+    missionDeadline: Boolean(cats.DEADLINE_APPROACHING),
+    dailyResult: Boolean(cats.DAILY_RESULT),
+    finalSettlement: Boolean(cats.SETTLEMENT),
+    crewDissolved: Boolean(cats.CREW_DISBANDED),
+    crewNews: Boolean(cats.CREW_NEWS),
+    dndEnabled: data.quiet_start_time !== null && data.quiet_start_time !== undefined,
+    dndStart: timeValue(data.quiet_start_time, FALLBACK_DND_START),
+    dndEnd: timeValue(data.quiet_end_time, FALLBACK_DND_END),
   };
 }
 
 function toRequest(settings: NotificationSettings): NotificationSettingsRequest {
   return {
-    emoji_reaction_enabled: settings.emojiReaction,
-    host_verification_enabled: settings.hostVerification,
-    mission_deadline_enabled: settings.missionDeadline,
-    daily_result_enabled: settings.dailyResult,
-    final_settlement_enabled: settings.finalSettlement,
-    crew_dissolved_enabled: settings.crewDissolved,
-    crew_news_enabled: settings.crewNews,
-    dnd_enabled: settings.dndEnabled,
-    dnd_start: settings.dndStart,
-    dnd_end: settings.dndEnd,
+    categories: {
+      EMOJI_REACTION: settings.emojiReaction,
+      HOST_VERIFICATION: settings.hostVerification,
+      DEADLINE_APPROACHING: settings.missionDeadline,
+      DAILY_RESULT: settings.dailyResult,
+      SETTLEMENT: settings.finalSettlement,
+      CREW_DISBANDED: settings.crewDissolved,
+      CREW_NEWS: settings.crewNews,
+    },
+    quiet_start_time: settings.dndEnabled ? settings.dndStart : null,
+    quiet_end_time: settings.dndEnabled ? settings.dndEnd : null,
   };
 }
 
@@ -100,18 +96,16 @@ function Toggle({ checked, onChange, ariaLabel }: { checked: boolean; onChange: 
 
 interface NotificationSettingsPanelProps {
   onCancel?: () => void;
-  onSave?: () => void;
   showHeading?: boolean;
 }
 
 export function NotificationSettingsPanel({
   onCancel,
-  onSave,
   showHeading = false,
 }: NotificationSettingsPanelProps) {
-  const [settings, setSettings] = useState<NotificationSettings | null>(null);
+  const [settings, setSettings] = useState<NotificationSettings | null>(cachedSettings);
   const [isDndSheetOpen, setIsDndSheetOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(cachedSettings === null);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState("");
@@ -125,13 +119,20 @@ export function NotificationSettingsPanel({
   }, []);
 
   const fetchSettings = useCallback(async () => {
-    setIsLoading(true);
+    setIsLoading(cachedSettings === null);
     setErrorMessage(null);
     try {
       const { data } = await getNotificationSettings();
-      setSettings(toSettings(data));
+      if (process.env.NODE_ENV === 'development') console.log('[Settings GET]', JSON.stringify(data));
+      const nextSettings = toSettings(data);
+      cachedSettings = nextSettings;
+      setSettings(nextSettings);
     } catch (error) {
-      setErrorMessage(getApiErrorMessage(error, {}, "알림 설정을 불러오지 못했어요. 잠시 후 다시 시도해 주세요."));
+      if (cachedSettings) {
+        setSettings(cachedSettings);
+      } else {
+        setErrorMessage(getApiErrorMessage(error, {}, "알림 설정을 불러오지 못했어요. 잠시 후 다시 시도해 주세요."));
+      }
     } finally {
       setIsLoading(false);
     }
@@ -149,13 +150,18 @@ export function NotificationSettingsPanel({
 
     setIsSaving(true);
     try {
-      const { data } = await updateNotificationSettings(toRequest(settings));
-      setSettings(toSettings(data));
+      const req = toRequest(settings);
+      if (process.env.NODE_ENV === 'development') console.log('[Settings PATCH req]', JSON.stringify(req));
+      const { data } = await updateNotificationSettings(req);
+      if (process.env.NODE_ENV === 'development') console.log('[Settings PATCH]', JSON.stringify(data));
+      const nextSettings = toSettings(data);
+      cachedSettings = nextSettings;
+      setSettings(nextSettings);
+      await fetchSettings();
       showToast("알림 설정을 저장했어요.");
-      onSave?.();
+      setIsSaving(false);
     } catch (error) {
       showToast(getApiErrorMessage(error, {}, "알림 설정 저장에 실패했어요. 잠시 후 다시 시도해 주세요."), "error");
-    } finally {
       setIsSaving(false);
     }
   };
@@ -339,7 +345,7 @@ export function NotificationSettingsModal({ isOpen, onClose }: NotificationSetti
             <X size={20} />
           </button>
         </div>
-        <NotificationSettingsPanel onCancel={onClose} onSave={onClose} />
+        <NotificationSettingsPanel onCancel={onClose} />
       </div>
     </Modal>
   );
