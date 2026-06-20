@@ -1093,3 +1093,27 @@ export interface NotificationsResponse {
   next_cursor: string | null;
   unread_count: number;
 }
+
+// PATCH /api/notification-settings
+export interface NotificationSettingsRequest {
+  categories: Record<NotificationCategoryKey, boolean>;
+  quiet_start_time: string | null;
+  quiet_end_time: string | null;
+}
+
+export type NotificationCategoryKey =
+  | 'EMOJI_REACTION'
+  | 'HOST_VERIFICATION'
+  | 'DEADLINE_APPROACHING'
+  | 'DAILY_RESULT'
+  | 'SETTLEMENT'
+  | 'CREW_DISBANDED'
+  | 'CREW_NEWS';
+
+export interface NotificationSettingsResponse {
+  categories: Record<NotificationCategoryKey, boolean>;
+  quiet_hours_enabled?: boolean;
+  dnd_enabled?: boolean;
+  quiet_start_time: string | null;
+  quiet_end_time: string | null;
+}

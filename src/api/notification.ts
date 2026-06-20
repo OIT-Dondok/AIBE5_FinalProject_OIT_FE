@@ -1,5 +1,9 @@
 import { api } from '@/lib/axios';
-import type { NotificationsResponse } from '@/types/domain';
+import type {
+  NotificationSettingsRequest,
+  NotificationSettingsResponse,
+  NotificationsResponse,
+} from '@/types/domain';
 
 export const getNotifications = (params?: { cursor?: string; limit?: number }) =>
   api.get<NotificationsResponse>('/notifications', { params });
@@ -19,3 +23,9 @@ export const registerDevice = (token: string, deviceId: string) =>
 
 export const readNotification = (notificationId: string) =>
   api.patch<void>(`/notifications/${notificationId}/read`);
+
+export const getNotificationSettings = () =>
+  api.get<NotificationSettingsResponse>('/notification-settings');
+
+export const updateNotificationSettings = (data: NotificationSettingsRequest) =>
+  api.patch<NotificationSettingsResponse>('/notification-settings', data);
