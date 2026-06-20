@@ -15,18 +15,24 @@ export function NotificationBadgeInitializer() {
   useEffect(() => {
     if (!isInitialized || !user) return;
 
-    void getUnreadCount()
-      .then(({ data }) => {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[NotificationBadge] unread_count:', data.unread_count, '| path:', pathname);
-        }
-        setUnreadCount(data.unread_count);
-      })
-      .catch((err) => {
-        if (process.env.NODE_ENV === 'development') {
-          console.error('[NotificationBadge] fetch failed:', err);
-        }
-      });
+    const fetch = () => {
+      void getUnreadCount()
+        .then(({ data }) => {
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[NotificationBadge] unread_count:', data.unread_count, '| path:', pathname);
+          }
+          setUnreadCount(data.unread_count);
+        })
+        .catch((err) => {
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[NotificationBadge] fetch failed:', err);
+          }
+        });
+    };
+
+    fetch();
+    const timer = setInterval(fetch, 30000);
+    return () => clearInterval(timer);
   }, [isInitialized, user, setUnreadCount, pathname]);
 
   return null;
