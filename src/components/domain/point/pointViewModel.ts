@@ -106,6 +106,8 @@ export interface WalletHistoryViewItem {
   displayAmount: string;
   balanceAfter: string;
   dateLabel: string;
+  dateKey: string;   // "2026-06-19" — 날짜 그룹핑용
+  timeLabel: string; // "17:51" — 그룹 헤더가 날짜를 대신할 때 표시
   direction: DisplayDirection;
   displayType: WalletHistoryDisplayType;
   category: WalletHistoryCategory;
@@ -233,6 +235,43 @@ function formatHistoryDate(iso: string) {
   }).format(date);
 }
 
+function getKstDateKey(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: "Asia/Seoul",
+  }).format(date);
+}
+
+function formatHistoryTime(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Seoul",
+  }).format(date);
+}
+
+export function formatDateGroupLabel(dateKey: string): string {
+  if (!dateKey) return "";
+  const parts = dateKey.split("-").map(Number);
+  if (parts.length < 3 || parts.some((n) => !Number.isFinite(n))) return dateKey;
+  const [year, month, day] = parts;
+  // UTC로 생성해 en-CA YYYY-MM-DD 파싱이 시스템 TZ 영향을 안 받도록
+  const date = new Date(Date.UTC(year!, month! - 1, day!));
+  return new Intl.DateTimeFormat("ko-KR", {
+    month: "long",
+    day: "numeric",
+    weekday: "short",
+    timeZone: "UTC",
+  }).format(date);
+}
+
 function formatUpdatedAt(iso: string) {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "업데이트 불가";
@@ -258,6 +297,8 @@ export function toWalletHistoryViewItem(item: WalletHistoryItem): WalletHistoryV
     displayAmount: `${sign}${formatKrw(Math.abs(item.amount))}`,
     balanceAfter: formatKrw(item.balance_after),
     dateLabel: formatHistoryDate(item.created_at),
+    dateKey: getKstDateKey(item.created_at),
+    timeLabel: formatHistoryTime(item.created_at),
     direction,
     displayType,
     category: displayType === "UNKNOWN" ? "unknown" : WALLET_DISPLAY_CATEGORY[displayType],
