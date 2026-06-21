@@ -40,15 +40,16 @@ export default function HostConsoleClient() {
   const { user } = useAuthStore();
   const [crewDetail, setCrewDetail] = useState<CrewDetail | null>(null);
   const [isDetailLoading, setIsDetailLoading] = useState(true);
-  const [pendingReviewCount, setPendingReviewCount] = useState(0);
-  const [pendingApplicationCount, setPendingApplicationCount] = useState(0);
-  const [noticeCount, setNoticeCount] = useState(0);
+  const [pendingReviewCount, setPendingReviewCount] = useState<number | null>(null);
+  const [pendingApplicationCount, setPendingApplicationCount] = useState<number | null>(null);
+  const [noticeCount, setNoticeCount] = useState<number | null>(null);
   const [tabRefreshKey, setTabRefreshKey] = useState(0);
   const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
 
   const handleTabChange = (tab: HostTab) => {
     setActiveTab(tab);
     setTabRefreshKey((prev) => prev + 1);
+    if (tab === "verification") setPendingReviewCount(null);
   };
 
   useEffect(() => {
@@ -57,24 +58,18 @@ export default function HostConsoleClient() {
       return;
     }
     setIsDetailLoading(true);
-    getCrew(crewId)
-      .then(({ data }) => setCrewDetail(data))
+    Promise.all([
+      getCrew(crewId),
+      getCrewApplications(crewId, { status: "PENDING" }).catch(() => null),
+      getCrewNotices(crewId).catch(() => null),
+    ])
+      .then(([crewRes, appRes, noticeRes]) => {
+        setCrewDetail(crewRes.data);
+        setPendingApplicationCount(appRes?.data.items.length ?? 0);
+        setNoticeCount(noticeRes?.data.items.length ?? 0);
+      })
       .catch(() => setCrewDetail(null))
       .finally(() => setIsDetailLoading(false));
-  }, [crewId]);
-
-  useEffect(() => {
-    if (crewId === null) return;
-    getCrewNotices(crewId)
-      .then((res) => setNoticeCount(res.data.items.length))
-      .catch(() => setNoticeCount(0));
-  }, [crewId]);
-
-  useEffect(() => {
-    if (crewId === null) return;
-    getCrewApplications(crewId, { status: "PENDING" })
-      .then((res) => setPendingApplicationCount(res.data.items.length))
-      .catch(() => setPendingApplicationCount(0));
   }, [crewId]);
 
   if (crewId === null) {

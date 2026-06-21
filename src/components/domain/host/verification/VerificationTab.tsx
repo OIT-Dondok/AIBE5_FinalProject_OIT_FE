@@ -179,7 +179,14 @@ export function VerificationTab({ onPendingCountChange }: VerificationTabProps) 
                 isActive ? styles.active : styles.inactive
               }`}
             >
-              {filter.label} <span className="font-extrabold">{counts[filter.value]}</span>
+              {filter.label}{" "}
+              <span className="inline-flex min-w-[2ch] justify-center">
+                {isLoading ? (
+                  <span className="h-[10px] w-[14px] animate-pulse rounded bg-current opacity-20 self-center" />
+                ) : (
+                  <span className="font-extrabold">{counts[filter.value]}</span>
+                )}
+              </span>
             </button>
           );
         })}
