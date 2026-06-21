@@ -18,9 +18,9 @@ const INACTIVE_STYLES = "bg-[#EFEAD8] text-[#777777] border-t-4 border-t-transpa
 
 type HostConsoleTabsProps = {
   activeTab: HostTab;
-  pendingReviewCount: number;
-  pendingApplicationCount: number;
-  noticeCount: number;
+  pendingReviewCount: number | null;
+  pendingApplicationCount: number | null;
+  noticeCount: number | null;
   onTabChange: (tab: HostTab) => void;
 };
 
@@ -50,13 +50,19 @@ export function HostConsoleTabs({
               <Icon size={13} />
               <span className="truncate">{tab.label}</span>
             </span>
-            <span className="text-[20px] font-extrabold leading-none">
-              {tab.value === "verification"
-                ? pendingReviewCount
-                : tab.value === "applications"
-                  ? pendingApplicationCount
-                  : noticeCount}
-            </span>
+            {(() => {
+              const count =
+                tab.value === "verification"
+                  ? pendingReviewCount
+                  : tab.value === "applications"
+                    ? pendingApplicationCount
+                    : noticeCount;
+              return count === null ? (
+                <span className="mt-0.5 h-5 w-4 animate-pulse rounded bg-current opacity-20" />
+              ) : (
+                <span className="text-[20px] font-extrabold leading-none">{count}</span>
+              );
+            })()}
           </button>
         );
       })}

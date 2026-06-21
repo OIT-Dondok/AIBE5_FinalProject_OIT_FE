@@ -29,8 +29,7 @@ import type {
   RejectReasonCode,
   ReviewableMissionLog,
 } from "@/types/domain";
-import type { HostCertificationMock } from "@/mocks/data/host";
-import type { VerificationDecision, VerificationRejectInfo } from "@/components/domain/host/hostConsoleTypes";
+import type { VerificationCardItem, VerificationDecision, VerificationRejectInfo } from "@/components/domain/host/hostConsoleTypes";
 
 type VerificationTabProps = {
   onPendingCountChange?: (count: number) => void;
@@ -62,7 +61,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   INVALID_INPUT: "입력한 검토 정보를 확인해 주세요.",
 };
 
-function toCardItem(item: ReviewableMissionLog): HostCertificationMock {
+function toCardItem(item: ReviewableMissionLog): VerificationCardItem {
   return {
     mission_log_id: item.mission_log_id,
     crew_id: item.crew_id,
@@ -73,10 +72,8 @@ function toCardItem(item: ReviewableMissionLog): HostCertificationMock {
     submitted_at: item.server_time,
     captured_at: item.captured_at ?? item.server_time,
     exif_status: item.exif_risk === "TIME_INVALID" ? "FAILED" : item.exif_risk,
-    exif_valid: item.exif_risk === "NORMAL",
     is_duplicate: item.is_duplicate,
     comment: item.caption,
-    first_failed: false,
     review_bucket: item.review_bucket,
     certification_status: item.certification_status,
     decision_type: item.decision_type,
@@ -99,7 +96,7 @@ export function VerificationTab({ onPendingCountChange, decisionsById, onDecisio
   const crewId = parseRouteNumber(params.crewId);
   const [reviewFilter, setReviewFilter] = useState<MissionLogReviewBucket>("urgent");
   const isInitialLoad = useRef(true);
-  const [items, setItems] = useState<HostCertificationMock[]>([]);
+  const [items, setItems] = useState<VerificationCardItem[]>([]);
   const [counts, setCounts] = useState(EMPTY_COUNTS);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -267,7 +264,13 @@ export function VerificationTab({ onPendingCountChange, decisionsById, onDecisio
               }`}
             >
               {filter.label}{" "}
-              <span className="font-extrabold">{counts[filter.value]}</span>
+              <span className="inline-flex min-w-[2ch] justify-center">
+                {isLoading ? (
+                  <span className="h-[10px] w-[14px] animate-pulse rounded bg-current opacity-20 self-center" />
+                ) : (
+                  <span className="font-extrabold">{counts[filter.value]}</span>
+                )}
+              </span>
             </button>
           );
         })}
