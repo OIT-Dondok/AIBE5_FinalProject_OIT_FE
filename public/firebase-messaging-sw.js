@@ -15,7 +15,7 @@ self.addEventListener('message', (event) => {
     if (!handlerRegistered) {
       handlerRegistered = true;
       messaging.onBackgroundMessage((payload) => {
-        const { title, body, icon } = payload.notification ?? {};
+        const { title, body, icon } = payload.data ?? {};
         self.registration.showNotification(title ?? '돈독', {
           body: body ?? '',
           icon: icon ?? '/icon-192x192.png',

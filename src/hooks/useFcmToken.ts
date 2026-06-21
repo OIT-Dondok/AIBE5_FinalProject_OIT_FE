@@ -45,10 +45,10 @@ export function useFcmToken(enabled: boolean) {
         if (dev) console.log('[FCM] permission:', permission);
         if (permission !== 'granted') return;
 
-        const sw = await navigator.serviceWorker.register(SW_PATH);
-        if (dev) console.log('[FCM] SW registered:', sw.scope, '| active:', !!sw.active);
-        const readySw = await navigator.serviceWorker.ready;
-        readySw.active?.postMessage({ type: 'FIREBASE_CONFIG', config: firebaseConfig });
+        await navigator.serviceWorker.register(SW_PATH);
+        const swReg = await navigator.serviceWorker.ready;
+        if (dev) console.log('[FCM] SW ready:', swReg.scope, '| active:', !!swReg.active);
+        swReg.active?.postMessage({ type: 'FIREBASE_CONFIG', config: firebaseConfig });
 
         const messaging = getFirebaseMessaging();
         if (dev) console.log('[FCM] messaging instance:', !!messaging);
@@ -56,7 +56,7 @@ export function useFcmToken(enabled: boolean) {
 
         const token = await getToken(messaging, {
           vapidKey: VAPID_KEY,
-          serviceWorkerRegistration: sw,
+          serviceWorkerRegistration: swReg,
         });
         if (dev) console.log('[FCM] token:', token ? token.slice(0, 20) + '…' : 'null');
 
