@@ -126,7 +126,7 @@ export default function CrewCard({ crew }: CrewCardProps) {
 
           {/* 하단: 기간 및 D-Day 배지 */}
           <div className="flex items-center justify-between pt-2.5 border-t border-text-secondary/10">
-            <div className="relative bg-[#FFFEEA] border border-amber-200/50 shadow-sm rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 rotate-[-1deg] hover:rotate-0 transition-transform duration-300 shrink-0">
+            <div className="relative bg-amber-50 border border-amber-200/50 shadow-sm rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 rotate-[-1deg] hover:rotate-0 transition-transform duration-300 shrink-0">
               <Pin size={11} className="text-amber-600/70 rotate-45 shrink-0" />
               <span className="text-[11px] font-bold text-amber-800 tracking-tight">
                 {formatShortDate(crew.start_at)} ~ {formatShortDate(crew.end_at)}
