@@ -4,9 +4,8 @@ import { useEffect, useState } from "react";
 import { ShieldCheck, Pin, RefreshCw, ChevronDown, ChevronRight, Check } from "lucide-react";
 import { useRouter as useNextRouter } from "next/navigation";
 
-import type { HostCrewDetailMock } from "@/mocks/data/host";
 import { getCrew, getCrewApplications, getMyCrew } from "@/services/crew";
-import type { DailySettlementType, MyCrew } from "@/types/domain";
+import type { CrewDetail, DailySettlementType, MyCrew } from "@/types/domain";
 import { CATEGORY_EMOJI } from "@/constants/crew";
 import { formatShortDate } from "@/utils/date";
 
@@ -74,7 +73,7 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
   },
 };
 
-export function HostSummaryCard({ crewDetail }: { crewDetail: HostCrewDetailMock }) {
+export function HostSummaryCard({ crewDetail }: { crewDetail: CrewDetail }) {
   const router = useNextRouter();
   const [isListOpen, setIsListOpen] = useState(false);
   const [hostCrews, setHostCrews] = useState<MyCrew[]>([]);

@@ -14,11 +14,11 @@ import {
   exifDetailStyle,
   exifSummaryLabel,
 } from "@/components/domain/host/verification/verificationDisplay";
-import type { HostCertificationMock } from "@/mocks/data/host";
+import type { VerificationCardItem } from "@/components/domain/host/hostConsoleTypes";
 import type { RejectReasonCode } from "@/types/domain";
 
 type VerificationCardProps = {
-  item: HostCertificationMock;
+  item: VerificationCardItem;
   isExpanded: boolean;
   onToggle: () => void;
   onApprove: () => Promise<boolean>;
