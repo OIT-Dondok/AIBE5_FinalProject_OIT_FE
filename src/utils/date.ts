@@ -93,6 +93,21 @@ export function formatYmdDot(dateStr: string): string {
 }
 
 /**
+ * ISO-8601 문자열을 KST(UTC+9) 기준 `YYYY.M.D HH:mm` 형식으로 변환합니다.
+ * 연·월·일은 0 패딩 없이, 시·분은 2자리로 0 패딩합니다.
+ * (예: '2026-06-19T17:40:00+09:00' → '2026.6.19 17:40')
+ *
+ * 대시보드 '마지막 업데이트(데이터 기준 시각)' 표기에 사용합니다.
+ */
+export function formatDateTimeDot(isoString: string): string {
+  const d = toKstDate(isoString);
+  if (Number.isNaN(d.getTime())) return '';
+  const hh = String(d.getUTCHours()).padStart(2, '0');
+  const mm = String(d.getUTCMinutes()).padStart(2, '0');
+  return `${d.getUTCFullYear()}.${d.getUTCMonth() + 1}.${d.getUTCDate()} ${hh}:${mm}`;
+}
+
+/**
  * ISO `server_time`을 KST 기준 `YYYY-MM-DD` 날짜 키로 변환합니다.
  */
 export function getKstDateKeyFromIso(isoString: string): string {

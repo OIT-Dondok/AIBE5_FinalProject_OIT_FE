@@ -72,6 +72,23 @@ export function DailyDashboardSection({
         </div>
       </DashboardCard>
 
+      {(dashboard.updatedAtLabel || dashboard.nextSettlementTime) && (
+        <div className="-mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 px-1 text-[11px] text-text-secondary">
+          {dashboard.updatedAtLabel && (
+            <span className="inline-flex items-center gap-1">
+              <Clock3 size={12} />
+              마지막 업데이트 {dashboard.updatedAtLabel}
+            </span>
+          )}
+          {dashboard.updatedAtLabel && dashboard.nextSettlementTime && (
+            <span className="text-text-secondary/40">·</span>
+          )}
+          {dashboard.nextSettlementTime && (
+            <span>다음 정산 {dashboard.nextSettlementTime}</span>
+          )}
+        </div>
+      )}
+
       {dashboard.notice && (
         <NoticeBanner
           message={dashboard.notice}
@@ -115,20 +132,6 @@ export function DailyDashboardSection({
           {dashboard.successCount}
         </strong>
       </DashboardCard>
-
-      {dashboard.nextSettlementTime && (
-        <DashboardCard className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-blue/10 text-primary-blue">
-            <Clock3 size={19} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-black text-text-primary">다음 정산</p>
-            <p className="mt-0.5 text-[11px] text-text-secondary">
-              {dashboard.nextSettlementTime}
-            </p>
-          </div>
-        </DashboardCard>
-      )}
 
       <ReportSuspicionCallout notice={reportNotice} actionLabel={reportActionLabel} />
     </section>

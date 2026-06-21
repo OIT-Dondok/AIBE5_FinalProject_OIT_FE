@@ -1,3 +1,5 @@
+import { formatDateTimeDot } from "@/utils/date";
+
 import type {
   CrewCategory,
   DashboardResponse,
@@ -257,6 +259,7 @@ export interface CrewDashboardView {
   rankDeltaLabel: string | null;
   rankTrend: Trend;
   nextSettlementTime: string | null;
+  updatedAtLabel: string; // 데이터 기준 시각 "2026.6.19 17:40" (파싱 불가 시 "")
   notice: string | null;
   // SETTLEMENT_RESULT_AVAILABLE일 때 정산 상세(/crews/{crewId}/settlement) 유도
   showSettlementLink: boolean;
@@ -309,6 +312,7 @@ export function mapCrewDashboard(res: DashboardResponse): CrewDashboardView {
     rankDeltaLabel: rankDelta.label,
     rankTrend: rankDelta.trend,
     nextSettlementTime: formatNextSettlement(res.next_settlement_at),
+    updatedAtLabel: formatDateTimeDot(res.updated_at),
     notice: noticeMessage(res.projection_notice),
     showSettlementLink:
       res.projection_notice === "SETTLEMENT_RESULT_AVAILABLE" &&
