@@ -47,11 +47,9 @@ export function useFcmToken(enabled: boolean) {
 
         await navigator.serviceWorker.register(SW_PATH);
         const swReg = await navigator.serviceWorker.ready;
-        if (dev) console.log('[FCM] SW ready:', swReg.scope, '| active:', !!swReg.active);
         swReg.active?.postMessage({ type: 'FIREBASE_CONFIG', config: firebaseConfig });
 
         const messaging = getFirebaseMessaging();
-        if (dev) console.log('[FCM] messaging instance:', !!messaging);
         if (!messaging) return;
 
         const token = await getToken(messaging, {
