@@ -6,7 +6,7 @@ export const REVIEW_FILTERS: Array<{ value: MissionLogReviewBucket; label: strin
   { value: "urgent", label: "긴급 검토" },
   { value: "warning", label: "주의 검토" },
   { value: "normal", label: "일반 검토" },
-  { value: "decided", label: "결정됨" },
+  { value: "decided", label: "결정됨탭" },
 ];
 
 export const REVIEW_FILTER_STYLES: Record<MissionLogReviewBucket, { active: string; inactive: string }> = {

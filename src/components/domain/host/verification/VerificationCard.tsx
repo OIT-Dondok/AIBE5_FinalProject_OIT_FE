@@ -163,7 +163,7 @@ export function VerificationCard({
               handleHeaderClick(e);
             }
           }}
-          className="w-full px-4 py-3.5 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#4d73d9] focus:ring-inset rounded-t-[22px]"
+          className="w-full px-4 py-3.5 text-left cursor-pointer rounded-t-[22px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4d73d9] focus-visible:ring-inset"
         >
           <div className="flex items-center justify-between gap-3">
             <Link
@@ -214,7 +214,7 @@ export function VerificationCard({
         </div>
 
         {isExpanded && (
-          <div className="border-t border-text-secondary/10 bg-[#FAFCFF] px-4 pb-4 pt-3">
+          <div className="bg-[#FAFCFF] px-4 pb-4 pt-3">
             <div className="flex items-center gap-3">
               <button
                 type="button"

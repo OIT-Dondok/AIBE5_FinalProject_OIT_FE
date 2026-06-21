@@ -175,11 +175,9 @@ export function VerificationTab({ onPendingCountChange, decisionsById, onDecisio
       ),
     );
 
-    setCounts((prev) => {
-      const next = { ...prev, [reviewFilter]: Math.max(0, prev[reviewFilter] - 1) };
-      onPendingCountChange?.(next.urgent + next.warning + next.normal);
-      return next;
-    });
+    const nextCounts = { ...counts, [reviewFilter]: Math.max(0, counts[reviewFilter] - 1) };
+    setCounts(nextCounts);
+    onPendingCountChange?.(nextCounts.urgent + nextCounts.warning + nextCounts.normal);
   };
 
   const handleApprove = async (missionLogId: number) => {
@@ -230,11 +228,9 @@ export function VerificationTab({ onPendingCountChange, decisionsById, onDecisio
             : item,
         ),
       );
-      setCounts((prev) => {
-        const next = { ...prev, [reviewFilter]: prev[reviewFilter] + 1 };
-        onPendingCountChange?.(next.urgent + next.warning + next.normal);
-        return next;
-      });
+      const nextCounts = { ...counts, [reviewFilter]: counts[reviewFilter] + 1 };
+      setCounts(nextCounts);
+      onPendingCountChange?.(nextCounts.urgent + nextCounts.warning + nextCounts.normal);
       setToastMessage("검토 대기로 되돌렸어요.");
       setToastType("success");
       setIsToastOpen(true);
