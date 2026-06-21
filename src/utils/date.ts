@@ -93,6 +93,18 @@ export function formatYmdDot(dateStr: string): string {
 }
 
 /**
+ * ISO-8601 날짜 문자열을 KST(Asia/Seoul) 기준 날짜+시간 문자열로 변환합니다.
+ * 공지·댓글 등 날짜+시간 표기에 사용합니다.
+ */
+export function formatKstDateTime(isoString: string): string {
+  return new Date(isoString).toLocaleString('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit',
+  });
+}
+
+/**
  * ISO `server_time`을 KST 기준 `YYYY-MM-DD` 날짜 키로 변환합니다.
  */
 export function getKstDateKeyFromIso(isoString: string): string {

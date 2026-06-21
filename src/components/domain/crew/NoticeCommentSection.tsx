@@ -17,19 +17,7 @@ import type { ToastType } from "@/components/common/Toast";
 import { Modal } from "@/components/common/Modal";
 import { Button } from "@/components/common/Button";
 import type { NoticeComment } from "@/types/domain";
-
-// YYYY.MM.DD HH:mm 포맷터 — 오프셋 포함 ISO 문자열(+09:00)을 그대로 파싱
-const formatDateTime = (isoString: string) => {
-  if (!isoString) return "-";
-  const date = new Date(isoString);
-  if (isNaN(date.getTime())) return "-";
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  const hh = String(date.getHours()).padStart(2, "0");
-  const mm = String(date.getMinutes()).padStart(2, "0");
-  return `${y}.${m}.${d} ${hh}:${mm}`;
-};
+import { formatKstDateTime } from "@/utils/date";
 
 interface NoticeCommentSectionProps {
   crewId: number;
@@ -269,7 +257,7 @@ export function NoticeCommentSection({ crewId, noticeId }: NoticeCommentSectionP
                           {comment.content}
                         </p>
                         <p className="mt-1 text-[9px] text-text-secondary/60">
-                          {formatDateTime(comment.created_at)}
+                          {formatKstDateTime(comment.created_at)}
                         </p>
                       </>
                     )}
