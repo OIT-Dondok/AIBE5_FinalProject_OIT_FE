@@ -6,7 +6,7 @@ import type {
 } from "@/types/domain";
 import { MOCK_CREWS } from "@/mocks/data/crews";
 
-export type HostReviewBucket = "urgent" | "warning" | "normal";
+export type HostReviewBucket = "urgent" | "warning" | "normal" | "decided";
 export type HostExifStatus = "NORMAL" | "MISSING" | "FAILED";
 
 export interface HostCrewDetailMock {

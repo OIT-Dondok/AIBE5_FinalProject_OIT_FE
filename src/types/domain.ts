@@ -594,7 +594,7 @@ export interface MissionLogListResponse {
   items: MissionLog[];
 }
 
-export type MissionLogReviewBucket = 'urgent' | 'warning' | 'normal';
+export type MissionLogReviewBucket = 'urgent' | 'warning' | 'normal' | 'decided';
 export type MissionLogExifRisk = 'NORMAL' | 'MISSING' | 'TIME_INVALID';
 
 export interface ReviewableMissionLog {

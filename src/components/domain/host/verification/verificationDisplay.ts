@@ -6,6 +6,7 @@ export const REVIEW_FILTERS: Array<{ value: MissionLogReviewBucket; label: strin
   { value: "urgent", label: "긴급 검토" },
   { value: "warning", label: "주의 검토" },
   { value: "normal", label: "일반 검토" },
+  { value: "decided", label: "결정됨" },
 ];
 
 export const REVIEW_FILTER_STYLES: Record<MissionLogReviewBucket, { active: string; inactive: string }> = {
@@ -19,6 +20,10 @@ export const REVIEW_FILTER_STYLES: Record<MissionLogReviewBucket, { active: stri
   },
   normal: {
     active: "bg-[#777777]/10 text-[#777777] border border-[#777777]/25 font-extrabold shadow-sm",
+    inactive: "bg-white text-text-secondary border border-text-secondary/15 hover:bg-slate-50",
+  },
+  decided: {
+    active: "bg-[#4d73d9]/10 text-[#4d73d9] border border-[#4d73d9]/25 font-extrabold shadow-sm",
     inactive: "bg-white text-text-secondary border border-text-secondary/15 hover:bg-slate-50",
   },
 };

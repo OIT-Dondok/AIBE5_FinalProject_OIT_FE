@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
 import { ApplicationsTab } from "@/components/domain/host/applications/ApplicationsTab";
 import { HostConsoleTabs } from "@/components/domain/host/HostConsoleTabs";
-import type { HostTab, VerificationDecision } from "@/components/domain/host/hostConsoleTypes";
+import type { HostTab, VerificationDecision, VerificationRejectInfo } from "@/components/domain/host/hostConsoleTypes";
 import { HostSummaryCard } from "@/components/domain/host/HostSummaryCard";
 import { NoticesTab } from "@/components/domain/host/notices/NoticesTab";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
@@ -53,6 +53,12 @@ export default function HostConsoleClient() {
       delete next[id];
       return next;
     });
+  }, []);
+
+  const [verificationRejectsById, setVerificationRejectsById] = useState<Record<number, VerificationRejectInfo>>({});
+
+  const handleVerificationRejectInfoSet = useCallback((id: number, info: VerificationRejectInfo) => {
+    setVerificationRejectsById((prev) => ({ ...prev, [id]: info }));
   }, []);
 
   const handleTabChange = (tab: HostTab) => {
@@ -159,6 +165,8 @@ export default function HostConsoleClient() {
               decisionsById={verificationDecisionsById}
               onDecisionMade={handleVerificationDecisionMade}
               onDecisionReverted={handleVerificationDecisionReverted}
+              rejectsById={verificationRejectsById}
+              onRejectInfoSet={handleVerificationRejectInfoSet}
             />
           )}
           {activeTab === "applications" && (

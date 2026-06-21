@@ -30,19 +30,22 @@ import type {
   ReviewableMissionLog,
 } from "@/types/domain";
 import type { HostCertificationMock } from "@/mocks/data/host";
-import type { VerificationDecision } from "@/components/domain/host/hostConsoleTypes";
+import type { VerificationDecision, VerificationRejectInfo } from "@/components/domain/host/hostConsoleTypes";
 
 type VerificationTabProps = {
   onPendingCountChange?: (count: number) => void;
   decisionsById: Record<number, VerificationDecision>;
   onDecisionMade: (id: number, decision: VerificationDecision) => void;
   onDecisionReverted: (id: number) => void;
+  rejectsById: Record<number, VerificationRejectInfo>;
+  onRejectInfoSet: (id: number, info: VerificationRejectInfo) => void;
 };
 
 const EMPTY_COUNTS: Record<MissionLogReviewBucket, number> = {
   urgent: 0,
   warning: 0,
   normal: 0,
+  decided: 0,
 };
 
 const VERIFICATION_ERROR_FALLBACK =
@@ -91,7 +94,7 @@ function getDecisionFromType(decisionType?: MissionLogDecisionType | null): Veri
   return null;
 }
 
-export function VerificationTab({ onPendingCountChange, decisionsById, onDecisionMade, onDecisionReverted }: VerificationTabProps) {
+export function VerificationTab({ onPendingCountChange, decisionsById, onDecisionMade, onDecisionReverted, rejectsById, onRejectInfoSet }: VerificationTabProps) {
   const params = useParams<{ crewId: string }>();
   const crewId = parseRouteNumber(params.crewId);
   const [reviewFilter, setReviewFilter] = useState<MissionLogReviewBucket>("urgent");
@@ -151,19 +154,27 @@ export function VerificationTab({ onPendingCountChange, decisionsById, onDecisio
     void fetchItems();
   }, [fetchItems]);
 
+  useEffect(() => {
+    if (reviewFilter === "decided") {
+      console.log("[VerificationTab] decided 탭 진입, items:", items);
+    }
+  }, [reviewFilter, items]);
+
   const markDecided = (missionLogId: number, decision: VerificationDecision) => {
     onDecisionMade(missionLogId, decision);
+
     setItems((current) =>
       current.map((item) =>
         item.mission_log_id === missionLogId
           ? {
               ...item,
-              certification_status: decision === "approved" ? "SUCCESS" : "FAILED",
-              decision_type: decision === "approved" ? "MANUAL_APPROVE" : "MANUAL_REJECT",
+              certification_status: (decision === "approved" ? "SUCCESS" : "FAILED") as import("@/types/domain").CertificationStatus,
+              decision_type: (decision === "approved" ? "MANUAL_APPROVE" : "MANUAL_REJECT") as import("@/types/domain").MissionLogDecisionType,
             }
           : item,
       ),
     );
+
     setCounts((prev) => {
       const next = { ...prev, [reviewFilter]: Math.max(0, prev[reviewFilter] - 1) };
       onPendingCountChange?.(next.urgent + next.warning + next.normal);
@@ -212,7 +223,7 @@ export function VerificationTab({ onPendingCountChange, decisionsById, onDecisio
           item.mission_log_id === missionLogId
             ? {
                 ...item,
-                certification_status: "PENDING_REVIEW",
+                certification_status: "PENDING_REVIEW" as import("@/types/domain").CertificationStatus,
                 decision_type: null,
                 reject_reason_code: null,
               }
@@ -259,7 +270,8 @@ export function VerificationTab({ onPendingCountChange, decisionsById, onDecisio
                 isActive ? styles.active : styles.inactive
               }`}
             >
-              {filter.label} <span className="font-extrabold">{counts[filter.value]}</span>
+              {filter.label}{" "}
+              <span className="font-extrabold">{counts[filter.value]}</span>
             </button>
           );
         })}
@@ -270,7 +282,10 @@ export function VerificationTab({ onPendingCountChange, decisionsById, onDecisio
           인증 목록을 불러오는 중...
         </div>
       ) : items.length === 0 ? (
-        <EmptyState icon={<ShieldCheck size={44} className="text-primary-green" />} title="검토할 인증이 없어요" />
+        <EmptyState
+          icon={<ShieldCheck size={44} className="text-primary-green" />}
+          title={reviewFilter === "decided" ? "결정된 인증이 없어요" : "검토할 인증이 없어요"}
+        />
       ) : (
         <div className="flex flex-col gap-3">
           {items.map((item) => (
@@ -279,12 +294,14 @@ export function VerificationTab({ onPendingCountChange, decisionsById, onDecisio
               item={item}
               isExpanded={expandedMissionLogId === item.mission_log_id}
               decision={decisionsById[item.mission_log_id] ?? getDecisionFromType(item.decision_type)}
+              rejectInfo={rejectsById[item.mission_log_id] ?? null}
               onToggle={() => setExpandedMissionLogId((current) =>
                 current === item.mission_log_id ? null : item.mission_log_id
               )}
               onApprove={() => handleApprove(item.mission_log_id)}
               onReject={(reason) => handleReject(item.mission_log_id, reason)}
               onRevert={() => handleRevert(item.mission_log_id)}
+              onRejectInfoSet={(info) => onRejectInfoSet(item.mission_log_id, info)}
             />
           ))}
           {nextCursor && (

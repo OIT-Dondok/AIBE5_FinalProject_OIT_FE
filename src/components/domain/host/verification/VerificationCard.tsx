@@ -16,15 +16,18 @@ import {
 } from "@/components/domain/host/verification/verificationDisplay";
 import type { HostCertificationMock } from "@/mocks/data/host";
 import type { RejectReasonCode } from "@/types/domain";
+import type { VerificationRejectInfo } from "@/components/domain/host/hostConsoleTypes";
 
 type VerificationCardProps = {
   item: HostCertificationMock;
   isExpanded: boolean;
   decision?: "approved" | "rejected" | null;
+  rejectInfo?: VerificationRejectInfo | null;
   onToggle: () => void;
   onApprove: () => Promise<boolean>;
   onReject: (reason: { code: RejectReasonCode; label: string; memo?: string }) => Promise<boolean>;
   onRevert: () => Promise<boolean>;
+  onRejectInfoSet: (info: VerificationRejectInfo) => void;
 };
 
 const rejectReasonOptions: Array<{ value: RejectReasonCode; label: string; description: string }> = [
@@ -40,10 +43,12 @@ export function VerificationCard({
   item,
   isExpanded,
   decision = null,
+  rejectInfo = null,
   onToggle,
   onApprove,
   onReject,
   onRevert,
+  onRejectInfoSet,
 }: VerificationCardProps) {
   const [isRejectSheetOpen, setIsRejectSheetOpen] = useState(false);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
@@ -51,6 +56,7 @@ export function VerificationCard({
   const [isRevertConfirmOpen, setIsRevertConfirmOpen] = useState(false);
   const [toastDecision, setToastDecision] = useState<"approved" | "rejected" | null>(null);
   const [selectedRejectReason, setSelectedRejectReason] = useState<RejectReasonCode | null>(null);
+
   const [rejectMemo, setRejectMemo] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isRejectConfirmDisabled =
@@ -63,6 +69,13 @@ export function VerificationCard({
         : null;
   const visibleDecision = decision ?? automaticDecision;
   const isDecided = visibleDecision !== null;
+  const rejectReasonDisplay: VerificationRejectInfo | null =
+    visibleDecision === "rejected"
+      ? (rejectInfo ??
+          (item.reject_reason_code
+            ? { label: rejectReasonOptions.find((o) => o.value === item.reject_reason_code)?.label ?? item.reject_reason_code }
+            : null))
+      : null;
 
   const handleHeaderClick = (e: React.MouseEvent | React.KeyboardEvent) => {
     if ((e.target as HTMLElement).closest("a")) {
@@ -113,6 +126,10 @@ export function VerificationCard({
       });
       setIsSubmitting(false);
       if (!succeeded) return;
+      onRejectInfoSet({
+        label: selectedRejectReasonLabel,
+        memo: rejectMemo.trim() || undefined,
+      });
       setToastDecision("rejected");
     }
 
@@ -241,12 +258,39 @@ export function VerificationCard({
             </p>
 
             {isDecided ? (
-              <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-[#E8F2EB] px-4 py-3">
-                <div className="flex min-w-0 items-center gap-2.5 text-primary-green">
-                  <Check size={18} strokeWidth={2.8} className="shrink-0" />
-                  <p className="min-w-0 text-sm font-extrabold">
-                    {visibleDecision === "approved" ? "승인 완료" : "거절 완료"} · 정산에 반영됩니다
-                  </p>
+              <div
+                className={`mt-3 flex items-center justify-between gap-3 rounded-2xl px-4 py-3 ${
+                  visibleDecision === "rejected" ? "bg-[#FCEDEC]" : "bg-[#E8F2EB]"
+                }`}
+              >
+                <div
+                  className={`flex min-w-0 items-center gap-2.5 ${
+                    visibleDecision === "rejected" ? "text-[#DB5C55]" : "text-primary-green"
+                  }`}
+                >
+                  {visibleDecision === "rejected" ? (
+                    <X size={18} strokeWidth={2.8} className="shrink-0" />
+                  ) : (
+                    <Check size={18} strokeWidth={2.8} className="shrink-0" />
+                  )}
+                  <div className="min-w-0">
+                    {visibleDecision === "rejected" && rejectReasonDisplay ? (
+                      <>
+                        <p className="text-sm font-extrabold">
+                          거절 완료 · {rejectReasonDisplay.label}
+                        </p>
+                        {rejectReasonDisplay.memo && (
+                          <p className="mt-0.5 truncate text-xs font-medium opacity-80">
+                            {rejectReasonDisplay.memo}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="min-w-0 text-sm font-extrabold">
+                        {visibleDecision === "approved" ? "승인 완료" : "거절 완료"} · 정산에 반영됩니다
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <button
                   type="button"
