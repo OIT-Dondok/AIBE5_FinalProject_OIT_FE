@@ -100,6 +100,7 @@ export function formatYmdDot(dateStr: string): string {
  * 대시보드 '마지막 업데이트(데이터 기준 시각)' 표기에 사용합니다.
  */
 export function formatDateTimeDot(isoString: string): string {
+  if (!isoString) return ''; // null/빈 문자열 방어 (new Date(null)이 epoch가 되는 것 방지)
   const d = toKstDate(isoString);
   if (Number.isNaN(d.getTime())) return '';
   const hh = String(d.getUTCHours()).padStart(2, '0');

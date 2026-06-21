@@ -249,7 +249,7 @@ export interface CrewDashboardView {
   successCount: string;
   expectedRefund: string;
   // 직전 배치 대비 변동("오늘 변동") — 메인 카드 헤더 표기. 변동 null이면 null → 숨김
-  todayDeltaLabel: string | null; // "+3,000원 (+30%)" / "+3,000원" / "0원"
+  todayDeltaLabel: string | null; // "+3,000원 (+30.0%)" / "+3,000원" / "0원"
   todayDeltaTrend: Trend;
   // 보증금 대비 손익 보조줄. 예상 환급금이 null이면 prefix=null → 보조줄 숨김
   depositComparePrefix: string | null; // "보증금 10,000원 대비"
@@ -299,9 +299,7 @@ export function mapCrewDashboard(res: DashboardResponse): CrewDashboardView {
     todayDeltaLabel: todayDelta.label,
     todayDeltaTrend: todayDelta.trend,
     depositComparePrefix:
-      depositPnl == null
-        ? null
-        : `보증금 ${res.my_deposit_amount.toLocaleString("ko-KR")}원 대비`,
+      depositPnl == null ? null : `보증금 ${formatWon(res.my_deposit_amount)} 대비`,
     depositPnlLabel: depositPnl?.label ?? "",
     depositPnlTrend: depositPnl?.trend ?? "flat",
     // rank가 null(예: 배치 전)이어도 participant_count가 있으면 "전체 N명"은 표시
