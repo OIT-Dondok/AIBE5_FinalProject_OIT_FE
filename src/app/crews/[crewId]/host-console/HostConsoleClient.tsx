@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Bell, ShieldCheck, HelpCircle } from "lucide-react";
 
 import { EmptyState } from "@/components/common/EmptyState";
@@ -19,25 +19,21 @@ import { getCrew, getCrewApplications, getCrewNotices } from "@/services/crew";
 import { useAuthStore } from "@/store/authStore";
 import type { CrewDetail } from "@/types/domain";
 
+function parseHostTab(value: string | null): HostTab | null {
+  return value === "verification" || value === "applications" || value === "notices"
+    ? value
+    : null;
+}
+
 export default function HostConsoleClient() {
   const params = useParams<{ crewId: string }>();
   const crewId = parseRouteNumber(params.crewId);
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const tabParam = searchParams.get("tab");
-  const [activeTab, setActiveTab] = useState<HostTab>(
-    tabParam === "verification" || tabParam === "applications" || tabParam === "notices"
-      ? tabParam
-      : "verification"
-  );
+  const activeTab = parseHostTab(searchParams.get("tab")) ?? "verification";
 
-  useEffect(() => {
-    if (tabParam === "verification" || tabParam === "applications" || tabParam === "notices") {
-      setActiveTab(tabParam);
-    }
-  }, [tabParam]);
-
-  const { user } = useAuthStore();
+  const { user, isInitialized } = useAuthStore();
   const [crewDetail, setCrewDetail] = useState<CrewDetail | null>(null);
   const [isDetailLoading, setIsDetailLoading] = useState(true);
   const [pendingReviewCount, setPendingReviewCount] = useState<number | null>(null);
@@ -45,32 +41,57 @@ export default function HostConsoleClient() {
   const [noticeCount, setNoticeCount] = useState<number | null>(null);
   const [tabRefreshKey, setTabRefreshKey] = useState(0);
   const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
+  const detailRequestIdRef = useRef(0);
 
   const handleTabChange = (tab: HostTab) => {
-    setActiveTab(tab);
     setTabRefreshKey((prev) => prev + 1);
     if (tab === "verification") setPendingReviewCount(null);
+    const nextSearchParams = new URLSearchParams(searchParams.toString());
+    nextSearchParams.set("tab", tab);
+    router.replace(`${pathname}?${nextSearchParams.toString()}`, { scroll: false });
   };
 
   useEffect(() => {
-    if (crewId === null) {
-      setIsDetailLoading(false);
-      return;
-    }
-    setIsDetailLoading(true);
-    Promise.all([
-      getCrew(crewId),
-      getCrewApplications(crewId, { status: "PENDING" }).catch(() => null),
-      getCrewNotices(crewId).catch(() => null),
-    ])
-      .then(([crewRes, appRes, noticeRes]) => {
+    const requestId = detailRequestIdRef.current + 1;
+    detailRequestIdRef.current = requestId;
+
+    const loadHostConsole = async () => {
+      if (!isInitialized) return;
+
+      if (crewId === null) {
+        setCrewDetail(null);
+        setPendingApplicationCount(0);
+        setNoticeCount(0);
+        setIsDetailLoading(false);
+        return;
+      }
+
+      setIsDetailLoading(true);
+      setCrewDetail(null);
+      setPendingApplicationCount(null);
+      setNoticeCount(null);
+
+      try {
+        const [crewRes, appRes, noticeRes] = await Promise.all([
+          getCrew(crewId),
+          getCrewApplications(crewId, { status: "PENDING" }).catch(() => null),
+          getCrewNotices(crewId).catch(() => null),
+        ]);
+        if (requestId !== detailRequestIdRef.current) return;
         setCrewDetail(crewRes.data);
         setPendingApplicationCount(appRes?.data.items.length ?? 0);
         setNoticeCount(noticeRes?.data.items.length ?? 0);
-      })
-      .catch(() => setCrewDetail(null))
-      .finally(() => setIsDetailLoading(false));
-  }, [crewId]);
+      } catch {
+        if (requestId !== detailRequestIdRef.current) return;
+        setCrewDetail(null);
+      } finally {
+        if (requestId !== detailRequestIdRef.current) return;
+        setIsDetailLoading(false);
+      }
+    };
+
+    void loadHostConsole();
+  }, [crewId, isInitialized]);
 
   if (crewId === null) {
     return (
@@ -91,7 +112,7 @@ export default function HostConsoleClient() {
     );
   }
 
-  if (isDetailLoading) {
+  if (!isInitialized || isDetailLoading) {
     return (
       <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
         <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-28">
