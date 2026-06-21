@@ -594,7 +594,7 @@ export interface MissionLogListResponse {
   items: MissionLog[];
 }
 
-export type MissionLogReviewBucket = 'urgent' | 'warning' | 'normal';
+export type MissionLogReviewBucket = 'urgent' | 'warning' | 'normal' | 'decided';
 export type MissionLogExifRisk = 'NORMAL' | 'MISSING' | 'TIME_INVALID';
 
 export interface ReviewableMissionLog {
@@ -665,6 +665,18 @@ export interface ModerationRejectResponse {
   decision_type: 'MANUAL_REJECT';
   reject_reason_code: RejectReasonCode;
   decided_at: string;
+  moderation_history_id: number;
+}
+
+// POST /api/mission-logs/{missionLogId}/moderation/revert → 200
+export interface ModerationRevertResponse {
+  mission_log_id: number;
+  crew_id: number;
+  crew_participant_id: number;
+  certification_status: 'PENDING_REVIEW';
+  decision_type: null;
+  reject_reason_code: null;
+  reverted_at: string;
   moderation_history_id: number;
 }
 
