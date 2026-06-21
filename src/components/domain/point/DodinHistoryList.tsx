@@ -3,6 +3,7 @@
 import { ChevronDown } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 
+import { ReceiptTopEdge } from "@/components/common/ReceiptTopEdge";
 import {
   HistoryFilterTabs,
   HistoryRow,
@@ -12,6 +13,7 @@ import {
 } from "@/components/domain/point/WalletHistorySection";
 import { BottomSheet } from "@/components/common/BottomSheet";
 import {
+  formatDateGroupLabel,
   formatMonthLabel,
   getCurrentSeoulMonth,
   isAfterMonth,
@@ -63,6 +65,36 @@ interface DodinHistoryListProps {
   onRetry: () => void;
 }
 
+interface HistoryDateGroup {
+  dateKey: string;
+  dateLabel: string;
+  items: WalletHistoryViewItem[];
+}
+
+function groupHistoryByDate(items: WalletHistoryViewItem[]): HistoryDateGroup[] {
+  const map = new Map<string, HistoryDateGroup>();
+  for (const item of items) {
+    const key = item.dateKey || "unknown";
+    if (!map.has(key)) {
+      map.set(key, {
+        dateKey: key,
+        dateLabel: formatDateGroupLabel(key),
+        items: [],
+      });
+    }
+    map.get(key)!.items.push(item);
+  }
+  return Array.from(map.values());
+}
+
+function DateGroupHeader({ label }: { label: string }) {
+  return (
+    <div className="sticky top-0 z-10 border-b border-text-secondary/[0.08] bg-card/95 px-4 py-2.5 backdrop-blur-sm">
+      <p className="text-[13px] font-extrabold text-text-primary">{label}</p>
+    </div>
+  );
+}
+
 function DodinHistoryEmptyState({ activeFilter }: { activeFilter: HistoryFilter }) {
   return (
     <div className="px-6 py-12 text-center">
@@ -106,10 +138,45 @@ function DodinHistoryFooter({
   isLoading: boolean;
   loadMoreRef: RefObject<HTMLDivElement | null>;
 }) {
+  // 마지막 내역 — 영수증 바코드로 마무리
+  if (!hasMore && !isLoading) {
+    const barPattern = [2, 1, 3, 1, 1, 2, 1, 3, 2, 1, 1, 3, 1, 2, 1, 1, 3, 1, 2, 3, 1, 1, 2, 1];
+    let x = 0;
+    const rects: { x: number; w: number }[] = [];
+    barPattern.forEach((w, i) => {
+      if (i % 2 === 0) rects.push({ x, w });
+      x += w;
+    });
+
+    return (
+      <div className="px-4 pb-6 pt-4">
+        <div className="border-t-[2.5px] border-text-primary/10 pt-5">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <svg
+                aria-hidden="true"
+                viewBox={`0 0 ${x} 22`}
+                className="h-[22px] w-28 text-text-secondary/25"
+              >
+                {rects.map((r, i) => (
+                  <rect key={i} x={r.x} y={0} width={r.w} height={22} fill="currentColor" />
+                ))}
+              </svg>
+              <p className="mt-1.5 font-mono text-[9px] font-bold uppercase tracking-[0.22em] text-text-secondary/40">
+                DONDOK WALLET
+              </p>
+            </div>
+            <p className="font-mono text-[9px] text-text-secondary/40">마지막 내역</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div ref={hasMore ? loadMoreRef : undefined} className="border-t border-text-secondary/[0.08] px-4 py-4">
+    <div ref={hasMore ? loadMoreRef : undefined} className="border-t border-dashed border-text-secondary/[0.08] px-4 py-4">
       <p className="text-center text-xs font-medium text-text-secondary">
-        {isLoading ? "내역을 불러오는 중..." : hasMore ? "아래로 스크롤해 더 보기" : "마지막 내역입니다."}
+        {isLoading ? "내역을 불러오는 중..." : "아래로 스크롤해 더 보기"}
       </p>
     </div>
   );
@@ -241,34 +308,46 @@ export function DodinHistoryList({
   }, [hasMore, onLoadMore]);
 
   return (
-    <section className="overflow-hidden rounded-[24px] border border-text-secondary/10 bg-card shadow-card">
-      <div className="px-4 py-4">
-        <DodinHistoryMonthStepper activeMonth={activeMonth} onMonthChange={onMonthChange} />
-        <HistoryFilterTabs
-          activeClassName="bg-primary-green text-white shadow-sm shadow-primary-green/20"
-          activeFilter={activeFilter}
-          filters={filters}
-          onFilterChange={onFilterChange}
-        />
-      </div>
+    <section>
+      {/* 영수증 상단 톱니 절취선 */}
+      <ReceiptTopEdge />
+
+      <div className="overflow-hidden rounded-b-[24px] bg-card shadow-[0_6px_28px_rgba(0,0,0,0.07)]">
+        <div className="px-4 py-4">
+          <DodinHistoryMonthStepper activeMonth={activeMonth} onMonthChange={onMonthChange} />
+          <HistoryFilterTabs
+            activeClassName="bg-primary-green text-white shadow-sm shadow-primary-green/20"
+            activeFilter={activeFilter}
+            filters={filters}
+            onFilterChange={onFilterChange}
+          />
+        </div>
 
       {errorMessage && historyItems.length === 0 ? (
         <DodinHistoryErrorState errorMessage={errorMessage} onRetry={onRetry} />
       ) : historyItems.length > 0 ? (
-        <ul className="divide-y divide-text-secondary/[0.08]">
-          {historyItems.map((item) => (
-            <HistoryRow key={item.id} item={item} />
+        <div>
+          {groupHistoryByDate(historyItems).map((group) => (
+            <div key={group.dateKey}>
+              <DateGroupHeader label={group.dateLabel} />
+              <ul className="divide-y divide-dashed divide-text-secondary/[0.08]">
+                {group.items.map((item) => (
+                  <HistoryRow key={item.id} item={item} hideDate />
+                ))}
+              </ul>
+            </div>
           ))}
-        </ul>
+        </div>
       ) : isLoading ? (
         <p className="px-6 py-12 text-center text-xs font-semibold text-text-secondary">내역을 불러오는 중...</p>
       ) : (
         <DodinHistoryEmptyState activeFilter={activeFilter} />
       )}
 
-      {(historyItems.length > 0 || isLoading) && (
-        <DodinHistoryFooter hasMore={hasMore} isLoading={isLoading} loadMoreRef={loadMoreRef} />
-      )}
+        {(historyItems.length > 0 || isLoading) && (
+          <DodinHistoryFooter hasMore={hasMore} isLoading={isLoading} loadMoreRef={loadMoreRef} />
+        )}
+      </div>
     </section>
   );
 }

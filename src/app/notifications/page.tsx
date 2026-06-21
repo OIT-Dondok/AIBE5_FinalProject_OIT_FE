@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { Header } from "@/components/common/Header";
+import { EmptyState } from "@/components/common/EmptyState";
 import { getNotifications, getUnreadCount, readAllNotifications, readNotification } from "@/api/notification";
 import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 import type { NotificationItem } from "@/types/domain";
@@ -39,27 +40,27 @@ const CATEGORY_META: Record<
 > = {
   미션: {
     icon: TrendingUp,
-    iconBoxClassName: "bg-[#FBF1E1]",
-    iconClassName: "text-[#D89B4C]",
-    badgeClassName: "bg-[#FBF1E1] text-[#D89B4C]",
+    iconBoxClassName: "bg-amber-50",
+    iconClassName: "text-amber-600",
+    badgeClassName: "bg-amber-50 text-amber-600",
   },
   정산: {
     icon: WalletCards,
-    iconBoxClassName: "bg-[#E8F2EB]",
+    iconBoxClassName: "bg-success-green/40",
     iconClassName: "text-primary-green",
-    badgeClassName: "bg-[#E8F2EB] text-primary-green",
+    badgeClassName: "bg-success-green/40 text-primary-green",
   },
   크루: {
     icon: Users,
-    iconBoxClassName: "bg-[#E0E8FA]",
-    iconClassName: "text-[#4d73d9]",
-    badgeClassName: "bg-[#E0E8FA] text-[#4d73d9]",
+    iconBoxClassName: "bg-primary-blue/10",
+    iconClassName: "text-primary-blue",
+    badgeClassName: "bg-primary-blue/10 text-primary-blue",
   },
   리액션: {
     icon: Heart,
-    iconBoxClassName: "bg-[#FCE8E4]",
-    iconClassName: "text-[#D9735E]",
-    badgeClassName: "bg-[#FCE8E4] text-[#D9735E]",
+    iconBoxClassName: "bg-rose-50",
+    iconClassName: "text-rose-500",
+    badgeClassName: "bg-rose-50 text-rose-500",
   },
 };
 
@@ -135,7 +136,7 @@ function NotificationCard({
       type="button"
       onClick={() => onClick(item)}
       className={`w-full origin-center rounded-2xl px-4 py-3.5 text-left transition-[background-color,transform] duration-150 ease-out active:scale-[0.985] ${
-        item.read_at !== null ? "bg-card active:bg-[#F4F4F4]" : "bg-[#F4F7FF] active:bg-[#E9EEFB]"
+        item.read_at !== null ? "bg-card active:bg-text-secondary/5" : "bg-primary-blue/5 active:bg-primary-blue/10"
       }`}
     >
       <div className="flex items-start gap-3">
@@ -164,7 +165,7 @@ function NotificationCard({
             {message}
           </p>
           {item.crew_name && (
-            <p className="mt-1.5 break-words text-xs font-semibold leading-tight text-[#666666]">
+            <p className="mt-1.5 break-words text-xs font-semibold leading-tight text-text-secondary">
               {item.crew_name}
             </p>
           )}
@@ -311,7 +312,7 @@ export default function NotificationsPage() {
         </div>
 
         {/* 카테고리 필터 탭 */}
-        <div className="flex gap-2 overflow-x-auto px-5 pt-3 pb-1 scrollbar-hide">
+        <div className="flex gap-2 overflow-x-auto px-5 pt-3 pb-1 no-scrollbar">
           {FILTER_TABS.map(({ value, label }) => {
             const isActive = activeFilter === value;
             return (
@@ -338,22 +339,19 @@ export default function NotificationsPage() {
               <p className="text-sm font-semibold text-text-secondary">불러오는 중...</p>
             </div>
           ) : errorMessage ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <p className="text-sm font-semibold text-text-secondary">{errorMessage}</p>
-              <button
-                type="button"
-                onClick={fetchInitial}
-                className="mt-4 rounded-full bg-primary-blue px-5 py-2 text-xs font-extrabold text-white transition-opacity hover:opacity-75"
-              >
-                다시 시도
-              </button>
-            </div>
+            <EmptyState
+              icon="⚠️"
+              title={errorMessage}
+              actionButtonText="다시 시도"
+              onActionClick={fetchInitial}
+              className="py-20 px-6"
+            />
           ) : groups.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <p className="text-sm font-semibold text-text-secondary">
-                {activeFilter === "전체" ? "알림이 없어요" : `${activeFilter} 알림이 없어요`}
-              </p>
-            </div>
+            <EmptyState
+              icon="🔔"
+              title={activeFilter === "전체" ? "알림이 없어요" : `${activeFilter} 알림이 없어요`}
+              className="py-20 px-6"
+            />
           ) : (
             <>
               {groups.map(({ label, items }) => (
@@ -372,7 +370,7 @@ export default function NotificationsPage() {
                   type="button"
                   onClick={loadMore}
                   disabled={loadingMore}
-                  className="mx-auto mt-2 rounded-full px-5 py-2 text-xs font-extrabold text-primary-blue bg-card border border-text-secondary/20 hover:opacity-75 transition-opacity disabled:opacity-50"
+                  className="w-full py-3 text-sm font-semibold text-primary-green border border-primary-green/30 rounded-2xl hover:bg-primary-green/5 transition-colors disabled:opacity-50"
                 >
                   {loadingMore ? "불러오는 중..." : "더 보기"}
                 </button>

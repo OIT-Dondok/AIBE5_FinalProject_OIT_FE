@@ -24,7 +24,7 @@ const SECTION_ORDER: (keyof GroupedCrews)[] = ['RECRUITING', 'ACTIVE', 'CLOSED']
 
 const SECTION_CONFIG: Record<keyof GroupedCrews, { label: string; badgeClass: string }> = {
   RECRUITING: { label: '모집중', badgeClass: 'bg-blue-500/10 text-blue-600 border border-blue-500/20' },
-  ACTIVE: { label: '진행중', badgeClass: 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' },
+  ACTIVE: { label: '진행중', badgeClass: 'bg-primary-green/10 text-primary-green border border-primary-green/20' },
   CLOSED: { label: '종료됨', badgeClass: 'bg-slate-500/10 text-slate-500 border border-slate-500/20' },
 };
 

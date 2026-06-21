@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Check, ChevronDown, Pin } from 'lucide-react';
 import { Header } from '@/components/common/Header';
 import { Skeleton } from '@/components/common/Skeleton';
+import { EmptyState } from '@/components/common/EmptyState';
 import { getMyCrew } from '@/services/crew';
 import { CATEGORY_EMOJI, CATEGORY_BG } from '@/constants/crew';
 import { HostBadge } from '@/components/common/HostBadge';
@@ -226,7 +227,7 @@ function MyCrewCard({ crew }: { crew: MyCrew }) {
 
       {/* 하단: 미션 수행 기간 카드 (Stationery Motif) */}
       <div className="flex items-center justify-between pt-2.5 border-t border-text-secondary/10">
-        <div className="relative bg-[#FFFEEA] border border-amber-200/50 shadow-sm rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 rotate-[-1deg] hover:rotate-0 transition-transform duration-300 shrink-0">
+        <div className="relative bg-amber-50 border border-amber-200/50 shadow-sm rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 rotate-[-1deg] hover:rotate-0 transition-transform duration-300 shrink-0">
           <Pin size={11} className="text-amber-600/70 rotate-45 shrink-0" />
           <span className="text-[11px] font-bold text-amber-800 tracking-tight">
             {formatShortDate(crew.start_at)} ~ {formatShortDate(crew.end_at)}
@@ -372,22 +373,19 @@ export default function MyCrewsPage() {
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => <MyCrewCardSkeleton key={i} />)
           ) : crewsError ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-3">
-              <span className="text-4xl">⚠️</span>
-              <p className="text-sm text-text-secondary font-medium text-center">크루 목록을 불러오지 못했어요</p>
-              <button
-                type="button"
-                onClick={() => setRetryCount((c) => c + 1)}
-                className="text-sm font-semibold text-primary-green hover:opacity-75 transition-opacity"
-              >
-                다시 시도
-              </button>
-            </div>
+            <EmptyState
+              icon="⚠️"
+              title="크루 목록을 불러오지 못했어요"
+              actionButtonText="다시 시도"
+              onActionClick={() => setRetryCount((c) => c + 1)}
+              className="py-20 px-6"
+            />
           ) : applyStatusFilter(crews, statusFilter).length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-3">
-              <span className="text-4xl">🫂</span>
-              <p className="text-sm text-text-secondary font-medium">참여 중인 크루가 없어요</p>
-            </div>
+            <EmptyState
+              icon="🫂"
+              title="참여 중인 크루가 없어요"
+              className="py-20 px-6"
+            />
           ) : (
             applyStatusFilter(crews, statusFilter).map((crew) => <MyCrewCard key={crew.crew_id} crew={crew} />)
           )}
