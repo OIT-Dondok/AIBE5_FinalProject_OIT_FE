@@ -78,6 +78,24 @@ export function CrewDonutSection({
         </div>
       </DashboardCard>
 
+      <Button
+        type="button"
+        variant="outline"
+        fullWidth
+        className="border-primary-green/25 bg-success-green/70 text-primary-green shadow-[0_6px_18px_rgba(94,155,115,0.14)] hover:bg-success-green"
+        onClick={onOpenPrinciples}
+      >
+        <span className="flex w-full items-center justify-between gap-2">
+          <span className="flex items-center gap-2 font-extrabold">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-green text-white">
+              <ShieldCheck size={15} />
+            </span>
+            방장 운영 원칙 보기
+          </span>
+          <ChevronRight size={16} className="text-primary-green/70" />
+        </span>
+      </Button>
+
       <div className="flex items-center justify-between pt-1">
         <h2 className="text-sm font-black tracking-tight text-text-primary">
           크루별 현황
@@ -96,24 +114,6 @@ export function CrewDonutSection({
           />
         ))}
       </div>
-
-      <Button
-        type="button"
-        variant="outline"
-        fullWidth
-        className="border-primary-green/25 bg-success-green/70 text-primary-green shadow-[0_6px_18px_rgba(94,155,115,0.14)] hover:bg-success-green"
-        onClick={onOpenPrinciples}
-      >
-        <span className="flex w-full items-center justify-between gap-2">
-          <span className="flex items-center gap-2 font-extrabold">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-green text-white">
-              <ShieldCheck size={15} />
-            </span>
-            방장 운영 원칙 보기
-          </span>
-          <ChevronRight size={16} className="text-primary-green/70" />
-        </span>
-      </Button>
     </section>
   );
 }
