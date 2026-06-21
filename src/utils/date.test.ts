@@ -5,6 +5,7 @@ import {
   addDaysToYmd,
   compareYmd,
   formatDateTimeDot,
+  formatKstDateTime,
   formatYmdDot,
   getKstDateKeyFromIso,
   getMsUntilNextKstDay,
@@ -41,6 +42,11 @@ describe('KST date helpers', () => {
     // UTC 자정 → KST 09:00 (UTC+9). 시·분은 2자리 0 패딩
     assert.equal(formatDateTimeDot('2026-06-19T00:00:00Z'), '2026.6.19 09:00');
     assert.equal(formatDateTimeDot('not-a-date'), '');
+  });
+
+  it('returns an empty label for invalid KST datetime input', () => {
+    assert.equal(formatKstDateTime(''), '');
+    assert.equal(formatKstDateTime('not-a-date'), '');
   });
 
   it('compares YYYY-MM-DD keys lexically', () => {

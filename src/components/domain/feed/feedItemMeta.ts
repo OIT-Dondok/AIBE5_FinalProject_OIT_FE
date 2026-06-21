@@ -27,15 +27,7 @@ export const STATUS_CONFIG: Record<
 /** ISO 문자열(server_time)을 KST 기준 "M/D 오전/오후 h:mm" 형태로 변환 */
 export function formatServerTime(isoStr: string): string {
   if (!isoStr) return '-';
-  let targetStr = isoStr.trim();
-  const hasTimezone = targetStr.endsWith('Z') || targetStr.includes('+') || /-\d{2}:?\d{2}$/.test(targetStr);
-  if (!hasTimezone) {
-    if (targetStr.includes(' ')) {
-      targetStr = targetStr.replace(' ', 'T');
-    }
-    targetStr = targetStr + 'Z';
-  }
-  const d = new Date(targetStr);
+  const d = new Date(isoStr.trim());
   if (isNaN(d.getTime())) return '-';
   const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
   const month = kst.getUTCMonth() + 1;

@@ -23,26 +23,7 @@ import { getMemberProfile } from "@/services/member";
 import { useAuthStore } from "@/store/authStore";
 import { NoticeCommentSection } from "@/components/domain/crew/NoticeCommentSection";
 import type { CrewNotice, CrewDetail, MemberPublicProfile } from "@/types/domain";
-
-// YYYY.MM.DD HH:mm 포맷터
-const formatDateTime = (isoString: string) => {
-  if (!isoString) return '-';
-  let targetStr = isoString.trim();
-  const hasTimezone = targetStr.endsWith('Z') || targetStr.includes('+') || /-\d{2}:?\d{2}$/.test(targetStr);
-  if (!hasTimezone) {
-    if (targetStr.includes(' ')) {
-      targetStr = targetStr.replace(' ', 'T');
-    }
-    targetStr = targetStr + 'Z';
-  }
-  const date = new Date(targetStr);
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  const hh = String(date.getHours()).padStart(2, '0');
-  const mm = String(date.getMinutes()).padStart(2, '0');
-  return `${y}.${m}.${d} ${hh}:${mm}`;
-};
+import { formatKstDateTime } from "@/utils/date";
 
 // 숫자 ID 파싱 헬퍼
 const parseRouteNumber = (val: string | string[] | undefined): number | null => {
@@ -262,7 +243,7 @@ export default function NoticeDetailPage() {
                         </p>
                         <HostBadge label="방장" className="shrink-0" />
                       </div>
-                      <p className="mt-0.5 text-xs text-text-secondary">{formatDateTime(notice.created_at)}</p>
+                      <p className="mt-0.5 text-xs text-text-secondary">{formatKstDateTime(notice.created_at)}</p>
                     </div>
                   </div>
                 </div>
