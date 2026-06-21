@@ -97,7 +97,10 @@ export function formatYmdDot(dateStr: string): string {
  * 공지·댓글 등 날짜+시간 표기에 사용합니다.
  */
 export function formatKstDateTime(isoString: string): string {
-  return new Date(isoString).toLocaleString('ko-KR', {
+  if (!isoString) return '';
+  const d = new Date(isoString);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleString('ko-KR', {
     timeZone: 'Asia/Seoul',
     year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit',
