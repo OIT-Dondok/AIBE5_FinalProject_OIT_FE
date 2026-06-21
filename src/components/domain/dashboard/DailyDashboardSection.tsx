@@ -8,6 +8,7 @@ import {
   InfoTooltip,
   ProjectionTooltip,
   SegmentRing,
+  type TooltipAlign,
 } from "./DashboardPrimitives";
 import { ReportSuspicionCallout } from "./ReportSuspicionCallout";
 import type {
@@ -50,7 +51,9 @@ export function DailyDashboardSection({
             >
               {dashboard.todayDeltaLabel}
             </span>
-            <InfoTooltip ariaLabel="오늘 변동 안내">{DELTA_TOOLTIP_TEXT}</InfoTooltip>
+            <InfoTooltip ariaLabel="오늘 변동 안내" placement="bottom" align="right">
+              {DELTA_TOOLTIP_TEXT}
+            </InfoTooltip>
           </span>
         )}
       </div>
@@ -72,21 +75,11 @@ export function DailyDashboardSection({
         </div>
       </DashboardCard>
 
-      {(dashboard.updatedAtLabel || dashboard.nextSettlementTime) && (
-        <div className="-mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 px-1 text-[11px] text-text-secondary">
-          {dashboard.updatedAtLabel && (
-            <span className="inline-flex items-center gap-1">
-              <Clock3 size={12} />
-              마지막 업데이트 {dashboard.updatedAtLabel}
-            </span>
-          )}
-          {dashboard.updatedAtLabel && dashboard.nextSettlementTime && (
-            <span className="text-text-secondary/40">·</span>
-          )}
-          {dashboard.nextSettlementTime && (
-            <span>다음 정산 {dashboard.nextSettlementTime}</span>
-          )}
-        </div>
+      {dashboard.updatedAtLabel && (
+        <p className="-mt-0.5 inline-flex items-center gap-1 px-1 text-[11px] text-text-secondary">
+          <Clock3 size={12} />
+          마지막 업데이트 {dashboard.updatedAtLabel}
+        </p>
       )}
 
       {dashboard.notice && (
@@ -101,7 +94,12 @@ export function DailyDashboardSection({
       )}
 
       <div className="grid grid-cols-2 gap-2.5">
-        <MetricCard label="예상 환급금" showTooltip projectionCopy={projectionCopy}>
+        <MetricCard
+          label="예상 환급금"
+          showTooltip
+          projectionCopy={projectionCopy}
+          tooltipAlign="left"
+        >
           <strong className="mt-3 text-xl font-black tracking-tight text-text-primary">
             {dashboard.expectedRefund}
           </strong>
@@ -133,6 +131,20 @@ export function DailyDashboardSection({
         </strong>
       </DashboardCard>
 
+      {dashboard.nextSettlementTime && (
+        <DashboardCard className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-blue/10 text-primary-blue">
+            <Clock3 size={19} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-black text-text-primary">다음 정산</p>
+            <p className="mt-0.5 text-[11px] text-text-secondary">
+              {dashboard.nextSettlementTime}
+            </p>
+          </div>
+        </DashboardCard>
+      )}
+
       <ReportSuspicionCallout notice={reportNotice} actionLabel={reportActionLabel} />
     </section>
   );
@@ -163,18 +175,22 @@ function MetricCard({
   label,
   showTooltip = false,
   projectionCopy,
+  tooltipAlign,
   children,
 }: {
   label: string;
   showTooltip?: boolean;
   projectionCopy?: ProjectionCopy;
+  tooltipAlign?: TooltipAlign;
   children: React.ReactNode;
 }) {
   return (
     <DashboardCard className="min-h-28 flex flex-col justify-between bg-card/95">
       <p className="inline-flex items-center gap-1 text-[11px] font-black text-text-secondary">
         {label}
-        {showTooltip && projectionCopy && <ProjectionTooltip copy={projectionCopy} />}
+        {showTooltip && projectionCopy && (
+          <ProjectionTooltip copy={projectionCopy} align={tooltipAlign} />
+        )}
       </p>
       {children}
     </DashboardCard>

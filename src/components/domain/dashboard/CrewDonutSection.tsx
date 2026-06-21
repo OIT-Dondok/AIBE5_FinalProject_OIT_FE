@@ -47,23 +47,21 @@ export function CrewDonutSection({
             </strong>
           </SegmentRing>
           <div className="min-w-0 flex-1">
-            <p className="inline-flex items-center gap-1 text-[11px] text-text-secondary">
+            <p className="flex items-center gap-1 text-[11px] text-text-secondary">
               오늘 변동
               <InfoTooltip ariaLabel="오늘 변동 안내">{DELTA_TOOLTIP_TEXT}</InfoTooltip>
             </p>
             <p
-              className={`mt-1 inline-flex items-center gap-1 text-lg font-black ${
+              className={`mt-1 flex items-baseline gap-1.5 ${
                 isDeltaDown ? "text-red-500" : "text-primary-green"
               }`}
             >
-              {crewDonuts.todayDelta}
-            </p>
-            <p
-              className={`text-[11px] font-bold ${
-                isDeltaDown ? "text-red-500" : "text-primary-green"
-              }`}
-            >
-              {crewDonuts.todayDeltaPercent}
+              <span className="text-lg font-black">{crewDonuts.todayDelta}</span>
+              {crewDonuts.todayDeltaPercent !== "—" && (
+                <span className="text-[11px] font-bold">
+                  ({crewDonuts.todayDeltaPercent})
+                </span>
+              )}
             </p>
             <div className="mt-3 flex flex-col gap-1.5 border-t border-text-secondary/10 pt-3">
               <p className="text-[11px] font-black text-text-primary">
