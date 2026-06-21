@@ -71,3 +71,8 @@ export const mockDashboard: DashboardMock = {
     reportActionLabel: "부정 의심 신고",
   },
 };
+
+// 직전 배치 대비 변동액 안내 툴팁 문구.
+// 전체 대시보드 '오늘 변동'(CrewDonutSection)·크루 상세 메인 카드(DailyDashboardSection) 공용.
+export const DELTA_TOOLTIP_TEXT =
+  "직전 정산 배치와 비교한 예상 환급금 변동이에요. 첫 정산이라 비교 대상이 없으면 0원으로 표시돼요.";

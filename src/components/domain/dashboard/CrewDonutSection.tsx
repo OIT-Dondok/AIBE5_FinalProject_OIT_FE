@@ -3,10 +3,11 @@ import { CalendarDays, ChevronRight, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/common/Button";
 import { CATEGORY_BG, CATEGORY_EMOJI } from "@/constants/crew";
-import type { ProjectionCopy } from "@/mocks/data/dashboard";
+import { DELTA_TOOLTIP_TEXT, type ProjectionCopy } from "@/mocks/data/dashboard";
 
 import {
   DashboardCard,
+  InfoTooltip,
   ProgressBar,
   ProjectionTooltip,
   SegmentRing,
@@ -46,7 +47,10 @@ export function CrewDonutSection({
             </strong>
           </SegmentRing>
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] text-text-secondary">오늘</p>
+            <p className="inline-flex items-center gap-1 text-[11px] text-text-secondary">
+              오늘 변동
+              <InfoTooltip ariaLabel="오늘 변동 안내">{DELTA_TOOLTIP_TEXT}</InfoTooltip>
+            </p>
             <p
               className={`mt-1 inline-flex items-center gap-1 text-lg font-black ${
                 isDeltaDown ? "text-red-500" : "text-primary-green"
