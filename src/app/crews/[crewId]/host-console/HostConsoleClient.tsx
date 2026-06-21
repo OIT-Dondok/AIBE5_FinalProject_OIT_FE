@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Bell, ShieldCheck, HelpCircle } from "lucide-react";
 
@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { Header } from "@/components/common/Header";
 import { ApplicationsTab } from "@/components/domain/host/applications/ApplicationsTab";
 import { HostConsoleTabs } from "@/components/domain/host/HostConsoleTabs";
-import type { HostTab } from "@/components/domain/host/hostConsoleTypes";
+import type { HostTab, VerificationDecision, VerificationRejectInfo } from "@/components/domain/host/hostConsoleTypes";
 import { HostSummaryCard } from "@/components/domain/host/HostSummaryCard";
 import { NoticesTab } from "@/components/domain/host/notices/NoticesTab";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
@@ -41,6 +41,25 @@ export default function HostConsoleClient() {
   const [noticeCount, setNoticeCount] = useState(0);
   const [tabRefreshKey, setTabRefreshKey] = useState(0);
   const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
+  const [verificationDecisionsById, setVerificationDecisionsById] = useState<Record<number, VerificationDecision>>({});
+
+  const handleVerificationDecisionMade = useCallback((id: number, decision: VerificationDecision) => {
+    setVerificationDecisionsById((prev) => ({ ...prev, [id]: decision }));
+  }, []);
+
+  const handleVerificationDecisionReverted = useCallback((id: number) => {
+    setVerificationDecisionsById((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }, []);
+
+  const [verificationRejectsById, setVerificationRejectsById] = useState<Record<number, VerificationRejectInfo>>({});
+
+  const handleVerificationRejectInfoSet = useCallback((id: number, info: VerificationRejectInfo) => {
+    setVerificationRejectsById((prev) => ({ ...prev, [id]: info }));
+  }, []);
 
   const handleTabChange = (tab: HostTab) => {
     setActiveTab(tab);
@@ -140,7 +159,15 @@ export default function HostConsoleClient() {
           />
 
           {activeTab === "verification" && (
-            <VerificationTab key={tabRefreshKey} onPendingCountChange={setPendingReviewCount} />
+            <VerificationTab
+              key={tabRefreshKey}
+              onPendingCountChange={setPendingReviewCount}
+              decisionsById={verificationDecisionsById}
+              onDecisionMade={handleVerificationDecisionMade}
+              onDecisionReverted={handleVerificationDecisionReverted}
+              rejectsById={verificationRejectsById}
+              onRejectInfoSet={handleVerificationRejectInfoSet}
+            />
           )}
           {activeTab === "applications" && (
             <ApplicationsTab key={tabRefreshKey} onPendingCountChange={setPendingApplicationCount} />

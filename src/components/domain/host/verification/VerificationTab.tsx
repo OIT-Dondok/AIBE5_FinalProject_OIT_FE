@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ShieldCheck } from "lucide-react";
 import { useParams } from "next/navigation";
 
@@ -21,22 +21,31 @@ import {
   approveMissionLog,
   getReviewableMissionLogs,
   rejectMissionLog,
+  revertMissionLogModeration,
 } from "@/services/moderation";
 import type {
   MissionLogReviewBucket,
+  MissionLogDecisionType,
   RejectReasonCode,
   ReviewableMissionLog,
 } from "@/types/domain";
 import type { HostCertificationMock } from "@/mocks/data/host";
+import type { VerificationDecision, VerificationRejectInfo } from "@/components/domain/host/hostConsoleTypes";
 
 type VerificationTabProps = {
   onPendingCountChange?: (count: number) => void;
+  decisionsById: Record<number, VerificationDecision>;
+  onDecisionMade: (id: number, decision: VerificationDecision) => void;
+  onDecisionReverted: (id: number) => void;
+  rejectsById: Record<number, VerificationRejectInfo>;
+  onRejectInfoSet: (id: number, info: VerificationRejectInfo) => void;
 };
 
 const EMPTY_COUNTS: Record<MissionLogReviewBucket, number> = {
   urgent: 0,
   warning: 0,
   normal: 0,
+  decided: 0,
 };
 
 const VERIFICATION_ERROR_FALLBACK =
@@ -45,6 +54,8 @@ const VERIFICATION_ERROR_FALLBACK =
 const ERROR_MESSAGES: Record<string, string> = {
   FORBIDDEN_NOT_HOST: "방장만 인증을 검토할 수 있어요.",
   MISSION_LOG_NOT_REVIEWABLE: "이미 처리되었거나 검토 가능 시간이 지난 인증이에요.",
+  MISSION_LOG_DECISION_NOT_REVERSIBLE: "되돌릴 수 없는 인증이에요.",
+  MISSION_LOG_ALREADY_SETTLED: "정산이 완료되어 되돌릴 수 없어요.",
   SETTLEMENT_INPUT_FROZEN: "정산이 시작되어 더 이상 검토할 수 없어요.",
   REJECT_MEMO_REQUIRED: "기타 사유를 입력해 주세요.",
   REJECT_MEMO_TOO_LONG: "기타 사유는 50자 이내로 입력해 주세요.",
@@ -77,10 +88,17 @@ function getErrorMessage(error: unknown) {
   return getApiErrorMessage(error, ERROR_MESSAGES, VERIFICATION_ERROR_FALLBACK);
 }
 
-export function VerificationTab({ onPendingCountChange }: VerificationTabProps) {
+function getDecisionFromType(decisionType?: MissionLogDecisionType | null): VerificationDecision | null {
+  if (decisionType === "AUTO_APPROVE" || decisionType === "MANUAL_APPROVE") return "approved";
+  if (decisionType === "AUTO_REJECT" || decisionType === "MANUAL_REJECT") return "rejected";
+  return null;
+}
+
+export function VerificationTab({ onPendingCountChange, decisionsById, onDecisionMade, onDecisionReverted, rejectsById, onRejectInfoSet }: VerificationTabProps) {
   const params = useParams<{ crewId: string }>();
   const crewId = parseRouteNumber(params.crewId);
   const [reviewFilter, setReviewFilter] = useState<MissionLogReviewBucket>("urgent");
+  const isInitialLoad = useRef(true);
   const [items, setItems] = useState<HostCertificationMock[]>([]);
   const [counts, setCounts] = useState(EMPTY_COUNTS);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -110,6 +128,16 @@ export function VerificationTab({ onPendingCountChange }: VerificationTabProps) 
       setItems((current) => cursor ? [...current, ...nextItems] : nextItems);
       setNextCursor(data.next_cursor);
       updateCounts(data.counts);
+
+      if (!cursor && isInitialLoad.current) {
+        isInitialLoad.current = false;
+        if (data.counts.urgent === 0) {
+          const firstNonEmpty = (["warning", "normal"] as const).find(
+            (bucket) => data.counts[bucket] > 0,
+          );
+          if (firstNonEmpty) setReviewFilter(firstNonEmpty);
+        }
+      }
     } catch (error) {
       setToastMessage(getErrorMessage(error));
       setToastType("error");
@@ -126,10 +154,36 @@ export function VerificationTab({ onPendingCountChange }: VerificationTabProps) 
     void fetchItems();
   }, [fetchItems]);
 
+  useEffect(() => {
+    if (reviewFilter === "decided") {
+      console.log("[VerificationTab] decided 탭 진입, items:", items);
+    }
+  }, [reviewFilter, items]);
+
+  const markDecided = (missionLogId: number, decision: VerificationDecision) => {
+    onDecisionMade(missionLogId, decision);
+
+    setItems((current) =>
+      current.map((item) =>
+        item.mission_log_id === missionLogId
+          ? {
+              ...item,
+              certification_status: (decision === "approved" ? "SUCCESS" : "FAILED") as import("@/types/domain").CertificationStatus,
+              decision_type: (decision === "approved" ? "MANUAL_APPROVE" : "MANUAL_REJECT") as import("@/types/domain").MissionLogDecisionType,
+            }
+          : item,
+      ),
+    );
+
+    const nextCounts = { ...counts, [reviewFilter]: Math.max(0, counts[reviewFilter] - 1) };
+    setCounts(nextCounts);
+    onPendingCountChange?.(nextCounts.urgent + nextCounts.warning + nextCounts.normal);
+  };
+
   const handleApprove = async (missionLogId: number) => {
     try {
       await approveMissionLog(missionLogId);
-      await fetchItems();
+      markDecided(missionLogId, "approved");
       return true;
     } catch (error) {
       setToastMessage(getErrorMessage(error));
@@ -148,7 +202,38 @@ export function VerificationTab({ onPendingCountChange }: VerificationTabProps) 
         reject_reason_code: reason.code,
         reject_memo: reason.memo,
       });
-      await fetchItems();
+      markDecided(missionLogId, "rejected");
+      return true;
+    } catch (error) {
+      setToastMessage(getErrorMessage(error));
+      setToastType("error");
+      setIsToastOpen(true);
+      return false;
+    }
+  };
+
+  const handleRevert = async (missionLogId: number) => {
+    try {
+      await revertMissionLogModeration(missionLogId);
+      onDecisionReverted(missionLogId);
+      setItems((current) =>
+        current.map((item) =>
+          item.mission_log_id === missionLogId
+            ? {
+                ...item,
+                certification_status: "PENDING_REVIEW" as import("@/types/domain").CertificationStatus,
+                decision_type: null,
+                reject_reason_code: null,
+              }
+            : item,
+        ),
+      );
+      const nextCounts = { ...counts, [reviewFilter]: counts[reviewFilter] + 1 };
+      setCounts(nextCounts);
+      onPendingCountChange?.(nextCounts.urgent + nextCounts.warning + nextCounts.normal);
+      setToastMessage("검토 대기로 되돌렸어요.");
+      setToastType("success");
+      setIsToastOpen(true);
       return true;
     } catch (error) {
       setToastMessage(getErrorMessage(error));
@@ -181,7 +266,8 @@ export function VerificationTab({ onPendingCountChange }: VerificationTabProps) 
                 isActive ? styles.active : styles.inactive
               }`}
             >
-              {filter.label} <span className="font-extrabold">{counts[filter.value]}</span>
+              {filter.label}{" "}
+              <span className="font-extrabold">{counts[filter.value]}</span>
             </button>
           );
         })}
@@ -192,7 +278,10 @@ export function VerificationTab({ onPendingCountChange }: VerificationTabProps) 
           인증 목록을 불러오는 중...
         </div>
       ) : items.length === 0 ? (
-        <EmptyState icon={<ShieldCheck size={44} className="text-primary-green" />} title="검토할 인증이 없어요" />
+        <EmptyState
+          icon={<ShieldCheck size={44} className="text-primary-green" />}
+          title={reviewFilter === "decided" ? "결정된 인증이 없어요" : "검토할 인증이 없어요"}
+        />
       ) : (
         <div className="flex flex-col gap-3">
           {items.map((item) => (
@@ -200,11 +289,15 @@ export function VerificationTab({ onPendingCountChange }: VerificationTabProps) 
               key={item.mission_log_id}
               item={item}
               isExpanded={expandedMissionLogId === item.mission_log_id}
+              decision={decisionsById[item.mission_log_id] ?? getDecisionFromType(item.decision_type)}
+              rejectInfo={rejectsById[item.mission_log_id] ?? null}
               onToggle={() => setExpandedMissionLogId((current) =>
                 current === item.mission_log_id ? null : item.mission_log_id
               )}
               onApprove={() => handleApprove(item.mission_log_id)}
               onReject={(reason) => handleReject(item.mission_log_id, reason)}
+              onRevert={() => handleRevert(item.mission_log_id)}
+              onRejectInfoSet={(info) => onRejectInfoSet(item.mission_log_id, info)}
             />
           ))}
           {nextCursor && (
