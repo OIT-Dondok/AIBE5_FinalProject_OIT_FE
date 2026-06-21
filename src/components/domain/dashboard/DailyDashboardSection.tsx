@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { ArrowDown, ArrowUp, CheckCircle2, Clock3, Info } from "lucide-react";
 
-import type { ProjectionCopy } from "@/mocks/data/dashboard";
+import { DELTA_TOOLTIP_TEXT, type ProjectionCopy } from "@/mocks/data/dashboard";
 
 import {
   DashboardCard,
+  InfoTooltip,
   ProjectionTooltip,
   SegmentRing,
 } from "./DashboardPrimitives";
@@ -29,12 +30,29 @@ export function DailyDashboardSection({
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-center gap-2">
-        <h2 className="text-sm font-black text-text-primary">
+        <h2 className="min-w-0 truncate text-sm font-black text-text-primary">
           {dashboard.crewName}
         </h2>
-        <span className="rounded-full bg-success-green px-3 py-1 text-[11px] font-extrabold text-primary-green">
+        <span className="shrink-0 rounded-full bg-success-green px-3 py-1 text-[11px] font-extrabold text-primary-green">
           {dashboard.ddayLabel}
         </span>
+        {dashboard.todayDeltaLabel && (
+          <span className="ml-auto inline-flex shrink-0 items-center gap-1 text-[11px]">
+            <span className="font-bold text-text-secondary">오늘 변동</span>
+            <span
+              className={`font-extrabold ${
+                dashboard.todayDeltaTrend === "up"
+                  ? "text-primary-green"
+                  : dashboard.todayDeltaTrend === "down"
+                    ? "text-red-500"
+                    : "text-text-secondary"
+              }`}
+            >
+              {dashboard.todayDeltaLabel}
+            </span>
+            <InfoTooltip ariaLabel="오늘 변동 안내">{DELTA_TOOLTIP_TEXT}</InfoTooltip>
+          </span>
+        )}
       </div>
 
       <DashboardCard className="mb-1 flex items-center gap-5 border-primary-green/25 bg-card/95 px-5 py-6 shadow-[0_14px_30px_rgba(94,155,115,0.16)] ring-1 ring-primary-green/10">

@@ -167,6 +167,27 @@ function buildDepositPnl(pnl: number): { label: string; trend: Trend } {
   return { label: "±0원", trend: "flat" };
 }
 
+// my_expected_refund_delta_amount(직전 배치 대비 변동) → "오늘 변동" 라벨/추세.
+// 변동 null이면 라벨 null(숨김). 변동률은 직전값(현재 − 변동) 기준으로 계산하고,
+// 직전값이 0이거나 산출 불가하면 % 없이 금액만 표시한다.
+function buildTodayDelta(
+  delta: number | null,
+  current: number | null,
+): { label: string | null; trend: Trend } {
+  if (delta == null) return { label: null, trend: "flat" };
+
+  let label = formatSignedWon(delta);
+  const base = current == null ? null : current - delta; // 직전 예상 환급금
+
+  if (delta !== 0 && base != null && base > 0) {
+    const pct = (delta / base) * 100;
+    const prefix = pct > 0 ? "+" : "";
+    label += ` (${prefix}${pct.toFixed(1)}%)`;
+  }
+
+  return { label, trend: deltaTrend(delta) };
+}
+
 function formatRankDelta(delta: number | null): { label: string | null; trend: Trend } {
   if (delta == null) return { label: null, trend: "flat" };
   if (delta > 0) return { label: `${delta}단계 상승`, trend: "up" };
@@ -225,8 +246,9 @@ export interface CrewDashboardView {
   segments: CrewDashboardSegmentView[];
   successCount: string;
   expectedRefund: string;
-  expectedRefundDelta: string | null;
-  expectedRefundTrend: Trend;
+  // 직전 배치 대비 변동("오늘 변동") — 메인 카드 헤더 표기. 변동 null이면 null → 숨김
+  todayDeltaLabel: string | null; // "+3,000원 (+30%)" / "+3,000원" / "0원"
+  todayDeltaTrend: Trend;
   // 보증금 대비 손익 보조줄. 예상 환급금이 null이면 prefix=null → 보조줄 숨김
   depositComparePrefix: string | null; // "보증금 10,000원 대비"
   depositPnlLabel: string; // "+3,000원" / "-1,000원" / "±0원"
@@ -250,6 +272,11 @@ export function mapCrewDashboard(res: DashboardResponse): CrewDashboardView {
       ? null
       : buildDepositPnl(res.my_expected_refund_amount - res.my_deposit_amount);
 
+  const todayDelta = buildTodayDelta(
+    res.my_expected_refund_delta_amount,
+    res.my_expected_refund_amount,
+  );
+
   return {
     crewId: res.crew_id,
     crewName: res.crew_name,
@@ -266,11 +293,8 @@ export function mapCrewDashboard(res: DashboardResponse): CrewDashboardView {
     })),
     successCount: res.my_success_count == null ? "—" : `${res.my_success_count}회`,
     expectedRefund: formatWon(res.my_expected_refund_amount),
-    expectedRefundDelta:
-      res.my_expected_refund_delta_amount == null
-        ? null
-        : formatSignedWon(res.my_expected_refund_delta_amount),
-    expectedRefundTrend: deltaTrend(res.my_expected_refund_delta_amount),
+    todayDeltaLabel: todayDelta.label,
+    todayDeltaTrend: todayDelta.trend,
     depositComparePrefix:
       depositPnl == null
         ? null
