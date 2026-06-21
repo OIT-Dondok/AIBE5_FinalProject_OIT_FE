@@ -1,3 +1,5 @@
+import { formatDateTimeDot } from "@/utils/date";
+
 import type {
   CrewCategory,
   DashboardResponse,
@@ -160,6 +162,34 @@ function formatDday(days: number | null): string {
   return `D-${days}`;
 }
 
+// 보증금 대비 손익(예상 환급금 − 보증금) 라벨/추세. 손익 0이면 "±0원"
+function buildDepositPnl(pnl: number): { label: string; trend: Trend } {
+  if (pnl > 0) return { label: formatSignedWon(pnl), trend: "up" };
+  if (pnl < 0) return { label: formatSignedWon(pnl), trend: "down" }; // toLocaleString이 '-' 포함
+  return { label: "±0원", trend: "flat" };
+}
+
+// my_expected_refund_delta_amount(직전 배치 대비 변동) → "오늘 변동" 라벨/추세.
+// 변동 null이면 라벨 null(숨김). 변동률은 직전값(현재 − 변동) 기준으로 계산하고,
+// 직전값이 0이거나 산출 불가하면 % 없이 금액만 표시한다.
+function buildTodayDelta(
+  delta: number | null,
+  current: number | null,
+): { label: string | null; trend: Trend } {
+  if (delta == null) return { label: null, trend: "flat" };
+
+  let label = formatSignedWon(delta);
+  const base = current == null ? null : current - delta; // 직전 예상 환급금
+
+  if (delta !== 0 && base != null && base > 0) {
+    const pct = (delta / base) * 100;
+    const prefix = pct > 0 ? "+" : "";
+    label += ` (${prefix}${pct.toFixed(1)}%)`;
+  }
+
+  return { label, trend: deltaTrend(delta) };
+}
+
 function formatRankDelta(delta: number | null): { label: string | null; trend: Trend } {
   if (delta == null) return { label: null, trend: "flat" };
   if (delta > 0) return { label: `${delta}단계 상승`, trend: "up" };
@@ -218,12 +248,18 @@ export interface CrewDashboardView {
   segments: CrewDashboardSegmentView[];
   successCount: string;
   expectedRefund: string;
-  expectedRefundDelta: string | null;
-  expectedRefundTrend: Trend;
+  // 직전 배치 대비 변동("오늘 변동") — 메인 카드 헤더 표기. 변동 null이면 null → 숨김
+  todayDeltaLabel: string | null; // "+3,000원 (+30.0%)" / "+3,000원" / "0원"
+  todayDeltaTrend: Trend;
+  // 보증금 대비 손익 보조줄. 예상 환급금이 null이면 prefix=null → 보조줄 숨김
+  depositComparePrefix: string | null; // "보증금 10,000원 대비"
+  depositPnlLabel: string; // "+3,000원" / "-1,000원" / "±0원"
+  depositPnlTrend: Trend;
   rankLabel: string;
   rankDeltaLabel: string | null;
   rankTrend: Trend;
   nextSettlementTime: string | null;
+  updatedAtLabel: string; // 데이터 기준 시각 "2026.6.19 17:40" (파싱 불가 시 "")
   notice: string | null;
   // SETTLEMENT_RESULT_AVAILABLE일 때 정산 상세(/crews/{crewId}/settlement) 유도
   showSettlementLink: boolean;
@@ -232,6 +268,17 @@ export interface CrewDashboardView {
 export function mapCrewDashboard(res: DashboardResponse): CrewDashboardView {
   const me = res.participants.find((p) => p.is_me) ?? null;
   const rankDelta = formatRankDelta(res.rank_delta);
+
+  // 보증금 대비 손익 = 예상 환급금 − 보증금. 예상 환급금 null이면 손익 산출 불가 → 보조줄 숨김
+  const depositPnl =
+    res.my_expected_refund_amount == null
+      ? null
+      : buildDepositPnl(res.my_expected_refund_amount - res.my_deposit_amount);
+
+  const todayDelta = buildTodayDelta(
+    res.my_expected_refund_delta_amount,
+    res.my_expected_refund_amount,
+  );
 
   return {
     crewId: res.crew_id,
@@ -249,11 +296,12 @@ export function mapCrewDashboard(res: DashboardResponse): CrewDashboardView {
     })),
     successCount: res.my_success_count == null ? "—" : `${res.my_success_count}회`,
     expectedRefund: formatWon(res.my_expected_refund_amount),
-    expectedRefundDelta:
-      res.my_expected_refund_delta_amount == null
-        ? null
-        : formatSignedWon(res.my_expected_refund_delta_amount),
-    expectedRefundTrend: deltaTrend(res.my_expected_refund_delta_amount),
+    todayDeltaLabel: todayDelta.label,
+    todayDeltaTrend: todayDelta.trend,
+    depositComparePrefix:
+      depositPnl == null ? null : `보증금 ${formatWon(res.my_deposit_amount)} 대비`,
+    depositPnlLabel: depositPnl?.label ?? "",
+    depositPnlTrend: depositPnl?.trend ?? "flat",
     // rank가 null(예: 배치 전)이어도 participant_count가 있으면 "전체 N명"은 표시
     rankLabel:
       res.participant_count != null
@@ -262,6 +310,7 @@ export function mapCrewDashboard(res: DashboardResponse): CrewDashboardView {
     rankDeltaLabel: rankDelta.label,
     rankTrend: rankDelta.trend,
     nextSettlementTime: formatNextSettlement(res.next_settlement_at),
+    updatedAtLabel: formatDateTimeDot(res.updated_at),
     notice: noticeMessage(res.projection_notice),
     showSettlementLink:
       res.projection_notice === "SETTLEMENT_RESULT_AVAILABLE" &&

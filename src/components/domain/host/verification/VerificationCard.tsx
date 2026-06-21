@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Check, ChevronDown, ChevronRight, Maximize2, X } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Maximize2, RotateCcw, X } from "lucide-react";
 
 import { BottomSheet } from "@/components/common/BottomSheet";
 import { HostActionButton } from "@/components/domain/host/common/HostActionButton";
@@ -14,15 +14,20 @@ import {
   exifDetailStyle,
   exifSummaryLabel,
 } from "@/components/domain/host/verification/verificationDisplay";
-import type { HostCertificationMock } from "@/mocks/data/host";
+import type { VerificationCardItem } from "@/components/domain/host/hostConsoleTypes";
 import type { RejectReasonCode } from "@/types/domain";
+import type { VerificationRejectInfo } from "@/components/domain/host/hostConsoleTypes";
 
 type VerificationCardProps = {
-  item: HostCertificationMock;
+  item: VerificationCardItem;
   isExpanded: boolean;
+  decision?: "approved" | "rejected" | null;
+  rejectInfo?: VerificationRejectInfo | null;
   onToggle: () => void;
   onApprove: () => Promise<boolean>;
   onReject: (reason: { code: RejectReasonCode; label: string; memo?: string }) => Promise<boolean>;
+  onRevert: () => Promise<boolean>;
+  onRejectInfoSet: (info: VerificationRejectInfo) => void;
 };
 
 const rejectReasonOptions: Array<{ value: RejectReasonCode; label: string; description: string }> = [
@@ -37,15 +42,21 @@ const rejectReasonOptions: Array<{ value: RejectReasonCode; label: string; descr
 export function VerificationCard({
   item,
   isExpanded,
+  decision = null,
+  rejectInfo = null,
   onToggle,
   onApprove,
   onReject,
+  onRevert,
+  onRejectInfoSet,
 }: VerificationCardProps) {
   const [isRejectSheetOpen, setIsRejectSheetOpen] = useState(false);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [confirmDecision, setConfirmDecision] = useState<"approved" | "rejected" | null>(null);
+  const [isRevertConfirmOpen, setIsRevertConfirmOpen] = useState(false);
   const [toastDecision, setToastDecision] = useState<"approved" | "rejected" | null>(null);
   const [selectedRejectReason, setSelectedRejectReason] = useState<RejectReasonCode | null>(null);
+
   const [rejectMemo, setRejectMemo] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isRejectConfirmDisabled =
@@ -56,6 +67,15 @@ export function VerificationCard({
       : item.decision_type === "AUTO_REJECT"
         ? "rejected"
         : null;
+  const visibleDecision = decision ?? automaticDecision;
+  const isDecided = visibleDecision !== null;
+  const rejectReasonDisplay: VerificationRejectInfo | null =
+    visibleDecision === "rejected"
+      ? (rejectInfo ??
+          (item.reject_reason_code
+            ? { label: rejectReasonOptions.find((o) => o.value === item.reject_reason_code)?.label ?? item.reject_reason_code }
+            : null))
+      : null;
 
   const handleHeaderClick = (e: React.MouseEvent | React.KeyboardEvent) => {
     if ((e.target as HTMLElement).closest("a")) {
@@ -106,10 +126,24 @@ export function VerificationCard({
       });
       setIsSubmitting(false);
       if (!succeeded) return;
+      onRejectInfoSet({
+        label: selectedRejectReasonLabel,
+        memo: rejectMemo.trim() || undefined,
+      });
       setToastDecision("rejected");
     }
 
     setConfirmDecision(null);
+  };
+
+  const handleConfirmRevert = async () => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    const succeeded = await onRevert();
+    setIsSubmitting(false);
+    if (!succeeded) return;
+    setIsRevertConfirmOpen(false);
   };
 
   return (
@@ -129,7 +163,7 @@ export function VerificationCard({
               handleHeaderClick(e);
             }
           }}
-          className="w-full px-4 py-3.5 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#4d73d9] focus:ring-inset rounded-t-[22px]"
+          className="w-full px-4 py-3.5 text-left cursor-pointer rounded-t-[22px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4d73d9] focus-visible:ring-inset"
         >
           <div className="flex items-center justify-between gap-3">
             <Link
@@ -159,17 +193,17 @@ export function VerificationCard({
           <div className="flex shrink-0 items-center gap-2">
               <span
                 className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
-                  automaticDecision === "approved"
+                  visibleDecision === "approved"
                     ? "bg-success-green/65 text-primary-green"
-                    : automaticDecision === "rejected"
+                    : visibleDecision === "rejected"
                       ? "bg-[#FCEDEC] text-[#DB5C55]"
                       : exifBadgeStyle[item.exif_status]
                 }`}
               >
-                {automaticDecision === "approved"
-                  ? "자동 승인됨"
-                  : automaticDecision === "rejected"
-                    ? "자동 거절됨"
+                {visibleDecision === "approved"
+                  ? "승인됨"
+                  : visibleDecision === "rejected"
+                    ? "거절됨"
                     : `Exif ${exifSummaryLabel[item.exif_status]}`}
               </span>
               <span className={`flex h-6 w-5 items-center justify-center ${isExpanded ? "text-[#4d73d9]" : "text-[#aeaaa1]"}`}>
@@ -180,7 +214,7 @@ export function VerificationCard({
         </div>
 
         {isExpanded && (
-          <div className="border-t border-text-secondary/10 bg-[#FAFCFF] px-4 pb-4 pt-3">
+          <div className="bg-[#FAFCFF] px-4 pb-4 pt-3">
             <div className="flex items-center gap-3">
               <button
                 type="button"
@@ -223,22 +257,67 @@ export function VerificationCard({
               &quot;{item.comment}&quot;
             </p>
 
-            <div className="mt-3 grid grid-cols-2 gap-3">
-              <HostActionButton
-                variant="reject"
-                icon={<X size={16} strokeWidth={2.8} />}
-                onClick={() => setIsRejectSheetOpen(true)}
+            {isDecided ? (
+              <div
+                className={`mt-3 flex items-center justify-between gap-3 rounded-2xl px-4 py-3 ${
+                  visibleDecision === "rejected" ? "bg-[#FCEDEC]" : "bg-[#E8F2EB]"
+                }`}
               >
-                거절
-              </HostActionButton>
-              <HostActionButton
-                variant="approve"
-                icon={<Check size={16} strokeWidth={2.8} />}
-                onClick={() => setConfirmDecision("approved")}
-              >
-                승인
-              </HostActionButton>
-            </div>
+                <div
+                  className={`flex min-w-0 items-center gap-2.5 ${
+                    visibleDecision === "rejected" ? "text-[#DB5C55]" : "text-primary-green"
+                  }`}
+                >
+                  {visibleDecision === "rejected" ? (
+                    <X size={18} strokeWidth={2.8} className="shrink-0" />
+                  ) : (
+                    <Check size={18} strokeWidth={2.8} className="shrink-0" />
+                  )}
+                  <div className="min-w-0">
+                    {visibleDecision === "rejected" && rejectReasonDisplay ? (
+                      <>
+                        <p className="text-sm font-extrabold">
+                          거절 완료 · {rejectReasonDisplay.label}
+                        </p>
+                        {rejectReasonDisplay.memo && (
+                          <p className="mt-0.5 truncate text-xs font-medium opacity-80">
+                            {rejectReasonDisplay.memo}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="min-w-0 text-sm font-extrabold">
+                        {visibleDecision === "approved" ? "승인 완료" : "거절 완료"} · 정산에 반영됩니다
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsRevertConfirmOpen(true)}
+                  className="h-10 shrink-0 rounded-xl border border-[#E2D8C9] bg-[#F7F3EA] px-4 text-sm font-extrabold text-text-primary transition-colors hover:bg-[#EFE8DC] active:scale-[0.98]"
+                >
+                  되돌리기
+                </button>
+              </div>
+            ) : (
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <HostActionButton
+                  variant="reject"
+                  icon={<X size={16} strokeWidth={2.8} />}
+                  onClick={() => setIsRejectSheetOpen(true)}
+                >
+                  거절
+                </HostActionButton>
+                <HostActionButton
+                  variant="approve"
+                  icon={<Check size={16} strokeWidth={2.8} />}
+                  onClick={() => setConfirmDecision("approved")}
+                >
+                  승인
+                </HostActionButton>
+              </div>
+            )}
           </div>
         )}
       </article>
@@ -339,6 +418,25 @@ export function VerificationCard({
           confirmLabel={confirmDecision === "approved" ? "승인" : "거절"}
           onCancel={() => setConfirmDecision(null)}
           onConfirm={() => void handleConfirmModeration()}
+          isSubmitting={isSubmitting}
+        />
+      )}
+
+      {isRevertConfirmOpen && (
+        <HostConfirmDialog
+          labelledById={`verification-revert-title-${item.mission_log_id}`}
+          title="되돌리시겠습니까?"
+          description={
+            <>
+              {item.nickname}님의 {visibleDecision === "approved" ? "승인" : "거절"} 결정을 취소하고 다시 검토 대기로
+              돌립니다.
+            </>
+          }
+          icon={<RotateCcw size={22} strokeWidth={2.6} />}
+          tone="neutral"
+          confirmLabel="되돌리기"
+          onCancel={() => setIsRevertConfirmOpen(false)}
+          onConfirm={() => void handleConfirmRevert()}
           isSubmitting={isSubmitting}
         />
       )}
