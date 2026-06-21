@@ -70,7 +70,11 @@ export function DailyDashboardSection({
           <strong className="mt-3 text-xl font-black tracking-tight text-text-primary">
             {dashboard.expectedRefund}
           </strong>
-          <DeltaText label={dashboard.expectedRefundDelta} trend={dashboard.expectedRefundTrend} />
+          <DepositCompareText
+            prefix={dashboard.depositComparePrefix}
+            pnlLabel={dashboard.depositPnlLabel}
+            trend={dashboard.depositPnlTrend}
+          />
         </MetricCard>
 
         <MetricCard label="현재 순위">
@@ -200,6 +204,33 @@ function DeltaText({
       {withArrow && trend === "down" && <ArrowDown size={12} />}
       {label}
     </span>
+  );
+}
+
+// 예상 환급금 카드 보조줄 — "보증금 N원 대비 +M원". prefix null이면 카드 높이 유지용 빈 placeholder
+function DepositCompareText({
+  prefix,
+  pnlLabel,
+  trend,
+}: {
+  prefix: string | null;
+  pnlLabel: string;
+  trend: Trend;
+}) {
+  if (!prefix) return <span className="mt-2 h-[16px]" />;
+
+  const color =
+    trend === "up"
+      ? "text-primary-green"
+      : trend === "down"
+        ? "text-red-500"
+        : "text-text-secondary";
+
+  return (
+    <p className="mt-2 text-[11px] font-bold leading-snug text-text-secondary">
+      {prefix}{" "}
+      <span className={`font-extrabold ${color}`}>{pnlLabel}</span>
+    </p>
   );
 }
 

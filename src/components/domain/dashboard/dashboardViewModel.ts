@@ -160,6 +160,13 @@ function formatDday(days: number | null): string {
   return `D-${days}`;
 }
 
+// 보증금 대비 손익(예상 환급금 − 보증금) 라벨/추세. 손익 0이면 "±0원"
+function buildDepositPnl(pnl: number): { label: string; trend: Trend } {
+  if (pnl > 0) return { label: formatSignedWon(pnl), trend: "up" };
+  if (pnl < 0) return { label: formatSignedWon(pnl), trend: "down" }; // toLocaleString이 '-' 포함
+  return { label: "±0원", trend: "flat" };
+}
+
 function formatRankDelta(delta: number | null): { label: string | null; trend: Trend } {
   if (delta == null) return { label: null, trend: "flat" };
   if (delta > 0) return { label: `${delta}단계 상승`, trend: "up" };
@@ -220,6 +227,10 @@ export interface CrewDashboardView {
   expectedRefund: string;
   expectedRefundDelta: string | null;
   expectedRefundTrend: Trend;
+  // 보증금 대비 손익 보조줄. 예상 환급금이 null이면 prefix=null → 보조줄 숨김
+  depositComparePrefix: string | null; // "보증금 10,000원 대비"
+  depositPnlLabel: string; // "+3,000원" / "-1,000원" / "±0원"
+  depositPnlTrend: Trend;
   rankLabel: string;
   rankDeltaLabel: string | null;
   rankTrend: Trend;
@@ -232,6 +243,12 @@ export interface CrewDashboardView {
 export function mapCrewDashboard(res: DashboardResponse): CrewDashboardView {
   const me = res.participants.find((p) => p.is_me) ?? null;
   const rankDelta = formatRankDelta(res.rank_delta);
+
+  // 보증금 대비 손익 = 예상 환급금 − 보증금. 예상 환급금 null이면 손익 산출 불가 → 보조줄 숨김
+  const depositPnl =
+    res.my_expected_refund_amount == null
+      ? null
+      : buildDepositPnl(res.my_expected_refund_amount - res.my_deposit_amount);
 
   return {
     crewId: res.crew_id,
@@ -254,6 +271,12 @@ export function mapCrewDashboard(res: DashboardResponse): CrewDashboardView {
         ? null
         : formatSignedWon(res.my_expected_refund_delta_amount),
     expectedRefundTrend: deltaTrend(res.my_expected_refund_delta_amount),
+    depositComparePrefix:
+      depositPnl == null
+        ? null
+        : `보증금 ${res.my_deposit_amount.toLocaleString("ko-KR")}원 대비`,
+    depositPnlLabel: depositPnl?.label ?? "",
+    depositPnlTrend: depositPnl?.trend ?? "flat",
     // rank가 null(예: 배치 전)이어도 participant_count가 있으면 "전체 N명"은 표시
     rankLabel:
       res.participant_count != null
