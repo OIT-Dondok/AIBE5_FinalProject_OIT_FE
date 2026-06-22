@@ -51,13 +51,28 @@ function TodayVerificationStatus() {
         }
 
         const todayStr = getKstTodayYmd();
-        const feedRes = await getFeed({
-          from: todayStr,
-          to: todayStr,
-          limit: 100,
-        });
+        const allFeedItems = [];
+        let cursor: string | undefined;
+        let hasMore = true;
 
-        const myFeedItems = feedRes.data.feed_items.filter(
+        while (hasMore) {
+          const feedRes = await getFeed({
+            from: todayStr,
+            to: todayStr,
+            limit: 50,
+            cursor,
+          });
+
+          allFeedItems.push(...feedRes.data.feed_items);
+
+          if (feedRes.data.next_cursor) {
+            cursor = feedRes.data.next_cursor;
+          } else {
+            hasMore = false;
+          }
+        }
+
+        const myFeedItems = allFeedItems.filter(
           (item) => item.member_uuid === user.member_uuid
         );
 
@@ -74,8 +89,8 @@ function TodayVerificationStatus() {
         if (active) {
           setActiveCrews(statusItems);
         }
-      } catch {
-        // 에러 무시
+      } catch (error) {
+        console.error('Failed to load today verification status:', error);
       } finally {
         if (active) setLoading(false);
       }

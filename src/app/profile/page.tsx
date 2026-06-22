@@ -27,9 +27,6 @@ import {
   requestProfileImageUploadUrl,
   updateMyProfile,
 } from "@/services/profile";
-import { getFeed } from "@/services/feed";
-import { useAuthStore } from "@/store/authStore";
-import { getKstTodayYmd } from "@/utils/date";
 import { prepareImageForUpload, UnsupportedImageError } from "@/lib/prepareImageForUpload";
 import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 import { ERROR_CODE } from "@/types/common";
