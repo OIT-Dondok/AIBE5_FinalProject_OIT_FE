@@ -8,9 +8,10 @@ import { Header } from '@/components/common/Header';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FeedCalendar } from '@/components/domain/feed/FeedCalendar';
 import { FeedCrewFilter } from '@/components/domain/feed/FeedCrewFilter';
+import { FeedDateFilter } from '@/components/domain/feed/FeedDateFilter';
+import type { FeedDateMode } from '@/components/domain/feed/FeedDateFilter';
 import { FeedItem } from '@/components/domain/feed/FeedItem';
 import { FeedSkeletonList } from '@/components/domain/feed/FeedItemSkeleton';
-import { FeedPeriodCard } from '@/components/domain/feed/FeedPeriodCard';
 import FeedNoticeList from '@/components/domain/feed/FeedNoticeList';
 import { Toast } from '@/components/common/Toast';
 import type { ToastType } from '@/components/common/Toast';
@@ -20,6 +21,7 @@ import type { AvailableCrew, FeedItem as FeedItemType, FeedPeriod, CrewNotice, M
 import { useAuthStore } from '@/store/authStore';
 import { ERROR_CODE } from '@/types/common';
 import type { ErrorResponse } from '@/types/common';
+import { getKstTodayYmd, getMonthPeriod, toMonthValue } from '@/utils/date';
 
 export default function FeedPage() {
   const router = useRouter();
@@ -33,6 +35,9 @@ export default function FeedPage() {
   const [selectedCrewId, setSelectedCrewId] = useState<number | null>(initialCrewId);
   // null = 전체 기간(날짜 필터 없음). 달력에서 선택 시 from/to 적용
   const [period, setPeriod] = useState<FeedPeriod | null>(null);
+  const [dateMode, setDateMode] = useState<FeedDateMode>('period');
+  const [selectedDay, setSelectedDay] = useState(() => getKstTodayYmd());
+  const [selectedMonth, setSelectedMonth] = useState(() => toMonthValue(getKstTodayYmd()));
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   // 뷰 모드 및 공지사항 관련 상태
@@ -260,6 +265,39 @@ export default function FeedPage() {
     observerRef.current.observe(node);
   }, []);
 
+  const handleClearPeriod = useCallback(() => {
+    setDateMode('period');
+    setPeriod(null);
+    setIsCalendarOpen(false);
+  }, []);
+
+  const handleDayChange = useCallback((day: string) => {
+    setSelectedDay(day);
+    setPeriod({ start_date: day, end_date: day });
+    setIsCalendarOpen(false);
+  }, []);
+
+  const handleMonthChange = useCallback((month: string) => {
+    setSelectedMonth(month);
+    setPeriod(getMonthPeriod(month));
+    setIsCalendarOpen(false);
+  }, []);
+
+  const handleDateModeChange = useCallback((mode: FeedDateMode) => {
+    setDateMode(mode);
+    if (mode === 'daily') {
+      setPeriod({ start_date: selectedDay, end_date: selectedDay });
+      setIsCalendarOpen(true);
+      return;
+    }
+    if (mode === 'monthly') {
+      setPeriod(getMonthPeriod(selectedMonth));
+      setIsCalendarOpen(true);
+      return;
+    }
+    setIsCalendarOpen(true);
+  }, [selectedDay, selectedMonth]);
+
 
   const hasCrews = availableCrews.length > 0;
 
@@ -308,25 +346,41 @@ export default function FeedPage() {
         <div className="px-5 flex flex-col gap-4">
           {viewMode === 'feed' ? (
             <>
-              {/* 기간 카드 */}
-              <FeedPeriodCard
+              {/* 기간 필터 */}
+              <FeedDateFilter
+                mode={dateMode}
                 period={period}
+                selectedDay={selectedDay}
+                selectedMonth={selectedMonth}
                 isCalendarOpen={isCalendarOpen}
-                onOpenCalendar={() => setIsCalendarOpen((v) => !v)}
+                onDayChange={handleDayChange}
+                onMonthChange={handleMonthChange}
+                onClear={handleClearPeriod}
+                onToggleCalendar={() => setIsCalendarOpen((v) => !v)}
               />
 
               {/* 캘린더 */}
               {isCalendarOpen && (
                 <FeedCalendar
+                  key={dateMode}
+                  mode={dateMode}
                   currentPeriod={period}
+                  selectionMode={dateMode === 'daily' ? 'single' : 'range'}
+                  onModeChange={handleDateModeChange}
                   onApply={(newPeriod) => {
+                    if (dateMode === 'daily') {
+                      handleDayChange(newPeriod.start_date);
+                      return;
+                    }
+                    if (dateMode === 'monthly') {
+                      handleMonthChange(newPeriod.start_date.slice(0, 7));
+                      return;
+                    }
+                    setDateMode('period');
                     setPeriod(newPeriod);
                     setIsCalendarOpen(false);
                   }}
-                  onClear={() => {
-                    setPeriod(null);
-                    setIsCalendarOpen(false);
-                  }}
+                  onClear={handleClearPeriod}
                   onClose={() => setIsCalendarOpen(false)}
                 />
               )}
@@ -383,7 +437,10 @@ export default function FeedPage() {
                       title="아직 인증 내역이 없어요"
                       description="기간을 바꿔서 다시 확인해보세요"
                       actionButtonText="기간 변경"
-                      onActionClick={() => setIsCalendarOpen(true)}
+                      onActionClick={() => {
+                        setDateMode('period');
+                        setIsCalendarOpen(true);
+                      }}
                     />
                   )
                 ) : (
