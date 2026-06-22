@@ -3,20 +3,29 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
+import type { FeedDateMode } from '@/components/domain/feed/FeedDateFilter';
 import type { FeedPeriod } from '@/types/domain';
+import { getMonthPeriod } from '@/utils/date';
 
 interface FeedCalendarProps {
+  mode: FeedDateMode;
   /** 현재 적용된 기간. null이면 전체 기간(필터 없음) */
   currentPeriod: FeedPeriod | null;
+  onModeChange: (mode: FeedDateMode) => void;
   onApply: (period: FeedPeriod) => void;
   /** 전체 기간으로 되돌리기(날짜 필터 해제) */
   onClear: () => void;
   onClose: () => void;
+  selectionMode?: 'range' | 'single';
 }
 
-type Tab = 'date' | 'period';
-
 const WEEK_LABELS = ['일', '월', '화', '수', '목', '금', '토'] as const;
+const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
+const MODE_OPTIONS: { value: FeedDateMode; label: string }[] = [
+  { value: 'daily', label: '일일' },
+  { value: 'monthly', label: '월간' },
+  { value: 'period', label: '기간' },
+];
 
 function toDateStr(year: number, month: number, day: number): string {
   return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -32,11 +41,18 @@ function todayStr(): string {
   return toDateStr(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
-export function FeedCalendar({ currentPeriod, onApply, onClear, onClose }: FeedCalendarProps) {
+export function FeedCalendar({
+  mode,
+  currentPeriod,
+  onModeChange,
+  onApply,
+  onClear,
+  onClose,
+  selectionMode = 'range',
+}: FeedCalendarProps) {
   const initial = parseInitialYM(currentPeriod?.start_date ?? todayStr());
   const [viewYear, setViewYear] = useState(initial.year);
   const [viewMonth, setViewMonth] = useState(initial.month);
-  const [tab, setTab] = useState<Tab>('period');
   const [selStart, setSelStart] = useState<string | null>(currentPeriod?.start_date ?? null);
   const [selEnd, setSelEnd] = useState<string | null>(currentPeriod?.end_date ?? null);
   const [pickingEnd, setPickingEnd] = useState(false);
@@ -55,31 +71,29 @@ export function FeedCalendar({ currentPeriod, onApply, onClear, onClose }: FeedC
     weeks.push(cells.slice(i, i + 7));
   }
 
-  const prevMonth = () => {
+  const prevPage = () => {
+    if (mode === 'monthly') {
+      setViewYear((y) => y - 1);
+      return;
+    }
     if (viewMonth === 0) { setViewYear((y) => y - 1); setViewMonth(11); }
     else setViewMonth((m) => m - 1);
   };
-  const nextMonth = () => {
+  const nextPage = () => {
+    if (mode === 'monthly') {
+      setViewYear((y) => y + 1);
+      return;
+    }
     if (viewMonth === 11) { setViewYear((y) => y + 1); setViewMonth(0); }
     else setViewMonth((m) => m + 1);
   };
 
-  const handleTabChange = (nextTab: Tab) => {
-    setTab(nextTab);
-    setSelStart(null);
-    setSelEnd(null);
-    setPickingEnd(false);
-  };
-
   const handleDayClick = (day: number) => {
     const dateStr = toDateStr(viewYear, viewMonth, day);
-    if (tab === 'date') {
-      setSelStart(dateStr);
-      setSelEnd(dateStr);
-      setPickingEnd(false);
+    if (selectionMode === 'single') {
+      onApply({ start_date: dateStr, end_date: dateStr });
       return;
     }
-    // period tab: 2-click selection
     if (!pickingEnd) {
       setSelStart(dateStr);
       setSelEnd(null);
@@ -111,12 +125,17 @@ export function FeedCalendar({ currentPeriod, onApply, onClear, onClose }: FeedC
     return `${base} text-text-primary hover:bg-text-secondary/10`;
   };
 
-  const canApply = selStart !== null;
+  const canApply = mode === 'monthly' || selStart !== null;
+  const selectedMonth = currentPeriod?.start_date.slice(0, 7) ?? '';
+
+  const applyViewedMonth = () => {
+    onApply(getMonthPeriod(`${viewYear}-${String(viewMonth + 1).padStart(2, '0')}`));
+  };
 
   const selectionHint =
     selStart && selEnd && selStart !== selEnd
       ? `${selStart} ~ ${selEnd}`
-      : selStart && tab === 'period' && !selEnd
+      : selStart && !selEnd
         ? `${selStart} · 종료일을 선택하세요`
         : selStart
           ? selStart
@@ -124,18 +143,18 @@ export function FeedCalendar({ currentPeriod, onApply, onClear, onClose }: FeedC
 
   return (
     <div className="bg-card rounded-card border border-text-secondary/10 shadow-card-elevated p-4">
-      {/* 날짜 / 기간 탭 */}
-      <div className="flex items-center bg-text-secondary/8 rounded-xl p-1 gap-1 mb-4">
-        {(['date', 'period'] as Tab[]).map((t) => (
+      <div className="flex items-center bg-text-secondary/10 p-1 rounded-full border border-text-secondary/5 mb-4">
+        {MODE_OPTIONS.map((option) => (
           <button
-            key={t}
+            key={option.value}
             type="button"
-            onClick={() => handleTabChange(t)}
-            className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
-              tab === t ? 'bg-card text-text-primary shadow-sm' : 'text-text-secondary'
-            }`}
+            onClick={() => onModeChange(option.value)}
+            className={`flex-1 py-1.5 text-xs font-bold rounded-full transition-all ${mode === option.value
+              ? 'bg-card text-text-primary shadow-sm'
+              : 'text-text-secondary hover:text-text-primary'
+              }`}
           >
-            {t === 'date' ? '날짜' : '기간'}
+            {option.label}
           </button>
         ))}
       </div>
@@ -144,56 +163,80 @@ export function FeedCalendar({ currentPeriod, onApply, onClear, onClose }: FeedC
       <div className="flex items-center justify-between mb-3">
         <button
           type="button"
-          onClick={prevMonth}
-          aria-label="이전 달"
+          onClick={prevPage}
+          aria-label={mode === 'monthly' ? '이전 연도' : '이전 달'}
           className="p-1.5 rounded-lg hover:bg-text-secondary/8 active:scale-95 transition-all"
         >
           <ChevronLeft size={16} className="text-text-secondary" />
         </button>
         <span className="text-sm font-extrabold text-text-primary tracking-tight">
-          {viewYear}·{viewMonth + 1}월
+          {mode === 'monthly' ? `${viewYear}년` : `${viewYear}년 ${viewMonth + 1}월`}
         </span>
         <button
           type="button"
-          onClick={nextMonth}
-          aria-label="다음 달"
+          onClick={nextPage}
+          aria-label={mode === 'monthly' ? '다음 연도' : '다음 달'}
           className="p-1.5 rounded-lg hover:bg-text-secondary/8 active:scale-95 transition-all"
         >
           <ChevronRight size={16} className="text-text-secondary" />
         </button>
       </div>
 
-      {/* 요일 헤더 */}
-      <div className="grid grid-cols-7 mb-1">
-        {WEEK_LABELS.map((label) => (
-          <div key={label} className="flex items-center justify-center py-1">
-            <span className="text-[10px] font-semibold text-text-secondary">{label}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* 날짜 그리드 */}
-      <div className="space-y-0.5">
-        {weeks.map((week, wi) => (
-          <div key={wi} className="grid grid-cols-7">
-            {week.map((day, di) => (
-              <div key={di} className="flex items-center justify-center py-0.5">
-                {day !== null ? (
-                  <button
-                    type="button"
-                    onClick={() => handleDayClick(day)}
-                    className={getDayClassName(day)}
-                  >
-                    {day}
-                  </button>
-                ) : (
-                  <span className="w-8 h-8" />
-                )}
+      {mode === 'monthly' ? (
+        <div className="grid grid-cols-3 gap-2">
+          {MONTH_OPTIONS.map((month) => {
+            const monthValue = `${viewYear}-${String(month).padStart(2, '0')}`;
+            const active = monthValue === selectedMonth;
+            return (
+              <button
+                key={monthValue}
+                type="button"
+                onClick={() => onApply(getMonthPeriod(monthValue))}
+                className={`py-3 rounded-button text-sm font-bold transition-all ${active
+                  ? 'bg-primary-green text-white'
+                  : 'bg-text-secondary/5 text-text-primary hover:bg-text-secondary/10'
+                  }`}
+              >
+                {month}월
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <>
+          {/* 요일 헤더 */}
+          <div className="grid grid-cols-7 mb-1">
+            {WEEK_LABELS.map((label) => (
+              <div key={label} className="flex items-center justify-center py-1">
+                <span className="text-[10px] font-semibold text-text-secondary">{label}</span>
               </div>
             ))}
           </div>
-        ))}
-      </div>
+
+          {/* 날짜 그리드 */}
+          <div className="space-y-0.5">
+            {weeks.map((week, wi) => (
+              <div key={wi} className="grid grid-cols-7">
+                {week.map((day, di) => (
+                  <div key={di} className="flex items-center justify-center py-0.5">
+                    {day !== null ? (
+                      <button
+                        type="button"
+                        onClick={() => handleDayClick(day)}
+                        className={getDayClassName(day)}
+                      >
+                        {day}
+                      </button>
+                    ) : (
+                      <span className="w-8 h-8" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       {/* 선택 상태 표시 */}
       {selectionHint && (
@@ -214,6 +257,10 @@ export function FeedCalendar({ currentPeriod, onApply, onClear, onClose }: FeedC
         <button
           type="button"
           onClick={() => {
+            if (mode === 'monthly') {
+              applyViewedMonth();
+              return;
+            }
             if (!selStart) return;
             onApply({ start_date: selStart, end_date: selEnd ?? selStart });
           }}
