@@ -10,10 +10,10 @@ interface FeedCertImageProps {
 }
 
 /**
- * 크루 인증 이미지 영역.
- * - imageUrl이 있으면 실제 이미지를 4:3으로 렌더
+ * 크루 인증 카드 썸네일 영역.
+ * - imageUrl이 있으면 실제 이미지를 1:1(정사각)로 크롭해 렌더
  * - 없으면 중립 배경 + 이미지 아이콘 placeholder (레이아웃 시프트 방지)
- * 카드/라이트박스가 동일한 외형을 공유하도록 컴포넌트로 분리.
+ * 카드 그리드 정렬을 위한 고정 비율 크롭 전용. 원본 비율 확대는 라이트박스가 담당.
  */
 export function FeedCertImage({
   imageUrl,
@@ -22,7 +22,7 @@ export function FeedCertImage({
 }: FeedCertImageProps) {
   return (
     <div
-      className={`relative w-full aspect-[4/3] overflow-hidden bg-gradient-to-br from-text-secondary/5 to-text-secondary/15 ${className}`}
+      className={`relative w-full aspect-square overflow-hidden bg-gradient-to-br from-text-secondary/5 to-text-secondary/15 ${className}`}
     >
       {/* placeholder — 이미지가 없을 때만 노출 */}
       {!imageUrl && (
