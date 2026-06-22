@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowDown, ArrowUp, CheckCircle2, Clock3, Info } from "lucide-react";
+import { ArrowDown, ArrowUp, CheckCircle2, ChevronRight, Clock3, Info, Users } from "lucide-react";
 
 import { DELTA_TOOLTIP_TEXT, type ProjectionCopy } from "@/mocks/data/dashboard";
 
@@ -144,6 +144,17 @@ export function DailyDashboardSection({
           </div>
         </DashboardCard>
       )}
+
+      <Link
+        href={`/crews/${dashboard.crewId}`}
+        className="w-full flex items-center justify-between gap-3 rounded-card border border-primary-blue/20 bg-primary-blue/5 p-4 text-left shadow-[0_4px_16px_rgba(76,115,217,0.08)] hover:border-primary-blue/30 hover:bg-primary-blue/10 transition-all active:scale-[0.99]"
+      >
+        <p className="min-w-0 flex-1 text-sm font-black text-primary-blue flex items-center gap-1.5">
+          <Users size={15} className="shrink-0 text-primary-blue" />
+          크루 페이지 보러가기
+        </p>
+        <ChevronRight size={16} className="shrink-0 text-primary-blue/80" />
+      </Link>
 
       <ReportSuspicionCallout notice={reportNotice} actionLabel={reportActionLabel} />
     </section>
