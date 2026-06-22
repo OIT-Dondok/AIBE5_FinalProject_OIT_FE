@@ -128,7 +128,7 @@ export default function DodinWalletPage() {
   }, [accountError, isAccountLoading, router]);
 
   return (
-    <main className="min-h-screen w-full overflow-x-hidden bg-transparent">
+    <main className="min-h-screen w-full overflow-x-clip bg-transparent">
       <div className="mx-auto flex w-full max-w-[430px] flex-col pb-10">
         <Header title="도딘 지갑" showBackButton />
 

@@ -191,7 +191,7 @@ export default function HostNoticeEditPage() {
 
   if (crewId === null || noticeId === null) {
     return (
-      <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
+      <main className="min-h-screen w-full overflow-x-clip bg-transparent flex flex-col items-center">
         <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-8">
           <Header showBackButton title="공지 수정" />
           <div className="px-5 pt-5">
@@ -206,7 +206,7 @@ export default function HostNoticeEditPage() {
 
   if (isLoading) {
     return (
-      <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
+      <main className="min-h-screen w-full overflow-x-clip bg-transparent flex flex-col items-center">
         <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-8">
           <Header showBackButton title="공지 수정" />
           <div className="px-5 pt-5 flex flex-col gap-4 animate-pulse">
@@ -221,7 +221,7 @@ export default function HostNoticeEditPage() {
 
   if (hasError || !notice) {
     return (
-      <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
+      <main className="min-h-screen w-full overflow-x-clip bg-transparent flex flex-col items-center">
         <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-8">
           <Header showBackButton title="공지 수정" />
           <div className="px-5 pt-5">
@@ -235,7 +235,7 @@ export default function HostNoticeEditPage() {
   }
 
   return (
-    <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
+    <main className="min-h-screen w-full overflow-x-clip bg-transparent flex flex-col items-center">
       <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-8">
         <Header showBackButton title="공지 수정" />
 

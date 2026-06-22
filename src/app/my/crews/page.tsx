@@ -327,7 +327,7 @@ export default function MyCrewsPage() {
   };
 
   return (
-    <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
+    <main className="min-h-screen w-full overflow-x-clip bg-transparent flex flex-col items-center">
       <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-10">
         <Header title="내 크루" showBackButton />
 

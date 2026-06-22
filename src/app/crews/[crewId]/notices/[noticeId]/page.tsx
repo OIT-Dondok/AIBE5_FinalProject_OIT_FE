@@ -145,7 +145,7 @@ export default function NoticeDetailPage() {
 
   if (crewId === null || noticeId === null) {
     return (
-      <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
+      <main className="min-h-screen w-full overflow-x-clip bg-transparent flex flex-col items-center">
         <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-8">
           <Header showBackButton title="공지 상세" />
           <div className="px-5 pt-5">
@@ -160,7 +160,7 @@ export default function NoticeDetailPage() {
 
   if (isLoading) {
     return (
-      <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
+      <main className="min-h-screen w-full overflow-x-clip bg-transparent flex flex-col items-center">
         <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-8">
           <Header
             showBackButton
@@ -179,7 +179,7 @@ export default function NoticeDetailPage() {
 
   if (hasError || !notice || !crew) {
     return (
-      <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
+      <main className="min-h-screen w-full overflow-x-clip bg-transparent flex flex-col items-center">
         <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-8">
           <Header
             showBackButton
@@ -202,7 +202,7 @@ export default function NoticeDetailPage() {
   const hostProfileUrl = hostProfile?.profile_image_url;
 
   return (
-    <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
+    <main className="min-h-screen w-full overflow-x-clip bg-transparent flex flex-col items-center">
       <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-8">
         <Header
           showBackButton
