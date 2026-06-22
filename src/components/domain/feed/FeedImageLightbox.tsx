@@ -2,10 +2,9 @@
 
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X } from 'lucide-react';
+import { ImageIcon, X } from 'lucide-react';
 
 import type { FeedItem as FeedItemType } from '@/types/domain';
-import { FeedCertImage } from '@/components/domain/feed/FeedCertImage';
 
 interface FeedImageLightboxProps {
   item: FeedItemType;
@@ -46,13 +45,22 @@ export function FeedImageLightbox({ item, onClose }: FeedImageLightboxProps) {
         <X size={22} />
       </button>
 
-      {/* 확대 이미지 — 카드와 동일한 FeedCertImage 사용 */}
-      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-[400px]">
-        <FeedCertImage
-          imageUrl={item.image_url}
-          alt={`${item.nickname}님의 ${item.crew_name} 인증 이미지`}
-          className="shadow-2xl"
-        />
+      {/* 확대 이미지 — 카드 썸네일(크롭)과 달리 원본 비율 전체를 표시 */}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="flex max-h-full max-w-full items-center justify-center"
+      >
+        {item.image_url ? (
+          <img
+            src={item.image_url}
+            alt={`${item.nickname}님의 ${item.crew_name} 인증 이미지`}
+            className="max-h-[85vh] max-w-full rounded-2xl object-contain shadow-2xl"
+          />
+        ) : (
+          <div className="flex aspect-square w-full max-w-[400px] items-center justify-center rounded-2xl bg-white/10">
+            <ImageIcon size={48} strokeWidth={1.5} className="text-white/40" />
+          </div>
+        )}
       </div>
     </div>,
     document.body,
