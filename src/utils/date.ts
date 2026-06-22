@@ -64,7 +64,7 @@ function parseMonthValue(monthValue: string): { year: number; month: number } {
   }
 
   const [year, month] = monthValue.split('-').map(Number);
-  if (!year || month < 1 || month > 12) {
+  if (!Number.isInteger(year) || year < 0 || year > 9999 || month < 1 || month > 12) {
     throw new Error(`[parseMonthValue] invalid month string: ${monthValue}`);
   }
   return { year, month };
@@ -104,9 +104,16 @@ export function formatYmdDot(dateStr: string): string {
   return `${year}.${String(month).padStart(2, '0')}.${String(day).padStart(2, '0')}`;
 }
 
+export function formatMonthValue(year: number, month: number): string {
+  if (!Number.isInteger(year) || !Number.isInteger(month) || year < 0 || year > 9999 || month < 1 || month > 12) {
+    throw new Error(`[formatMonthValue] invalid month value: ${year}-${month}`);
+  }
+  return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}`;
+}
+
 export function toMonthValue(dateStr: string): string {
   const { year, month } = parseYmd(dateStr);
-  return `${year}-${String(month).padStart(2, '0')}`;
+  return formatMonthValue(year, month);
 }
 
 export function shiftMonthValue(monthValue: string, months: number): string {
@@ -114,7 +121,7 @@ export function shiftMonthValue(monthValue: string, months: number): string {
   const serial = year * 12 + (month - 1) + months;
   const nextYear = Math.floor(serial / 12);
   const nextMonth = (serial % 12) + 1;
-  return `${nextYear}-${String(nextMonth).padStart(2, '0')}`;
+  return formatMonthValue(nextYear, nextMonth);
 }
 
 export function getMonthPeriod(monthValue: string): { start_date: string; end_date: string } {

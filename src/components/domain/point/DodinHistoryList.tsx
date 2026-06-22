@@ -1,8 +1,9 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 
+import { MonthPickerSheet } from "@/components/common/MonthPickerSheet";
 import { ReceiptTopEdge } from "@/components/common/ReceiptTopEdge";
 import {
   HistoryFilterTabs,
@@ -11,45 +12,11 @@ import {
   type HistoryFilter,
   type HistoryFilterOption,
 } from "@/components/domain/point/WalletHistorySection";
-import { BottomSheet } from "@/components/common/BottomSheet";
 import {
   formatDateGroupLabel,
-  formatMonthLabel,
-  getCurrentSeoulMonth,
-  isAfterMonth,
   getMonthStepperState,
-  shiftMonth,
   type WalletHistoryViewItem,
 } from "@/components/domain/point/pointViewModel";
-
-interface MonthOption {
-  label: string;
-  value: string;
-}
-
-const MONTH_OPTIONS_LOOKBACK = 24;
-
-function getMonthOptions(activeMonth: string) {
-  const nowMonth = getCurrentSeoulMonth();
-  const startMonth = isAfterMonth(activeMonth, nowMonth) ? activeMonth : nowMonth;
-
-  const options: MonthOption[] = Array.from({ length: MONTH_OPTIONS_LOOKBACK + 1 }, (_, index) => {
-    const value = shiftMonth(startMonth, -index);
-    return {
-      value,
-      label: formatMonthLabel(value),
-    };
-  });
-
-  if (!options.some((item) => item.value === activeMonth)) {
-    options.unshift({
-      value: activeMonth,
-      label: formatMonthLabel(activeMonth),
-    });
-  }
-
-  return options;
-}
 
 interface DodinHistoryListProps {
   activeFilter: HistoryFilter;
@@ -190,9 +157,8 @@ function DodinHistoryMonthStepper({
   onMonthChange: (month: string) => void;
 }) {
   const [isMonthSheetOpen, setIsMonthSheetOpen] = useState(false);
-  const { canGoNext, canGoPrevious, label: selectedLabel, nextMonth, previousMonth } =
+  const { canGoNext, canGoPrevious, currentMonth, label: selectedLabel, nextMonth, previousMonth } =
     getMonthStepperState(activeMonth);
-  const monthOptions = useMemo(() => getMonthOptions(activeMonth), [activeMonth]);
 
   return (
     <div className="flex items-center justify-between gap-3 rounded-2xl bg-background/70 px-3 py-2">
@@ -234,38 +200,13 @@ function DodinHistoryMonthStepper({
         <span aria-hidden="true">›</span>
       </button>
 
-      <BottomSheet
+      <MonthPickerSheet
         isOpen={isMonthSheetOpen}
+        value={activeMonth}
+        maxValue={currentMonth}
         onClose={() => setIsMonthSheetOpen(false)}
-        title="월별 도딘 내역"
-        ariaLabel="Select month"
-      >
-        <div className="px-5 pb-6 pt-2">
-          <div className="no-scrollbar flex max-h-[55vh] flex-col gap-1.5 overflow-y-auto">
-            {monthOptions.map((month) => {
-              const isSelected = month.value === activeMonth;
-              return (
-                <button
-                  type="button"
-                  key={month.value}
-                  onClick={() => {
-                    setIsMonthSheetOpen(false);
-                    if (!isSelected) onMonthChange(month.value);
-                  }}
-                  className={`rounded-2xl border px-4 py-3 text-left text-sm font-bold transition-colors ${
-                    isSelected
-                      ? "border-primary-green bg-primary-green/[0.09] text-primary-green"
-                      : "border-text-secondary/20 bg-card text-text-primary hover:bg-background/70"
-                  }`}
-                  aria-pressed={isSelected}
-                >
-                  {month.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </BottomSheet>
+        onSelect={onMonthChange}
+      />
     </div>
   );
 }
