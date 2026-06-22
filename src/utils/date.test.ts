@@ -25,6 +25,7 @@ describe('KST date helpers', () => {
     assert.equal(addDaysToYmd('2026-06-18', -1), '2026-06-17');
     assert.equal(addDaysToYmd('2026-06-18', 1), '2026-06-19');
     assert.equal(addDaysToYmd('2026-03-01', -1), '2026-02-28');
+    assert.equal(addDaysToYmd('2024-03-01', -1), '2024-02-29');
   });
 
   it('rejects invalid calendar dates before date arithmetic', () => {
