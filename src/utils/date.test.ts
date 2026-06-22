@@ -7,9 +7,12 @@ import {
   formatDateTimeDot,
   formatKstDateTime,
   formatYmdDot,
+  getMonthPeriod,
   getKstDateKeyFromIso,
   getMsUntilNextKstDay,
   getKstTodayYmd,
+  shiftMonthValue,
+  toMonthValue,
 } from './date';
 
 describe('KST date helpers', () => {
@@ -58,5 +61,26 @@ describe('KST date helpers', () => {
   it('calculates the next KST day refresh delay', () => {
     assert.equal(getMsUntilNextKstDay(new Date('2026-06-18T14:59:00Z')), 60_000);
     assert.equal(getMsUntilNextKstDay(new Date('2026-06-18T15:00:00Z')), 86_400_000);
+  });
+
+  it('builds month periods with real month ends', () => {
+    assert.deepEqual(getMonthPeriod('2026-06'), {
+      start_date: '2026-06-01',
+      end_date: '2026-06-30',
+    });
+    assert.deepEqual(getMonthPeriod('2024-02'), {
+      start_date: '2024-02-01',
+      end_date: '2024-02-29',
+    });
+    assert.deepEqual(getMonthPeriod('2025-02'), {
+      start_date: '2025-02-01',
+      end_date: '2025-02-28',
+    });
+  });
+
+  it('converts and shifts month anchors across year boundaries', () => {
+    assert.equal(toMonthValue('2026-06-22'), '2026-06');
+    assert.equal(shiftMonthValue('2026-01', -1), '2025-12');
+    assert.equal(shiftMonthValue('2025-12', 1), '2026-01');
   });
 });

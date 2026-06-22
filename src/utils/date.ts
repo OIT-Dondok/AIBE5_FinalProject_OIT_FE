@@ -58,6 +58,18 @@ function parseYmd(dateStr: string): { year: number; month: number; day: number }
   return { year, month, day };
 }
 
+function parseMonthValue(monthValue: string): { year: number; month: number } {
+  if (!/^\d{4}-\d{2}$/.test(monthValue)) {
+    throw new Error(`[parseMonthValue] invalid month string: ${monthValue}`);
+  }
+
+  const [year, month] = monthValue.split('-').map(Number);
+  if (!year || month < 1 || month > 12) {
+    throw new Error(`[parseMonthValue] invalid month string: ${monthValue}`);
+  }
+  return { year, month };
+}
+
 /**
  * 현재 시각을 KST(Asia/Seoul) 캘린더 날짜 `YYYY-MM-DD`로 반환합니다.
  * 테스트에서는 기준 시각을 주입해 UTC 경계 근처 날짜 밀림을 검증할 수 있습니다.
@@ -90,6 +102,34 @@ export function addDaysToYmd(dateStr: string, days: number): string {
 export function formatYmdDot(dateStr: string): string {
   const { year, month, day } = parseYmd(dateStr);
   return `${year}.${String(month).padStart(2, '0')}.${String(day).padStart(2, '0')}`;
+}
+
+export function toMonthValue(dateStr: string): string {
+  const { year, month } = parseYmd(dateStr);
+  return `${year}-${String(month).padStart(2, '0')}`;
+}
+
+export function shiftMonthValue(monthValue: string, months: number): string {
+  const { year, month } = parseMonthValue(monthValue);
+  const serial = year * 12 + (month - 1) + months;
+  const nextYear = Math.floor(serial / 12);
+  const nextMonth = (serial % 12) + 1;
+  return `${nextYear}-${String(nextMonth).padStart(2, '0')}`;
+}
+
+export function getMonthPeriod(monthValue: string): { start_date: string; end_date: string } {
+  const { year, month } = parseMonthValue(monthValue);
+  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const paddedMonth = String(month).padStart(2, '0');
+  return {
+    start_date: `${year}-${paddedMonth}-01`,
+    end_date: `${year}-${paddedMonth}-${String(lastDay).padStart(2, '0')}`,
+  };
+}
+
+export function formatMonthLabel(monthValue: string): string {
+  const { year, month } = parseMonthValue(monthValue);
+  return `${year}년 ${month}월`;
 }
 
 /**
