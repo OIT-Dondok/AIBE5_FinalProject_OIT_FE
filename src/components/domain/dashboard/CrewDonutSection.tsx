@@ -63,12 +63,17 @@ export function CrewDonutSection({
             </p>
             <div className="mt-2 flex items-center justify-center gap-2 text-[11px] font-black">
               {/* 상승 크루 툴팁 */}
-              <span className="group relative inline-flex items-center gap-0.5 text-primary-green cursor-help">
+              <span
+                tabIndex={0}
+                role="button"
+                aria-label={`상승 크루 ${crewDonuts.risingCrewCount}개`}
+                className="group relative inline-flex items-center gap-0.5 text-primary-green cursor-help focus:outline-none focus:ring-1 focus:ring-primary-green/30 rounded px-0.5"
+              >
                 ▲ {crewDonuts.risingCrewCount}
                 {crewDonuts.risingCrews.length > 0 && (
                   <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 hidden group-hover:block group-focus-within:block z-50 w-28 rounded-xl border border-primary-green/25 bg-success-green/95 px-2.5 py-2 text-center text-[10px] font-black text-primary-green shadow-md">
-                    {crewDonuts.risingCrews.map((name) => (
-                      <span key={name} className="block truncate leading-relaxed">
+                    {crewDonuts.risingCrews.map((name, index) => (
+                      <span key={`${name}-${index}`} className="block truncate leading-relaxed">
                         {name}
                       </span>
                     ))}
@@ -79,12 +84,17 @@ export function CrewDonutSection({
               <span className="text-text-secondary/25 font-normal">|</span>
 
               {/* 하락 크루 툴팁 */}
-              <span className="group relative inline-flex items-center gap-0.5 text-red-500 cursor-help">
+              <span
+                tabIndex={0}
+                role="button"
+                aria-label={`하락 크루 ${crewDonuts.fallingCrewCount}개`}
+                className="group relative inline-flex items-center gap-0.5 text-red-500 cursor-help focus:outline-none focus:ring-1 focus:ring-red-500/30 rounded px-0.5"
+              >
                 ▼ {crewDonuts.fallingCrewCount}
                 {crewDonuts.fallingCrews.length > 0 && (
                   <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 hidden group-hover:block group-focus-within:block z-50 w-28 rounded-xl border border-red-200 bg-red-50 px-2.5 py-2 text-center text-[10px] font-black text-red-600 shadow-md">
-                    {crewDonuts.fallingCrews.map((name) => (
-                      <span key={name} className="block truncate leading-relaxed">
+                    {crewDonuts.fallingCrews.map((name, index) => (
+                      <span key={`${name}-${index}`} className="block truncate leading-relaxed">
                         {name}
                       </span>
                     ))}
@@ -93,7 +103,7 @@ export function CrewDonutSection({
               </span>
             </div>
 
-            {crewDonuts.topMoverLabel && crewDonuts.topMoverCrewId && (
+            {crewDonuts.topMoverLabel && crewDonuts.topMoverCrewId != null && (
               <button
                 type="button"
                 onClick={() => onOpenDaily(crewDonuts.topMoverCrewId!)}
