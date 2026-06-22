@@ -507,7 +507,7 @@ export default function CertifyPage() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full aspect-[4/3] rounded-card border-2 border-dashed border-text-secondary/25 bg-background/60 flex flex-col items-center justify-center gap-2 hover:border-primary-green/50 hover:bg-success-green/10 transition-all active:scale-[0.99]"
+                className="w-full aspect-square rounded-card border-2 border-dashed border-text-secondary/25 bg-background/60 flex flex-col items-center justify-center gap-2 hover:border-primary-green/50 hover:bg-success-green/10 transition-all active:scale-[0.99]"
               >
                 {preview ? (
                   // eslint-disable-next-line @next/next/no-img-element -- blob preview URL은 next/image 최적화 불필요
