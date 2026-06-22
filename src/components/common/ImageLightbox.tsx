@@ -55,10 +55,11 @@ export function ImageLightbox({ imageUrl, alt, onClose }: ImageLightboxProps) {
         <X size={22} />
       </button>
 
-      {/* 확대 이미지 — 카드 썸네일(크롭)과 달리 원본 비율 전체를 표시 */}
+      {/* 확대 이미지 — 카드 썸네일(크롭)과 달리 원본 비율 전체를 표시.
+          데스크탑에서도 앱 모바일 프레임(max-w-[430px])을 넘지 않도록 폭을 가둔다. */}
       <div
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-full max-w-full items-center justify-center"
+        className="flex w-full max-w-[430px] max-h-full items-center justify-center"
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- 원본 비율 표시를 위해 fill 대신 자연 크기 사용 */}
         <img
