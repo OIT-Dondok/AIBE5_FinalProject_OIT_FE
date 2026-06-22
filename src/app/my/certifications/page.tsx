@@ -2,11 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Check, ChevronDown, ChevronLeft, ChevronRight, ClipboardCheck, Info, Loader2, MessageCircle, User } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, ClipboardCheck, Info, Loader2, MessageCircle, ShieldCheck, User } from "lucide-react";
 
+import { Button } from "@/components/common/Button";
 import { Header } from "@/components/common/Header";
 import { Skeleton } from "@/components/common/Skeleton";
 import { CertificationCalendar } from "@/components/domain/certifications/CertificationCalendar";
+import { PrinciplesModal } from "@/components/domain/dashboard/PrinciplesModal";
+import { mockDashboard } from "@/mocks/data/dashboard";
 import { getFeed } from "@/services/feed";
 import { useAuthStore } from "@/store/authStore";
 import type { AvailableCrew, CertificationStatus, FeedItem, FeedPeriod } from "@/types/domain";
@@ -523,6 +526,8 @@ export default function CertificationsPage() {
   const [today, setToday] = useState(initialToday);
   const todayRef = useRef(today);
 
+  const [isPrinciplesModalOpen, setIsPrinciplesModalOpen] = useState(false);
+
   const [availableCrews, setAvailableCrews] = useState<AvailableCrew[]>([]);
   const [items, setItems] = useState<FeedItem[]>([]);
   const [selectedCrewId, setSelectedCrewId] = useState<number | null>(null);
@@ -772,6 +777,26 @@ export default function CertificationsPage() {
                 myMemberUuid={myMemberUuid}
               />
 
+              <div className="px-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  fullWidth
+                  className="border-primary-green/25 bg-success-green/70 text-primary-green shadow-[0_6px_18px_rgba(94,155,115,0.14)] hover:bg-success-green"
+                  onClick={() => setIsPrinciplesModalOpen(true)}
+                >
+                  <span className="flex w-full items-center justify-between gap-2">
+                    <span className="flex items-center gap-2 font-extrabold">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-green text-white">
+                        <ShieldCheck size={15} />
+                      </span>
+                      방장 운영 원칙 보기
+                    </span>
+                    <ChevronRight size={16} className="text-primary-green/70" />
+                  </span>
+                </Button>
+              </div>
+
               {/* 3. 인증 리스트 */}
               <div className="px-4 flex flex-col gap-4 pb-4">
                 {filteredCount === 0 ? (
@@ -801,6 +826,13 @@ export default function CertificationsPage() {
           )}
         </div>
       </div>
+
+      {isPrinciplesModalOpen && (
+        <PrinciplesModal
+          principles={mockDashboard.principles}
+          onClose={() => setIsPrinciplesModalOpen(false)}
+        />
+      )}
     </main>
   );
 }

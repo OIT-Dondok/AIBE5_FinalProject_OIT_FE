@@ -68,7 +68,7 @@ export function DailyDashboardSection({
           </strong>
         </SegmentRing>
 
-        <div className="min-w-0 flex-1 space-y-2">
+        <div className="min-w-0 flex-1 max-h-[110px] overflow-y-auto pr-1 space-y-1.5 scrollbar-thin">
           {dashboard.segments.map((segment) => (
             <LegendRow key={segment.id} segment={segment} />
           ))}
@@ -152,18 +152,18 @@ export function DailyDashboardSection({
 
 function LegendRow({ segment }: { segment: CrewDashboardSegmentView }) {
   return (
-    <div className="flex items-center gap-2 text-[11px]">
+    <div className="flex items-center gap-2 text-[10px] md:text-[11px] leading-none py-0.5">
       <span
-        className="h-2 w-2 shrink-0 rounded-sm"
+        className="h-1.5 w-1.5 shrink-0 rounded-full"
         style={{ backgroundColor: segment.color }}
       />
       <span
-        className={`min-w-0 flex-1 truncate ${segment.isMe ? "font-black" : "font-medium"}`}
+        className={`min-w-0 flex-1 truncate ${segment.isMe ? "font-black text-text-primary" : "font-medium text-text-secondary"}`}
       >
         {segment.label}
       </span>
       <span
-        className={`shrink-0 tabular-nums text-text-primary ${segment.isMe ? "font-black" : "font-medium"}`}
+        className={`shrink-0 tabular-nums ${segment.isMe ? "font-black text-text-primary" : "font-bold text-text-secondary/90"}`}
       >
         {segment.valueLabel}
       </span>
@@ -185,8 +185,8 @@ function MetricCard({
   children: React.ReactNode;
 }) {
   return (
-    <DashboardCard className="min-h-28 flex flex-col justify-between bg-card/95">
-      <p className="inline-flex items-center gap-1 text-[11px] font-black text-text-secondary">
+    <DashboardCard className="min-h-28 flex flex-col justify-between bg-card/95 p-3.5 shadow-[0_2px_10px_rgba(34,34,34,0.03)] border-slate-100">
+      <p className="inline-flex items-center gap-1 text-[11px] font-bold text-text-secondary/90">
         {label}
         {showTooltip && projectionCopy && (
           <ProjectionTooltip copy={projectionCopy} align={tooltipAlign} />

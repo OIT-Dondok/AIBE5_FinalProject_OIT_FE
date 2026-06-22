@@ -71,7 +71,7 @@ export default function CrewCard({ crew }: CrewCardProps) {
   } = getCrewCardViewModel(crew, status.progress, isClosed);
 
   return (
-      <div className={`bg-card rounded-[24px] flex flex-col border border-text-secondary/10 shadow-sm hover:shadow-md hover:-translate-y-1 active:scale-[0.985] transition-all duration-300 cursor-pointer group relative overflow-hidden ${isClosed ? 'opacity-60' : ''}`}>
+      <div className={`bg-card rounded-2xl flex flex-col shadow-md hover:shadow-lg hover:-translate-y-1 active:scale-[0.985] transition-all duration-300 cursor-pointer group relative overflow-hidden ${isClosed ? 'opacity-60' : ''}`}>
         
         <div className="p-5 flex flex-col gap-4">
           {/* 상단: 이모지 + 크루명/상태 + 보증금 */}

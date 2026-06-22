@@ -258,7 +258,7 @@ export default function ProfilePage() {
     }
 
     setIsSaving(true);
-
+ 
     try {
       const response = await updateMyProfile(createProfileUpdatePayload(inlineDraft));
       setPageData((current) => {

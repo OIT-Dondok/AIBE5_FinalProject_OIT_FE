@@ -82,8 +82,14 @@ export interface CrewDonutView {
   todayDeltaPercent: string;
   deltaTrend: Trend;
   trendSummaryLabel: string;
+  risingCrewCount: number;
+  fallingCrewCount: number;
+  risingCrews: string[];
+  fallingCrews: string[];
   topMoverLabel: string | null;
   topMoverDelta: string | null;
+  topMoverColor: string | null;
+  topMoverCrewId: number | null;
   participantLabel: string;
   segments: CrewDonutSegmentView[];
   crews: CrewDonutRowView[];
@@ -119,6 +125,21 @@ export function mapGlobalDashboard(
     color: crewColor(index),
   }));
 
+  const maxDeltaCrewId = res.max_delta_crew?.crew_id;
+  const topMoverIndex =
+    maxDeltaCrewId != null
+      ? res.crews.findIndex((c) => c.crew_id === maxDeltaCrewId)
+      : -1;
+  const topMoverColor = topMoverIndex !== -1 ? crewColor(topMoverIndex) : null;
+  const topMoverCrewId = res.max_delta_crew ? res.max_delta_crew.crew_id : null;
+
+  const risingCrews = res.crews
+    .filter((c) => c.today_delta_amount != null && c.today_delta_amount > 0)
+    .map((c) => c.crew_name);
+  const fallingCrews = res.crews
+    .filter((c) => c.today_delta_amount != null && c.today_delta_amount < 0)
+    .map((c) => c.crew_name);
+
   return {
     dateLabel,
     totalLabel: "예상 합계",
@@ -127,10 +148,16 @@ export function mapGlobalDashboard(
     todayDeltaPercent: formatSignedPercent(res.today_delta_ratio),
     deltaTrend: deltaTrend(res.today_delta_amount),
     trendSummaryLabel: `상승 ${res.rising_crew_count} · 하락 ${res.falling_crew_count}`,
+    risingCrewCount: res.rising_crew_count,
+    fallingCrewCount: res.falling_crew_count,
+    risingCrews,
+    fallingCrews,
     topMoverLabel: res.max_delta_crew ? `최대 변동 ${res.max_delta_crew.crew_name}` : null,
     topMoverDelta: res.max_delta_crew
       ? formatSignedWon(res.max_delta_crew.today_delta_amount)
       : null,
+    topMoverColor,
+    topMoverCrewId,
     participantLabel: `참여 크루 ${res.crews.length}`,
     segments,
     crews,
