@@ -2,16 +2,26 @@
 
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { ImageIcon, X } from 'lucide-react';
+import { X } from 'lucide-react';
 
-import type { FeedItem as FeedItemType } from '@/types/domain';
-
-interface FeedImageLightboxProps {
-  item: FeedItemType;
+interface ImageLightboxProps {
+  /** 확대해서 보여줄 이미지 URL */
+  imageUrl: string;
+  /** 이미지 대체 텍스트 */
+  alt: string;
+  /** 닫기 콜백 (배경 클릭 · Esc · 닫기 버튼) */
   onClose: () => void;
 }
 
-export function FeedImageLightbox({ item, onClose }: FeedImageLightboxProps) {
+/**
+ * 인증 이미지 확대 라이트박스 (공용).
+ * 카드 썸네일(1:1 크롭)과 달리 원본 비율 전체를 표시한다.
+ * - object-contain + max-h-[85vh]로 원본 비율 유지
+ * - Esc / 배경 클릭 닫기, 배경 스크롤 잠금
+ * 운영 콘솔 검증 확대는 헤더·정보 패널이 함께 있는 풀스크린 레이아웃이라
+ * 이 컴포넌트를 쓰지 않고 별도로 둔다.
+ */
+export function ImageLightbox({ imageUrl, alt, onClose }: ImageLightboxProps) {
   // Esc 닫기 + 배경 스크롤 잠금
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -50,17 +60,12 @@ export function FeedImageLightbox({ item, onClose }: FeedImageLightboxProps) {
         onClick={(e) => e.stopPropagation()}
         className="flex max-h-full max-w-full items-center justify-center"
       >
-        {item.image_url ? (
-          <img
-            src={item.image_url}
-            alt={`${item.nickname}님의 ${item.crew_name} 인증 이미지`}
-            className="max-h-[85vh] max-w-full rounded-2xl object-contain shadow-2xl"
-          />
-        ) : (
-          <div className="flex aspect-square w-full max-w-[400px] items-center justify-center rounded-2xl bg-white/10">
-            <ImageIcon size={48} strokeWidth={1.5} className="text-white/40" />
-          </div>
-        )}
+        {/* eslint-disable-next-line @next/next/no-img-element -- 원본 비율 표시를 위해 fill 대신 자연 크기 사용 */}
+        <img
+          src={imageUrl}
+          alt={alt}
+          className="max-h-[85vh] max-w-full rounded-2xl object-contain shadow-2xl"
+        />
       </div>
     </div>,
     document.body,
