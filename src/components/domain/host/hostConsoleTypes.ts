@@ -27,4 +27,5 @@ export interface VerificationCardItem {
   certification_status: CertificationStatus;
   decision_type?: MissionLogDecisionType | null;
   reject_reason_code: RejectReasonCode | null;
+  host_reviewable_until: string;
 }

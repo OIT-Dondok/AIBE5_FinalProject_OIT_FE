@@ -78,6 +78,7 @@ function toCardItem(item: ReviewableMissionLog): VerificationCardItem {
     certification_status: item.certification_status,
     decision_type: item.decision_type,
     reject_reason_code: item.reject_reason_code,
+    host_reviewable_until: item.host_reviewable_until,
   };
 }
 
@@ -151,28 +152,16 @@ export function VerificationTab({ onPendingCountChange, decisionsById, onDecisio
     void fetchItems();
   }, [fetchItems]);
 
-  useEffect(() => {
-    if (reviewFilter === "decided") {
-      console.log("[VerificationTab] decided 탭 진입, items:", items);
-    }
-  }, [reviewFilter, items]);
-
   const markDecided = (missionLogId: number, decision: VerificationDecision) => {
     onDecisionMade(missionLogId, decision);
 
-    setItems((current) =>
-      current.map((item) =>
-        item.mission_log_id === missionLogId
-          ? {
-              ...item,
-              certification_status: (decision === "approved" ? "SUCCESS" : "FAILED") as import("@/types/domain").CertificationStatus,
-              decision_type: (decision === "approved" ? "MANUAL_APPROVE" : "MANUAL_REJECT") as import("@/types/domain").MissionLogDecisionType,
-            }
-          : item,
-      ),
-    );
+    setItems((current) => current.filter((item) => item.mission_log_id !== missionLogId));
 
-    const nextCounts = { ...counts, [reviewFilter]: Math.max(0, counts[reviewFilter] - 1) };
+    const nextCounts = {
+      ...counts,
+      [reviewFilter]: Math.max(0, counts[reviewFilter] - 1),
+      decided: counts.decided + 1,
+    };
     setCounts(nextCounts);
     onPendingCountChange?.(nextCounts.urgent + nextCounts.warning + nextCounts.normal);
   };
@@ -225,7 +214,10 @@ export function VerificationTab({ onPendingCountChange, decisionsById, onDecisio
             : item,
         ),
       );
-      const nextCounts = { ...counts, [reviewFilter]: counts[reviewFilter] + 1 };
+      const nextCounts =
+        reviewFilter === "decided"
+          ? { ...counts, decided: Math.max(0, counts.decided - 1) }
+          : { ...counts, [reviewFilter]: counts[reviewFilter] + 1 };
       setCounts(nextCounts);
       onPendingCountChange?.(nextCounts.urgent + nextCounts.warning + nextCounts.normal);
       setToastMessage("검토 대기로 되돌렸어요.");
