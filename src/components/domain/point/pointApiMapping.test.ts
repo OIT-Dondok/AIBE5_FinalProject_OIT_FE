@@ -403,12 +403,17 @@ describe("point wallet API mapping", () => {
   it("renders the history page month control as a stepper with a month picker", () => {
     const sourceFile = readTsSourceFile("src/components/domain/point/DodinHistoryList.tsx");
     const sourceText = sourceFile.getFullText();
+    const pickerSourceText = readTsSourceFile("src/components/common/MonthPickerSheet.tsx").getFullText();
 
     assert.equal(sourceText.includes("DodinHistoryMonthStepper"), true);
     assert.equal(sourceText.includes("disabled={!canGoNext}"), true);
-    assert.equal(sourceText.includes("monthOptions"), true);
-    assert.equal(sourceText.includes("<BottomSheet"), true);
+    assert.equal(sourceText.includes("maxValue={currentMonth}"), true);
+    assert.equal(sourceText.includes("<MonthPickerSheet"), true);
     assert.equal(sourceText.includes("aria-label=\"month picker\""), true);
+    assert.equal(pickerSourceText.includes("formatMonthValue(year, month)"), true);
+    assert.equal(pickerSourceText.includes("aria-pressed={active}"), true);
+    assert.equal(pickerSourceText.includes("canGoPreviousYear"), true);
+    assert.equal(pickerSourceText.includes("canGoNextYear"), true);
   });
 });
 
