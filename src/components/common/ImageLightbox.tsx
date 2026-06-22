@@ -49,7 +49,11 @@ export function ImageLightbox({ imageUrl, alt, onClose }: ImageLightboxProps) {
       <button
         type="button"
         aria-label="닫기"
-        onClick={onClose}
+        onClick={(e) => {
+          // 부모 오버레이의 onClick(onClose)로 버블링되어 중복 호출되는 것을 방지
+          e.stopPropagation();
+          onClose();
+        }}
         className="absolute top-4 right-4 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 active:scale-95 transition-all"
       >
         <X size={22} />
