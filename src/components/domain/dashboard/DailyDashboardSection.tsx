@@ -68,7 +68,7 @@ export function DailyDashboardSection({
           </strong>
         </SegmentRing>
 
-        <div className="min-w-0 flex-1 space-y-2">
+        <div className="min-w-0 flex-1 max-h-[110px] overflow-y-auto pr-1 space-y-1.5 scrollbar-thin">
           {dashboard.segments.map((segment) => (
             <LegendRow key={segment.id} segment={segment} />
           ))}

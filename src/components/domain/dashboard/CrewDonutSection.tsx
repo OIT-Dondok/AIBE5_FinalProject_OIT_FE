@@ -1,7 +1,5 @@
 import Image from "next/image";
-import { CalendarDays, ChevronRight, ClipboardCheck, ShieldCheck } from "lucide-react";
-
-import { Button } from "@/components/common/Button";
+import { CalendarDays, ChevronRight, ClipboardCheck } from "lucide-react";
 import { CATEGORY_BG, CATEGORY_EMOJI } from "@/constants/crew";
 import { DELTA_TOOLTIP_TEXT, type ProjectionCopy } from "@/mocks/data/dashboard";
 
