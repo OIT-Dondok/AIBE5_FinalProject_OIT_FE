@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Check, ChevronDown, ChevronLeft, ChevronRight, ClipboardCheck, Loader2, User } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, ClipboardCheck, Info, Loader2, MessageCircle, User } from "lucide-react";
 
 import { Header } from "@/components/common/Header";
 import { Skeleton } from "@/components/common/Skeleton";
@@ -29,7 +29,7 @@ interface StatusMeta {
 
 const STATUS_CONFIG: Record<CertificationStatus, StatusMeta> = {
   PENDING_REVIEW: { badge: "검토중", badgeClass: "bg-amber-100 text-amber-700" },
-  SUCCESS: { badge: "승인", badgeClass: "bg-green-100 text-green-700" },
+  SUCCESS: { badge: "승인", badgeClass: "bg-success-green text-primary-green" },
   FAILED: { badge: "거절", badgeClass: "bg-red-100 text-red-600" },
 };
 
@@ -174,12 +174,16 @@ function CertificationCard({ item }: { item: FeedItem }) {
         </p>
         <p className="text-xs text-text-secondary/70 truncate">{detailParts.join(" · ")}</p>
         {item.reject_reason_code === "OTHER" && item.reject_memo && (
-          <p className="text-xs text-text-secondary line-clamp-1 mt-0.5">
-            &quot;{item.reject_memo}&quot;
+          <p className="flex items-center gap-1 text-xs text-amber-600/80 min-w-0 mt-0.5">
+            <Info size={10} className="shrink-0" />
+            <span className="truncate">{item.reject_memo}</span>
           </p>
         )}
         {item.caption && (
-          <p className="text-xs text-text-secondary line-clamp-1 mt-0.5">{item.caption}</p>
+          <p className="flex items-center gap-1 text-xs text-text-secondary min-w-0 mt-0.5">
+            <MessageCircle size={10} className="shrink-0 opacity-50" />
+            <span className="truncate">{item.caption}</span>
+          </p>
         )}
       </div>
       <StatusBadge status={item.certification_status} />
@@ -223,9 +227,9 @@ interface FilterCardDef {
   filter: StatusFilter;
   label: string;
   count: number;
-  normalClass: string;
   activeClass: string;
-  countClass: string;
+  countColor: string;
+  labelActiveColor: string;
 }
 
 function FilterSummaryCards({
@@ -246,51 +250,62 @@ function FilterSummaryCards({
       filter: "ALL",
       label: "전체",
       count: items.length,
-      normalClass: "bg-card border border-text-secondary/10",
-      activeClass: "bg-card border-2 border-text-primary/40",
-      countClass: "text-text-primary",
+      activeClass: "bg-text-secondary/5 border-2 border-text-secondary/25",
+      countColor: "text-text-primary",
+      labelActiveColor: "text-text-primary",
     },
     {
       filter: "APPROVED",
       label: "승인",
       count: approvedCount,
-      normalClass: "bg-green-50",
-      activeClass: "bg-green-100 ring-2 ring-green-400",
-      countClass: "text-green-600",
+      activeClass: "bg-success-green/30 border-2 border-primary-green/40",
+      countColor: "text-primary-green",
+      labelActiveColor: "text-primary-green",
     },
     {
       filter: "REJECTED",
       label: "거절",
       count: rejectedCount,
-      normalClass: "bg-rose-50",
-      activeClass: "bg-rose-100 ring-2 ring-rose-400",
-      countClass: "text-rose-500",
+      activeClass: "bg-rose-50 border-2 border-rose-400/40",
+      countColor: "text-rose-500",
+      labelActiveColor: "text-rose-500",
     },
     {
       filter: "PENDING",
       label: "검토중",
       count: pendingCount,
-      normalClass: "bg-amber-50",
-      activeClass: "bg-amber-100 ring-2 ring-amber-400",
-      countClass: "text-amber-600",
+      activeClass: "bg-amber-50 border-2 border-amber-400/40",
+      countColor: "text-amber-600",
+      labelActiveColor: "text-amber-600",
     },
   ];
 
   return (
     <div className="grid grid-cols-4 gap-2">
-      {cards.map((card) => (
-        <button
-          key={card.filter}
-          type="button"
-          onClick={() => onSelect(card.filter)}
-          className={`flex flex-col items-center justify-center py-3 rounded-xl transition-all ${
-            activeFilter === card.filter ? card.activeClass : card.normalClass
-          }`}
-        >
-          <span className="text-[10px] text-text-secondary font-medium mb-0.5">{card.label}</span>
-          <span className={`text-xl font-bold leading-none ${card.countClass}`}>{card.count}</span>
-        </button>
-      ))}
+      {cards.map((card) => {
+        const isActive = activeFilter === card.filter;
+        return (
+          <button
+            key={card.filter}
+            type="button"
+            onClick={() => onSelect(card.filter)}
+            className={`flex flex-col items-center justify-center py-3.5 rounded-2xl shadow-sm transition-all duration-200 active:scale-[0.97] ${
+              isActive
+                ? card.activeClass
+                : "bg-card border border-text-secondary/10"
+            }`}
+          >
+            <span className={`text-[10px] font-semibold mb-1 transition-colors ${
+              isActive ? card.labelActiveColor : "text-text-secondary"
+            }`}>
+              {card.label}
+            </span>
+            <span className={`text-2xl font-black leading-none tabular-nums ${card.countColor}`}>
+              {card.count}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -333,21 +348,21 @@ function CrewDropdown({ availableCrews, selectedCrewId, onSelect }: CrewDropdown
       <button
         type="button"
         onClick={() => setIsOpen((v) => !v)}
-        className={`w-full h-8 pl-3 pr-2 flex items-center justify-between gap-1 text-xs font-medium rounded-lg border transition-colors ${
+        className={`w-full h-9 pl-4 pr-3 flex items-center justify-between gap-1.5 text-xs font-bold rounded-full border shadow-sm transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-green focus:ring-offset-1 ${
           selectedCrewId !== null
-            ? "bg-[var(--color-primary-green)]/10 border-[var(--color-primary-green)] text-[var(--color-primary-green)]"
-            : "bg-card border-text-secondary/20 text-text-primary"
+            ? "bg-primary-green/10 border-primary-green/30 text-primary-green"
+            : "bg-card border-text-secondary/15 text-text-primary"
         }`}
       >
         <span className="truncate">{selectedLabel}</span>
         <ChevronDown
           size={12}
-          className={`shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`shrink-0 text-text-secondary/60 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 top-[calc(100%+4px)] z-50 w-full min-w-[120px] bg-card border border-text-secondary/15 rounded-xl shadow-lg overflow-hidden">
+        <div className="absolute left-0 top-[calc(100%+6px)] z-50 w-full min-w-[120px] bg-card border border-text-secondary/10 rounded-2xl shadow-xl py-1 overflow-hidden origin-top-left animate-dropdown-open focus:outline-none">
           {options.map((opt) => {
             const isSelected = opt.id === selectedCrewId;
             return (
@@ -358,13 +373,13 @@ function CrewDropdown({ availableCrews, selectedCrewId, onSelect }: CrewDropdown
                   onSelect(opt.id);
                   setIsOpen(false);
                 }}
-                className={`w-full flex items-center justify-between px-3 py-2.5 text-xs font-medium text-left transition-colors hover:bg-text-secondary/5 active:bg-text-secondary/10 ${
-                  isSelected ? "text-[var(--color-primary-green)]" : "text-text-primary"
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-bold text-left transition-colors hover:bg-text-secondary/5 active:bg-text-secondary/10 focus:outline-none ${
+                  isSelected ? "text-primary-green" : "text-text-primary"
                 }`}
               >
                 <span className="truncate">{opt.label}</span>
                 {isSelected && (
-                  <Check size={12} className="shrink-0 text-[var(--color-primary-green)]" />
+                  <Check size={12} strokeWidth={3} className="shrink-0 ml-2 text-primary-green" />
                 )}
               </button>
             );
@@ -408,10 +423,10 @@ function InlineFilterBar({
         type="button"
         onClick={onToggleMyOnly}
         disabled={!myMemberUuid}
-        className={`shrink-0 flex items-center gap-1 h-8 px-3 rounded-lg text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+        className={`shrink-0 flex items-center gap-1.5 h-9 px-4 rounded-full text-xs font-bold shadow-sm transition-all duration-200 active:scale-95 disabled:opacity-40 disabled:pointer-events-none focus:outline-none focus:ring-2 focus:ring-primary-green focus:ring-offset-1 ${
           showMyOnly
-            ? "bg-[var(--color-primary-green)] text-white"
-            : "bg-card border border-text-secondary/20 text-text-secondary"
+            ? "bg-primary-green text-white border border-primary-green/20"
+            : "bg-card border border-text-secondary/15 text-text-primary"
         }`}
       >
         <User size={11} />

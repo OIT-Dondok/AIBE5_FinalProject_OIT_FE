@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { ArrowDown, ArrowUp, CheckCircle2, Clock3, Info } from "lucide-react";
 
-import type { ProjectionCopy } from "@/mocks/data/dashboard";
+import { DELTA_TOOLTIP_TEXT, type ProjectionCopy } from "@/mocks/data/dashboard";
 
 import {
   DashboardCard,
+  InfoTooltip,
   ProjectionTooltip,
   SegmentRing,
+  type TooltipAlign,
 } from "./DashboardPrimitives";
 import { ReportSuspicionCallout } from "./ReportSuspicionCallout";
 import type {
@@ -29,12 +31,31 @@ export function DailyDashboardSection({
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-center gap-2">
-        <h2 className="text-sm font-black text-text-primary">
+        <h2 className="min-w-0 truncate text-sm font-black text-text-primary">
           {dashboard.crewName}
         </h2>
-        <span className="rounded-full bg-success-green px-3 py-1 text-[11px] font-extrabold text-primary-green">
+        <span className="shrink-0 rounded-full bg-success-green px-3 py-1 text-[11px] font-extrabold text-primary-green">
           {dashboard.ddayLabel}
         </span>
+        {dashboard.todayDeltaLabel && (
+          <span className="ml-auto inline-flex shrink-0 items-center gap-1 text-[11px]">
+            <span className="font-bold text-text-secondary">오늘 변동</span>
+            <span
+              className={`font-extrabold ${
+                dashboard.todayDeltaTrend === "up"
+                  ? "text-primary-green"
+                  : dashboard.todayDeltaTrend === "down"
+                    ? "text-red-500"
+                    : "text-text-secondary"
+              }`}
+            >
+              {dashboard.todayDeltaLabel}
+            </span>
+            <InfoTooltip ariaLabel="오늘 변동 안내" placement="bottom" align="right">
+              {DELTA_TOOLTIP_TEXT}
+            </InfoTooltip>
+          </span>
+        )}
       </div>
 
       <DashboardCard className="mb-1 flex items-center gap-5 border-primary-green/25 bg-card/95 px-5 py-6 shadow-[0_14px_30px_rgba(94,155,115,0.16)] ring-1 ring-primary-green/10">
@@ -54,6 +75,13 @@ export function DailyDashboardSection({
         </div>
       </DashboardCard>
 
+      {dashboard.updatedAtLabel && (
+        <p className="-mt-0.5 inline-flex items-center gap-1 px-1 text-[11px] text-text-secondary">
+          <Clock3 size={12} />
+          마지막 업데이트 {dashboard.updatedAtLabel}
+        </p>
+      )}
+
       {dashboard.notice && (
         <NoticeBanner
           message={dashboard.notice}
@@ -66,11 +94,20 @@ export function DailyDashboardSection({
       )}
 
       <div className="grid grid-cols-2 gap-2.5">
-        <MetricCard label="예상 환급금" showTooltip projectionCopy={projectionCopy}>
+        <MetricCard
+          label="예상 환급금"
+          showTooltip
+          projectionCopy={projectionCopy}
+          tooltipAlign="left"
+        >
           <strong className="mt-3 text-xl font-black tracking-tight text-text-primary">
             {dashboard.expectedRefund}
           </strong>
-          <DeltaText label={dashboard.expectedRefundDelta} trend={dashboard.expectedRefundTrend} />
+          <DepositCompareText
+            prefix={dashboard.depositComparePrefix}
+            pnlLabel={dashboard.depositPnlLabel}
+            trend={dashboard.depositPnlTrend}
+          />
         </MetricCard>
 
         <MetricCard label="현재 순위">
@@ -138,18 +175,22 @@ function MetricCard({
   label,
   showTooltip = false,
   projectionCopy,
+  tooltipAlign,
   children,
 }: {
   label: string;
   showTooltip?: boolean;
   projectionCopy?: ProjectionCopy;
+  tooltipAlign?: TooltipAlign;
   children: React.ReactNode;
 }) {
   return (
     <DashboardCard className="min-h-28 flex flex-col justify-between bg-card/95">
       <p className="inline-flex items-center gap-1 text-[11px] font-black text-text-secondary">
         {label}
-        {showTooltip && projectionCopy && <ProjectionTooltip copy={projectionCopy} />}
+        {showTooltip && projectionCopy && (
+          <ProjectionTooltip copy={projectionCopy} align={tooltipAlign} />
+        )}
       </p>
       {children}
     </DashboardCard>
@@ -200,6 +241,33 @@ function DeltaText({
       {withArrow && trend === "down" && <ArrowDown size={12} />}
       {label}
     </span>
+  );
+}
+
+// 예상 환급금 카드 보조줄 — "보증금 N원 대비 +M원". prefix null이면 카드 높이 유지용 빈 placeholder
+function DepositCompareText({
+  prefix,
+  pnlLabel,
+  trend,
+}: {
+  prefix: string | null;
+  pnlLabel: string;
+  trend: Trend;
+}) {
+  if (!prefix) return <span className="mt-2 h-[16px]" />;
+
+  const color =
+    trend === "up"
+      ? "text-primary-green"
+      : trend === "down"
+        ? "text-red-500"
+        : "text-text-secondary";
+
+  return (
+    <p className="mt-2 text-[11px] font-bold leading-snug text-text-secondary">
+      {prefix}{" "}
+      <span className={`font-extrabold ${color}`}>{pnlLabel}</span>
+    </p>
   );
 }
 

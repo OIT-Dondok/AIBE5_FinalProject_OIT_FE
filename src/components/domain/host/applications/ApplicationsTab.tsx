@@ -138,6 +138,7 @@ type ApplicationsTabProps = {
 export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) {
   const [applicationFilter, setApplicationFilter] = useState<ApplicationFilter>("PENDING");
   const [applications, setApplications] = useState<ApplicationListItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [confirmTarget, setConfirmTarget] = useState<{
     item: ApplicationListItem;
     decision: ApplicationDecision;
@@ -153,6 +154,7 @@ export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) 
 
   const loadApplications = useCallback(async () => {
     if (crewId === null) return;
+    setIsLoading(true);
     try {
       const [pendingRes, lockedRes, rejectedRes] = await Promise.all([
         fetchCrewApplications(crewId, { status: "PENDING" }),
@@ -222,6 +224,8 @@ export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) 
       );
       setToastType("error");
       setIsToastOpen(true);
+    } finally {
+      setIsLoading(false);
     }
   }, [crewId, myUuid]);
 
@@ -316,7 +320,14 @@ export function ApplicationsTab({ onPendingCountChange }: ApplicationsTabProps) 
                   isActive ? filterStyle.active : filterStyle.inactive
                 }`}
               >
-                <span>{filter.label}</span> <span className="font-extrabold">{count}</span>
+                <span>{filter.label}</span>{" "}
+                <span className="inline-flex min-w-[2ch] justify-center">
+                  {isLoading ? (
+                    <span className="h-[10px] w-[14px] animate-pulse rounded bg-current opacity-20 self-center" />
+                  ) : (
+                    <span className="font-extrabold">{count}</span>
+                  )}
+                </span>
               </button>
             );
           })}

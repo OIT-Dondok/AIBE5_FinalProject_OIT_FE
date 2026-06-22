@@ -4,6 +4,7 @@ import type {
   ModerationApproveResponse,
   ModerationRejectRequest,
   ModerationRejectResponse,
+  ModerationRevertResponse,
   ReviewableMissionLogResponse,
 } from "@/types/domain";
 
@@ -34,4 +35,9 @@ export const rejectMissionLog = (
   api.post<ModerationRejectResponse>(
     `/mission-logs/${missionLogId}/moderation/reject`,
     body,
+  );
+
+export const revertMissionLogModeration = (missionLogId: number) =>
+  api.post<ModerationRevertResponse>(
+    `/mission-logs/${missionLogId}/moderation/revert`,
   );

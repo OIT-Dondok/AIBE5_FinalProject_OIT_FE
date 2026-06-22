@@ -16,6 +16,7 @@ interface ConfirmModalProps {
   isLoading?: boolean;
   confirmVariant?: "primary-green" | "primary-blue" | "danger" | "outline";
   iconType?: "success" | "error" | "warning" | "none";
+  customIcon?: ReactNode;
   showCancel?: boolean;
 }
 
@@ -30,6 +31,7 @@ export function ConfirmModal({
   isLoading = false,
   confirmVariant = "primary-green",
   iconType = "none",
+  customIcon,
   showCancel = true,
 }: ConfirmModalProps) {
 
@@ -61,7 +63,13 @@ export function ConfirmModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} ariaLabel={title}>
       <div className="flex flex-col gap-4 p-6">
-        {iconType !== "none" && <div className="mb-1">{getIcon()}</div>}
+        {customIcon ? (
+          <div className="mb-1 mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#ECECF1] text-text-primary">
+            {customIcon}
+          </div>
+        ) : (
+          iconType !== "none" && <div className="mb-1">{getIcon()}</div>
+        )}
         <div className="flex flex-col gap-2 text-center">
           <h3 className="text-base font-bold text-text-primary">{title}</h3>
           <p className="text-sm text-text-secondary leading-relaxed whitespace-pre-line">

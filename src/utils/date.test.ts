@@ -4,6 +4,8 @@ import assert from 'node:assert/strict';
 import {
   addDaysToYmd,
   compareYmd,
+  formatDateTimeDot,
+  formatKstDateTime,
   formatYmdDot,
   getKstDateKeyFromIso,
   getMsUntilNextKstDay,
@@ -33,6 +35,18 @@ describe('KST date helpers', () => {
     assert.equal(formatYmdDot('2026-06-18'), '2026.06.18');
     assert.equal(getKstDateKeyFromIso('2026-06-18T23:30:00+09:00'), '2026-06-18');
     assert.equal(getKstDateKeyFromIso('2026-06-18T15:30:00Z'), '2026-06-19');
+  });
+
+  it('formats datetime as KST YYYY.M.D HH:mm without padding date parts', () => {
+    assert.equal(formatDateTimeDot('2026-06-19T17:40:00+09:00'), '2026.6.19 17:40');
+    // UTC 자정 → KST 09:00 (UTC+9). 시·분은 2자리 0 패딩
+    assert.equal(formatDateTimeDot('2026-06-19T00:00:00Z'), '2026.6.19 09:00');
+    assert.equal(formatDateTimeDot('not-a-date'), '');
+  });
+
+  it('returns an empty label for invalid KST datetime input', () => {
+    assert.equal(formatKstDateTime(''), '');
+    assert.equal(formatKstDateTime('not-a-date'), '');
   });
 
   it('compares YYYY-MM-DD keys lexically', () => {

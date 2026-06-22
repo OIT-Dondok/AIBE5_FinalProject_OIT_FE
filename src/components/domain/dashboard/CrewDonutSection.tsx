@@ -3,10 +3,11 @@ import { CalendarDays, ChevronRight, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/common/Button";
 import { CATEGORY_BG, CATEGORY_EMOJI } from "@/constants/crew";
-import type { ProjectionCopy } from "@/mocks/data/dashboard";
+import { DELTA_TOOLTIP_TEXT, type ProjectionCopy } from "@/mocks/data/dashboard";
 
 import {
   DashboardCard,
+  InfoTooltip,
   ProgressBar,
   ProjectionTooltip,
   SegmentRing,
@@ -46,20 +47,21 @@ export function CrewDonutSection({
             </strong>
           </SegmentRing>
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] text-text-secondary">오늘</p>
-            <p
-              className={`mt-1 inline-flex items-center gap-1 text-lg font-black ${
-                isDeltaDown ? "text-red-500" : "text-primary-green"
-              }`}
-            >
-              {crewDonuts.todayDelta}
+            <p className="flex items-center gap-1 text-[11px] text-text-secondary">
+              오늘 변동
+              <InfoTooltip ariaLabel="오늘 변동 안내">{DELTA_TOOLTIP_TEXT}</InfoTooltip>
             </p>
             <p
-              className={`text-[11px] font-bold ${
+              className={`mt-1 flex items-baseline gap-1.5 ${
                 isDeltaDown ? "text-red-500" : "text-primary-green"
               }`}
             >
-              {crewDonuts.todayDeltaPercent}
+              <span className="text-lg font-black">{crewDonuts.todayDelta}</span>
+              {crewDonuts.todayDeltaPercent !== "—" && (
+                <span className="text-[11px] font-bold">
+                  ({crewDonuts.todayDeltaPercent})
+                </span>
+              )}
             </p>
             <div className="mt-3 flex flex-col gap-1.5 border-t border-text-secondary/10 pt-3">
               <p className="text-[11px] font-black text-text-primary">
@@ -77,6 +79,24 @@ export function CrewDonutSection({
           </div>
         </div>
       </DashboardCard>
+
+      <Button
+        type="button"
+        variant="outline"
+        fullWidth
+        className="border-primary-green/25 bg-success-green/70 text-primary-green shadow-[0_6px_18px_rgba(94,155,115,0.14)] hover:bg-success-green"
+        onClick={onOpenPrinciples}
+      >
+        <span className="flex w-full items-center justify-between gap-2">
+          <span className="flex items-center gap-2 font-extrabold">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-green text-white">
+              <ShieldCheck size={15} />
+            </span>
+            방장 운영 원칙 보기
+          </span>
+          <ChevronRight size={16} className="text-primary-green/70" />
+        </span>
+      </Button>
 
       <div className="flex items-center justify-between pt-1">
         <h2 className="text-sm font-black tracking-tight text-text-primary">
@@ -96,24 +116,6 @@ export function CrewDonutSection({
           />
         ))}
       </div>
-
-      <Button
-        type="button"
-        variant="outline"
-        fullWidth
-        className="border-primary-green/25 bg-success-green/70 text-primary-green shadow-[0_6px_18px_rgba(94,155,115,0.14)] hover:bg-success-green"
-        onClick={onOpenPrinciples}
-      >
-        <span className="flex w-full items-center justify-between gap-2">
-          <span className="flex items-center gap-2 font-extrabold">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-green text-white">
-              <ShieldCheck size={15} />
-            </span>
-            방장 운영 원칙 보기
-          </span>
-          <ChevronRight size={16} className="text-primary-green/70" />
-        </span>
-      </Button>
     </section>
   );
 }
