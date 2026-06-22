@@ -44,13 +44,13 @@ export function CrewDonutSection({
               {crewDonuts.totalAmount}
             </strong>
           </SegmentRing>
-          <div className="flex flex-col justify-center text-center">
-            <p className="flex items-center gap-1 text-[11px] font-bold text-text-secondary justify-center">
+          <div className="flex flex-col justify-center text-left items-start">
+            <p className="flex items-center gap-1 text-[11px] font-bold text-text-secondary justify-start">
               오늘 변동
               <InfoTooltip ariaLabel="오늘 변동 안내">{DELTA_TOOLTIP_TEXT}</InfoTooltip>
             </p>
             <p
-              className={`mt-1 flex items-baseline justify-center gap-1 ${
+              className={`mt-1 flex items-baseline justify-start gap-1 ${
                 isDeltaDown ? "text-red-500" : "text-primary-green"
               }`}
             >
@@ -61,7 +61,7 @@ export function CrewDonutSection({
                 </span>
               )}
             </p>
-            <div className="mt-2 flex items-center justify-center gap-2 text-[11px] font-black">
+            <div className="mt-2 flex items-center justify-start gap-2 text-[11px] font-black">
               {/* 상승 크루 툴팁 */}
               <span
                 tabIndex={0}
@@ -107,7 +107,7 @@ export function CrewDonutSection({
               <button
                 type="button"
                 onClick={() => onOpenDaily(crewDonuts.topMoverCrewId!)}
-                className="mt-2.5 flex items-center justify-center gap-1 text-[10px] font-extrabold text-text-secondary/70 hover:text-primary-green active:scale-95 transition-all text-left"
+                className="mt-2.5 flex items-center justify-start gap-1 text-[10px] font-extrabold text-text-secondary/70 hover:text-primary-green active:scale-95 transition-all text-left"
               >
                 <span className="opacity-75">최대 변동</span>
                 {crewDonuts.topMoverColor && (

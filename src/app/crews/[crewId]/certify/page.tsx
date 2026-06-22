@@ -473,6 +473,12 @@ export default function CertifyPage() {
         <Header title="오늘의 인증" showBackButton={step !== 'VERIFYING'} />
 
         <div className="px-5 pt-4 flex flex-col gap-5">
+          {/* 크루 이름 표시 */}
+          <div className="flex flex-col gap-1">
+            <span className="text-[11px] font-bold text-primary-green/90 uppercase tracking-wider">인증 크루</span>
+            <h1 className="text-xl font-black text-text-primary tracking-tight">{crew.title}</h1>
+          </div>
+
           {/* ── 마감 시간 배지 ── */}
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-card border border-text-secondary/10">
             <Clock size={16} className={isPastDeadline ? 'text-red-500' : 'text-primary-green'} />

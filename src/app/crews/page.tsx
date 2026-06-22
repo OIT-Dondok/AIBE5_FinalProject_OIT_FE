@@ -3,16 +3,212 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, CheckCircle2, CircleAlert, Sparkles, Camera } from 'lucide-react';
 import { Header } from '@/components/common/Header';
 import { EmptyState } from '@/components/common/EmptyState';
 import CrewCard from '@/components/domain/crew/CrewCard';
 import CrewFilterBar, { CategoryFilter } from '@/components/domain/crew/CrewFilterBar';
 import StatusDropdown from '@/components/domain/crew/StatusDropdown';
-import { getCrews } from '@/services/crew';
-import type { CrewListItem, CrewStatus } from '@/types/domain';
+import { getCrews, getMyCrew } from '@/services/crew';
+import { getFeed } from '@/services/feed';
+import { useAuthStore } from '@/store/authStore';
+import { getKstTodayYmd } from '@/utils/date';
+import type { CrewListItem, CrewStatus, MyCrew } from '@/types/domain';
 
 type StatusFilter = CrewStatus | 'ALL';
+
+import { ChevronDown, ChevronUp, Trophy } from 'lucide-react';
+
+interface VerificationStatusItem {
+  crewId: number;
+  title: string;
+  category: string;
+  isCertified: boolean;
+}
+
+function TodayVerificationStatus() {
+  const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+  const [activeCrews, setActiveCrews] = useState<VerificationStatusItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+
+    const loadTodayStatus = async () => {
+      setLoading(true);
+      try {
+        const myCrewsRes = await getMyCrew('ALL');
+        const runningCrews = myCrewsRes.data.items.filter(
+          (c) => c.my_status === 'LOCKED' && c.status === 'ACTIVE'
+        );
+
+        if (runningCrews.length === 0) {
+          if (active) setActiveCrews([]);
+          return;
+        }
+
+        const todayStr = getKstTodayYmd();
+        const feedRes = await getFeed({
+          from: todayStr,
+          to: todayStr,
+          limit: 100,
+        });
+
+        const myFeedItems = feedRes.data.feed_items.filter(
+          (item) => item.member_uuid === user.member_uuid
+        );
+
+        const statusItems: VerificationStatusItem[] = runningCrews.map((crew) => {
+          const hasCertified = myFeedItems.some((item) => item.crew_id === crew.crew_id);
+          return {
+            crewId: crew.crew_id,
+            title: crew.title,
+            category: crew.category,
+            isCertified: hasCertified,
+          };
+        });
+
+        if (active) {
+          setActiveCrews(statusItems);
+        }
+      } catch {
+        // 에러 무시
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    void loadTodayStatus();
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  if (!user || activeCrews.length === 0) return null;
+
+  const totalCount = activeCrews.length;
+  const certifiedCount = activeCrews.filter((c) => c.isCertified).length;
+  const progressPercent = Math.round((certifiedCount / totalCount) * 100);
+  const isAllCertified = certifiedCount === totalCount;
+  const remainingCount = totalCount - certifiedCount;
+
+  return (
+    <div className="px-5 py-2">
+      <div
+        onClick={() => {
+          if (!isAllCertified) {
+            setIsExpanded((prev) => !prev);
+          } else {
+            router.push('/feed');
+          }
+        }}
+        className={`w-full p-4 rounded-[24px] border shadow-[0_4px_16px_rgba(0,0,0,0.03)] cursor-pointer transition-all duration-300 flex flex-col gap-3.5 select-none active:scale-[0.99] ${
+          isAllCertified
+            ? 'bg-gradient-to-br from-emerald-500 to-green-600 border-primary-green/20 text-white shadow-emerald-500/10'
+            : 'bg-card border-text-secondary/10 text-text-primary'
+        }`}
+      >
+        {/* 헤더 및 요약 배지 */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {isAllCertified ? (
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white animate-bounce">
+                <Trophy size={16} fill="white" />
+              </span>
+            ) : (
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500/10 text-amber-500 animate-pulse">
+                <Sparkles size={16} className="fill-amber-500/10" />
+              </span>
+            )}
+            <div className="flex flex-col">
+              <span className={`text-xs font-black tracking-tight ${isAllCertified ? 'text-white/80' : 'text-text-secondary'}`}>
+                {isAllCertified ? '오늘의 챌린지' : '오늘의 인증 현황'}
+              </span>
+              <strong className="text-[14px] font-black tracking-tight -mt-0.5">
+                {isAllCertified
+                  ? '오늘의 미션을 모두 완수했어요! 🎉'
+                  : `인증률 ${progressPercent}% (${certifiedCount}/${totalCount})`}
+              </strong>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            {!isAllCertified ? (
+              <>
+                <span className="bg-amber-500/10 text-amber-600 text-[10px] font-black px-2 py-0.5 rounded-full border border-amber-500/20">
+                  {remainingCount}개 남음 ⚡
+                </span>
+                {isExpanded ? <ChevronUp size={16} className="text-text-secondary/70" /> : <ChevronDown size={16} className="text-text-secondary/70" />}
+              </>
+            ) : (
+              <span className="bg-white/20 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+                완료
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* 인터랙티브 게이지 바 */}
+        <div className="w-full flex flex-col gap-1">
+          <div className={`w-full h-3 rounded-full overflow-hidden ${isAllCertified ? 'bg-white/20' : 'bg-text-secondary/10'}`}>
+            <div
+              className={`h-full rounded-full transition-all duration-700 ease-out ${
+                isAllCertified ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.5)]' : 'bg-amber-400'
+              }`}
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 펼쳐지는 크루 서랍 (아코디언) */}
+      {!isAllCertified && isExpanded && (
+        <div className="mt-2.5 flex flex-col gap-2 bg-text-secondary/5 p-3 rounded-[24px] border border-text-secondary/5 animate-dropdown-open">
+          <p className="text-[10px] font-extrabold text-text-secondary/60 tracking-wider uppercase px-1">인증이 필요한 크루</p>
+          <div className="flex flex-col gap-2">
+            {activeCrews.map((crew) => (
+              <div
+                key={crew.crewId}
+                onClick={() => {
+                  if (crew.isCertified) {
+                    router.push('/feed');
+                  } else {
+                    router.push(`/crews/${crew.crewId}/certify`);
+                  }
+                }}
+                className={`w-full flex items-center justify-between p-3.5 rounded-[20px] border transition-all cursor-pointer bg-card ${
+                  crew.isCertified
+                    ? 'border-primary-green/10 text-text-secondary bg-success-green/10'
+                    : 'border-text-secondary/10 text-text-primary hover:border-primary-green/30 hover:bg-success-green/5 active:scale-[0.99]'
+                }`}
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold truncate leading-tight">{crew.title}</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0 ml-3">
+                  {crew.isCertified ? (
+                    <span className="flex items-center gap-1 bg-emerald-500/10 text-emerald-800 border border-emerald-500/25 px-2.5 py-1 rounded-full text-[10px] font-bold">
+                      <CheckCircle2 size={12} className="text-emerald-600 shrink-0" />
+                      완료
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5 bg-primary-green text-white px-3 py-1 rounded-full text-[10px] font-black shadow-sm shadow-primary-green/20 hover:opacity-95 transition-opacity">
+                      <Camera size={12} strokeWidth={2.5} />
+                      인증하기
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 type GroupedCrews = {
   RECRUITING: CrewListItem[];
@@ -23,9 +219,9 @@ type GroupedCrews = {
 const SECTION_ORDER: (keyof GroupedCrews)[] = ['RECRUITING', 'ACTIVE', 'CLOSED'];
 
 const SECTION_CONFIG: Record<keyof GroupedCrews, { label: string; badgeClass: string }> = {
-  RECRUITING: { label: '모집중', badgeClass: 'bg-blue-500/10 text-blue-600 border border-blue-500/20' },
-  ACTIVE: { label: '진행중', badgeClass: 'bg-primary-green/10 text-primary-green border border-primary-green/20' },
-  CLOSED: { label: '종료됨', badgeClass: 'bg-slate-500/10 text-slate-500 border border-slate-500/20' },
+  RECRUITING: { label: '모집중', badgeClass: 'bg-blue-500/10 text-blue-600 border border-blue-500/25 px-2 py-0.5 rounded-full' },
+  ACTIVE: { label: '진행중', badgeClass: 'bg-primary-green/10 text-primary-green border border-primary-green/25 px-2 py-0.5 rounded-full' },
+  CLOSED: { label: '종료됨', badgeClass: 'bg-slate-500/10 text-slate-500 border border-slate-500/25 px-2 py-0.5 rounded-full' },
 };
 
 export default function CrewsPage() {
@@ -128,6 +324,9 @@ export default function CrewsPage() {
           </div>
         </div>
 
+        {/* 오늘의 크루 인증 상태 대시보드 */}
+        <TodayVerificationStatus />
+
         {/* 결과 카운트 + 상태 드롭다운 */}
         <div className="px-5 pt-3 pb-3 flex items-center justify-between">
           <span className="text-xs text-text-secondary font-medium">
@@ -160,18 +359,20 @@ export default function CrewsPage() {
                 const { label, badgeClass } = SECTION_CONFIG[key];
                 const items = groupedCrews[key];
                 return (
-                  <div key={key} className="flex flex-col gap-3">
-                    <div className="flex items-center gap-2 pt-1">
-                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${badgeClass}`}>
+                  <div key={key} className="flex flex-col gap-3.5 mt-4 first:mt-1">
+                    <div className="flex items-center gap-2 pb-1">
+                      <span className={`text-[11px] font-bold ${badgeClass}`}>
                         {label}
                       </span>
                       <span className="text-xs text-text-secondary">{items.length}개</span>
                     </div>
-                    {items.map((crew) => (
-                      <Link key={crew.crew_id} href={`/crews/${crew.crew_id}`}>
-                        <CrewCard crew={crew} />
-                      </Link>
-                    ))}
+                    <div className="flex flex-col gap-3">
+                      {items.map((crew) => (
+                        <Link key={crew.crew_id} href={`/crews/${crew.crew_id}`}>
+                          <CrewCard crew={crew} />
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 );
               })
