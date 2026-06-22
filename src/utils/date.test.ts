@@ -84,6 +84,7 @@ describe('KST date helpers', () => {
     assert.equal(toMonthValue('2026-06-22'), '2026-06');
     assert.equal(formatMonthValue(0, 1), '0000-01');
     assert.equal(formatMonthValue(999, 12), '0999-12');
+    assert.equal(shiftMonthValue('0000-01', 1), '0000-02');
     assert.equal(shiftMonthValue('2026-01', -1), '2025-12');
     assert.equal(shiftMonthValue('2025-12', 1), '2026-01');
   });

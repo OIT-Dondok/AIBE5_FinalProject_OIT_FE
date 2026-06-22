@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { BottomSheet } from "@/components/common/BottomSheet";
@@ -34,6 +34,12 @@ export function MonthPickerSheet({
   const year = draftYear ?? selectedYear;
   const canGoPreviousYear = year > 0;
   const canGoNextYear = year < maxYear;
+
+  useEffect(() => {
+    if (isOpen) return;
+    const timeoutId = window.setTimeout(() => setDraftYear(null), 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [isOpen]);
 
   const handleClose = () => {
     setDraftYear(null);

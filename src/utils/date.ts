@@ -64,7 +64,7 @@ function parseMonthValue(monthValue: string): { year: number; month: number } {
   }
 
   const [year, month] = monthValue.split('-').map(Number);
-  if (!year || month < 1 || month > 12) {
+  if (!Number.isInteger(year) || year < 0 || year > 9999 || month < 1 || month > 12) {
     throw new Error(`[parseMonthValue] invalid month string: ${monthValue}`);
   }
   return { year, month };
