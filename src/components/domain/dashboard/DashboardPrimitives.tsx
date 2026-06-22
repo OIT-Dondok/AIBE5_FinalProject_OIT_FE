@@ -53,7 +53,7 @@ export function InfoTooltip({
         type="button"
         aria-label={ariaLabel}
         aria-describedby={tooltipId}
-        className="flex h-4 w-4 items-center justify-center rounded-full bg-text-secondary/10 text-[10px] font-black text-text-secondary hover:bg-primary-blue/10 hover:text-primary-blue focus:outline-none focus:ring-2 focus:ring-primary-blue/20"
+        className="flex h-4 w-4 items-center justify-center rounded-full bg-text-secondary/20 text-[10px] font-black text-text-primary hover:bg-primary-blue/20 hover:text-primary-blue focus:outline-none focus:ring-2 focus:ring-primary-blue/20"
       >
         ?
       </button>

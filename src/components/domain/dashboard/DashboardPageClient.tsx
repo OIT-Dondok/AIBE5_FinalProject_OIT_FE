@@ -9,7 +9,6 @@ import { mockDashboard } from "@/mocks/data/dashboard";
 import type { GlobalDashboardResponse } from "@/types/domain";
 
 import { CrewDonutSection } from "./CrewDonutSection";
-import { PrinciplesModal } from "./PrinciplesModal";
 import {
   DashboardEmpty,
   DashboardError,
@@ -27,7 +26,6 @@ function formatTodayLabel(): string {
 export function DashboardPageClient() {
   const router = useRouter();
 
-  const [isPrinciplesModalOpen, setIsPrinciplesModalOpen] = useState(false);
   const [globalData, setGlobalData] = useState<GlobalDashboardResponse | null>(
     null,
   );
@@ -78,18 +76,11 @@ export function DashboardPageClient() {
               crewDonuts={mapGlobalDashboard(globalData, formatTodayLabel())}
               projectionCopy={mockDashboard.projectionCopy}
               onOpenDaily={(crewId) => router.push(`/crews/${crewId}/dashboard`)}
-              onOpenPrinciples={() => setIsPrinciplesModalOpen(true)}
+              onOpenCertifications={() => router.push("/my/certifications")}
             />
           ) : null}
         </div>
       </div>
-
-      {isPrinciplesModalOpen && (
-        <PrinciplesModal
-          principles={mockDashboard.principles}
-          onClose={() => setIsPrinciplesModalOpen(false)}
-        />
-      )}
     </main>
   );
 }

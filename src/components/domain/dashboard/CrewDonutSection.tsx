@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { CalendarDays, ChevronRight, ShieldCheck } from "lucide-react";
+import { CalendarDays, ChevronRight, ClipboardCheck, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/common/Button";
 import { CATEGORY_BG, CATEGORY_EMOJI } from "@/constants/crew";
@@ -18,12 +18,12 @@ export function CrewDonutSection({
   crewDonuts,
   projectionCopy,
   onOpenDaily,
-  onOpenPrinciples,
+  onOpenCertifications,
 }: {
   crewDonuts: CrewDonutView;
   projectionCopy: ProjectionCopy;
   onOpenDaily: (crewId: number) => void;
-  onOpenPrinciples: () => void;
+  onOpenCertifications: () => void;
 }) {
   const isDeltaDown = crewDonuts.deltaTrend === "down";
 
@@ -36,7 +36,7 @@ export function CrewDonutSection({
             {crewDonuts.dateLabel}
           </span>
         </div>
-        <div className="flex items-center gap-5">
+        <div className="flex items-center justify-around gap-4 px-2">
           <SegmentRing segments={crewDonuts.segments} size={144} stroke={16}>
             <span className="inline-flex items-center gap-1 text-[10px] font-bold text-text-secondary">
               {crewDonuts.totalLabel}
@@ -46,57 +46,112 @@ export function CrewDonutSection({
               {crewDonuts.totalAmount}
             </strong>
           </SegmentRing>
-          <div className="min-w-0 flex-1">
-            <p className="flex items-center gap-1 text-[11px] text-text-secondary">
+          <div className="flex flex-col justify-center text-center">
+            <p className="flex items-center gap-1 text-[11px] font-bold text-text-secondary justify-center">
               오늘 변동
               <InfoTooltip ariaLabel="오늘 변동 안내">{DELTA_TOOLTIP_TEXT}</InfoTooltip>
             </p>
             <p
-              className={`mt-1 flex items-baseline gap-1.5 ${
+              className={`mt-1 flex items-baseline justify-center gap-1 ${
                 isDeltaDown ? "text-red-500" : "text-primary-green"
               }`}
             >
-              <span className="text-lg font-black">{crewDonuts.todayDelta}</span>
+              <span className="text-xl font-black">{crewDonuts.todayDelta}</span>
               {crewDonuts.todayDeltaPercent !== "—" && (
-                <span className="text-[11px] font-bold">
+                <span className="text-[11px] font-extrabold">
                   ({crewDonuts.todayDeltaPercent})
                 </span>
               )}
             </p>
-            <div className="mt-3 flex flex-col gap-1.5 border-t border-text-secondary/10 pt-3">
-              <p className="text-[11px] font-black text-text-primary">
-                {crewDonuts.trendSummaryLabel}
-              </p>
-              {crewDonuts.topMoverLabel && (
-                <p className="text-[11px] font-bold leading-snug text-text-secondary">
-                  {crewDonuts.topMoverLabel}{" "}
-                  <span className="font-black text-primary-green">
-                    {crewDonuts.topMoverDelta}
+            <div className="mt-2 flex items-center justify-center gap-2 text-[11px] font-black">
+              {/* 상승 크루 툴팁 */}
+              <span className="group relative inline-flex items-center gap-0.5 text-primary-green cursor-help">
+                ▲ {crewDonuts.risingCrewCount}
+                {crewDonuts.risingCrews.length > 0 && (
+                  <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 hidden group-hover:block group-focus-within:block z-50 w-28 rounded-xl border border-primary-green/25 bg-success-green/95 px-2.5 py-2 text-center text-[10px] font-black text-primary-green shadow-md">
+                    {crewDonuts.risingCrews.map((name) => (
+                      <span key={name} className="block truncate leading-relaxed">
+                        {name}
+                      </span>
+                    ))}
                   </span>
-                </p>
-              )}
+                )}
+              </span>
+
+              <span className="text-text-secondary/25 font-normal">|</span>
+
+              {/* 하락 크루 툴팁 */}
+              <span className="group relative inline-flex items-center gap-0.5 text-red-500 cursor-help">
+                ▼ {crewDonuts.fallingCrewCount}
+                {crewDonuts.fallingCrews.length > 0 && (
+                  <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 hidden group-hover:block group-focus-within:block z-50 w-28 rounded-xl border border-red-200 bg-red-50 px-2.5 py-2 text-center text-[10px] font-black text-red-600 shadow-md">
+                    {crewDonuts.fallingCrews.map((name) => (
+                      <span key={name} className="block truncate leading-relaxed">
+                        {name}
+                      </span>
+                    ))}
+                  </span>
+                )}
+              </span>
             </div>
+
+            {crewDonuts.topMoverLabel && crewDonuts.topMoverCrewId && (
+              <button
+                type="button"
+                onClick={() => onOpenDaily(crewDonuts.topMoverCrewId!)}
+                className="mt-2.5 flex items-center justify-center gap-1 text-[10px] font-extrabold text-text-secondary/70 hover:text-primary-green active:scale-95 transition-all text-left"
+              >
+                <span className="opacity-75">최대 변동</span>
+                {crewDonuts.topMoverColor && (
+                  <span
+                    className="inline-block h-1.5 w-1.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: crewDonuts.topMoverColor }}
+                  />
+                )}
+                <span className="text-text-primary/90 underline decoration-dotted truncate max-w-[85px]" title={crewDonuts.topMoverLabel.replace("최대 변동 ", "")}>
+                  {crewDonuts.topMoverLabel.replace("최대 변동 ", "")}
+                </span>
+                <ChevronRight size={10} className="opacity-50" />
+              </button>
+            )}
           </div>
+        </div>
+
+        {/* 범례 (Legend) 영역 */}
+        <div className="border-t border-text-secondary/10 pt-3 flex flex-wrap justify-center gap-x-3 gap-y-1.5">
+          {crewDonuts.segments.map((seg) => (
+            <div
+              key={seg.label}
+              className="inline-flex items-center gap-1 text-[11px] font-bold text-text-secondary"
+            >
+              <span
+                className="h-2 w-2 shrink-0 rounded-full"
+                style={{ backgroundColor: seg.color }}
+              />
+              <span className="truncate max-w-[85px]" title={seg.label}>
+                {seg.label}
+              </span>
+            </div>
+          ))}
         </div>
       </DashboardCard>
 
-      <Button
+      <button
         type="button"
-        variant="outline"
-        fullWidth
-        className="border-primary-green/25 bg-success-green/70 text-primary-green shadow-[0_6px_18px_rgba(94,155,115,0.14)] hover:bg-success-green"
-        onClick={onOpenPrinciples}
+        className="w-full flex items-center justify-between gap-3 rounded-card border border-primary-green/20 bg-success-green/40 p-4 text-left shadow-[0_4px_16px_rgba(94,155,115,0.08)] hover:border-primary-green/30 hover:bg-success-green/60 transition-all active:scale-[0.99]"
+        onClick={onOpenCertifications}
       >
-        <span className="flex w-full items-center justify-between gap-2">
-          <span className="flex items-center gap-2 font-extrabold">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-green text-white">
-              <ShieldCheck size={15} />
-            </span>
-            방장 운영 원칙 보기
-          </span>
-          <ChevronRight size={16} className="text-primary-green/70" />
-        </span>
-      </Button>
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-bold text-primary-green/90">
+            검증 결과와 반려 사유가 궁금하신가요?
+          </p>
+          <p className="mt-1 text-sm font-black text-primary-green flex items-center gap-1.5">
+            <ClipboardCheck size={15} className="text-primary-green" />
+            전체 인증 이력 보러가기
+          </p>
+        </div>
+        <ChevronRight size={16} className="text-primary-green/80 shrink-0" />
+      </button>
 
       <div className="flex items-center justify-between pt-1">
         <h2 className="text-sm font-black tracking-tight text-text-primary">
@@ -133,12 +188,12 @@ function CrewRow({
   return (
     <button
       type="button"
-      className="w-full rounded-card border border-white/70 bg-card p-3.5 text-left shadow-[0_2px_12px_rgba(34,34,34,0.05)] hover:border-primary-green/25 hover:bg-success-green/25"
+      className="w-full rounded-card border border-white/70 bg-card p-4 text-left shadow-[0_2px_12px_rgba(34,34,34,0.04)] hover:border-primary-green/25 hover:bg-success-green/15 transition-all duration-200"
       onClick={onSelect}
     >
-      <span className="flex items-center gap-3">
+      <span className="flex items-center gap-3.5">
         <span
-          className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl text-xl ${
+          className={`flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl text-xl ${
             crew.imageUrl ? "" : (CATEGORY_BG[crew.category] ?? "bg-slate-100")
           }`}
         >
@@ -146,8 +201,8 @@ function CrewRow({
             <Image
               src={crew.imageUrl}
               alt={crew.title}
-              width={40}
-              height={40}
+              width={44}
+              height={44}
               className="h-full w-full object-cover"
               unoptimized
             />
@@ -156,23 +211,23 @@ function CrewRow({
           )}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="flex items-center gap-1.5">
-            <span className="truncate text-sm font-black text-text-primary">
+          <span className="flex items-baseline gap-1.5">
+            <span className="truncate text-[14px] font-black text-text-primary">
               {crew.title}
             </span>
-            <span className="shrink-0 text-[10px] font-bold text-text-secondary">
-              · 환급 비중 {crew.percent}%
+            <span className="shrink-0 text-[10px] font-bold text-text-secondary/80">
+              {crew.percent}% 비중
             </span>
           </span>
           <ProgressBar percent={crew.percent} color={crew.color} className="mt-2" />
         </span>
         <span className="shrink-0 text-right">
-          <span className="block text-sm font-black tabular-nums text-text-primary">
+          <span className="block text-[15px] font-black tabular-nums text-text-primary">
             {crew.amount}
           </span>
           {crew.delta && (
             <span
-              className={`mt-1 inline-flex items-center gap-0.5 text-[11px] font-extrabold ${
+              className={`mt-0.5 inline-flex items-center gap-0.5 text-[11px] font-extrabold ${
                 isUp
                   ? "text-primary-green"
                   : isDown
@@ -185,9 +240,9 @@ function CrewRow({
           )}
         </span>
       </span>
-      <span className="mt-3 flex items-center justify-end gap-1 text-[11px] font-black text-primary-green">
+      <span className="mt-3 flex items-center justify-end gap-1 text-[11px] font-bold text-primary-green/90">
         일일 현황 보기
-        <ChevronRight size={13} />
+        <ChevronRight size={12} />
       </span>
     </button>
   );
