@@ -114,7 +114,7 @@ export default function HostConsoleClient() {
 
   if (crewId === null) {
     return (
-      <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
+      <main className="min-h-screen w-full overflow-x-clip bg-transparent flex flex-col items-center">
         <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-28">
           <Header showBackButton title="운영 콘솔" />
           <div className="px-5 pt-5">
@@ -133,7 +133,7 @@ export default function HostConsoleClient() {
 
   if (!isInitialized || isDetailLoading) {
     return (
-      <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
+      <main className="min-h-screen w-full overflow-x-clip bg-transparent flex flex-col items-center">
         <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-28">
           <Header showBackButton title="운영 콘솔" />
           <div className="px-5 pt-5 flex justify-center py-16 text-sm font-medium text-text-secondary">
@@ -146,7 +146,7 @@ export default function HostConsoleClient() {
 
   if (!crewDetail || crewDetail.host_member_uuid !== user?.member_uuid) {
     return (
-      <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
+      <main className="min-h-screen w-full overflow-x-clip bg-transparent flex flex-col items-center">
         <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-28">
           <Header showBackButton title="운영 콘솔" />
           <div className="px-5 pt-5">
@@ -164,7 +164,7 @@ export default function HostConsoleClient() {
   }
 
   return (
-    <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
+    <main className="min-h-screen w-full overflow-x-clip bg-transparent flex flex-col items-center">
       <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-28">
         <Header
           showBackButton

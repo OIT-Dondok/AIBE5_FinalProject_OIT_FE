@@ -37,7 +37,7 @@ export default function OfflinePage() {
   };
 
   return (
-    <main className="min-h-screen w-full overflow-x-hidden bg-transparent flex flex-col items-center">
+    <main className="min-h-screen w-full overflow-x-clip bg-transparent flex flex-col items-center">
       <div className="w-full max-w-[430px] min-h-screen flex flex-col pb-8 bg-background shadow-card">
         <Header title="돈독 (Dondok)" />
         <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">

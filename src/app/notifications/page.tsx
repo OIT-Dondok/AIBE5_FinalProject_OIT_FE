@@ -275,7 +275,7 @@ export default function NotificationsPage() {
   const groups = groupByDate(filtered);
 
   return (
-    <main className="min-h-screen w-full overflow-x-hidden bg-background flex flex-col items-center">
+    <main className="min-h-screen w-full overflow-x-clip bg-background flex flex-col items-center">
       <div className="w-full max-w-[430px] min-w-0 flex flex-col pb-28">
         <Header
           title="알림"
