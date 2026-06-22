@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { ClipboardCheck } from "lucide-react";
+import { ClipboardCheck, Maximize2, X } from "lucide-react";
 
 import { Header } from "@/components/common/Header";
 import { Skeleton } from "@/components/common/Skeleton";
@@ -103,6 +104,67 @@ function getAvatarClass(crewId: number): string {
 
 // ─── 서브 컴포넌트 ────────────────────────────────────────────
 
+/**
+ * 인증 이미지 확대 라이트박스.
+ * 카드 썸네일(1:1 크롭)과 달리 원본 비율 전체를 표시.
+ * 피드/운영 콘솔 확대와 동일한 동작(object-contain · Esc/배경 클릭 닫기 · 배경 스크롤 잠금).
+ */
+function ImageLightbox({
+  imageUrl,
+  alt,
+  onClose,
+}: {
+  imageUrl: string;
+  alt: string;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [onClose]);
+
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="인증 이미지 확대 보기"
+      onClick={onClose}
+      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-in fade-in duration-150"
+    >
+      <button
+        type="button"
+        aria-label="닫기"
+        onClick={onClose}
+        className="absolute top-4 right-4 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 active:scale-95 transition-all"
+      >
+        <X size={22} />
+      </button>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="flex max-h-full max-w-full items-center justify-center"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- 원본 비율 표시를 위해 fill 대신 자연 크기 사용 */}
+        <img
+          src={imageUrl}
+          alt={alt}
+          className="max-h-[85vh] max-w-full rounded-2xl object-contain shadow-2xl"
+        />
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 function DetailSkeleton() {
   return (
     <div className="px-4 pt-4 flex flex-col gap-4">
@@ -192,6 +254,7 @@ export default function MissionLogDetailPage() {
   const [item, setItem] = useState<MissionLogDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   useEffect(() => {
     const loadDetail = async () => {
@@ -247,22 +310,25 @@ export default function MissionLogDetailPage() {
           <div className="px-4 pt-4 flex flex-col gap-4">
             {/* 카드 */}
             <div className="bg-card rounded-xl overflow-hidden shadow-card-elevated border border-text-secondary/10">
-              {/* 인증 이미지 (카드 상단, 부모 overflow-hidden이 코너 처리) */}
-              <div className="relative w-full aspect-square bg-text-secondary/10">
-                {item.image_url ? (
-                  <Image
-                    src={item.image_url}
-                    alt="인증 이미지"
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <ClipboardCheck size={48} className="text-text-secondary opacity-30" />
-                  </div>
-                )}
-              </div>
+              {/* 인증 이미지 (카드 상단, 부모 overflow-hidden이 코너 처리) — 탭하면 원본 비율로 확대 */}
+              {item.image_url ? (
+                <button
+                  type="button"
+                  onClick={() => setIsLightboxOpen(true)}
+                  aria-label="인증 이미지 확대"
+                  className="relative block w-full aspect-square bg-text-secondary/10 cursor-zoom-in"
+                >
+                  <Image src={item.image_url} alt="인증 이미지" fill className="object-cover" unoptimized />
+                  <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-md bg-text-primary/55 px-2 py-1 text-[10px] font-medium text-white">
+                    <Maximize2 size={11} strokeWidth={2.4} />
+                    확대
+                  </span>
+                </button>
+              ) : (
+                <div className="relative w-full aspect-square bg-text-secondary/10 flex items-center justify-center">
+                  <ClipboardCheck size={48} className="text-text-secondary opacity-30" />
+                </div>
+              )}
 
               {/* 본문 (카드 내부) */}
               <div className="px-4 pt-4 pb-4 flex flex-col gap-3">
@@ -330,6 +396,15 @@ export default function MissionLogDetailPage() {
               notice="부정 행위가 의심될 경우 운영팀에 신고해주세요."
               actionLabel="부정 의심 신고"
             />
+
+            {/* 인증 이미지 확대 라이트박스 */}
+            {isLightboxOpen && item.image_url && (
+              <ImageLightbox
+                imageUrl={item.image_url}
+                alt="인증 이미지"
+                onClose={() => setIsLightboxOpen(false)}
+              />
+            )}
           </div>
         ) : null}
       </div>
