@@ -18,15 +18,6 @@ function getOrCreateDeviceId(): string {
   return id;
 }
 
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
-
 export function useFcmToken(enabled: boolean) {
   const attemptedRef = useRef(false);
 
@@ -45,18 +36,16 @@ export function useFcmToken(enabled: boolean) {
         if (dev) console.log('[FCM] permission:', permission);
         if (permission !== 'granted') return;
 
-        const sw = await navigator.serviceWorker.register(SW_PATH);
-        if (dev) console.log('[FCM] SW registered:', sw.scope, '| active:', !!sw.active);
-        const readySw = await navigator.serviceWorker.ready;
-        readySw.active?.postMessage({ type: 'FIREBASE_CONFIG', config: firebaseConfig });
+        await navigator.serviceWorker.register(SW_PATH);
+        const swReg = await navigator.serviceWorker.ready;
+        if (dev) console.log('[FCM] SW ready:', swReg.scope);
 
         const messaging = getFirebaseMessaging();
-        if (dev) console.log('[FCM] messaging instance:', !!messaging);
         if (!messaging) return;
 
         const token = await getToken(messaging, {
           vapidKey: VAPID_KEY,
-          serviceWorkerRegistration: sw,
+          serviceWorkerRegistration: swReg,
         });
         if (dev) console.log('[FCM] token:', token ? token.slice(0, 20) + '…' : 'null');
 
