@@ -74,15 +74,6 @@ export function VerificationCard({
   const isInGracePeriod =
     isAutoDecision && new Date(item.host_reviewable_until) > new Date();
   const isDecided = visibleDecision !== null && !isInGracePeriod && !isAutoDecision;
-  console.log('[VerificationCard]', item.mission_log_id, {
-    decision_type: item.decision_type,
-    decision,
-    visibleDecision,
-    isAutoDecision,
-    isInGracePeriod,
-    isDecided,
-    host_reviewable_until: item.host_reviewable_until,
-  });
   const rejectReasonDisplay: VerificationRejectInfo | null =
     visibleDecision === "rejected"
       ? (rejectInfo ??
