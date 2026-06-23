@@ -498,7 +498,7 @@ export default function CrewNewPage() {
     };
 
     return (
-      <div className="sticky bottom-0 bg-background/90 backdrop-blur-md border-t border-text-secondary/8 px-5 py-4 flex gap-3">
+      <div className="sticky bottom-0 bg-background/90 backdrop-blur-md border-t border-text-secondary/8 px-5 pt-4 pb-8 flex gap-3">
         <Button
           variant="outline"
           size="lg"

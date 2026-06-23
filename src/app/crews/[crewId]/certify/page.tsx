@@ -9,6 +9,7 @@ import {
   Loader2,
   ImagePlus,
   Clock,
+  Camera,
 } from 'lucide-react';
 
 import { Header } from '@/components/common/Header';
@@ -212,6 +213,7 @@ export default function CertifyPage() {
   };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   // ── VERIFYING 중 새로고침/탭 닫기 + 뒤로가기 차단 ──────────
   useEffect(() => {
@@ -275,6 +277,31 @@ export default function CertifyPage() {
       clearTimeout(t3);
     };
   }, [step]);
+
+  // ── 세션스토리지에 저장된 임시 파일(모달 촬영/사진선택 결과) 복원 ──────────
+  useEffect(() => {
+    const tempUrl = sessionStorage.getItem('dondok_temp_cert_file_url');
+    const tempName = sessionStorage.getItem('dondok_temp_cert_file_name') || 'capture.jpg';
+    const tempType = sessionStorage.getItem('dondok_temp_cert_file_type') || 'image/jpeg';
+
+    if (!tempUrl) return;
+
+    fetch(tempUrl)
+      .then((res) => res.blob())
+      .then((blob) => {
+        const restoredFile = new File([blob], tempName, { type: tempType });
+        setFile(restoredFile);
+      })
+      .catch((err) => {
+        console.error('Failed to restore captured file:', err);
+      })
+      .finally(() => {
+        // 복원 후 세션 클리어해 재진입 시 오작동 방지
+        sessionStorage.removeItem('dondok_temp_cert_file_name');
+        sessionStorage.removeItem('dondok_temp_cert_file_type');
+        sessionStorage.removeItem('dondok_temp_cert_file_url');
+      });
+  }, []);
 
   // ── 파일 미리보기 URL 관리 ────────────────────────────────────
   useEffect(() => {
@@ -383,8 +410,8 @@ export default function CertifyPage() {
   // ────────────────────────────────────────────────────────────
   if (crewLoading) {
     return (
-      <main className="min-h-screen flex flex-col items-center bg-transparent">
-        <div className="w-full max-w-[430px] flex flex-col">
+      <main className="min-h-screen flex flex-col items-center bg-background">
+        <div className="w-full max-w-[430px] min-h-screen flex flex-col bg-background shadow-card">
           <Header title="오늘의 인증" showBackButton />
           <div className="flex-1 flex items-center justify-center py-20">
             <Loader2 size={32} className="animate-spin text-primary-green" />
@@ -396,8 +423,8 @@ export default function CertifyPage() {
 
   if (crewError || !crew) {
     return (
-      <main className="min-h-screen flex flex-col items-center bg-transparent">
-        <div className="w-full max-w-[430px] flex flex-col">
+      <main className="min-h-screen flex flex-col items-center bg-background">
+        <div className="w-full max-w-[430px] min-h-screen flex flex-col bg-background shadow-card">
           <Header title="오늘의 인증" showBackButton />
           <div className="flex-1 flex flex-col items-center justify-center py-20 gap-3 px-6 text-center">
             <AlertTriangle size={40} className="text-amber-500" />
@@ -414,8 +441,8 @@ export default function CertifyPage() {
   const participation = crew.my_participation;
   if (!participation || participation.status !== 'LOCKED') {
     return (
-      <main className="min-h-screen flex flex-col items-center bg-transparent">
-        <div className="w-full max-w-[430px] flex flex-col">
+      <main className="min-h-screen flex flex-col items-center bg-background">
+        <div className="w-full max-w-[430px] min-h-screen flex flex-col bg-background shadow-card">
           <Header title="오늘의 인증" showBackButton />
           <div className="flex-1 flex flex-col items-center justify-center py-20 gap-3 px-6 text-center">
             <AlertTriangle size={40} className="text-amber-500" />
@@ -442,8 +469,8 @@ export default function CertifyPage() {
       minute: '2-digit',
     });
     return (
-      <main className="min-h-screen flex flex-col items-center bg-transparent">
-        <div className="w-full max-w-[430px] flex flex-col">
+      <main className="min-h-screen flex flex-col items-center bg-background">
+        <div className="w-full max-w-[430px] min-h-screen flex flex-col bg-background shadow-card">
           <Header title="오늘의 인증" showBackButton />
           <div className="flex flex-col items-center justify-center py-20 gap-5 px-6 text-center">
             <div className="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center">
@@ -468,8 +495,8 @@ export default function CertifyPage() {
   // 렌더: 본문
   // ────────────────────────────────────────────────────────────
   return (
-    <main className="min-h-screen flex flex-col items-center bg-transparent">
-      <div className="w-full max-w-[430px] flex flex-col pb-10">
+    <main className="min-h-screen flex flex-col items-center bg-background">
+      <div className="w-full max-w-[430px] min-h-screen flex flex-col pb-10 bg-background shadow-card">
         <Header title="오늘의 인증" showBackButton={step !== 'VERIFYING'} />
 
         <div className="px-5 pt-4 flex flex-col gap-5">
@@ -502,12 +529,18 @@ export default function CertifyPage() {
                 onChange={handleFileChange}
                 className="hidden"
               />
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleFileChange}
+                className="hidden"
+              />
 
               {/* 이미지 선택 영역 */}
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full aspect-[4/3] rounded-card border-2 border-dashed border-text-secondary/25 bg-background/60 flex flex-col items-center justify-center gap-2 hover:border-primary-green/50 hover:bg-success-green/10 transition-all active:scale-[0.99]"
+              <div
+                className="w-full aspect-[4/3] rounded-card border-2 border-dashed border-text-secondary/15 bg-background/40 flex flex-col items-center justify-center transition-all overflow-hidden"
               >
                 {preview ? (
                   // eslint-disable-next-line @next/next/no-img-element -- blob preview URL은 next/image 최적화 불필요
@@ -517,22 +550,62 @@ export default function CertifyPage() {
                     className="w-full h-full object-cover rounded-[calc(var(--radius-card)-2px)]"
                   />
                 ) : (
-                  <>
-                    <ImagePlus size={36} className="text-text-secondary/50" />
-                    <p className="text-sm font-medium text-text-secondary">사진을 선택해주세요</p>
-                    <p className="text-xs text-text-secondary/60">JPG · PNG · GIF · BMP · WEBP · HEIC · 최대 10MB</p>
-                  </>
+                  <div className="flex flex-col items-center justify-center w-full h-full gap-5 p-6">
+                    <div className="text-center">
+                      <p className="text-sm font-bold text-text-primary">인증 방법을 선택해주세요</p>
+                      <p className="text-[11px] text-text-secondary mt-1">오늘 수행한 미션의 사진을 등록합니다.</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 w-full max-w-[300px]">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex flex-col items-center justify-center gap-2.5 py-4 px-3 rounded-2xl bg-card border border-text-secondary/10 hover:border-primary-green/40 hover:bg-success-green/10 hover:shadow-sm active:scale-[0.97] transition-all group"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-background/80 flex items-center justify-center group-hover:bg-primary-green/10 transition-colors">
+                          <ImagePlus size={18} className="text-text-secondary group-hover:text-primary-green transition-colors" />
+                        </div>
+                        <span className="text-xs font-semibold text-text-primary">앨범에서 선택</span>
+                      </button>
+                      
+                      <button
+                        type="button"
+                        onClick={() => cameraInputRef.current?.click()}
+                        className="flex flex-col items-center justify-center gap-2.5 py-4 px-3 rounded-2xl bg-card border border-text-secondary/10 hover:border-primary-green/40 hover:bg-success-green/10 hover:shadow-sm active:scale-[0.97] transition-all group"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-background/80 flex items-center justify-center group-hover:bg-primary-green/10 transition-colors">
+                          <Camera size={18} className="text-text-secondary group-hover:text-primary-green transition-colors" />
+                        </div>
+                        <span className="text-xs font-semibold text-text-primary">카메라로 촬영</span>
+                      </button>
+                    </div>
+                    
+                    <p className="text-[10px] text-text-secondary/40 text-center leading-normal">
+                      최대 10MB · JPG, PNG, WEBP, HEIC 지원
+                      <span className="block mt-1 text-[9px] text-amber-600/80 font-medium">※ 직접 촬영은 PWA 앱을 설치한 모바일 환경에서만 가능합니다.</span>
+                    </p>
+                  </div>
                 )}
-              </button>
+              </div>
 
               {preview && (
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="text-xs text-primary-blue underline-offset-2 hover:underline self-center"
-                >
-                  사진 다시 선택
-                </button>
+                <div className="flex items-center justify-center gap-3.5 text-xs self-center">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-primary-blue underline-offset-2 hover:underline font-medium"
+                  >
+                    사진 다시 선택
+                  </button>
+                  <span className="text-text-secondary/30">|</span>
+                  <button
+                    type="button"
+                    onClick={() => cameraInputRef.current?.click()}
+                    className="text-primary-blue underline-offset-2 hover:underline font-medium"
+                  >
+                    카메라로 촬영
+                  </button>
+                </div>
               )}
 
               {/* 캡션 입력 */}
@@ -565,6 +638,7 @@ export default function CertifyPage() {
                   '한 장의 사진만 업로드해요',
                   '한 줄 소감을 함께 적어주세요',
                   'Exif/OCR 자동 검증 후 방장이 확인해요',
+                  '직접 촬영 기능은 PWA 앱을 설치한 모바일 기기에서만 동작해요',
                 ].map((txt) => (
                   <p key={txt} className="text-xs text-text-secondary flex items-start gap-1.5">
                     <span className="shrink-0 mt-px">•</span>

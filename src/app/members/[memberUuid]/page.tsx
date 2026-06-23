@@ -292,9 +292,6 @@ export default function MemberProfilePage() {
                       <h1 className="text-2xl font-black tracking-tight text-text-primary">
                         {profile.nickname}
                       </h1>
-                      {profile.is_host_ever && (
-                        <Crown size={16} fill="currentColor" className="text-amber-500 shrink-0" />
-                      )}
                     </div>
                     {profile.is_host_ever && (
                       <div className="mt-2">

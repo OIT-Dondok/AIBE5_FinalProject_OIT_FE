@@ -149,7 +149,25 @@ function StatusBadge({ status }: { status: CertificationStatus }) {
   );
 }
 
-function NicknameAvatar({ nickname, crewId }: { nickname: string; crewId: number }) {
+function NicknameAvatar({
+  nickname,
+  crewId,
+  profileImageUrl,
+}: {
+  nickname: string;
+  crewId: number;
+  profileImageUrl?: string | null;
+}) {
+  if (profileImageUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- Keep current image rendering path for backend-provided profile URLs.
+      <img
+        src={profileImageUrl}
+        alt={`${nickname} 프로필`}
+        className="shrink-0 w-10 h-10 rounded-xl object-cover border border-text-secondary/10"
+      />
+    );
+  }
   const displayChar = (nickname && nickname.charAt(0).toUpperCase()) || "?";
   return (
     <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${getAvatarClass(crewId)}`}>
@@ -168,7 +186,11 @@ function CertificationCard({ item }: { item: FeedItem }) {
       href={`/my/certifications/${item.mission_log_id}`}
       className="flex items-center gap-3 bg-card rounded-card shadow-card border border-text-secondary/10 px-4 py-3 animate-feed-in hover:shadow-card-elevated active:scale-[0.99] transition-all"
     >
-      <NicknameAvatar nickname={item.nickname} crewId={item.crew_id} />
+      <NicknameAvatar
+        nickname={item.nickname}
+        crewId={item.crew_id}
+        profileImageUrl={item.profile_image_url}
+      />
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
         <p className="text-sm font-semibold text-text-primary truncate leading-snug">
           {item.nickname}

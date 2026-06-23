@@ -425,7 +425,7 @@ export default function CrewsPage() {
         type="button"
         aria-label="크루 생성"
         onClick={() => router.push('/crews/new')}
-        className="fixed bottom-24 right-5 w-14 h-14 rounded-full bg-primary-green flex items-center justify-center text-white shadow-xl shadow-primary-green/40 hover:opacity-90 active:scale-95 transition-all z-40"
+        className="fixed bottom-28 right-5 md:left-1/2 md:right-auto md:translate-x-[160px] w-14 h-14 rounded-full bg-primary-green flex items-center justify-center text-white shadow-xl shadow-primary-green/40 hover:opacity-90 active:scale-95 transition-all z-40 cursor-pointer"
       >
         <Plus size={24} strokeWidth={2.5} />
       </button>
