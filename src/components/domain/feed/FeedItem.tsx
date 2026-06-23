@@ -6,7 +6,7 @@ import { ChevronRight } from 'lucide-react';
 
 import type { FeedItem as FeedItemType } from '@/types/domain';
 import { FeedReactionBar } from '@/components/domain/feed/FeedReactionBar';
-import { FeedImageLightbox } from '@/components/domain/feed/FeedImageLightbox';
+import { ImageLightbox } from '@/components/common/ImageLightbox';
 import { FeedCertImage } from '@/components/domain/feed/FeedCertImage';
 import {
   STATUS_CONFIG,
@@ -115,9 +115,13 @@ export function FeedItem({ item, onRemove }: FeedItemProps) {
         />
       </div>
 
-      {/* 이미지 확대 라이트박스 */}
-      {isLightboxOpen && (
-        <FeedImageLightbox item={item} onClose={() => setIsLightboxOpen(false)} />
+      {/* 이미지 확대 라이트박스 (image_url이 있을 때만 확대 버튼이 노출됨) */}
+      {isLightboxOpen && item.image_url && (
+        <ImageLightbox
+          imageUrl={item.image_url}
+          alt={`${item.nickname}님의 ${item.crew_name} 인증 이미지`}
+          onClose={() => setIsLightboxOpen(false)}
+        />
       )}
     </article>
   );
