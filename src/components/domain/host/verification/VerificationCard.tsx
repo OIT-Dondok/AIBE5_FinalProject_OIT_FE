@@ -73,7 +73,7 @@ export function VerificationCard({
     decision == null;
   const isInGracePeriod =
     isAutoDecision && new Date(item.host_reviewable_until) > new Date();
-  const isDecided = visibleDecision !== null && !isInGracePeriod;
+  const isDecided = visibleDecision !== null && !isInGracePeriod && !isAutoDecision;
   const rejectReasonDisplay: VerificationRejectInfo | null =
     visibleDecision === "rejected"
       ? (rejectInfo ??
@@ -198,22 +198,18 @@ export function VerificationCard({
           <div className="flex shrink-0 items-center gap-2">
               <span
                 className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
-                  isInGracePeriod
-                    ? "bg-amber-100 text-amber-700"
-                    : visibleDecision === "approved"
-                      ? "bg-success-green/65 text-primary-green"
-                      : visibleDecision === "rejected"
-                        ? "bg-[#FCEDEC] text-[#DB5C55]"
-                        : exifBadgeStyle[item.exif_status]
+                  visibleDecision === "approved"
+                    ? "bg-success-green/65 text-primary-green"
+                    : visibleDecision === "rejected"
+                      ? "bg-[#FCEDEC] text-[#DB5C55]"
+                      : exifBadgeStyle[item.exif_status]
                 }`}
               >
-                {isInGracePeriod
-                  ? "유예 중"
-                  : visibleDecision === "approved"
-                    ? "승인됨"
-                    : visibleDecision === "rejected"
-                      ? "거절됨"
-                      : `Exif ${exifSummaryLabel[item.exif_status]}`}
+                {visibleDecision === "approved"
+                  ? isInGracePeriod ? "임시 승인" : "승인"
+                  : visibleDecision === "rejected"
+                    ? isInGracePeriod ? "임시 거절" : "거절"
+                    : `Exif ${exifSummaryLabel[item.exif_status]}`}
               </span>
               <span className={`flex h-6 w-5 items-center justify-center ${isExpanded ? "text-[#4d73d9]" : "text-[#aeaaa1]"}`}>
                 {isExpanded ? <ChevronDown size={19} strokeWidth={2.4} /> : <ChevronRight size={21} strokeWidth={2.4} />}
@@ -268,12 +264,6 @@ export function VerificationCard({
 
             {isInGracePeriod ? (
               <div className="mt-3 flex flex-col gap-3">
-                <div className="flex items-center gap-2.5 rounded-2xl bg-amber-50 px-4 py-3 text-amber-700">
-                  <Check size={18} strokeWidth={2.8} className="shrink-0" />
-                  <p className="text-sm font-extrabold">
-                    임시 자동 {visibleDecision === "approved" ? "승인" : "거절"} · 유예 중 수정 가능
-                  </p>
-                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <HostActionButton
                     variant="reject"

@@ -87,8 +87,8 @@ function getErrorMessage(error: unknown) {
 }
 
 function getDecisionFromType(decisionType?: MissionLogDecisionType | null): VerificationDecision | null {
-  if (decisionType === "AUTO_APPROVE" || decisionType === "MANUAL_APPROVE") return "approved";
-  if (decisionType === "AUTO_REJECT" || decisionType === "MANUAL_REJECT") return "rejected";
+  if (decisionType === "MANUAL_APPROVE") return "approved";
+  if (decisionType === "MANUAL_REJECT") return "rejected";
   return null;
 }
 
