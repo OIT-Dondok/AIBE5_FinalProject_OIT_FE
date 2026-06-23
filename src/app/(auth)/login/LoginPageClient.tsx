@@ -23,6 +23,8 @@ export function LoginPageClient({ loginNotice }: LoginPageClientProps) {
   const [slogan2Visible, setSlogan2Visible] = useState(false);
   const router = useRouter();
   const { setAuth } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
+  const isInitialized = useAuthStore((s) => s.isInitialized);
 
   useEffect(() => {
     const t1 = setTimeout(() => setSlogan1Visible(true), 300);
@@ -39,6 +41,13 @@ export function LoginPageClient({ loginNotice }: LoginPageClientProps) {
 
     window.history.replaceState(null, "", "/login");
   }, [loginNotice]);
+
+  // 이미 로그인된 사용자가 로그인 화면에 갇히지 않도록, init 완료 후 통과시킨다.
+  useEffect(() => {
+    if (isInitialized && user) {
+      router.replace("/crews");
+    }
+  }, [isInitialized, user, router]);
 
   const validate = () => {
     let valid = true;
