@@ -98,7 +98,7 @@ export function NoticeCard({
             📢 공지
           </span>
           {crewName && (
-            <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-black border tracking-tight shrink-0 transition-colors ${getCrewBrandingColor(notice.crew_id).bgClass} ${getCrewBrandingColor(notice.crew_id).textClass} ${getCrewBrandingColor(notice.crew_id).borderClass}`}>
+            <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-black border tracking-tight shrink-0 transition-colors ${getCrewBrandingColor(notice.crew_id, crewName).bgClass} ${getCrewBrandingColor(notice.crew_id, crewName).textClass} ${getCrewBrandingColor(notice.crew_id, crewName).borderClass}`}>
               {crewName}
             </span>
           )}

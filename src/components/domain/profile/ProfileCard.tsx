@@ -208,9 +208,6 @@ export function ProfileCard({
               ) : (
                 <div className="flex items-center gap-2">
                   <h1 className="text-2xl font-black tracking-tight text-text-primary">{profile.nickname}</h1>
-                  {profile.isHostEver && (
-                    <Crown size={16} fill="currentColor" className="text-amber-500 shrink-0" />
-                  )}
                 </div>
               )}
               {profile.isHostEver && (

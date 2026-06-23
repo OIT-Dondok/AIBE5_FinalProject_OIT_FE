@@ -60,7 +60,7 @@ export function InfoTooltip({
       <span
         id={tooltipId}
         role="tooltip"
-        className={`pointer-events-none absolute z-50 w-52 rounded-xl bg-text-primary px-3 py-2 text-left text-[11px] font-bold leading-relaxed text-white opacity-0 shadow-[0_8px_24px_rgba(34,34,34,0.18)] group-hover:opacity-100 group-focus-within:opacity-100 ${vertical} ${horizontal}`}
+        className={`pointer-events-none absolute z-50 w-52 rounded-xl bg-[var(--color-background)] border border-[var(--color-primary-green)] px-3 py-2 text-left text-[11px] font-bold leading-relaxed text-[var(--color-primary-green)] opacity-0 shadow-[0_8px_24px_rgba(34,34,34,0.18)] group-hover:opacity-100 group-focus-within:opacity-100 ${vertical} ${horizontal}`}
       >
         {children}
       </span>
@@ -100,7 +100,7 @@ export function SegmentRing({
   const inset = stroke;
 
   return (
-    <div className="relative shrink-0" style={{ width: size, height: size }}>
+    <div className="relative shrink-0 animate-chart-pop" style={{ width: size, height: size }}>
       <div className="absolute inset-0 rounded-full" style={{ background }} />
       <div className="absolute rounded-full bg-card" style={{ inset }} />
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">

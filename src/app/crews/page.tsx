@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, Search, CheckCircle2, CircleAlert, Sparkles, Camera } from 'lucide-react';
+import { Plus, Search, CheckCircle2, CircleAlert, Sparkles, Camera, ChevronRight } from 'lucide-react';
 import { Header } from '@/components/common/Header';
 import { EmptyState } from '@/components/common/EmptyState';
 import CrewCard from '@/components/domain/crew/CrewCard';
@@ -122,31 +122,31 @@ function TodayVerificationStatus() {
         }}
         className={`w-full p-4 rounded-[24px] border shadow-[0_4px_16px_rgba(0,0,0,0.03)] cursor-pointer transition-all duration-300 flex flex-col gap-3.5 select-none active:scale-[0.99] ${
           isAllCertified
-            ? 'bg-gradient-to-br from-emerald-500 to-green-600 border-primary-green/20 text-white shadow-emerald-500/10'
-            : 'bg-card border-text-secondary/10 text-text-primary'
+            ? 'bg-[#5E9B73] border-[#4d8661] text-white shadow-[0_8px_20px_-4px_rgba(94,155,115,0.22)]'
+            : 'bg-gradient-to-br from-[#FFFDF0] to-[#FFFBEA] border-[#F2E5C1] text-text-primary shadow-[0_6px_16px_rgba(245,230,175,0.12)]'
         }`}
       >
         {/* 헤더 및 요약 배지 */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {isAllCertified ? (
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white animate-bounce shrink-0">
-                <Trophy size={20} fill="white" />
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white border border-white/20 animate-pulse shrink-0">
+                <Trophy size={18} fill="white" />
               </span>
             ) : (
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/10 text-amber-500 animate-pulse shrink-0">
-                <Sparkles size={20} className="fill-amber-500/10" />
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/10 text-amber-600 border border-amber-500/20 animate-pulse shrink-0">
+                <Sparkles size={20} className="fill-amber-500/10 text-amber-600" />
               </span>
             )}
             <div className="flex flex-col justify-center">
-              <span className={`text-[10px] font-bold tracking-wider uppercase ${isAllCertified ? 'text-white/70' : 'text-text-secondary/70'}`}>
-                {isAllCertified ? '오늘의 챌린지' : '오늘의 인증 현황'}
+              <span className={`text-[10px] font-bold tracking-wider uppercase ${isAllCertified ? 'text-white/75' : 'text-amber-700/80'}`}>
+                {isAllCertified ? '오늘의 챌린지 완료' : '오늘의 인증 현황'}
               </span>
               <div className="flex items-baseline gap-2 mt-0.5">
                 <strong className={`text-2xl font-black tracking-tight leading-none ${isAllCertified ? 'text-white' : 'text-text-primary'}`}>
                   {progressPercent}%
                 </strong>
-                <span className={`text-xs font-semibold ${isAllCertified ? 'text-white/80' : 'text-text-secondary'}`}>
+                <span className={`text-xs font-semibold ${isAllCertified ? 'text-white/90' : 'text-text-secondary'}`}>
                   {isAllCertified ? '(모두 완수 🎉)' : `(${certifiedCount}/${totalCount} 완료)`}
                 </span>
               </div>
@@ -161,8 +161,8 @@ function TodayVerificationStatus() {
                 <ChevronDown size={20} className="text-text-secondary/70 p-0.5 hover:bg-text-secondary/5 rounded-full transition-colors" />
               )
             ) : (
-              <span className="bg-white/20 text-white text-[10px] font-black px-2.5 py-1 rounded-full">
-                완료
+              <span className="bg-white/15 text-white border border-white/25 text-[10px] font-black px-3 py-1 rounded-full tracking-wider">
+                성공
               </span>
             )}
           </div>
@@ -170,10 +170,10 @@ function TodayVerificationStatus() {
 
         {/* 인터랙티브 게이지 바 */}
         <div className="w-full flex flex-col gap-1 mt-1">
-          <div className={`w-full h-5 rounded-full overflow-hidden p-0.5 ${isAllCertified ? 'bg-white/20' : 'bg-text-secondary/10'}`}>
+          <div className={`w-full h-5 rounded-full overflow-hidden p-0.5 ${isAllCertified ? 'bg-white/15' : 'bg-amber-500/10'}`}>
             <div
               className={`h-full rounded-full transition-all duration-700 ease-out ${
-                isAllCertified ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.5)]' : 'bg-gradient-to-r from-amber-400 to-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.3)]'
+                isAllCertified ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.6)]' : 'bg-gradient-to-r from-amber-400 to-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.3)]'
               }`}
               style={{ width: `${progressPercent}%` }}
             />
@@ -183,7 +183,7 @@ function TodayVerificationStatus() {
 
       {/* 펼쳐지는 크루 서랍 (아코디언) */}
       {!isAllCertified && isExpanded && (
-        <div className="mt-2.5 flex flex-col gap-2 bg-text-secondary/5 p-3 rounded-[24px] border border-text-secondary/5 animate-dropdown-open">
+        <div className="mt-2.5 flex flex-col gap-2 bg-gradient-to-br from-[#FFFDF0] to-[#FFFBEA] p-3 rounded-[24px] border border-[#F2E5C1] shadow-[0_4px_12px_rgba(245,230,175,0.08)] animate-dropdown-open">
           <p className="text-[10px] font-extrabold text-text-secondary/60 tracking-wider uppercase px-1">인증이 필요한 크루</p>
           <div className="flex flex-col gap-2">
             {activeCrews.map((crew) => (
@@ -212,10 +212,7 @@ function TodayVerificationStatus() {
                       완료
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1.5 bg-primary-green text-white px-3 py-1 rounded-full text-[10px] font-black shadow-sm shadow-primary-green/20 hover:opacity-95 transition-opacity">
-                      <Camera size={12} strokeWidth={2.5} />
-                      인증하기
-                    </span>
+                    <ChevronRight size={16} className="text-text-secondary/50" />
                   )}
                 </div>
               </div>
@@ -425,7 +422,7 @@ export default function CrewsPage() {
         type="button"
         aria-label="크루 생성"
         onClick={() => router.push('/crews/new')}
-        className="fixed bottom-24 right-5 w-14 h-14 rounded-full bg-primary-green flex items-center justify-center text-white shadow-xl shadow-primary-green/40 hover:opacity-90 active:scale-95 transition-all z-40"
+        className="fixed bottom-28 right-5 md:left-1/2 md:right-auto md:translate-x-[160px] w-14 h-14 rounded-full bg-primary-green flex items-center justify-center text-white shadow-xl shadow-primary-green/40 hover:opacity-90 active:scale-95 transition-all z-40 cursor-pointer"
       >
         <Plus size={24} strokeWidth={2.5} />
       </button>

@@ -12,8 +12,8 @@ const CATEGORY_BG: Record<CrewCategory, string> = {
   READING: 'bg-amber-50',
   EXERCISE: 'bg-blue-50',
   STUDY: 'bg-violet-50',
-  DIET: 'bg-green-50',
-  OTHER: 'bg-slate-50',
+  DIET: 'bg-lime-50',
+  OTHER: 'bg-rose-50',
 };
 
 interface StatusConfig {
@@ -25,10 +25,10 @@ interface StatusConfig {
 
 const STATUS_CONFIG: Record<CrewStatus, StatusConfig> = {
   RECRUITING: {
-    dot: 'bg-primary-blue',
-    text: 'text-primary-blue',
+    dot: 'bg-[#5E9B73]',
+    text: 'text-[#5E9B73]',
     label: '모집중',
-    progress: 'bg-gradient-to-r from-blue-400 to-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.25)]',
+    progress: 'bg-gradient-to-r from-[#5E9B73] to-[#85C49A] shadow-[0_0_8px_rgba(94,155,115,0.25)]',
   },
   ACTIVE: {
     dot: 'bg-primary-green animate-pulse',
