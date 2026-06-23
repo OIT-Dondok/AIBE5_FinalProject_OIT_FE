@@ -46,9 +46,14 @@ export default function CrewDetailTabs({ crew, crewId, onConfirmedCountLoaded }:
         // 2. 현재 로그인된 유저가 방장(HOST)인 경우에만 승인 대기자(PENDING) 조회
         const isHost = user?.member_uuid === crew.host_member_uuid;
         if (isHost) {
-          const appRes = await getCrewApplications(crewId, { status: 'PENDING' });
-          if (!active) return;
-          setPendingCount(appRes.data.items.length);
+          try {
+            const appRes = await getCrewApplications(crewId, { status: 'PENDING' });
+            if (!active) return;
+            setPendingCount(appRes.data.items.length);
+          } catch (appErr) {
+            console.error('Failed to fetch pending applications:', appErr);
+            setPendingCount(null);
+          }
         } else {
           setPendingCount(null);
         }
