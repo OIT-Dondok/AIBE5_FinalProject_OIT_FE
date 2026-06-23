@@ -13,17 +13,17 @@ interface FeedCrewFilterProps {
 
 export function FeedCrewFilter({ crews, selectedCrewId, onSelect }: FeedCrewFilterProps) {
   return (
-    <div className="relative w-full flex items-center group">
+    <div className="relative w-full overflow-hidden">
       {/* 가로 스크롤 컨테이너 */}
-      <div className="flex-1 flex items-center gap-2 overflow-x-auto no-scrollbar px-5 py-3 pr-10">
+      <div className="flex overflow-x-auto no-scrollbar gap-2 px-5 py-4 pr-14">
         <button
           type="button"
           onClick={() => onSelect(null)}
           aria-pressed={selectedCrewId === null}
-          className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-green/50 ${
+          className={`flex-shrink-0 px-4 py-2 text-xs font-bold rounded-full transition-all duration-300 active:scale-95 focus-visible:outline-none ${
             selectedCrewId === null
-              ? 'bg-primary-green text-white shadow-sm shadow-primary-green/30'
-              : 'bg-card border border-text-secondary/20 text-text-secondary hover:bg-text-secondary/5'
+              ? 'bg-[#5E9B73] text-white shadow-lg shadow-[#5E9B73]/20 ring-2 ring-[#5E9B73]/20 scale-[1.04] z-10'
+              : 'bg-card border border-text-secondary/15 text-text-secondary hover:bg-text-secondary/5'
           }`}
         >
           전체 크루
@@ -38,10 +38,10 @@ export function FeedCrewFilter({ crews, selectedCrewId, onSelect }: FeedCrewFilt
               type="button"
               onClick={() => onSelect(crew.crew_id)}
               aria-pressed={isSelected}
-              className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs transition-all active:scale-95 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-green/50 border ${
+              className={`flex-shrink-0 px-4 py-2 text-xs font-bold rounded-full transition-all duration-300 active:scale-95 whitespace-nowrap focus-visible:outline-none ${
                 isSelected
-                  ? `${branding.bgClass} ${branding.textClass} ${branding.borderClass} border-2 font-extrabold shadow-sm`
-                  : 'bg-card border-text-secondary/15 text-text-secondary hover:bg-text-secondary/5 font-semibold'
+                  ? `${branding.bgClass} ${branding.textClass} ${branding.borderClass} shadow-lg scale-[1.04] z-10 ring-4 ring-current/15`
+                  : 'bg-card border border-text-secondary/15 text-text-secondary hover:bg-text-secondary/5'
               }`}
             >
               {crew.crew_name}
@@ -50,9 +50,9 @@ export function FeedCrewFilter({ crews, selectedCrewId, onSelect }: FeedCrewFilt
         })}
       </div>
       
-      {/* 우측 스크롤 힌트 인디케이터 (더 많은 데이터 표시용) */}
-      <div className="absolute right-2 pointer-events-none flex items-center justify-center w-6 h-6 rounded-full bg-card/90 backdrop-blur-sm border border-text-secondary/10 shadow-sm text-text-secondary/60 animate-pulse">
-        <ChevronRight size={13} strokeWidth={2.5} />
+      {/* 우측 페이드 & 스크롤 암시 아이콘 */}
+      <div className="absolute right-0 top-0 bottom-0 w-14 bg-gradient-to-l from-background via-background/80 to-transparent pointer-events-none flex items-center justify-end pr-0.5 overflow-hidden">
+        <ChevronRight size={18} className="text-text-secondary/40 translate-x-1.5 animate-pulse shrink-0" strokeWidth={3} />
       </div>
     </div>
   );
