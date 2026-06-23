@@ -1,24 +1,23 @@
-// src/types/domain.ts
 import type { CursorPageResponse } from './common';
 // 전체 도메인 타입 정의
-// [기준] API-spec-dondok.md
+// [기준] 백엔드 레포 docs/api/* 
 // - 응답 필드: snake_case (명세와 동일)
 // - 식별자: member_uuid (외부 노출용), member.id는 내부 FK 전용
 // - 시간: ISO-8601 with offset (예: "2026-05-07T00:05:00+09:00")
 // - 금액: integer (원 단위)
 
 // ════════════════════════════════════════════════════════════
-// § 3. Enum
+// Enum
 // ════════════════════════════════════════════════════════════
 
-// § 3.0 MemberStatus
+// MemberStatus
 export const MEMBER_STATUS = {
   ACTIVE: 'ACTIVE',
   DEACTIVATED: 'DEACTIVATED',
 } as const;
 export type MemberStatus = (typeof MEMBER_STATUS)[keyof typeof MEMBER_STATUS];
 
-// § 3.1 CrewStatus
+// CrewStatus
 export const CREW_STATUS = {
   RECRUITING: 'RECRUITING',
   ACTIVE: 'ACTIVE',
@@ -27,7 +26,7 @@ export const CREW_STATUS = {
 } as const;
 export type CrewStatus = (typeof CREW_STATUS)[keyof typeof CREW_STATUS];
 
-// § 3.1a CrewCategory
+// CrewCategory
 export const CREW_CATEGORY = {
   MORNING: 'MORNING',
   READING: 'READING',
@@ -38,7 +37,7 @@ export const CREW_CATEGORY = {
 } as const;
 export type CrewCategory = (typeof CREW_CATEGORY)[keyof typeof CREW_CATEGORY];
 
-// § 3.2 ParticipantStatus
+// ParticipantStatus
 export const PARTICIPANT_STATUS = {
   PENDING: 'PENDING',       // 신청 대기, 보증금 reserve 상태
   LOCKED: 'LOCKED',         // 방장 승인 완료, 보증금 확정
@@ -48,7 +47,7 @@ export const PARTICIPANT_STATUS = {
 } as const;
 export type ParticipantStatus = (typeof PARTICIPANT_STATUS)[keyof typeof PARTICIPANT_STATUS];
 
-// § 3.3 FrequencyType
+// FrequencyType
 export const FREQUENCY_TYPE = {
   DAILY: 'DAILY',
   SPECIFIC_DAYS: 'SPECIFIC_DAYS',
@@ -56,14 +55,14 @@ export const FREQUENCY_TYPE = {
 } as const;
 export type FrequencyType = (typeof FREQUENCY_TYPE)[keyof typeof FREQUENCY_TYPE];
 
-// § 3.4 SettlementType
+// SettlementType
 export const SETTLEMENT_TYPE = {
   NORMAL: 'NORMAL',
   CANCELLED_BEFORE_START: 'CANCELLED_BEFORE_START',
 } as const;
 export type SettlementType = (typeof SETTLEMENT_TYPE)[keyof typeof SETTLEMENT_TYPE];
 
-// § 3.5 SettlementStatus
+// SettlementStatus
 export const SETTLEMENT_STATUS = {
   NONE: 'NONE',           // API projection only (DB에 저장 안 됨)
   PENDING: 'PENDING',
@@ -74,7 +73,7 @@ export const SETTLEMENT_STATUS = {
 } as const;
 export type SettlementStatus = (typeof SETTLEMENT_STATUS)[keyof typeof SETTLEMENT_STATUS];
 
-// § 3.6 PointTransactionType
+// PointTransactionType
 export const POINT_TRANSACTION_TYPE = {
   POINT_CHARGE: 'POINT_CHARGE',
   CREW_DEPOSIT_RESERVE: 'CREW_DEPOSIT_RESERVE',   // 보증금 예약 (reserve)
@@ -85,7 +84,7 @@ export const POINT_TRANSACTION_TYPE = {
 } as const;
 export type PointTransactionType = (typeof POINT_TRANSACTION_TYPE)[keyof typeof POINT_TRANSACTION_TYPE];
 
-// § 3.8 DailySettlementType
+// DailySettlementType
 export const DAILY_SETTLEMENT_TYPE = {
   A: 'A', // 인증마감 09:00 KST / 정산 12:00 KST
   B: 'B', // 인증마감 21:00 KST / 정산 00:00 KST (익일)
@@ -93,7 +92,7 @@ export const DAILY_SETTLEMENT_TYPE = {
 } as const;
 export type DailySettlementType = (typeof DAILY_SETTLEMENT_TYPE)[keyof typeof DAILY_SETTLEMENT_TYPE];
 
-// § 3.9 MissionLogDecisionType
+// MissionLogDecisionType
 export const MISSION_LOG_DECISION_TYPE = {
   MANUAL_APPROVE: 'MANUAL_APPROVE',
   MANUAL_REJECT: 'MANUAL_REJECT',
@@ -102,7 +101,7 @@ export const MISSION_LOG_DECISION_TYPE = {
 } as const;
 export type MissionLogDecisionType = (typeof MISSION_LOG_DECISION_TYPE)[keyof typeof MISSION_LOG_DECISION_TYPE];
 
-// § 3.10 MissionLogRejectReasonCode
+// MissionLogRejectReasonCode
 export const REJECT_REASON_CODE = {
   TIME_VIOLATION: 'TIME_VIOLATION',
   DUPLICATE: 'DUPLICATE',
@@ -113,7 +112,7 @@ export const REJECT_REASON_CODE = {
 } as const;
 export type RejectReasonCode = (typeof REJECT_REASON_CODE)[keyof typeof REJECT_REASON_CODE];
 
-// § 3.11 SettlementFailureCode
+// SettlementFailureCode
 export const SETTLEMENT_FAILURE_CODE = {
   INPUT_LOAD_FAILED: 'INPUT_LOAD_FAILED',
   CALCULATION_FAILED: 'CALCULATION_FAILED',
@@ -124,7 +123,7 @@ export const SETTLEMENT_FAILURE_CODE = {
 } as const;
 export type SettlementFailureCode = (typeof SETTLEMENT_FAILURE_CODE)[keyof typeof SETTLEMENT_FAILURE_CODE];
 
-// § 3.14 ProjectionStatus (API 응답 전용, DB 저장 안 됨)
+// ProjectionStatus (API 응답 전용, DB 저장 안 됨)
 export const PROJECTION_STATUS = {
   NOT_STARTED: 'NOT_STARTED',
   LIVE: 'LIVE',
@@ -134,7 +133,7 @@ export const PROJECTION_STATUS = {
 } as const;
 export type ProjectionStatus = (typeof PROJECTION_STATUS)[keyof typeof PROJECTION_STATUS];
 
-// § 3.15 ProjectionNotice (API 응답 전용, DB 저장 안 됨)
+// ProjectionNotice (API 응답 전용, DB 저장 안 됨)
 export const PROJECTION_NOTICE = {
   ESTIMATED_NOT_FINAL: 'ESTIMATED_NOT_FINAL',
   NOT_STARTED: 'NOT_STARTED',
@@ -144,7 +143,7 @@ export const PROJECTION_NOTICE = {
 } as const;
 export type ProjectionNotice = (typeof PROJECTION_NOTICE)[keyof typeof PROJECTION_NOTICE];
 
-// § 3.16 PointHistoryReferenceType
+// PointHistoryReferenceType
 export const POINT_HISTORY_REFERENCE_TYPE = {
   POINT_CHARGE: 'POINT_CHARGE',
   CREW_PARTICIPANT: 'CREW_PARTICIPANT',
@@ -173,7 +172,7 @@ export type CertificationStatus = (typeof CERTIFICATION_STATUS)[keyof typeof CER
 
 
 // ════════════════════════════════════════════════════════════
-// § 5.1 인증 / 회원
+// 인증 / 회원
 // ════════════════════════════════════════════════════════════
 
 // POST /api/auth/signup → 201
@@ -310,7 +309,7 @@ export interface MemberPublicProfile {
 
 
 // ════════════════════════════════════════════════════════════
-// § 5.2 크루 / 참여
+// 크루 / 참여
 // ════════════════════════════════════════════════════════════
 
 // GET /api/crews → items[]
@@ -525,7 +524,7 @@ export type NoticeCommentsResponse = CursorPageResponse<NoticeComment>;
 
 
 // ════════════════════════════════════════════════════════════
-// § 5.3 미션 인증
+// 미션 인증
 // ════════════════════════════════════════════════════════════
 
 // POST /api/uploads/presigned-url Request
@@ -704,7 +703,7 @@ export type VerificationHistoryResponse = CursorPageResponse<VerificationHistory
 
 
 // ════════════════════════════════════════════════════════════
-// § 5.4 인증 피드 / 리액션
+// 인증 피드 / 리액션
 // ════════════════════════════════════════════════════════════
 
 // reaction_counts: emoji grapheme → count 동적 map
@@ -785,7 +784,7 @@ export interface ReactionResponse {
 
 
 // ════════════════════════════════════════════════════════════
-// § 5.5 크루 대시보드
+// 크루 대시보드
 // ════════════════════════════════════════════════════════════
 
 // ─── GET /api/dashboard (참여 중인 전체 크루 집계) ──────────────────────────
@@ -854,7 +853,7 @@ export interface DashboardResponse {
 
 
 // ════════════════════════════════════════════════════════════
-// § 5.6 정산
+// 정산
 // ════════════════════════════════════════════════════════════
 
 // GET /api/crews/{crewId}/settlement → 200
@@ -941,7 +940,7 @@ export interface SettlementItem {
 
 
 // ════════════════════════════════════════════════════════════
-// § 5.7 AI
+// AI
 // ════════════════════════════════════════════════════════════
 
 // POST /api/ai/mission-recommendations Request
@@ -987,7 +986,7 @@ export const NOTIFICATION_EVENT_TYPE = {
 export type NotificationEventType = (typeof NOTIFICATION_EVENT_TYPE)[keyof typeof NOTIFICATION_EVENT_TYPE];
 
 // ════════════════════════════════════════════════════════════
-// § 5.8 포인트
+// 포인트
 // ════════════════════════════════════════════════════════════
 
 // POST /api/points/charges Request
@@ -1060,7 +1059,7 @@ export type WalletHistoryResponse = CursorPageResponse<WalletHistoryItem>;
 
 
 // ════════════════════════════════════════════════════════════
-// § 5.9 내 크루
+// 내 크루
 // ════════════════════════════════════════════════════════════
 
 // GET /api/me/crews items[]
@@ -1084,7 +1083,7 @@ export interface MyCrewsResponse {
 }
 
 // ════════════════════════════════════════════════════════════
-// § 알림
+// 알림
 // ════════════════════════════════════════════════════════════
 
 export interface NotificationItem {
