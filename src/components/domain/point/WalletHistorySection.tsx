@@ -283,7 +283,7 @@ export function WalletHistorySection({
             </div>
             <Link
               href={fullHistoryHref}
-              className="inline-flex items-center gap-0.5 text-xs font-extrabold text-primary-blue"
+              className="inline-flex items-center gap-0.5 text-xs font-extrabold text-primary-green"
               aria-label="전체 도딘 내역 보기"
             >
               전체 <ChevronRight size={14} />
