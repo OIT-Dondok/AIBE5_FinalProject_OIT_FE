@@ -25,13 +25,19 @@ export function FeedCertImage({
   const [isLandscape, setIsLandscape] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!imageUrl) return;
+    if (!imageUrl) {
+      setIsLandscape(false);
+      return;
+    }
+
+    let active = true;
 
     // 브라우저 캐시로 인해 onLoad가 안 불리는 현상을 해결하기 위해 Image 객체 직접 생성 후 측정
     const img = new Image();
     img.src = imageUrl;
 
     const checkDimensions = () => {
+      if (!active) return;
       if (img.naturalWidth >= img.naturalHeight) {
         setIsLandscape(true);
       } else {
@@ -44,6 +50,10 @@ export function FeedCertImage({
     } else {
       img.onload = checkDimensions;
     }
+
+    return () => {
+      active = false;
+    };
   }, [imageUrl]);
 
   // Tailwind와 CSS style 바인딩을 병행하여 렌더링 안정성 극대화

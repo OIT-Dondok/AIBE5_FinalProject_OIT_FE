@@ -290,10 +290,19 @@ export default function CertifyPage() {
       .then((res) => res.blob())
       .then((blob) => {
         const restoredFile = new File([blob], tempName, { type: tempType });
+        if (restoredFile.size > MAX_SIZE) {
+          showToast('10MB 이하 이미지를 선택해주세요', 'error');
+          return;
+        }
+        if (!isAllowedFile(restoredFile)) {
+          showToast('JPG, PNG, GIF, BMP, WEBP, HEIC 파일만 업로드 가능해요', 'error');
+          return;
+        }
         setFile(restoredFile);
       })
       .catch((err) => {
-        console.error('Failed to restore captured file:', err);
+        showToast('이전 촬영/선택 사진 복원에 실패했어요. 다시 촬영해 주세요.', 'error');
+        // TODO: Sentry 통합 시 Sentry.captureException(err)으로 전송
       })
       .finally(() => {
         // 복원 후 세션 클리어해 재진입 시 오작동 방지

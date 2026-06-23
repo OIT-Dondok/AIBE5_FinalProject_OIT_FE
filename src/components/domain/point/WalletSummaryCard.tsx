@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useId, useState, useEffect } from "react";
+import { useId, useState, useEffect, useRef } from "react";
 
 import { ArrowDown, Plus } from "lucide-react";
 
@@ -46,6 +46,15 @@ function WalletMetricPill({ metric }: { metric: WalletSummaryMetric }) {
 
 export function WalletSummaryCard({ wallet, onOpenCharge }: WalletSummaryCardProps) {
   const [showWithdrawTooltip, setShowWithdrawTooltip] = useState(false);
+  const withdrawTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (withdrawTimerRef.current) {
+        clearTimeout(withdrawTimerRef.current);
+      }
+    };
+  }, []);
 
   return (
     <section className="relative rounded-[24px] bg-[#5E9B73] text-white shadow-[0_8px_24px_rgba(34,34,34,0.12)] overflow-hidden border border-white/10 p-0.5 pb-4 pt-2">
@@ -70,24 +79,25 @@ export function WalletSummaryCard({ wallet, onOpenCharge }: WalletSummaryCardPro
         {/* 포켓 곡선 커팅 입체 엣지 장식 */}
         <div className="absolute top-0 inset-x-0 h-3 bg-gradient-to-b from-black/8 to-transparent pointer-events-none" />
 
-        {/* 상단 지표 (마진 밀도 증가) */}
-        {wallet.metrics.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 z-20 relative">
-            {wallet.metrics.map((metric) => (
-              <WalletMetricPill key={metric.label} metric={metric} />
-            ))}
+        {/* 사용가능 잔액과 지표 필 수평 배치 */}
+        <div className="mt-3.5 z-20 relative px-1 flex items-end justify-between gap-3">
+          <div className="flex flex-col">
+            <p className="text-[11px] font-bold text-white/85">사용가능 잔액</p>
+            <div className="mt-0.5 flex items-end gap-1">
+              <span className="text-[32px] font-black leading-none tracking-[-0.04em] tabular-nums text-white">
+                {wallet.availableBalance.replace("원", "")}
+              </span>
+              <span className="pb-0.5 text-xs font-bold text-white/80">원</span>
+            </div>
           </div>
-        )}
 
-        {/* 사용가능 잔액 표시 (축소된 폰트 크기 및 마진) */}
-        <div className="mt-3.5 z-20 relative px-1">
-          <p className="text-[11px] font-bold text-white/85">사용가능 잔액</p>
-          <div className="mt-0.5 flex items-end gap-1">
-            <span className="text-[32px] font-black leading-none tracking-[-0.04em] tabular-nums text-white">
-              {wallet.availableBalance.replace("원", "")}
-            </span>
-            <span className="pb-0.5 text-xs font-bold text-white/80">원</span>
-          </div>
+          {wallet.metrics.length > 0 && (
+            <div className="flex flex-col gap-1.5 items-end mb-1">
+              {wallet.metrics.map((metric) => (
+                <WalletMetricPill key={metric.label} metric={metric} />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* 버튼 (출금 미지원 버튼을 충전과 동일한 톤의 활성화된 흰색 버튼 비주얼로 업그레이드) */}
@@ -104,9 +114,14 @@ export function WalletSummaryCard({ wallet, onOpenCharge }: WalletSummaryCardPro
             <button
               type="button"
               onClick={() => {
+                if (withdrawTimerRef.current) {
+                  clearTimeout(withdrawTimerRef.current);
+                }
                 setShowWithdrawTooltip(true);
-                const timer = setTimeout(() => setShowWithdrawTooltip(false), 3000);
-                return () => clearTimeout(timer);
+                withdrawTimerRef.current = setTimeout(() => {
+                  setShowWithdrawTooltip(false);
+                  withdrawTimerRef.current = null;
+                }, 3000);
               }}
               className="w-full flex h-[38px] items-center justify-center gap-1.5 rounded-lg bg-white text-xs font-extrabold text-[#5E9B73] shadow-md transition-transform active:scale-[0.98] hover:bg-neutral-50"
               aria-label="도딘 출금 안내 보기"

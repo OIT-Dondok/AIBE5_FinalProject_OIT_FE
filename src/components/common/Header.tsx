@@ -24,7 +24,7 @@ export const Header = ({
     const unreadCount = useNotificationStore((s) => s.unreadCount);
 
     return (
-        <header className="sticky top-0 z-100 w-full flex justify-center bg-background/80 backdrop-blur-md">
+        <header className="sticky top-0 z-[100] w-full flex justify-center bg-background/80 backdrop-blur-md">
             {/* h-16(64px) 규격을 유지하여 상단 바의 안정감을 확보합니다. */}
             <div className="w-full max-w-[430px] h-16 px-5 flex items-center justify-between border-b border-text-secondary/5">
 
