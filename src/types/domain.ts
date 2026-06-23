@@ -982,6 +982,7 @@ export const NOTIFICATION_EVENT_TYPE = {
   CREW_APPLICATION_REJECTED: 'CREW_APPLICATION_REJECTED',             // 참여 신청 거절
   CREW_ACTIVATED: 'CREW_ACTIVATED',                                   // 크루 활성화(미션 시작)
   SETTLEMENT_COMPLETED: 'SETTLEMENT_COMPLETED',                       // 정산 완료
+  SETTLEMENT_EXPECTED_REFUND_CHANGED: 'SETTLEMENT_EXPECTED_REFUND_CHANGED', // 예상 환급금 변동
 } as const;
 export type NotificationEventType = (typeof NOTIFICATION_EVENT_TYPE)[keyof typeof NOTIFICATION_EVENT_TYPE];
 
