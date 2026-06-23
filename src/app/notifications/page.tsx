@@ -78,7 +78,7 @@ function getDeepLink(item: NotificationItem): string | null {
     case "MISSION_LOG_VERIFICATION_RESULT":
       return `/crews/${item.crew_id}/dashboard`;
     case "SETTLEMENT_COMPLETED":
-      return `/crews/${item.crew_id}/settlement`;
+      return `/crews/${item.crew_id}/dashboard`;
     default:
       return `/crews/${item.crew_id}`;
   }
