@@ -10,6 +10,7 @@ import { Header } from "@/components/common/Header";
 import { ImageLightbox } from "@/components/common/ImageLightbox";
 import { Skeleton } from "@/components/common/Skeleton";
 import { ReportSuspicionCallout } from "@/components/domain/dashboard/ReportSuspicionCallout";
+import { AutoApproveNotice } from "@/components/domain/certifications/AutoApproveNotice";
 import { getMissionLogDetail } from "@/services/feed";
 import type { CertificationStatus, MissionLogDetail } from "@/types/domain";
 
@@ -335,6 +336,9 @@ export default function MissionLogDetailPage() {
                     {item.caption}
                   </p>
                 )}
+
+                {/* 자동 승인 안내 (자동 승인 건에만 노출) */}
+                {item.decision_type === "AUTO_APPROVE" && <AutoApproveNotice />}
 
                 {/* 검증 정보 */}
                 <VerificationInfoSection item={item} />

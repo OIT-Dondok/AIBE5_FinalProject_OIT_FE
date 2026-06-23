@@ -2,11 +2,11 @@ import { api } from '@/lib/axios';
 import type {
   NotificationSettingsRequest,
   NotificationSettingsResponse,
-  NotificationsResponse,
+  NotificationListResponse,
 } from '@/types/domain';
 
 export const getNotifications = (params?: { cursor?: string; limit?: number }) =>
-  api.get<NotificationsResponse>('/notifications', { params });
+  api.get<NotificationListResponse>('/notifications', { params });
 
 export const getUnreadCount = () =>
   api.get<{ unread_count: number }>('/notifications/unread-count');
