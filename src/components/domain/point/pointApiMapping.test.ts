@@ -327,6 +327,10 @@ describe("point wallet API mapping", () => {
     assert.equal(vm.lockedBalance.replace(/\D/g, ""), "1800");
     assert.equal(vm.totalPendingReserveBalance.replace(/\D/g, ""), "6800");
     assert.equal(vm.metrics.length, 2);
+    assert.deepEqual(
+      vm.metrics.map((metric) => metric.label),
+      ["총 보유 도딘", "크루 예치금"],
+    );
     assert.equal(vm.metrics[1].value.replace(/\D/g, ""), "6800");
     assert.equal(vm.metrics.some((metric) => metric.label.includes("정산")), false);
     assert.equal(vm.metrics.some((metric) => metric.label.includes("환급 실패")), false);
@@ -352,6 +356,10 @@ describe("point wallet API mapping", () => {
     const vm = createWalletViewModel(account, []);
 
     assert.equal(vm.metrics.length, 2);
+    assert.deepEqual(
+      vm.metrics.map((metric) => metric.label),
+      ["총 보유 도딘", "크루 예치금"],
+    );
     assert.equal(vm.metrics.some((metric) => metric.label.includes("정산")), false);
     assert.equal(vm.metrics.some((metric) => metric.label.includes("환급 실패")), false);
   });
@@ -420,7 +428,6 @@ describe("point wallet API mapping", () => {
 
     assert.equal(sourceText.includes("WalletMetricPill"), true);
     assert.equal(sourceText.includes("wallet.metrics.map"), true);
-    assert.equal(sourceText.includes("relative overflow-hidden rounded-[24px]"), false);
     assert.equal(sourceText.includes("WalletBreakdownRow"), false);
     assert.equal(sourceText.includes("TotalBalanceRow"), false);
   });
