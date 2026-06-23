@@ -128,38 +128,40 @@ function TodayVerificationStatus() {
       >
         {/* 헤더 및 요약 배지 */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {isAllCertified ? (
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white animate-bounce">
-                <Trophy size={16} fill="white" />
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white animate-bounce shrink-0">
+                <Trophy size={20} fill="white" />
               </span>
             ) : (
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500/10 text-amber-500 animate-pulse">
-                <Sparkles size={16} className="fill-amber-500/10" />
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/10 text-amber-500 animate-pulse shrink-0">
+                <Sparkles size={20} className="fill-amber-500/10" />
               </span>
             )}
-            <div className="flex flex-col">
-              <span className={`text-xs font-black tracking-tight ${isAllCertified ? 'text-white/80' : 'text-text-secondary'}`}>
+            <div className="flex flex-col justify-center">
+              <span className={`text-[10px] font-bold tracking-wider uppercase ${isAllCertified ? 'text-white/70' : 'text-text-secondary/70'}`}>
                 {isAllCertified ? '오늘의 챌린지' : '오늘의 인증 현황'}
               </span>
-              <strong className="text-[14px] font-black tracking-tight -mt-0.5">
-                {isAllCertified
-                  ? '오늘의 미션을 모두 완수했어요! 🎉'
-                  : `인증률 ${progressPercent}% (${certifiedCount}/${totalCount})`}
-              </strong>
+              <div className="flex items-baseline gap-2 mt-0.5">
+                <strong className={`text-2xl font-black tracking-tight leading-none ${isAllCertified ? 'text-white' : 'text-text-primary'}`}>
+                  {progressPercent}%
+                </strong>
+                <span className={`text-xs font-semibold ${isAllCertified ? 'text-white/80' : 'text-text-secondary'}`}>
+                  {isAllCertified ? '(모두 완수 🎉)' : `(${certifiedCount}/${totalCount} 완료)`}
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center justify-center shrink-0">
             {!isAllCertified ? (
-              <>
-                <span className="bg-amber-500/10 text-amber-600 text-[10px] font-black px-2 py-0.5 rounded-full border border-amber-500/20">
-                  {remainingCount}개 남음 ⚡
-                </span>
-                {isExpanded ? <ChevronUp size={16} className="text-text-secondary/70" /> : <ChevronDown size={16} className="text-text-secondary/70" />}
-              </>
+              isExpanded ? (
+                <ChevronUp size={20} className="text-text-secondary/70 p-0.5 hover:bg-text-secondary/5 rounded-full transition-colors" />
+              ) : (
+                <ChevronDown size={20} className="text-text-secondary/70 p-0.5 hover:bg-text-secondary/5 rounded-full transition-colors" />
+              )
             ) : (
-              <span className="bg-white/20 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+              <span className="bg-white/20 text-white text-[10px] font-black px-2.5 py-1 rounded-full">
                 완료
               </span>
             )}
@@ -167,11 +169,11 @@ function TodayVerificationStatus() {
         </div>
 
         {/* 인터랙티브 게이지 바 */}
-        <div className="w-full flex flex-col gap-1">
-          <div className={`w-full h-3 rounded-full overflow-hidden ${isAllCertified ? 'bg-white/20' : 'bg-text-secondary/10'}`}>
+        <div className="w-full flex flex-col gap-1 mt-1">
+          <div className={`w-full h-5 rounded-full overflow-hidden p-0.5 ${isAllCertified ? 'bg-white/20' : 'bg-text-secondary/10'}`}>
             <div
               className={`h-full rounded-full transition-all duration-700 ease-out ${
-                isAllCertified ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.5)]' : 'bg-amber-400'
+                isAllCertified ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.5)]' : 'bg-gradient-to-r from-amber-400 to-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.3)]'
               }`}
               style={{ width: `${progressPercent}%` }}
             />
@@ -318,11 +320,8 @@ export default function CrewsPage() {
       <Header showLogo={true} />
 
       <div className="w-full max-w-[430px] mx-auto flex flex-col">
-        {/* 카테고리 탭 (둥근 파스텔 칩 스타일) */}
-        <CrewFilterBar activeCategory={activeCategory} onChangeCategory={setActiveCategory} />
-
         {/* 검색바 */}
-        <div className="px-5 pt-1 pb-3">
+        <div className="px-5 pt-4 pb-2">
           <div className="relative flex items-center group/search">
             <Search
               size={15}
@@ -338,6 +337,9 @@ export default function CrewsPage() {
             />
           </div>
         </div>
+
+        {/* 카테고리 탭 (둥근 파스텔 칩 스타일) */}
+        <CrewFilterBar activeCategory={activeCategory} onChangeCategory={setActiveCategory} />
 
         {/* 오늘의 크루 인증 상태 대시보드 */}
         <TodayVerificationStatus />
@@ -375,11 +377,10 @@ export default function CrewsPage() {
                 const items = groupedCrews[key];
                 return (
                   <div key={key} className="flex flex-col gap-3.5 mt-4 first:mt-1">
-                    <div className="flex items-center gap-2 pb-1">
+                    <div className="flex items-center pb-1">
                       <span className={`text-[11px] font-bold ${badgeClass}`}>
-                        {label}
+                        {label} {items.length}
                       </span>
-                      <span className="text-xs text-text-secondary">{items.length}개</span>
                     </div>
                     <div className="flex flex-col gap-3">
                       {items.map((crew) => (

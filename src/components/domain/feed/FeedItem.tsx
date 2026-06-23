@@ -29,12 +29,12 @@ export function FeedItem({ item, onRemove }: FeedItemProps) {
   const initial = getInitial(item.nickname);
 
   return (
-    <article className="bg-card rounded-card overflow-hidden border border-text-secondary/10 shadow-card-elevated animate-feed-in">
+    <article className="bg-card rounded-[28px] overflow-hidden border border-text-secondary/8 shadow-[0_8px_32px_rgba(0,0,0,0.035)] animate-feed-in">
       {/* 상단: 닉네임/아바타(멤버 프로필 이동) + 상태 뱃지/chevron(인증 상세 이동) */}
-      <div className="px-4 pt-4 pb-3 flex items-center gap-3">
+      <div className="px-5 pt-5 pb-4 flex items-center gap-3.5">
         <Link
           href={`/members/${item.member_uuid}`}
-          className="flex items-center gap-3 min-w-0 flex-1 hover:bg-text-secondary/5 active:bg-text-secondary/10 transition-colors rounded-xl -mx-1 px-1 -my-0.5 py-0.5"
+          className="flex items-center gap-3.5 min-w-0 flex-1 hover:bg-text-secondary/5 active:bg-text-secondary/10 transition-colors rounded-xl -mx-1 px-1 -my-0.5 py-0.5"
         >
           {/* 프로필: 이미지가 있으면 사진, 없으면 닉네임 첫 글자 */}
           <div className="relative w-11 h-11 flex items-center justify-center bg-primary-green/10 rounded-full flex-shrink-0 overflow-hidden text-base font-bold text-text-primary shadow-sm">
@@ -56,7 +56,10 @@ export function FeedItem({ item, onRemove }: FeedItemProps) {
               <span className="text-[11px] text-text-secondary shrink-0">
                 {timeStr}
               </span>
-              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-black border tracking-tight shrink-0 transition-colors ${getCrewBrandingColor(item.crew_id).bgClass} ${getCrewBrandingColor(item.crew_id).textClass} ${getCrewBrandingColor(item.crew_id).borderClass}`}>
+              <span
+                className={`inline-block px-1.5 py-0.5 rounded-full text-[9px] font-black border tracking-tight truncate max-w-[120px] transition-colors ${getCrewBrandingColor(item.crew_id).bgClass} ${getCrewBrandingColor(item.crew_id).textClass} ${getCrewBrandingColor(item.crew_id).borderClass}`}
+                title={item.crew_name}
+              >
                 {item.crew_name}
               </span>
             </div>
@@ -94,7 +97,7 @@ export function FeedItem({ item, onRemove }: FeedItemProps) {
 
       {/* 캡션 (이미지 밖 별도 영역) */}
       {item.caption && (
-        <div className="px-4 pt-3.5">
+        <div className="px-5 pt-4 pb-1">
           <p className="text-sm text-text-primary leading-relaxed whitespace-pre-line">
             {item.caption}
           </p>
@@ -102,7 +105,7 @@ export function FeedItem({ item, onRemove }: FeedItemProps) {
       )}
 
       {/* 리액션 바 (mission_log_id 변경 시 remount되어 로컬 상태 초기화) */}
-      <div className="px-4 py-3.5">
+      <div className="px-5 pb-5 pt-3">
         <FeedReactionBar
           key={item.mission_log_id}
           missionLogId={item.mission_log_id}

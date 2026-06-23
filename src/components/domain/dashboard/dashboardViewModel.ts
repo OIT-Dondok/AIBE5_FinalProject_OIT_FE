@@ -307,6 +307,10 @@ export function mapCrewDashboard(res: DashboardResponse): CrewDashboardView {
     res.my_expected_refund_amount,
   );
 
+  const myRatio = me?.share_ratio;
+  const isCoRank = myRatio != null && res.participants.filter((p) => p.share_ratio === myRatio).length > 1;
+  const rankPrefix = isCoRank ? "공동 " : "";
+
   return {
     crewId: res.crew_id,
     crewName: res.crew_name,
@@ -332,7 +336,7 @@ export function mapCrewDashboard(res: DashboardResponse): CrewDashboardView {
     // rank가 null(예: 배치 전)이어도 participant_count가 있으면 "전체 N명"은 표시
     rankLabel:
       res.participant_count != null
-        ? `${res.rank != null ? `${res.rank}위` : "—"} / ${res.participant_count}명`
+        ? `${res.rank != null ? `${rankPrefix}${res.rank}위` : "—"} / ${res.participant_count}명`
         : "—",
     rankDeltaLabel: rankDelta.label,
     rankTrend: rankDelta.trend,

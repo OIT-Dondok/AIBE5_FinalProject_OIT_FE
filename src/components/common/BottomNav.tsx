@@ -98,7 +98,7 @@ export const BottomNav = () => {
                         aria-label="인증하기"
                         className="flex flex-col items-center gap-1 -mt-6 group"
                     >
-                        <span className="w-14 h-14 rounded-full bg-primary-green flex items-center justify-center shadow-lg shadow-primary-green/35 group-active:scale-95 transition-transform disabled:opacity-70">
+                        <span className="w-14 h-14 rounded-full bg-primary-green border-4 border-card flex items-center justify-center shadow-lg shadow-primary-green/35 group-active:scale-95 transition-transform disabled:opacity-70">
                             <Camera size={26} strokeWidth={2} className="text-white" />
                         </span>
                         <span className="text-[10px] font-bold text-primary-green">인증</span>

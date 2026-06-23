@@ -389,7 +389,7 @@ export default function FeedPage() {
               <div
                 key={`${selectedCrewId ?? 'all'}-${period?.start_date ?? ''}-${period?.end_date ?? ''}`}
                 aria-busy={isLoading}
-                className="flex flex-col gap-4"
+                className="flex flex-col gap-7"
               >
                 {isLoading ? (
                   <FeedSkeletonList count={3} />

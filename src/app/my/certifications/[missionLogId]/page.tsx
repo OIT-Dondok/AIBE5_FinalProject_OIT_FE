@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { ClipboardCheck, Maximize2 } from "lucide-react";
+import { ClipboardCheck, Check, Clock, X, Maximize2 } from "lucide-react";
 
 import { Header } from "@/components/common/Header";
 import { ImageLightbox } from "@/components/common/ImageLightbox";
@@ -18,12 +18,25 @@ import type { CertificationStatus, MissionLogDetail } from "@/types/domain";
 interface StatusMeta {
   label: string;
   className: string;
+  Icon: React.ComponentType<{ size?: number | string; strokeWidth?: number | string; className?: string }>;
 }
 
 const STATUS_META: Record<CertificationStatus, StatusMeta> = {
-  SUCCESS: { label: "인증 완료", className: "bg-green-100 text-green-700" },
-  FAILED: { label: "거절됨", className: "bg-red-100 text-red-600" },
-  PENDING_REVIEW: { label: "검토중", className: "bg-amber-100 text-amber-700" },
+  SUCCESS: {
+    label: "성공",
+    Icon: Check,
+    className: "bg-primary-green text-white shadow-sm shadow-primary-green/30",
+  },
+  PENDING_REVIEW: {
+    label: "검토중",
+    Icon: Clock,
+    className: "bg-primary-blue text-white shadow-sm shadow-primary-blue/30",
+  },
+  FAILED: {
+    label: "실패",
+    Icon: X,
+    className: "bg-red-500 text-white shadow-sm shadow-red-500/30",
+  },
 };
 
 // ─── 거절 사유 / 결정 방식 변환 ────────────────────────────────
@@ -304,8 +317,9 @@ export default function MissionLogDetailPage() {
                     const meta = STATUS_META[item.certification_status];
                     return (
                       <span
-                        className={`shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold ${meta.className}`}
+                        className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${meta.className}`}
                       >
+                        <meta.Icon size={12} strokeWidth={2.5} />
                         {meta.label}
                       </span>
                     );

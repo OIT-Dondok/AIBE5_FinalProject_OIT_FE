@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getCrewMembers, getCrewApplications } from '@/services/crew';
+import { getMemberProfile } from '@/services/member';
 import type { CrewDetail } from '@/types/domain';
 import { useAuthStore } from '@/store/authStore';
 import CrewInfoTable from './CrewInfoTable';
@@ -45,13 +46,29 @@ export default function CrewDetailTabs({ crew, crewId, onConfirmedCountLoaded }:
         // 2. 현재 로그인된 유저가 방장(HOST)인 경우에만 승인 대기자(PENDING) 조회
         const isHost = user?.member_uuid === crew.host_member_uuid;
         if (isHost) {
-          const appRes = await getCrewApplications(crewId, { status: 'PENDING' });
-          if (!active) return;
-          setPendingCount(appRes.data.items.length);
+          try {
+            const appRes = await getCrewApplications(crewId, { status: 'PENDING' });
+            if (!active) return;
+            setPendingCount(appRes.data.items.length);
+          } catch (appErr) {
+            console.error('Failed to fetch pending applications:', appErr);
+            setPendingCount(null);
+          }
         } else {
           setPendingCount(null);
         }
       } catch {
+        // 멤버 목록 403 차단 시 (미가입 유저 등), 공개 프로필 API로 방장 프로필 이미지 보완
+        try {
+          const memberProfileRes = await getMemberProfile(crew.host_member_uuid);
+          if (active) {
+            setHostProfileUrl(memberProfileRes.data.profile_image_url ?? null);
+          }
+        } catch {
+          if (active) {
+            setHostProfileUrl(null);
+          }
+        }
         onConfirmedCountLoaded?.(null);
       }
     };
