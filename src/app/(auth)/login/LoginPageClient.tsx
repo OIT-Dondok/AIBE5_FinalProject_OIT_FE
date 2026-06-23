@@ -102,6 +102,12 @@ export function LoginPageClient({ loginNotice }: LoginPageClientProps) {
     window.location.href = getGoogleOAuthUrl();
   };
 
+  // 이미 로그인된 사용자에겐 로그인 UI를 그리지 않는다 (effect 리다이렉트 전 플래시 방지).
+  // 실제 이동은 위 useEffect의 router.replace가 처리한다.
+  if (isInitialized && user) {
+    return null;
+  }
+
   return (
     <div className="flex-1 flex flex-col items-center px-5 py-10 w-full min-h-screen">
       <div className="w-full max-w-[430px] flex-1 flex flex-col">
