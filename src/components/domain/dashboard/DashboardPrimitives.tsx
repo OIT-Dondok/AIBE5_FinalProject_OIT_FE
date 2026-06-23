@@ -100,7 +100,7 @@ export function SegmentRing({
   const inset = stroke;
 
   return (
-    <div className="relative shrink-0" style={{ width: size, height: size }}>
+    <div className="relative shrink-0 animate-chart-pop" style={{ width: size, height: size }}>
       <div className="absolute inset-0 rounded-full" style={{ background }} />
       <div className="absolute rounded-full bg-card" style={{ inset }} />
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
