@@ -12,8 +12,15 @@ interface WalletSummaryCardProps {
   onOpenCharge: () => void;
 }
 
-function HoverHint({ text }: { text: string }) {
+function HoverHint({ text, align = "center" }: { text: string; align?: "center" | "right" | "left" }) {
   const tooltipId = useId();
+
+  const alignClasses =
+    align === "right"
+      ? "right-0 translate-x-0"
+      : align === "left"
+      ? "left-0 translate-x-0"
+      : "left-1/2 -translate-x-1/2";
 
   return (
     <button
@@ -26,7 +33,7 @@ function HoverHint({ text }: { text: string }) {
       <span
         id={tooltipId}
         role="tooltip"
-        className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-[var(--color-primary-green)] bg-[var(--color-background)] px-2 py-1 text-[10px] font-semibold leading-snug text-[var(--color-primary-green)] shadow-lg group-hover:block group-focus:block"
+        className={`pointer-events-none absolute bottom-full z-10 mb-1 hidden whitespace-nowrap rounded-md border border-[var(--color-primary-green)] bg-[var(--color-background)] px-2 py-1 text-[10px] font-semibold leading-snug text-[var(--color-primary-green)] shadow-lg group-hover:block group-focus:block ${alignClasses}`}
       >
         {text}
       </span>
@@ -79,25 +86,39 @@ export function WalletSummaryCard({ wallet, onOpenCharge }: WalletSummaryCardPro
         {/* 포켓 곡선 커팅 입체 엣지 장식 */}
         <div className="absolute top-0 inset-x-0 h-3 bg-gradient-to-b from-black/8 to-transparent pointer-events-none" />
 
-        {/* 사용가능 잔액과 지표 필 수평 배치 */}
-        <div className="mt-3.5 z-20 relative px-1 flex items-end justify-between gap-3">
-          <div className="flex flex-col">
-            <p className="text-[11px] font-bold text-white/85">사용가능 잔액</p>
-            <div className="mt-0.5 flex items-end gap-1">
-              <span className="text-[32px] font-black leading-none tracking-[-0.04em] tabular-nums text-white">
-                {wallet.availableBalance.replace("원", "")}
-              </span>
-              <span className="pb-0.5 text-xs font-bold text-white/80">원</span>
-            </div>
+        {/* 미니 지표 수평 배치 (총 보유금액, 크루 예치금) */}
+        {wallet.metrics.length > 0 && (
+          <div className="z-20 relative px-1 flex items-center gap-4 mb-3 border-b border-white/10 pb-2">
+            {wallet.metrics.map((metric, idx) => (
+              <div key={metric.label} className="flex items-center gap-1.5 text-xs">
+                <span className="font-bold text-white/60 text-[11px]">{metric.label}</span>
+                <span className="font-extrabold text-[12.5px] text-white">{metric.value}</span>
+                <HoverHint 
+                  text={metric.caption} 
+                  align={idx === wallet.metrics.length - 1 ? "right" : "center"} 
+                />
+              </div>
+            ))}
           </div>
+        )}
 
-          {wallet.metrics.length > 0 && (
-            <div className="flex flex-col gap-1.5 items-end mb-1">
-              {wallet.metrics.map((metric) => (
-                <WalletMetricPill key={metric.label} metric={metric} />
-              ))}
-            </div>
-          )}
+        {/* 사용가능 잔액 */}
+        <div className="z-20 relative px-1 flex flex-col">
+          <p className="text-[11px] font-bold text-white/80">사용가능 잔액</p>
+          <div className="mt-1 flex items-end gap-1">
+            <span className={`font-black leading-none tracking-[-0.04em] tabular-nums text-white transition-all duration-200 ${
+              wallet.availableBalance.replace("원", "").trim().length > 11
+                ? "text-[22px]"
+                : wallet.availableBalance.replace("원", "").trim().length > 8
+                ? "text-[26px]"
+                : wallet.availableBalance.replace("원", "").trim().length > 6
+                ? "text-[30px]"
+                : "text-[34px]"
+            }`}>
+              {wallet.availableBalance.replace("원", "")}
+            </span>
+            <span className="pb-0.5 text-xs font-bold text-white/70">원</span>
+          </div>
         </div>
 
         {/* 버튼 (출금 미지원 버튼을 충전과 동일한 톤의 활성화된 흰색 버튼 비주얼로 업그레이드) */}
