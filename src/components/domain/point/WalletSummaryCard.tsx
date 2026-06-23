@@ -34,46 +34,20 @@ function HoverHint({ text }: { text: string }) {
   );
 }
 
-function WalletBreakdownRow({ metric }: { metric: WalletSummaryMetric }) {
-  const isWarning = metric.tone === "red";
-
+function WalletMetricPill({ metric }: { metric: WalletSummaryMetric }) {
   return (
-    <div className="flex items-center justify-between gap-3">
-      <p className="inline-flex items-center pl-3 text-[11px] font-semibold text-white/60">
-        {isWarning ? (
-          <span className="mr-1.5 text-[12px] font-black leading-none text-red-300" aria-hidden="true">
-            ⚠
-          </span>
-        ) : (
-          <span className="mr-2 h-px w-2 rounded-full bg-white/25" aria-hidden="true" />
-        )}
-        <span>{metric.label}</span>
-        <HoverHint text={metric.caption} />
-      </p>
-      <p className="text-[13px] font-bold tabular-nums text-white/80">{metric.value}</p>
-    </div>
-  );
-}
-
-function TotalBalanceRow({ metric }: { metric: WalletSummaryMetric }) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <p className="inline-flex items-center text-[12px] font-bold text-white/70">
-        <span>{metric.label}</span>
-        <HoverHint text={metric.caption} />
-      </p>
-      <p className="text-[15px] font-black tracking-[-0.02em] tabular-nums text-white">
-        {metric.value}
-      </p>
+    <div className="inline-flex min-w-0 items-center gap-1.5 rounded-full bg-white/[0.10] px-3 py-1.5 text-white/80 ring-1 ring-white/[0.10]">
+      <span className="truncate text-[11px] font-semibold text-white/60">{metric.label}</span>
+      <span className="text-[12px] font-black tabular-nums text-white">{metric.value}</span>
+      <HoverHint text={metric.caption} />
     </div>
   );
 }
 
 export function WalletSummaryCard({ wallet, onOpenCharge }: WalletSummaryCardProps) {
-  const [totalMetric, ...breakdownMetrics] = wallet.metrics;
 
   return (
-    <section className="relative overflow-hidden rounded-[24px] bg-gradient-to-br from-[#6BAF85] via-[#5E9B73] to-[#4A7D5C] text-white shadow-[0_4px_20px_rgba(94,155,115,0.22),_0_16px_56px_rgba(94,155,115,0.35)]">
+    <section className="relative rounded-[24px] bg-gradient-to-br from-[#6BAF85] via-[#5E9B73] to-[#4A7D5C] text-white shadow-[0_4px_20px_rgba(94,155,115,0.22),_0_16px_56px_rgba(94,155,115,0.35)]">
 
       {/* 상단 하이라이트 */}
       <div className="pointer-events-none absolute inset-0">
@@ -96,6 +70,15 @@ export function WalletSummaryCard({ wallet, onOpenCharge }: WalletSummaryCardPro
           <span className="text-[11px] font-semibold text-white/45">도딘 지갑</span>
         </div>
 
+        {/* 상단 지표 */}
+        {wallet.metrics.length > 0 && (
+          <div className="mt-5 flex flex-wrap gap-2">
+            {wallet.metrics.map((metric) => (
+              <WalletMetricPill key={metric.label} metric={metric} />
+            ))}
+          </div>
+        )}
+
         {/* 잔액 */}
         <div className="mt-5">
           <p className="text-[12px] font-medium text-white/60">사용가능 잔액</p>
@@ -106,18 +89,6 @@ export function WalletSummaryCard({ wallet, onOpenCharge }: WalletSummaryCardPro
             <span className="pb-1 text-sm font-bold text-white/65">원</span>
           </div>
         </div>
-
-        {/* 상세 내역 */}
-        {totalMetric && (
-          <div className="mt-5 rounded-xl border border-white/[0.12] bg-black/[0.08] px-4 py-3.5">
-            <TotalBalanceRow metric={totalMetric} />
-            <div className="mt-3 space-y-2 border-t border-dashed border-white/[0.10] pt-3">
-              {breakdownMetrics.map((metric) => (
-                <WalletBreakdownRow key={metric.label} metric={metric} />
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* 버튼 */}
         <div className="mt-4 grid grid-cols-2 gap-2.5">
