@@ -73,7 +73,7 @@ export function VerificationCard({
     decision == null;
   const isInGracePeriod =
     isAutoDecision && new Date(item.host_reviewable_until) > new Date();
-  const isDecided = visibleDecision !== null && !isInGracePeriod;
+  const isDecided = visibleDecision !== null && !isInGracePeriod && !isAutoDecision;
   const rejectReasonDisplay: VerificationRejectInfo | null =
     visibleDecision === "rejected"
       ? (rejectInfo ??
