@@ -89,27 +89,27 @@ export default function CrewCard({ crew }: CrewCardProps) {
               )}
             </div>
 
-            <div className="flex-1 min-w-0">
-              <p className="text-[15px] font-bold text-text-primary leading-tight truncate mb-1.5 group-hover:text-primary-green transition-colors duration-200">
+            <div className="flex-1 min-w-0 flex flex-col justify-center">
+              <p className="text-[15px] font-bold text-text-primary leading-tight truncate mb-1 group-hover:text-primary-green transition-colors duration-200">
                 {crew.title}
               </p>
-              <div className="flex items-center gap-1.5 flex-wrap">
+              <div className="flex items-center gap-1.5">
                 <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${status.dot}`} />
-                <span className={`text-xs font-semibold ${status.text}`}>{status.label}</span>
+                <span className={`text-xs font-semibold ${status.text} leading-none`}>{status.label}</span>
               </div>
             </div>
 
-            <div className="text-right flex-shrink-0">
+            <div className="text-right flex-shrink-0 flex flex-col justify-center">
               <p className="text-[15px] font-extrabold text-primary-green leading-tight">
                 {crew.deposit_amount.toLocaleString()}
                 <span className="text-xs font-semibold ml-0.5">원</span>
               </p>
-              <p className="text-[10px] text-text-secondary mt-0.5 tracking-tight">보증금 💰</p>
+              <p className="text-[10px] text-text-secondary mt-1.5 tracking-tight">보증금 💰</p>
             </div>
           </div>
 
           {/* 참여 멤버 현황 프로그레스 바 */}
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2.5">
             <div className="flex items-center justify-between">
               <span className="text-[11px] text-text-secondary font-medium">모집 현황</span>
               <span className="text-[11px] font-bold text-text-primary">

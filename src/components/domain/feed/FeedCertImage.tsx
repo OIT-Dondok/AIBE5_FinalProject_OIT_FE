@@ -22,22 +22,22 @@ export function FeedCertImage({
 }: FeedCertImageProps) {
   return (
     <div
-      className={`relative w-full aspect-[4/3] overflow-hidden bg-gradient-to-br from-text-secondary/5 to-text-secondary/15 ${className}`}
+      className={`relative w-full overflow-hidden bg-gradient-to-br from-text-secondary/5 to-text-secondary/15 ${className}`}
     >
-      {/* placeholder — 이미지가 없을 때만 노출 */}
+      {/* placeholder — 이미지가 없을 때만 노출 (4:5 비율 영역 유지) */}
       {!imageUrl && (
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="w-full aspect-[4/5] flex items-center justify-center">
           <ImageIcon size={48} strokeWidth={1.5} className="text-text-secondary/25" />
         </div>
       )}
 
-      {/* 실제 이미지 (원격 호스트) */}
+      {/* 실제 이미지 — 가로가 긴 사진은 유동적인 높이로 레터박스 없이 100% 채움, 너무 긴 사진만 max-height로 방지 */}
       {imageUrl && (
         <img
           src={imageUrl}
           alt={alt}
           loading="lazy"
-          className="absolute inset-0 w-full h-full object-cover"
+          className="w-full h-auto max-h-[480px] object-cover"
         />
       )}
     </div>

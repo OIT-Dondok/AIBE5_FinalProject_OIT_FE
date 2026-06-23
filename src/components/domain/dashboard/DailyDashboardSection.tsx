@@ -28,6 +28,9 @@ export function DailyDashboardSection({
   reportNotice: string;
   reportActionLabel: string;
 }) {
+  const mySegment = dashboard.segments.find((s) => s.isMe);
+  const myColor = mySegment?.color ?? "#5E9B73";
+
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-center gap-2">
@@ -60,10 +63,10 @@ export function DailyDashboardSection({
 
       <DashboardCard className="mb-1 flex items-center gap-5 border-primary-green/25 bg-card/95 px-5 py-6 shadow-[0_14px_30px_rgba(94,155,115,0.16)] ring-1 ring-primary-green/10">
         <SegmentRing segments={dashboard.segments} size={144} stroke={16}>
-          <span className="text-[10px] font-bold text-text-secondary">
+          <span className="text-[10px] font-bold" style={{ color: myColor }}>
             {dashboard.myShareLabel}
           </span>
-          <strong className="mt-1 text-2xl font-black tracking-tight text-primary-green">
+          <strong className="mt-1 text-2xl font-black tracking-tight" style={{ color: myColor }}>
             {dashboard.mySharePercent}
           </strong>
         </SegmentRing>
@@ -218,9 +221,19 @@ function RankValue({ label }: { label: string }) {
   }
 
   const [rankValue, rankTotal] = label.split(" / ");
+  const hasCo = rankValue.startsWith("공동 ");
+  const displayValue = hasCo ? rankValue.replace("공동 ", "") : rankValue;
+
   return (
     <strong className="mt-3 flex items-baseline gap-1.5 tracking-tight">
-      <span className="text-2xl font-black text-primary-blue">{rankValue}</span>
+      <span className="flex items-baseline text-2xl font-black text-primary-blue">
+        {hasCo && (
+          <span className="text-xs font-bold text-primary-blue/80 mr-0.5 select-none">
+            공동
+          </span>
+        )}
+        {displayValue}
+      </span>
       {rankTotal && (
         <span className="text-sm font-extrabold text-text-secondary">/ {rankTotal}</span>
       )}

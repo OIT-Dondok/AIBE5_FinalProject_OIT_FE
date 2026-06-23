@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getCrewMembers, getCrewApplications } from '@/services/crew';
+import { getMemberProfile } from '@/services/member';
 import type { CrewDetail } from '@/types/domain';
 import { useAuthStore } from '@/store/authStore';
 import CrewInfoTable from './CrewInfoTable';
@@ -52,6 +53,17 @@ export default function CrewDetailTabs({ crew, crewId, onConfirmedCountLoaded }:
           setPendingCount(null);
         }
       } catch {
+        // 멤버 목록 403 차단 시 (미가입 유저 등), 공개 프로필 API로 방장 프로필 이미지 보완
+        try {
+          const memberProfileRes = await getMemberProfile(crew.host_member_uuid);
+          if (active) {
+            setHostProfileUrl(memberProfileRes.data.profile_image_url ?? null);
+          }
+        } catch {
+          if (active) {
+            setHostProfileUrl(null);
+          }
+        }
         onConfirmedCountLoaded?.(null);
       }
     };

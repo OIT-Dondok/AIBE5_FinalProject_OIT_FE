@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { UserRound, Crown } from 'lucide-react';
 import { HostBadge } from '@/components/common/HostBadge';
@@ -17,6 +17,10 @@ export default function CrewHostProfile({
   hostProfileUrl,
 }: CrewHostProfileProps) {
   const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [hostProfileUrl]);
 
   return (
     <div className="flex flex-col gap-3">
