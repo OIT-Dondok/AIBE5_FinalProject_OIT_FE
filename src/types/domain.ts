@@ -86,7 +86,7 @@ export const POINT_TRANSACTION_TYPE = {
   CREW_DEPOSIT_RESERVE: 'CREW_DEPOSIT_RESERVE',   // 보증금 예약 (reserve)
   CREW_DEPOSIT_LOCK: 'CREW_DEPOSIT_LOCK',         // 보증금 예약 확정 (lock)
   CREW_RESERVE_RELEASE: 'CREW_RESERVE_RELEASE',   // 예약 해제 (취소/거절/만료)
-  CREW_CANCEL_REFUND: 'CREW_CANCEL_REFUND',       // 크루 해체
+  CREW_CANCEL_REFUND: 'CREW_CANCEL_REFUND',       // LOCKED 예치 반환 (크루 해체)
   CREW_SETTLEMENT_REFUND: 'CREW_SETTLEMENT_REFUND', // 최종 정산 환급
 } as const;
 export type PointTransactionType = (typeof POINT_TRANSACTION_TYPE)[keyof typeof POINT_TRANSACTION_TYPE];
@@ -105,7 +105,7 @@ export const MISSION_LOG_DECISION_TYPE = {
   MANUAL_REJECT: 'MANUAL_REJECT',
   AUTO_APPROVE: 'AUTO_APPROVE',
   AUTO_REJECT: 'AUTO_REJECT',
-  MANUAL_REVERT: 'MANUAL_REVERT',
+  MANUAL_REVERT: 'MANUAL_REVERT', // 검수 결정 되돌리기 (moderation_history에 append)
 } as const;
 export type MissionLogDecisionType = (typeof MISSION_LOG_DECISION_TYPE)[keyof typeof MISSION_LOG_DECISION_TYPE];
 
@@ -681,7 +681,7 @@ export interface ModerationRevertResponse {
   crew_id: number;
   crew_participant_id: number;
   certification_status: 'PENDING_REVIEW';
-  decision_type: "MANUAL_REVERT";
+  decision_type: "MANUAL_REVERT"; // 되돌림 자체는 기록, 로그 상태는 PENDING_REVIEW로 복귀
   reject_reason_code: null;
   decided_at: string;
   moderation_history_id: number;
@@ -921,7 +921,7 @@ export interface SettlementMe {
 export interface SettlementItem {
   settlement_item_id: number;
   crew_participant_id: number;
-  nickname: string | null; // 정산 시점 스냅샷된 참여자 닉네임
+  nickname: string | null; // 정산 시점 스냅샷 닉네임 (/me 응답에서는 산출 안 해 null)
   is_me: boolean; // 인증 사용자 본인 행 여부
   participant_status_snapshot: ParticipantStatusSnapshot;
   deposit_amount: number;
@@ -930,7 +930,7 @@ export interface SettlementItem {
   recognized_dates_count: number;
   excluded_success_count: number;
   share_ratio: string; // string decimal
-  rank: number | null; // share_ratio DESC, 동률 시 crew_participant_id ASC, 공동 순위 가능(예: 1,2,2)
+  rank: number | null; // share_ratio DESC, 동률 시 crew_participant_id ASC, 공동 순위 가능(예: 1,2,2) · /me 응답에서는 null
   base_refund_amount: number;
   remainder_bonus_amount: number; // HOST_REMAINDER 정책에서 방장에게만 지급, 나머지는 0
   refund_amount: number; // base_refund_amount + remainder_bonus_amount (최종 환급 source of truth)
