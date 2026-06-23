@@ -1,24 +1,23 @@
-// src/types/domain.ts
 import type { CursorPageResponse } from './common';
 // 전체 도메인 타입 정의
-// [기준] API-spec-dondok.md
+// [기준] 백엔드 레포 docs/api/*
 // - 응답 필드: snake_case (명세와 동일)
 // - 식별자: member_uuid (외부 노출용), member.id는 내부 FK 전용
 // - 시간: ISO-8601 with offset (예: "2026-05-07T00:05:00+09:00")
 // - 금액: integer (원 단위)
 
 // ════════════════════════════════════════════════════════════
-// § 3. Enum
+// Enum
 // ════════════════════════════════════════════════════════════
 
-// § 3.0 MemberStatus
+// MemberStatus
 export const MEMBER_STATUS = {
   ACTIVE: 'ACTIVE',
   DEACTIVATED: 'DEACTIVATED',
 } as const;
 export type MemberStatus = (typeof MEMBER_STATUS)[keyof typeof MEMBER_STATUS];
 
-// § 3.1 CrewStatus
+// CrewStatus
 export const CREW_STATUS = {
   RECRUITING: 'RECRUITING',
   ACTIVE: 'ACTIVE',
@@ -27,7 +26,7 @@ export const CREW_STATUS = {
 } as const;
 export type CrewStatus = (typeof CREW_STATUS)[keyof typeof CREW_STATUS];
 
-// § 3.1a CrewCategory
+// CrewCategory
 export const CREW_CATEGORY = {
   MORNING: 'MORNING',
   READING: 'READING',
@@ -38,7 +37,7 @@ export const CREW_CATEGORY = {
 } as const;
 export type CrewCategory = (typeof CREW_CATEGORY)[keyof typeof CREW_CATEGORY];
 
-// § 3.2 ParticipantStatus
+// ParticipantStatus
 export const PARTICIPANT_STATUS = {
   PENDING: 'PENDING',       // 신청 대기, 보증금 reserve 상태
   LOCKED: 'LOCKED',         // 방장 승인 완료, 보증금 확정
@@ -48,7 +47,14 @@ export const PARTICIPANT_STATUS = {
 } as const;
 export type ParticipantStatus = (typeof PARTICIPANT_STATUS)[keyof typeof PARTICIPANT_STATUS];
 
-// § 3.3 FrequencyType
+// ParticipantStatusSnapshot (정산 시점 참여 상태 스냅샷 — 정산 대상은 LOCKED만)
+export const PARTICIPANT_STATUS_SNAPSHOT = {
+  LOCKED: 'LOCKED',
+} as const;
+export type ParticipantStatusSnapshot =
+  (typeof PARTICIPANT_STATUS_SNAPSHOT)[keyof typeof PARTICIPANT_STATUS_SNAPSHOT];
+
+// FrequencyType
 export const FREQUENCY_TYPE = {
   DAILY: 'DAILY',
   SPECIFIC_DAYS: 'SPECIFIC_DAYS',
@@ -56,14 +62,14 @@ export const FREQUENCY_TYPE = {
 } as const;
 export type FrequencyType = (typeof FREQUENCY_TYPE)[keyof typeof FREQUENCY_TYPE];
 
-// § 3.4 SettlementType
+// SettlementType
 export const SETTLEMENT_TYPE = {
   NORMAL: 'NORMAL',
   CANCELLED_BEFORE_START: 'CANCELLED_BEFORE_START',
 } as const;
 export type SettlementType = (typeof SETTLEMENT_TYPE)[keyof typeof SETTLEMENT_TYPE];
 
-// § 3.5 SettlementStatus
+// SettlementStatus
 export const SETTLEMENT_STATUS = {
   NONE: 'NONE',           // API projection only (DB에 저장 안 됨)
   PENDING: 'PENDING',
@@ -74,18 +80,18 @@ export const SETTLEMENT_STATUS = {
 } as const;
 export type SettlementStatus = (typeof SETTLEMENT_STATUS)[keyof typeof SETTLEMENT_STATUS];
 
-// § 3.6 PointTransactionType
+// PointTransactionType
 export const POINT_TRANSACTION_TYPE = {
   POINT_CHARGE: 'POINT_CHARGE',
   CREW_DEPOSIT_RESERVE: 'CREW_DEPOSIT_RESERVE',   // 보증금 예약 (reserve)
   CREW_DEPOSIT_LOCK: 'CREW_DEPOSIT_LOCK',         // 보증금 예약 확정 (lock)
   CREW_RESERVE_RELEASE: 'CREW_RESERVE_RELEASE',   // 예약 해제 (취소/거절/만료)
+  CREW_CANCEL_REFUND: 'CREW_CANCEL_REFUND',       // LOCKED 예치 반환 (크루 해체)
   CREW_SETTLEMENT_REFUND: 'CREW_SETTLEMENT_REFUND', // 최종 정산 환급
-  POINT_WITHDRAWAL: 'POINT_WITHDRAWAL', // 출금 요청(현재 UI/목데이터)
 } as const;
 export type PointTransactionType = (typeof POINT_TRANSACTION_TYPE)[keyof typeof POINT_TRANSACTION_TYPE];
 
-// § 3.8 DailySettlementType
+// DailySettlementType
 export const DAILY_SETTLEMENT_TYPE = {
   A: 'A', // 인증마감 09:00 KST / 정산 12:00 KST
   B: 'B', // 인증마감 21:00 KST / 정산 00:00 KST (익일)
@@ -93,16 +99,17 @@ export const DAILY_SETTLEMENT_TYPE = {
 } as const;
 export type DailySettlementType = (typeof DAILY_SETTLEMENT_TYPE)[keyof typeof DAILY_SETTLEMENT_TYPE];
 
-// § 3.9 MissionLogDecisionType
+// MissionLogDecisionType
 export const MISSION_LOG_DECISION_TYPE = {
   MANUAL_APPROVE: 'MANUAL_APPROVE',
   MANUAL_REJECT: 'MANUAL_REJECT',
   AUTO_APPROVE: 'AUTO_APPROVE',
   AUTO_REJECT: 'AUTO_REJECT',
+  MANUAL_REVERT: 'MANUAL_REVERT', // 검수 결정 되돌리기 (moderation_history에 append)
 } as const;
 export type MissionLogDecisionType = (typeof MISSION_LOG_DECISION_TYPE)[keyof typeof MISSION_LOG_DECISION_TYPE];
 
-// § 3.10 MissionLogRejectReasonCode
+// MissionLogRejectReasonCode
 export const REJECT_REASON_CODE = {
   TIME_VIOLATION: 'TIME_VIOLATION',
   DUPLICATE: 'DUPLICATE',
@@ -113,7 +120,7 @@ export const REJECT_REASON_CODE = {
 } as const;
 export type RejectReasonCode = (typeof REJECT_REASON_CODE)[keyof typeof REJECT_REASON_CODE];
 
-// § 3.11 SettlementFailureCode
+// SettlementFailureCode
 export const SETTLEMENT_FAILURE_CODE = {
   INPUT_LOAD_FAILED: 'INPUT_LOAD_FAILED',
   CALCULATION_FAILED: 'CALCULATION_FAILED',
@@ -124,7 +131,7 @@ export const SETTLEMENT_FAILURE_CODE = {
 } as const;
 export type SettlementFailureCode = (typeof SETTLEMENT_FAILURE_CODE)[keyof typeof SETTLEMENT_FAILURE_CODE];
 
-// § 3.14 ProjectionStatus (API 응답 전용, DB 저장 안 됨)
+// ProjectionStatus (API 응답 전용, DB 저장 안 됨)
 export const PROJECTION_STATUS = {
   NOT_STARTED: 'NOT_STARTED',
   LIVE: 'LIVE',
@@ -134,7 +141,7 @@ export const PROJECTION_STATUS = {
 } as const;
 export type ProjectionStatus = (typeof PROJECTION_STATUS)[keyof typeof PROJECTION_STATUS];
 
-// § 3.15 ProjectionNotice (API 응답 전용, DB 저장 안 됨)
+// ProjectionNotice (API 응답 전용, DB 저장 안 됨)
 export const PROJECTION_NOTICE = {
   ESTIMATED_NOT_FINAL: 'ESTIMATED_NOT_FINAL',
   NOT_STARTED: 'NOT_STARTED',
@@ -144,7 +151,7 @@ export const PROJECTION_NOTICE = {
 } as const;
 export type ProjectionNotice = (typeof PROJECTION_NOTICE)[keyof typeof PROJECTION_NOTICE];
 
-// § 3.16 PointHistoryReferenceType
+// PointHistoryReferenceType
 export const POINT_HISTORY_REFERENCE_TYPE = {
   POINT_CHARGE: 'POINT_CHARGE',
   CREW_PARTICIPANT: 'CREW_PARTICIPANT',
@@ -173,10 +180,10 @@ export type CertificationStatus = (typeof CERTIFICATION_STATUS)[keyof typeof CER
 
 
 // ════════════════════════════════════════════════════════════
-// § 5.1 인증 / 회원
+// 인증 / 회원
 // ════════════════════════════════════════════════════════════
 
-// POST /api/auth/signup → 201
+// POST /api/member/signup → 201
 export interface SignupResponse {
   member_uuid: string;
   email: string;
@@ -310,7 +317,7 @@ export interface MemberPublicProfile {
 
 
 // ════════════════════════════════════════════════════════════
-// § 5.2 크루 / 참여
+// 크루 / 참여
 // ════════════════════════════════════════════════════════════
 
 // GET /api/crews → items[]
@@ -353,11 +360,10 @@ export interface CrewDetail {
   deposit_amount: number;
   min_participants: number;
   max_participants: number;
+  current_participants: number;
   frequency_type: FrequencyType;
-  frequency_count: number | null;
   mission_schedule_days: string[];
   daily_settlement_type: DailySettlementType;
-  current_participants: number;
   host_agreement_version: string;
   host_agreed_at: string;
   recruitment_deadline: string;
@@ -488,6 +494,7 @@ export interface CrewNotice {
   notice_id: number;
   crew_id: number;
   author_member_uuid: string;
+  author_nickname: string;
   title: string;
   content: string;
   created_at: string;
@@ -525,7 +532,7 @@ export type NoticeCommentsResponse = CursorPageResponse<NoticeComment>;
 
 
 // ════════════════════════════════════════════════════════════
-// § 5.3 미션 인증
+// 미션 인증
 // ════════════════════════════════════════════════════════════
 
 // POST /api/uploads/presigned-url Request
@@ -663,7 +670,7 @@ export interface ModerationRejectResponse {
   crew_participant_id: number;
   certification_status: 'FAILED';
   decision_type: 'MANUAL_REJECT';
-  reject_reason_code: RejectReasonCode;
+  reject_reason_code: null;
   decided_at: string;
   moderation_history_id: number;
 }
@@ -674,9 +681,9 @@ export interface ModerationRevertResponse {
   crew_id: number;
   crew_participant_id: number;
   certification_status: 'PENDING_REVIEW';
-  decision_type: null;
+  decision_type: "MANUAL_REVERT"; // 되돌림 자체는 기록, 로그 상태는 PENDING_REVIEW로 복귀
   reject_reason_code: null;
-  reverted_at: string;
+  decided_at: string;
   moderation_history_id: number;
 }
 
@@ -704,7 +711,7 @@ export type VerificationHistoryResponse = CursorPageResponse<VerificationHistory
 
 
 // ════════════════════════════════════════════════════════════
-// § 5.4 인증 피드 / 리액션
+// 인증 피드 / 리액션
 // ════════════════════════════════════════════════════════════
 
 // reaction_counts: emoji grapheme → count 동적 map
@@ -785,7 +792,7 @@ export interface ReactionResponse {
 
 
 // ════════════════════════════════════════════════════════════
-// § 5.5 크루 대시보드
+// 크루 대시보드
 // ════════════════════════════════════════════════════════════
 
 // ─── GET /api/dashboard (참여 중인 전체 크루 집계) ──────────────────────────
@@ -845,7 +852,7 @@ export interface DashboardResponse {
   my_expected_refund_amount: number | null;
   my_expected_refund_delta_amount: number | null; // 직전 배치 없으면 null. 음수 가능
   rank: number | null;
-  participant_count: number | null; // 전체 참여자 수
+  participant_count: number; // 전체 참여자 수 (NOT_STARTED 포함 항상 제공)
   rank_delta: number | null; // 양수 상승 / 음수 하락 / 0 유지
   next_settlement_at: string | null; // 종료/남은 일정 없으면 null
   participants: DashboardParticipant[];
@@ -854,7 +861,7 @@ export interface DashboardResponse {
 
 
 // ════════════════════════════════════════════════════════════
-// § 5.6 정산
+// 정산
 // ════════════════════════════════════════════════════════════
 
 // GET /api/crews/{crewId}/settlement → 200
@@ -914,17 +921,16 @@ export interface SettlementMe {
 export interface SettlementItem {
   settlement_item_id: number;
   crew_participant_id: number;
-  nickname: string; // 정산 시점 스냅샷된 참여자 닉네임
+  nickname: string | null; // 정산 시점 스냅샷 닉네임 (/me 응답에서는 산출 안 해 null)
   is_me: boolean; // 인증 사용자 본인 행 여부
-  participant_status_snapshot: ParticipantStatus;
+  participant_status_snapshot: ParticipantStatusSnapshot;
   deposit_amount: number;
   success_count_raw: number;
   recognized_success_count: number;
   recognized_dates_count: number;
   excluded_success_count: number;
-  // withdrawn_at_snapshot 제거됨 (API 문서 확정)
   share_ratio: string; // string decimal
-  rank: number; // share_ratio DESC, 동률 시 crew_participant_id ASC, 공동 순위 가능(예: 1,2,2)
+  rank: number | null; // share_ratio DESC, 동률 시 crew_participant_id ASC, 공동 순위 가능(예: 1,2,2) · /me 응답에서는 null
   base_refund_amount: number;
   remainder_bonus_amount: number; // HOST_REMAINDER 정책에서 방장에게만 지급, 나머지는 0
   refund_amount: number; // base_refund_amount + remainder_bonus_amount (최종 환급 source of truth)
@@ -941,7 +947,7 @@ export interface SettlementItem {
 
 
 // ════════════════════════════════════════════════════════════
-// § 5.7 AI
+// AI
 // ════════════════════════════════════════════════════════════
 
 // POST /api/ai/mission-recommendations Request
@@ -962,7 +968,6 @@ export interface AiRecommendationResponse {
     title: string;
     description: string;
     frequency_type: FrequencyType;
-    frequency_count: number;
     mission_schedule_days: string[];
     daily_settlement_type: DailySettlementType;
     deposit_amount: number;
@@ -987,7 +992,7 @@ export const NOTIFICATION_EVENT_TYPE = {
 export type NotificationEventType = (typeof NOTIFICATION_EVENT_TYPE)[keyof typeof NOTIFICATION_EVENT_TYPE];
 
 // ════════════════════════════════════════════════════════════
-// § 5.8 포인트
+// 포인트
 // ════════════════════════════════════════════════════════════
 
 // POST /api/points/charges Request
@@ -1060,7 +1065,7 @@ export type WalletHistoryResponse = CursorPageResponse<WalletHistoryItem>;
 
 
 // ════════════════════════════════════════════════════════════
-// § 5.9 내 크루
+// 내 크루
 // ════════════════════════════════════════════════════════════
 
 // GET /api/me/crews items[]
@@ -1084,27 +1089,24 @@ export interface MyCrewsResponse {
 }
 
 // ════════════════════════════════════════════════════════════
-// § 알림
+// 알림
 // ════════════════════════════════════════════════════════════
 
 export interface NotificationItem {
   notification_id: string;
-  event_type: NotificationEventType;
-  title: string;
-  display_text: string;
-  is_read: boolean;
-  read_at: string | null;
-  crew_id?: number;
-  crew_name?: string;
-  mission_log_id?: number;
-  occurred_at: string;
+  event_type: string;
+  resource_type: string;
   deep_link?: string | null;
+  occurred_at: string;
+  display_text: string;
+  crew_name?: string;
+  requires_refetch: boolean;
+  read_at: string | null;
 }
 
-export interface NotificationsResponse {
+export interface NotificationListResponse {
   items: NotificationItem[];
   next_cursor: string | null;
-  unread_count: number;
 }
 
 // PATCH /api/notification-settings
@@ -1125,8 +1127,6 @@ export type NotificationCategoryKey =
 
 export interface NotificationSettingsResponse {
   categories: Record<NotificationCategoryKey, boolean>;
-  quiet_hours_enabled?: boolean;
-  dnd_enabled?: boolean;
   quiet_start_time: string | null;
   quiet_end_time: string | null;
 }

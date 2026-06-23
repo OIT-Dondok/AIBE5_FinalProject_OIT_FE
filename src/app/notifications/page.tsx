@@ -73,17 +73,9 @@ function getDeepLink(item: NotificationItem): string | null {
     }
     return converted;
   }
-  if (!item.crew_id) return null;
-  switch (item.event_type) {
-    case "MISSION_LOG_VERIFICATION_RESULT":
-      return `/crews/${item.crew_id}/dashboard`;
-    case "SETTLEMENT_COMPLETED":
-      return `/crews/${item.crew_id}/settlement`;
-    case "SETTLEMENT_EXPECTED_REFUND_CHANGED":
-      return `/crews/${item.crew_id}/dashboard`;
-    default:
-      return `/crews/${item.crew_id}`;
-  }
+  // deep_link이 없으면 라우팅하지 않는다.
+  // (BE 계약: 알림 클릭 시 deep_link로 이동 후 canonical API refetch. payload로 URL을 재구성하지 않음)
+  return null;
 }
 
 // ── 시간 포맷 ────────────────────────────────────────────────────────────────
@@ -222,7 +214,9 @@ export default function NotificationsPage() {
   }, [setStoreUnreadCount]);
 
   useEffect(() => {
-    fetchInitial();
+    // 마운트 1회 로드. effect 동기 구간에서 setState가 실행되지 않도록 마이크로태스크로 지연
+    // (set-state-in-effect 방지 — 인증 이력 페이지와 동일 패턴)
+    void Promise.resolve().then(() => fetchInitial());
   }, [fetchInitial]);
 
   const loadMore = async () => {
