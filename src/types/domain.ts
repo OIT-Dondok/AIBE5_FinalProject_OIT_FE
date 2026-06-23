@@ -1,6 +1,6 @@
 import type { CursorPageResponse } from './common';
 // 전체 도메인 타입 정의
-// [기준] 백엔드 레포 docs/api/* 
+// [기준] 백엔드 레포 docs/api/*
 // - 응답 필드: snake_case (명세와 동일)
 // - 식별자: member_uuid (외부 노출용), member.id는 내부 FK 전용
 // - 시간: ISO-8601 with offset (예: "2026-05-07T00:05:00+09:00")
@@ -47,6 +47,13 @@ export const PARTICIPANT_STATUS = {
 } as const;
 export type ParticipantStatus = (typeof PARTICIPANT_STATUS)[keyof typeof PARTICIPANT_STATUS];
 
+// ParticipantStatusSnapshot (정산 시점 참여 상태 스냅샷 — 정산 대상은 LOCKED만)
+export const PARTICIPANT_STATUS_SNAPSHOT = {
+  LOCKED: 'LOCKED',
+} as const;
+export type ParticipantStatusSnapshot =
+  (typeof PARTICIPANT_STATUS_SNAPSHOT)[keyof typeof PARTICIPANT_STATUS_SNAPSHOT];
+
 // FrequencyType
 export const FREQUENCY_TYPE = {
   DAILY: 'DAILY',
@@ -79,8 +86,8 @@ export const POINT_TRANSACTION_TYPE = {
   CREW_DEPOSIT_RESERVE: 'CREW_DEPOSIT_RESERVE',   // 보증금 예약 (reserve)
   CREW_DEPOSIT_LOCK: 'CREW_DEPOSIT_LOCK',         // 보증금 예약 확정 (lock)
   CREW_RESERVE_RELEASE: 'CREW_RESERVE_RELEASE',   // 예약 해제 (취소/거절/만료)
+  CREW_CANCEL_REFUND: 'CREW_CANCEL_REFUND',       // 크루 해체
   CREW_SETTLEMENT_REFUND: 'CREW_SETTLEMENT_REFUND', // 최종 정산 환급
-  POINT_WITHDRAWAL: 'POINT_WITHDRAWAL', // 출금 요청(현재 UI/목데이터)
 } as const;
 export type PointTransactionType = (typeof POINT_TRANSACTION_TYPE)[keyof typeof POINT_TRANSACTION_TYPE];
 
@@ -98,6 +105,7 @@ export const MISSION_LOG_DECISION_TYPE = {
   MANUAL_REJECT: 'MANUAL_REJECT',
   AUTO_APPROVE: 'AUTO_APPROVE',
   AUTO_REJECT: 'AUTO_REJECT',
+  MANUAL_REVERT: 'MANUAL_REVERT',
 } as const;
 export type MissionLogDecisionType = (typeof MISSION_LOG_DECISION_TYPE)[keyof typeof MISSION_LOG_DECISION_TYPE];
 
@@ -175,7 +183,7 @@ export type CertificationStatus = (typeof CERTIFICATION_STATUS)[keyof typeof CER
 // 인증 / 회원
 // ════════════════════════════════════════════════════════════
 
-// POST /api/auth/signup → 201
+// POST /api/member/signup → 201
 export interface SignupResponse {
   member_uuid: string;
   email: string;
@@ -352,11 +360,10 @@ export interface CrewDetail {
   deposit_amount: number;
   min_participants: number;
   max_participants: number;
+  current_participants: number;
   frequency_type: FrequencyType;
-  frequency_count: number | null;
   mission_schedule_days: string[];
   daily_settlement_type: DailySettlementType;
-  current_participants: number;
   host_agreement_version: string;
   host_agreed_at: string;
   recruitment_deadline: string;
@@ -487,6 +494,7 @@ export interface CrewNotice {
   notice_id: number;
   crew_id: number;
   author_member_uuid: string;
+  author_nickname: string;
   title: string;
   content: string;
   created_at: string;
@@ -662,7 +670,7 @@ export interface ModerationRejectResponse {
   crew_participant_id: number;
   certification_status: 'FAILED';
   decision_type: 'MANUAL_REJECT';
-  reject_reason_code: RejectReasonCode;
+  reject_reason_code: null;
   decided_at: string;
   moderation_history_id: number;
 }
@@ -673,9 +681,9 @@ export interface ModerationRevertResponse {
   crew_id: number;
   crew_participant_id: number;
   certification_status: 'PENDING_REVIEW';
-  decision_type: null;
+  decision_type: "MANUAL_REVERT";
   reject_reason_code: null;
-  reverted_at: string;
+  decided_at: string;
   moderation_history_id: number;
 }
 
@@ -844,7 +852,7 @@ export interface DashboardResponse {
   my_expected_refund_amount: number | null;
   my_expected_refund_delta_amount: number | null; // 직전 배치 없으면 null. 음수 가능
   rank: number | null;
-  participant_count: number | null; // 전체 참여자 수
+  participant_count: number; // 전체 참여자 수 (NOT_STARTED 포함 항상 제공)
   rank_delta: number | null; // 양수 상승 / 음수 하락 / 0 유지
   next_settlement_at: string | null; // 종료/남은 일정 없으면 null
   participants: DashboardParticipant[];
@@ -913,17 +921,16 @@ export interface SettlementMe {
 export interface SettlementItem {
   settlement_item_id: number;
   crew_participant_id: number;
-  nickname: string; // 정산 시점 스냅샷된 참여자 닉네임
+  nickname: string | null; // 정산 시점 스냅샷된 참여자 닉네임
   is_me: boolean; // 인증 사용자 본인 행 여부
-  participant_status_snapshot: ParticipantStatus;
+  participant_status_snapshot: ParticipantStatusSnapshot;
   deposit_amount: number;
   success_count_raw: number;
   recognized_success_count: number;
   recognized_dates_count: number;
   excluded_success_count: number;
-  // withdrawn_at_snapshot 제거됨 (API 문서 확정)
   share_ratio: string; // string decimal
-  rank: number; // share_ratio DESC, 동률 시 crew_participant_id ASC, 공동 순위 가능(예: 1,2,2)
+  rank: number | null; // share_ratio DESC, 동률 시 crew_participant_id ASC, 공동 순위 가능(예: 1,2,2)
   base_refund_amount: number;
   remainder_bonus_amount: number; // HOST_REMAINDER 정책에서 방장에게만 지급, 나머지는 0
   refund_amount: number; // base_refund_amount + remainder_bonus_amount (최종 환급 source of truth)
@@ -961,7 +968,6 @@ export interface AiRecommendationResponse {
     title: string;
     description: string;
     frequency_type: FrequencyType;
-    frequency_count: number;
     mission_schedule_days: string[];
     daily_settlement_type: DailySettlementType;
     deposit_amount: number;
@@ -1088,22 +1094,19 @@ export interface MyCrewsResponse {
 
 export interface NotificationItem {
   notification_id: string;
-  event_type: NotificationEventType;
-  title: string;
-  display_text: string;
-  is_read: boolean;
-  read_at: string | null;
-  crew_id?: number;
-  crew_name?: string;
-  mission_log_id?: number;
-  occurred_at: string;
+  event_type: string;
+  resource_type: string;
   deep_link?: string | null;
+  occurred_at: string;
+  display_text: string;
+  crew_name?: string;
+  requires_refetch: boolean;
+  read_at: string | null;
 }
 
-export interface NotificationsResponse {
+export interface NotificationListResponse {
   items: NotificationItem[];
   next_cursor: string | null;
-  unread_count: number;
 }
 
 // PATCH /api/notification-settings
@@ -1124,8 +1127,6 @@ export type NotificationCategoryKey =
 
 export interface NotificationSettingsResponse {
   categories: Record<NotificationCategoryKey, boolean>;
-  quiet_hours_enabled?: boolean;
-  dnd_enabled?: boolean;
   quiet_start_time: string | null;
   quiet_end_time: string | null;
 }

@@ -196,8 +196,8 @@ export default function NoticeDetailPage() {
     );
   }
 
-  // 작성자 정보 매핑 (공지는 무조건 호스트가 작성하므로 크루 호스트 닉네임 사용)
-  const authorName = crew.host_nickname;
+  // 작성자 정보 매핑 (BE가 공지 작성자 닉네임을 응답에 제공)
+  const authorName = notice.author_nickname;
   const authorInitial = authorName.slice(0, 1);
   const hostProfileUrl = hostProfile?.profile_image_url;
 

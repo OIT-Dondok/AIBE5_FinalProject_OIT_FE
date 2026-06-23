@@ -266,7 +266,7 @@ export interface SettlementResultCrewView {
 
 export interface SettlementResultRankRow {
   id: number;
-  rank: number;
+  rank: number | null;
   rankLabel: string;
   nickname: string;
   shareRatioPercent: string;
@@ -342,7 +342,12 @@ export interface SettlementResultViewModel {
 
 // items[]는 settlement_item_id ASC 안정 정렬 → rank 기준 표시 정렬(동률 시 원본 순서 유지, JS sort는 stable)
 export function sortItemsByRank(items: SettlementItem[]): SettlementItem[] {
-  return [...items].sort((a, b) => a.rank - b.rank);
+  return [...items].sort((a, b) => {
+    // rank null(=/me에서 미산출)은 맨 뒤로
+    if (a.rank === null) return 1;
+    if (b.rank === null) return -1;
+    return a.rank - b.rank;
+  });
 }
 
 export function toSettlementResultRankRow(item: SettlementItem): SettlementResultRankRow {
@@ -350,7 +355,7 @@ export function toSettlementResultRankRow(item: SettlementItem): SettlementResul
     id: item.settlement_item_id,
     rank: item.rank,
     rankLabel: formatRankLabel(item.rank),
-    nickname: item.nickname,
+    nickname: item.nickname ?? '-',
     shareRatioPercent: formatShareRatioPercent(item.share_ratio),
     refundAmount: formatKrw(item.refund_amount),
     isMe: item.is_me,
@@ -380,7 +385,7 @@ export function toSettlementResultViewModel(detail: SettlementDetail): Settlemen
 
   const my: SettlementResultMyView | null = myItem
     ? {
-        nickname: myItem.nickname,
+        nickname: myItem.nickname ?? '-',
         rankLabel: formatRankLabel(myRank),
         shareRatioPercent: formatShareRatioPercent(myItem.share_ratio),
         refundAmount: formatKrw(myItem.refund_amount),

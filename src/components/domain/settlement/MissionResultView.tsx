@@ -72,7 +72,7 @@ function RankCard({ rows }: { rows: SettlementResultViewModel['rankRows'] }) {
             }`}
           >
             <span className="flex h-7 w-7 shrink-0 items-center justify-center text-base font-extrabold text-text-secondary">
-              {RANK_MEDALS[row.rank] ?? row.rank}
+              {row.rank === null ? '-' : (RANK_MEDALS[row.rank] ?? row.rank)}
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-bold text-text-primary">{row.nickname}</p>
