@@ -325,13 +325,15 @@ describe("point wallet API mapping", () => {
     assert.equal(vm.totalBalance.replace(/\D/g, ""), "18800");
     assert.equal(vm.reservedBalance.replace(/\D/g, ""), "5000");
     assert.equal(vm.lockedBalance.replace(/\D/g, ""), "1800");
-    assert.equal(vm.totalPendingReserveBalance.replace(/\D/g, ""), "6000");
-    assert.equal(vm.metrics.length, 4);
-    assert.equal(vm.metrics[1].value.replace(/\D/g, ""), "6000");
-    assert.equal(vm.metrics[2].value.replace(/\D/g, ""), "800");
-    assert.equal(vm.metrics[3].value.replace(/\D/g, ""), "700");
-    assert.equal(vm.metrics[3].label, "환급 실패 (확인 필요)");
-    assert.equal(vm.metrics[3].tone, "red");
+    assert.equal(vm.totalPendingReserveBalance.replace(/\D/g, ""), "6800");
+    assert.equal(vm.metrics.length, 2);
+    assert.deepEqual(
+      vm.metrics.map((metric) => metric.label),
+      ["총 보유 도딘", "크루 예치금"],
+    );
+    assert.equal(vm.metrics[1].value.replace(/\D/g, ""), "6800");
+    assert.equal(vm.metrics.some((metric) => metric.label.includes("정산")), false);
+    assert.equal(vm.metrics.some((metric) => metric.label.includes("환급 실패")), false);
     assert.equal(vm.settlementFailedAmount.replace(/\D/g, ""), "700");
     assert.deepEqual(
       vm.historyItems.map((item) => item.id),
@@ -339,7 +341,7 @@ describe("point wallet API mapping", () => {
     );
   });
 
-  it("hides settlement failure metric when there is no failed settlement amount", () => {
+  it("keeps settlement amounts out of wallet summary metrics", () => {
     const account: PointAccountResponse = {
       available_balance: 12000,
       reserved_balance: 5000,
@@ -353,8 +355,13 @@ describe("point wallet API mapping", () => {
 
     const vm = createWalletViewModel(account, []);
 
-    assert.equal(vm.metrics.length, 3);
-    assert.equal(vm.metrics.some((metric) => metric.label === "환급 실패 (확인 필요)"), false);
+    assert.equal(vm.metrics.length, 2);
+    assert.deepEqual(
+      vm.metrics.map((metric) => metric.label),
+      ["총 보유 도딘", "크루 예치금"],
+    );
+    assert.equal(vm.metrics.some((metric) => metric.label.includes("정산")), false);
+    assert.equal(vm.metrics.some((metric) => metric.label.includes("환급 실패")), false);
   });
 
   it("clears the duplicate cursor guard when paginated history loading fails", () => {
@@ -414,6 +421,15 @@ describe("point wallet API mapping", () => {
     assert.equal(pickerSourceText.includes("aria-pressed={active}"), true);
     assert.equal(pickerSourceText.includes("canGoPreviousYear"), true);
     assert.equal(pickerSourceText.includes("canGoNextYear"), true);
+  });
+
+  it("renders wallet summary metrics as compact pills above the available balance", () => {
+    const sourceText = readTsSourceFile("src/components/domain/point/WalletSummaryCard.tsx").getFullText();
+
+    assert.equal(sourceText.includes("WalletMetricPill"), true);
+    assert.equal(sourceText.includes("wallet.metrics.map"), true);
+    assert.equal(sourceText.includes("WalletBreakdownRow"), false);
+    assert.equal(sourceText.includes("TotalBalanceRow"), false);
   });
 });
 
