@@ -23,14 +23,14 @@ export function FeedCrewFilter({ crews, selectedCrewId, onSelect }: FeedCrewFilt
           className={`flex-shrink-0 px-4 py-2 text-xs font-bold rounded-full transition-all duration-300 active:scale-95 focus-visible:outline-none ${
             selectedCrewId === null
               ? 'bg-[#5E9B73] text-white shadow-lg shadow-[#5E9B73]/20 ring-2 ring-[#5E9B73]/20 scale-[1.04] z-10'
-              : 'bg-card border border-text-secondary/15 text-text-secondary hover:bg-text-secondary/5'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80 border border-slate-200/50'
           }`}
         >
           전체 크루
         </button>
         {crews.map((crew) => {
           const isSelected = selectedCrewId === crew.crew_id;
-          const branding = getCrewBrandingColor(crew.crew_id);
+          const branding = getCrewBrandingColor(crew.crew_id, crew.crew_name);
           
           return (
             <button
@@ -39,9 +39,7 @@ export function FeedCrewFilter({ crews, selectedCrewId, onSelect }: FeedCrewFilt
               onClick={() => onSelect(crew.crew_id)}
               aria-pressed={isSelected}
               className={`flex-shrink-0 px-4 py-2 text-xs font-bold rounded-full transition-all duration-300 active:scale-95 whitespace-nowrap focus-visible:outline-none ${
-                isSelected
-                  ? `${branding.bgClass} ${branding.textClass} ${branding.borderClass} shadow-lg scale-[1.04] z-10 ring-4 ring-current/15`
-                  : 'bg-card border border-text-secondary/15 text-text-secondary hover:bg-text-secondary/5'
+                isSelected ? branding.active : branding.inactive
               }`}
             >
               {crew.crew_name}

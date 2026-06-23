@@ -1,15 +1,15 @@
 import type { CrewListItem } from '@/types/domain';
 import { toKstDate } from './date';
+import type { CrewCategory } from '@/types/domain';
 
-export const PASTEL_GRADIENTS = [
-  'bg-gradient-to-r from-blue-300 to-sky-300 shadow-[0_0_8px_rgba(125,211,252,0.2)]',
-  'bg-gradient-to-r from-emerald-300 to-teal-300 shadow-[0_0_8px_rgba(110,231,183,0.2)]',
-  'bg-gradient-to-r from-violet-300 to-fuchsia-300 shadow-[0_0_8px_rgba(196,181,253,0.2)]',
-  'bg-gradient-to-r from-amber-300 to-orange-300 shadow-[0_0_8px_rgba(252,211,77,0.2)]',
-  'bg-gradient-to-r from-pink-300 to-rose-300 shadow-[0_0_8px_rgba(244,63,94,0.15)]',
-  'bg-gradient-to-r from-teal-300 to-cyan-300 shadow-[0_0_8px_rgba(103,232,249,0.2)]',
-  'bg-gradient-to-r from-lime-300 to-emerald-300 shadow-[0_0_8px_rgba(190,242,50,0.15)]',
-];
+export const CATEGORY_GRADIENTS: Record<CrewCategory, string> = {
+  MORNING: 'bg-gradient-to-r from-orange-400 to-amber-300 shadow-[0_0_8px_rgba(251,146,60,0.25)]',
+  READING: 'bg-gradient-to-r from-amber-400 to-orange-300 shadow-[0_0_8px_rgba(251,191,36,0.25)]',
+  EXERCISE: 'bg-gradient-to-r from-blue-400 to-sky-300 shadow-[0_0_8px_rgba(96,165,250,0.25)]',
+  STUDY: 'bg-gradient-to-r from-violet-400 to-fuchsia-300 shadow-[0_0_8px_rgba(167,139,250,0.25)]',
+  DIET: 'bg-gradient-to-r from-lime-400 to-emerald-300 shadow-[0_0_8px_rgba(163,230,53,0.25)]',
+  OTHER: 'bg-gradient-to-r from-rose-400 to-pink-300 shadow-[0_0_8px_rgba(244,63,94,0.25)]',
+};
 
 export interface DDayInfo {
   label: string;
@@ -48,7 +48,7 @@ export interface CrewCardViewModel {
 }
 
 export function getCrewCardViewModel(
-  crew: Pick<CrewListItem, 'crew_id' | 'current_participants' | 'max_participants' | 'min_participants' | 'recruitment_deadline' | 'status'>,
+  crew: Pick<CrewListItem, 'crew_id' | 'current_participants' | 'max_participants' | 'min_participants' | 'recruitment_deadline' | 'status' | 'category'>,
   fallbackProgressBg: string,
   isClosed: boolean
 ): CrewCardViewModel {
@@ -60,10 +60,10 @@ export function getCrewCardViewModel(
   const isMinAchieved = currentParticipants >= crew.min_participants;
   const dDayInfo = crew.recruitment_deadline ? getDDay(crew.recruitment_deadline) : null;
   
-  const gradientIndex = crew.crew_id % PASTEL_GRADIENTS.length;
+  const cat = (crew.category || 'OTHER') as CrewCategory;
   const progressBg = isClosed
     ? fallbackProgressBg
-    : PASTEL_GRADIENTS[gradientIndex];
+    : (CATEGORY_GRADIENTS[cat] || CATEGORY_GRADIENTS.OTHER);
 
   return {
     currentParticipants,

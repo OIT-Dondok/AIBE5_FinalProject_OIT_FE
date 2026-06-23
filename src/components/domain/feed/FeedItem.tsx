@@ -57,7 +57,7 @@ export function FeedItem({ item, onRemove }: FeedItemProps) {
                 {timeStr}
               </span>
               <span
-                className={`inline-block px-1.5 py-0.5 rounded-full text-[9px] font-black border tracking-tight truncate max-w-[120px] transition-colors ${getCrewBrandingColor(item.crew_id).bgClass} ${getCrewBrandingColor(item.crew_id).textClass} ${getCrewBrandingColor(item.crew_id).borderClass}`}
+                className={`inline-block px-1.5 py-0.5 rounded-full text-[9px] font-black border tracking-tight truncate max-w-[120px] transition-colors ${getCrewBrandingColor(item.crew_id, item.crew_name).bgClass} ${getCrewBrandingColor(item.crew_id, item.crew_name).textClass} ${getCrewBrandingColor(item.crew_id, item.crew_name).borderClass}`}
                 title={item.crew_name}
               >
                 {item.crew_name}

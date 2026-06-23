@@ -4,6 +4,7 @@ import { LayoutWrapper } from "@/components/common/LayoutWrapper";
 import { AuthInitializer } from "@/components/common/AuthInitializer";
 import { FcmInitializer } from "@/components/common/FcmInitializer";
 import { NotificationBadgeInitializer } from "@/components/common/NotificationBadgeInitializer";
+import { SplashScreen } from "@/components/common/SplashScreen";
 
 export const metadata: Metadata = {
     title: "Dondok",
@@ -26,6 +27,7 @@ export default function RootLayout({
     return (
         <html lang="en" className="h-full antialiased">
         <body className="min-h-screen bg-background text-text-primary flex flex-col">
+        <SplashScreen />
         <AuthInitializer />
         <FcmInitializer />
         <NotificationBadgeInitializer />

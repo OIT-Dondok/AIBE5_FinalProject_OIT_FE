@@ -17,32 +17,32 @@ const CATEGORIES: { label: string; value: CategoryFilter }[] = [
 
 const CATEGORY_CHIP_STYLES: Record<CategoryFilter, { active: string; inactive: string }> = {
   ALL: {
-    active: 'bg-slate-900 text-white shadow-lg shadow-slate-900/20 ring-2 ring-slate-950/20 scale-[1.04] z-10',
+    active: 'bg-[#5E9B73] text-white shadow-lg shadow-[#5E9B73]/20 ring-4 ring-[#5E9B73]/20 scale-[1.04] z-10',
     inactive: 'bg-slate-100 text-slate-600 hover:bg-slate-200/80 border border-slate-200/50',
   },
   MORNING: {
-    active: 'bg-orange-500 text-white shadow-lg shadow-orange-500/30 ring-4 ring-orange-500/20 scale-[1.04] z-10',
+    active: 'bg-orange-400 text-white shadow-lg shadow-orange-400/30 ring-4 ring-orange-400/20 scale-[1.04] z-10',
     inactive: 'bg-orange-50 text-orange-700 hover:bg-orange-100/80 border border-orange-100/30',
   },
   READING: {
-    active: 'bg-amber-500 text-white shadow-lg shadow-amber-500/30 ring-4 ring-amber-500/20 scale-[1.04] z-10',
+    active: 'bg-amber-400 text-white shadow-lg shadow-amber-400/30 ring-4 ring-amber-400/20 scale-[1.04] z-10',
     inactive: 'bg-amber-50 text-amber-700 hover:bg-amber-100/80 border border-amber-100/30',
   },
   EXERCISE: {
-    active: 'bg-blue-500 text-white shadow-lg shadow-blue-500/30 ring-4 ring-blue-500/20 scale-[1.04] z-10',
+    active: 'bg-blue-400 text-white shadow-lg shadow-blue-400/30 ring-4 ring-blue-400/20 scale-[1.04] z-10',
     inactive: 'bg-blue-50 text-blue-700 hover:bg-blue-100/80 border border-blue-100/30',
   },
   STUDY: {
-    active: 'bg-violet-500 text-white shadow-lg shadow-violet-500/30 ring-4 ring-violet-500/20 scale-[1.04] z-10',
+    active: 'bg-violet-400 text-white shadow-lg shadow-violet-400/30 ring-4 ring-violet-400/20 scale-[1.04] z-10',
     inactive: 'bg-violet-50 text-violet-700 hover:bg-violet-100/80 border border-violet-100/30',
   },
   DIET: {
-    active: 'bg-green-500 text-white shadow-lg shadow-green-500/30 ring-4 ring-green-500/20 scale-[1.04] z-10',
-    inactive: 'bg-green-50 text-green-700 hover:bg-green-100/80 border border-green-100/30',
+    active: 'bg-lime-400 text-white shadow-lg shadow-lime-400/30 ring-4 ring-lime-400/20 scale-[1.04] z-10',
+    inactive: 'bg-lime-50 text-lime-700 hover:bg-lime-100/80 border border-lime-100/30',
   },
   OTHER: {
-    active: 'bg-slate-600 text-white shadow-lg shadow-slate-600/30 ring-4 ring-slate-600/20 scale-[1.04] z-10',
-    inactive: 'bg-slate-100 text-slate-700 hover:bg-slate-200/80 border border-slate-200/50',
+    active: 'bg-rose-400 text-white shadow-lg shadow-rose-400/30 ring-4 ring-rose-400/20 scale-[1.04] z-10',
+    inactive: 'bg-rose-50 text-rose-700 hover:bg-rose-100/80 border border-rose-100/30',
   },
 };
 
