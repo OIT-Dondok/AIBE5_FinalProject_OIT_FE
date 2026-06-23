@@ -183,7 +183,7 @@ function TodayVerificationStatus() {
 
       {/* 펼쳐지는 크루 서랍 (아코디언) */}
       {!isAllCertified && isExpanded && (
-        <div className="mt-2.5 flex flex-col gap-2 bg-text-secondary/5 p-3 rounded-[24px] border border-text-secondary/5 animate-dropdown-open">
+        <div className="mt-2.5 flex flex-col gap-2 bg-gradient-to-br from-[#FFFDF0] to-[#FFFBEA] p-3 rounded-[24px] border border-[#F2E5C1] shadow-[0_4px_12px_rgba(245,230,175,0.08)] animate-dropdown-open">
           <p className="text-[10px] font-extrabold text-text-secondary/60 tracking-wider uppercase px-1">인증이 필요한 크루</p>
           <div className="flex flex-col gap-2">
             {activeCrews.map((crew) => (
