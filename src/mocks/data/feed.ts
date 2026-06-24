@@ -3,9 +3,9 @@ import type { AvailableCrew, FeedItem, FeedResponse } from "@/types/domain";
 const MY_MEMBER_UUID = "018f4fd2-6d7a-7a41-9f58-me000000001";
 
 export const MOCK_AVAILABLE_CREWS: AvailableCrew[] = [
-  { crew_id: 1, crew_name: "갓생 6시 기상" },
-  { crew_id: 2, crew_name: "독서 1챕터" },
-  { crew_id: 3, crew_name: "운동 30분" },
+  { crew_id: 1, crew_name: "갓생 6시 기상", status: "ACTIVE" },
+  { crew_id: 2, crew_name: "독서 1챕터", status: "CLOSED" },
+  { crew_id: 3, crew_name: "운동 30분", status: "ACTIVE" },
 ];
 
 const BASE_FEED_SIGNALS: Pick<

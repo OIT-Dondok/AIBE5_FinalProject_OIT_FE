@@ -12,6 +12,11 @@ interface FeedCrewFilterProps {
 }
 
 export function FeedCrewFilter({ crews, selectedCrewId, onSelect }: FeedCrewFilterProps) {
+  // 종료(CLOSED) 크루는 맨 뒤로 정렬 (그 외 상대 순서 유지 — Array.sort는 stable)
+  const sortedCrews = [...crews].sort(
+    (a, b) => Number(a.status === 'CLOSED') - Number(b.status === 'CLOSED'),
+  );
+
   return (
     <div className="relative w-full overflow-hidden">
       {/* 가로 스크롤 컨테이너 */}
@@ -28,19 +33,26 @@ export function FeedCrewFilter({ crews, selectedCrewId, onSelect }: FeedCrewFilt
         >
           전체 크루
         </button>
-        {crews.map((crew) => {
+        {sortedCrews.map((crew) => {
           const isSelected = selectedCrewId === crew.crew_id;
+          const isEnded = crew.status === 'CLOSED';
           const branding = getCrewBrandingColor(crew.crew_id, crew.crew_name);
-          
+          // 종료 크루는 브랜딩 색 대신 회색(비활성) 톤. 선택·필터 동작은 그대로 유지
+          const chipClass = isEnded
+            ? isSelected
+              ? 'bg-slate-200 text-slate-500 ring-1 ring-slate-300'
+              : 'bg-slate-100 text-slate-400 border border-slate-200/50'
+            : isSelected
+              ? branding.active
+              : branding.inactive;
+
           return (
             <button
               key={crew.crew_id}
               type="button"
               onClick={() => onSelect(crew.crew_id)}
               aria-pressed={isSelected}
-              className={`flex-shrink-0 px-4 py-2 text-xs font-bold rounded-full transition-all duration-300 active:scale-95 whitespace-nowrap focus-visible:outline-none ${
-                isSelected ? branding.active : branding.inactive
-              }`}
+              className={`flex-shrink-0 px-4 py-2 text-xs font-bold rounded-full transition-all duration-300 active:scale-95 whitespace-nowrap focus-visible:outline-none ${chipClass}`}
             >
               {crew.crew_name}
             </button>
