@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Info } from 'lucide-react';
 import { getCrewMembers, getCrewApplications } from '@/services/crew';
 import { getMemberProfile } from '@/services/member';
 import type { CrewDetail } from '@/types/domain';
@@ -103,6 +105,23 @@ export default function CrewDetailTabs({ crew, crewId, onConfirmedCountLoaded }:
       <div className="px-5 py-4">
         {activeTab === '정보' && (
           <div className="flex flex-col gap-4">
+            {/* 정산 완료 시 정산 상세 진입 CTA (대시보드에서 이동) */}
+            {crew.settlement_status === 'SUCCEEDED' && (
+              <Link
+                href={`/crews/${crewId}/settlement`}
+                className="flex items-start gap-2.5 rounded-2xl border border-primary-blue/20 bg-primary-blue/5 px-4 py-3 transition-colors hover:bg-primary-blue/10 active:scale-[0.99]"
+              >
+                <Info size={16} className="mt-0.5 shrink-0 text-primary-blue" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[12px] font-medium leading-relaxed text-text-secondary">
+                    최종 정산이 완료됐어요. 정산 상세에서 확정 결과를 확인하세요.
+                  </span>
+                  <span className="mt-1.5 inline-flex text-[12px] font-black text-primary-blue">
+                    정산 상세 보기 →
+                  </span>
+                </span>
+              </Link>
+            )}
             <CrewHostProfile
               key={hostProfileUrl ?? 'no-avatar'}
               description={crew.description}
