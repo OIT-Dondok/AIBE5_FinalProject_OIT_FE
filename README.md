@@ -196,11 +196,12 @@ NEXT_PUBLIC_VAPID_KEY=...
 
 | 훈련생 | 역할 | 담당 업무 |
 |--------|------|-----------|
-| 김세희 | PM · Frontend · Backend | 피드 페이지 UI·피드 API 연동, 이모지 리액션 API 연동, HEIC 이미지 변환, 대시보드 UI·API 연동, 미션 종료·결과·결과 카드 저장 UI |
-| 서일현 | Frontend · Backend Lead | 대시보드 레이아웃 목업, 프로필 페이지 UI·API 연동, 도딘 충전 UI (Toss Payments 연동), 도딘 지갑 페이지 UI, 정산 상태/예외 화면 |
-| 문창현 | Backend · DevOps | 로그아웃 API 연결, 프로필 상태 메시지 버그 수정 |
-| 김한비 | Frontend · Backend | FE 공통 구조 셋업 (types·axios·authStore·CLAUDE.md), 운영 콘솔 탭 UI, 인증 검증 탭 UI, 가입 신청 승인/거절 UI, 공지관리 탭 UI·API 연동, FCM 웹 푸시·알림 페이지·알림 설정 UI, 크루 해체 FE 연동 |
-| 전성 | Frontend Lead · Backend | Next.js 초기화·Vercel 배포·PWA 서비스 워커, Tailwind 디자인 시스템·공통 컴포넌트, 로그인·회원가입 UI·API 연동, 크루 생성 5단계 폼·AI 도우미 UI, 크루 탐색·상세·입장 신청 UI, 미션 인증 업로드 UI, 인증 이력 UI, 대시보드 차트 |
+| 김세희 | PM · Team Lead | 피드 페이지 UI·피드 API 연동, 이모지 리액션 API 연동, HEIC 이미지 변환, 대시보드 UI·API 연동, 미션 종료·결과·결과 카드 저장 UI |
+| 서일현 | Backend Lead | 대시보드 레이아웃 목업, 프로필 페이지 UI·API 연동, 도딘 충전 UI (Toss Payments 연동), 도딘 지갑 페이지 UI, 정산 상태/예외 화면 |
+| 문창현 | DevOps Lead | 로그아웃 API 연결, 프로필 상태 메시지 버그 수정 |
+| 김한비 | Backend Lead | FE 공통 구조 셋업 (types·axios·authStore·CLAUDE.md), 운영 콘솔 탭 UI, 인증 검증 탭 UI, 가입 신청 승인/거절 UI, 공지관리 탭 UI·API 연동, FCM 웹 푸시·알림 페이지·알림 설정 UI, 크루 해체 FE 연동 |
+| 전성 | Frontend Lead | Next.js 초기화·Vercel 배포·PWA 서비스 워커, Tailwind 디자인 시스템·공통 컴포넌트, 로그인·회원가입 UI·API 연동, 크루 생성 5단계 폼·AI 도우미 UI, 크루 탐색·상세·입장 신청 UI, 미션 인증 업로드 UI, 인증 이력 UI, 대시보드 차트 |
+
 
 ---
 
