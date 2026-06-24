@@ -37,35 +37,27 @@ export function SplashScreen() {
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#121212] transition-all duration-500 ease-in-out ${
+      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#F5F0E6] transition-all duration-500 ease-in-out ${
         isFadingOut ? 'opacity-0 scale-[1.08] pointer-events-none' : 'opacity-100 scale-100'
       }`}
     >
       <style>{`
-        @keyframes splash-scale {
-          0% { transform: scale(0.6); opacity: 0; filter: blur(4px); }
-          15% { transform: scale(0.85); opacity: 0.5; filter: blur(2px); }
-          100% { transform: scale(1.05); opacity: 1; filter: blur(0); }
-        }
-        @keyframes splash-fade {
-          to { opacity: 1; transform: translateY(0); }
+        @keyframes splash-dudoong {
+          0% { transform: scale(0.3); opacity: 0; }
+          50% { transform: scale(1.15); opacity: 0.9; }
+          75% { transform: scale(0.95); opacity: 0.95; }
+          100% { transform: scale(1); opacity: 1; }
         }
       `}</style>
       
-      <div className="flex flex-col items-center gap-4">
-        {/* 로고 애니메이션: 퍼블릭 폴더의 고해상도 PWA 아이콘 사용 */}
-        <div className="relative animate-[splash-scale_1.4s_cubic-bezier(0.16,1,0.3,1)_forwards] drop-shadow-[0_8px_32px_rgba(0,0,0,0.35)]">
+      <div className="flex flex-col items-center justify-center">
+        {/* 로고 애니메이션: '두둥' 효과 스케일 바운스 적용 */}
+        <div className="relative animate-[splash-dudoong_0.75s_cubic-bezier(0.34,1.56,0.64,1)_forwards] drop-shadow-[0_12px_24px_rgba(0,0,0,0.18)]">
           <img
             src="/icon-512x512.png"
             alt="Dondok Splash Logo"
-            className="w-24 h-24 object-contain rounded-2xl"
+            className="w-28 h-28 object-contain rounded-2xl"
           />
-        </div>
-        
-        {/* 서비스 타이틀 & 슬로건 페이드인 */}
-        <div className="text-center mt-2 animate-[splash-fade_1s_ease-out_0.3s_forwards] opacity-0 translate-y-2">
-          <h1 className="text-white text-xl font-black tracking-widest">돈독</h1>
-          <p className="text-white/70 text-[10px] font-bold tracking-wider mt-1">Build habits, share the win</p>
         </div>
       </div>
     </div>
