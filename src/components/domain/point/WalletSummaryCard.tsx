@@ -64,10 +64,10 @@ export function WalletSummaryCard({ wallet, onOpenCharge }: WalletSummaryCardPro
   }, []);
 
   return (
-    <section className="relative overflow-hidden rounded-[24px] bg-gradient-to-br from-[#6BAF85] via-[#5E9B73] to-[#4A7D5C] text-white shadow-[0_4px_20px_rgba(94,155,115,0.22),_0_16px_56px_rgba(94,155,115,0.35)]">
+    <section className="relative rounded-[24px] bg-gradient-to-br from-[#6BAF85] via-[#5E9B73] to-[#4A7D5C] text-white shadow-[0_4px_20px_rgba(94,155,115,0.22),_0_16px_56px_rgba(94,155,115,0.35)]">
 
       {/* 상단 하이라이트 및 대각선 광택/쉬머 레이어 */}
-      <div className="pointer-events-none absolute inset-0">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[24px]">
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/45 to-transparent" />
         <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-white/[0.08] to-transparent" />
         <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/[0.08] to-transparent" />
@@ -92,16 +92,9 @@ export function WalletSummaryCard({ wallet, onOpenCharge }: WalletSummaryCardPro
 
         {/* 미니 지표 수평 배치 (총 보유금액, 크루 예치금) */}
         {wallet.metrics.length > 0 && (
-          <div className="mt-4 flex flex-col items-start gap-1.5">
+          <div className="mt-4 flex flex-wrap items-center gap-1.5">
             {wallet.metrics.map((metric) => (
-              <div
-                key={metric.label}
-                className="inline-flex min-w-0 items-center gap-1.5 rounded-full bg-white/[0.10] px-3 py-1.5 text-white/90 ring-1 ring-white/[0.10]"
-              >
-                <span className="truncate text-[11px] font-bold text-white/60">{metric.label}</span>
-                <span className="text-[12px] font-black tabular-nums text-white shrink-0">{metric.value}</span>
-                <HoverHint text={metric.caption} />
-              </div>
+              <WalletMetricPill key={metric.label} metric={metric} />
             ))}
           </div>
         )}

@@ -46,7 +46,7 @@ export function BottomSheet({
     // createPortal로 document.body에 직접 마운트:
     // Header의 backdrop-filter가 position:fixed 의 containing block이 되는 버그를 방지합니다.
     return createPortal(
-        <div className="fixed inset-0 z-[60] flex items-end justify-center">
+        <div className="fixed inset-0 z-[120] flex items-end justify-center">
             {/* 배경 딤 — 전체 화면 덮기 */}
             <div
                 className="absolute inset-0 bg-black/40 animate-in fade-in duration-200"
