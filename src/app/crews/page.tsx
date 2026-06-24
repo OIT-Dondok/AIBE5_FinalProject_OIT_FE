@@ -89,8 +89,9 @@ function TodayVerificationStatus() {
         if (active) {
           setActiveCrews(statusItems);
         }
-      } catch (error) {
-        console.error('Failed to load today verification status:', error);
+      } catch {
+        // 실패 시 이전 성공 결과가 남아 오래된 현황이 표시되지 않도록 비운다.
+        if (active) setActiveCrews([]);
       } finally {
         if (active) setLoading(false);
       }

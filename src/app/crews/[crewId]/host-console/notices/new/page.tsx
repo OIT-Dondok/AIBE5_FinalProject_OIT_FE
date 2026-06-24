@@ -14,15 +14,15 @@ import { ConfirmModal } from "@/components/common/ConfirmModal";
 import type { ToastType } from "@/components/common/Toast";
 import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
-import { createCrewNotice, getCrew, getMyCrew } from "@/services/crew";
+import { createCrewNotice, getMyCrew } from "@/services/crew";
 
-const isValidDraft = (data: any): data is { title: string; content: string; savedAt: number } => {
+const isValidDraft = (data: unknown): data is { title: string; content: string; savedAt: number } => {
+  if (typeof data !== "object" || data === null) return false;
+  const d = data as Record<string, unknown>;
   return (
-    data &&
-    typeof data === "object" &&
-    typeof data.title === "string" &&
-    typeof data.content === "string" &&
-    typeof data.savedAt === "number"
+    typeof d.title === "string" &&
+    typeof d.content === "string" &&
+    typeof d.savedAt === "number"
   );
 };
 
@@ -52,7 +52,6 @@ export default function HostNoticeNewPage() {
   const [toastType, setToastType] = useState<ToastType>("success");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-  const [crewName, setCrewName] = useState<string | null>(null);
   const [hostCrews, setHostCrews] = useState<MyCrew[]>([]);
   const isTitleReady = title.trim().length > 0;
 
@@ -83,22 +82,31 @@ export default function HostNoticeNewPage() {
   // 진입 시 임시 저장 검사
   useEffect(() => {
     if (crewId === null) return;
-    const stored = localStorage.getItem(`temp_notice_draft_${crewId}`);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        if (isValidDraft(parsed)) {
-          setDraftToRestore(parsed);
-          setIsRestoreModalOpen(true);
-        } else {
+    // effect 동기 구간에서 setState가 실행되지 않도록 마이크로태스크로 지연 (set-state-in-effect 방지)
+    // 언마운트/crewId 변경 후 콜백이 이전 crew의 draft 모달을 여는 레이스를 막기 위해 active 가드를 둔다.
+    let active = true;
+    void Promise.resolve().then(() => {
+      if (!active) return;
+      const stored = localStorage.getItem(`temp_notice_draft_${crewId}`);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (isValidDraft(parsed)) {
+            setDraftToRestore(parsed);
+            setIsRestoreModalOpen(true);
+          } else {
+            preventSaveRef.current = false;
+          }
+        } catch {
           preventSaveRef.current = false;
         }
-      } catch {
+      } else {
         preventSaveRef.current = false;
       }
-    } else {
-      preventSaveRef.current = false;
-    }
+    });
+    return () => {
+      active = false;
+    };
   }, [crewId]);
 
   // 실시간 디바운스 임시 저장
@@ -148,11 +156,6 @@ export default function HostNoticeNewPage() {
       router.push(`/crews/${crewId}/host-console?tab=notices`);
     }
   };
-
-  useEffect(() => {
-    if (crewId === null) return;
-    getCrew(crewId).then((res) => setCrewName(res.data.title)).catch(() => {});
-  }, [crewId]);
 
   if (crewId === null) {
     return (
