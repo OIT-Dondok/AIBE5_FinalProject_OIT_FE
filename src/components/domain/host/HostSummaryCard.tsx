@@ -105,7 +105,7 @@ export function HostSummaryCard({ crewDetail }: { crewDetail: CrewDetail }) {
     getMyCrew("HOST", undefined, signal)
       .then(({ data }) => {
         if (signal.aborted) return;
-        setHostCrews(data.items);
+        setHostCrews(data.items.filter((c) => c.status === 'ACTIVE' || c.status === 'RECRUITING'));
         Promise.all(
           data.items.map((crew) =>
             getCrewApplications(crew.crew_id, { status: "PENDING" })
