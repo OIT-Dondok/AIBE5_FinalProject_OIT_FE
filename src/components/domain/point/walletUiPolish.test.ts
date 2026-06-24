@@ -3,13 +3,17 @@ import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 
 function zIndexValue(source: string) {
-  const match = source.match(/z-\[(\d+)\]/);
+  const match = source.match(/className=["`][^"`]*(?:fixed\s+inset-0|sticky)[^"`]*z-\[(\d+)\][^"`]*["`]/);
 
   assert.ok(match);
   return Number(match[1]);
 }
 
 describe("wallet UI polish source guards", () => {
+  it("reads z-index from the anchored overlay container, not the first nested z-index", () => {
+    assert.equal(zIndexValue('<span className="z-[999]" /><div className="fixed inset-0 z-[120]" />'), 120);
+  });
+
   it("lets metric tooltips escape the wallet card clipping layer", () => {
     const walletSource = readFileSync("src/components/domain/point/WalletSummaryCard.tsx", "utf8");
 
