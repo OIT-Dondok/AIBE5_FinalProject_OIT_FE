@@ -89,8 +89,8 @@ function TodayVerificationStatus() {
         if (active) {
           setActiveCrews(statusItems);
         }
-      } catch (error) {
-        console.error('Failed to load today verification status:', error);
+      } catch {
+        // 오늘 인증 현황 로드 실패는 크루 목록 표시를 막지 않으므로 무시한다.
       } finally {
         if (active) setLoading(false);
       }

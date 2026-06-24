@@ -16,13 +16,13 @@ import { parseRouteNumber } from "@/components/domain/host/hostRouteParams";
 import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 import { createCrewNotice, getCrew, getMyCrew } from "@/services/crew";
 
-const isValidDraft = (data: any): data is { title: string; content: string; savedAt: number } => {
+const isValidDraft = (data: unknown): data is { title: string; content: string; savedAt: number } => {
+  if (typeof data !== "object" || data === null) return false;
+  const d = data as Record<string, unknown>;
   return (
-    data &&
-    typeof data === "object" &&
-    typeof data.title === "string" &&
-    typeof data.content === "string" &&
-    typeof data.savedAt === "number"
+    typeof d.title === "string" &&
+    typeof d.content === "string" &&
+    typeof d.savedAt === "number"
   );
 };
 

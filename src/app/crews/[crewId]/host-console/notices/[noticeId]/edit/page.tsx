@@ -15,13 +15,13 @@ import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 import { getCrewNoticeDetail, updateCrewNotice } from "@/services/crew";
 import type { CrewNotice } from "@/types/domain";
 
-const isValidDraft = (data: any): data is { title: string; content: string; savedAt: number } => {
+const isValidDraft = (data: unknown): data is { title: string; content: string; savedAt: number } => {
+  if (typeof data !== "object" || data === null) return false;
+  const d = data as Record<string, unknown>;
   return (
-    data &&
-    typeof data === "object" &&
-    typeof data.title === "string" &&
-    typeof data.content === "string" &&
-    typeof data.savedAt === "number"
+    typeof d.title === "string" &&
+    typeof d.content === "string" &&
+    typeof d.savedAt === "number"
   );
 };
 

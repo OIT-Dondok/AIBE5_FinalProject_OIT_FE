@@ -50,8 +50,8 @@ export default function CrewDetailTabs({ crew, crewId, onConfirmedCountLoaded }:
             const appRes = await getCrewApplications(crewId, { status: 'PENDING' });
             if (!active) return;
             setPendingCount(appRes.data.items.length);
-          } catch (appErr) {
-            console.error('Failed to fetch pending applications:', appErr);
+          } catch {
+            // 승인 대기자 수 조회 실패는 화면을 막지 않으므로 표시만 생략한다.
             setPendingCount(null);
           }
         } else {
