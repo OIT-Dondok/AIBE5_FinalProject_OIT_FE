@@ -37,11 +37,11 @@ export function FeedCrewFilter({ crews, selectedCrewId, onSelect }: FeedCrewFilt
           const isSelected = selectedCrewId === crew.crew_id;
           const isEnded = crew.status === 'CLOSED';
           const branding = getCrewBrandingColor(crew.crew_id, crew.crew_name);
-          // 종료 크루는 브랜딩 색 대신 회색(비활성) 톤. 선택·필터 동작은 그대로 유지
+          // 종료 크루는 브랜딩 색 대신 종료 톤(홈 탭 '종료됨' 배지와 동일 slate). 선택·필터 동작은 그대로 유지
           const chipClass = isEnded
             ? isSelected
-              ? 'bg-slate-200 text-slate-500 ring-1 ring-slate-300'
-              : 'bg-slate-100 text-slate-400 border border-slate-200/50'
+              ? 'bg-slate-500/20 text-slate-600 ring-1 ring-slate-500/30'
+              : 'bg-slate-500/10 text-slate-500 border border-slate-500/25'
             : isSelected
               ? branding.active
               : branding.inactive;
