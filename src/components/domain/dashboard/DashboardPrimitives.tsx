@@ -100,10 +100,12 @@ export function SegmentRing({
   const inset = stroke;
 
   return (
-    <div className="relative shrink-0 animate-chart-pop" style={{ width: size, height: size }}>
-      <div className="absolute inset-0 rounded-full" style={{ background }} />
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      {/* 바깥 그래프 부분에만 애니메이션을 부여합니다. */}
+      <div className="absolute inset-0 rounded-full animate-chart-pop" style={{ background }} />
       <div className="absolute rounded-full bg-card" style={{ inset }} />
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+      {/* 텍스트는 흔들리거나 돌아가지 않게 정적으로 둡니다. */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-center z-10">
         {children}
       </div>
     </div>
