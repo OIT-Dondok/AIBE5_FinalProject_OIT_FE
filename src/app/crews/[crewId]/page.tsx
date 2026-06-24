@@ -215,6 +215,7 @@ export default function CrewDetailPage() {
           <CrewJoinButton
             crewId={crewId}
             depositAmount={crew.deposit_amount}
+            crewStatus={crew.status}
             myParticipation={crew.my_participation}
             onSuccess={() => void fetchCrew()}
           />
