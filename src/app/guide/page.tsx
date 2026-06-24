@@ -208,11 +208,19 @@ function AuthMethod() {
         <section className="bg-card rounded-card shadow-card border border-text-secondary/10 px-5 pt-5 pb-5">
             <div className="flex items-center gap-2 mb-1">
                 <span className="text-xl">📸</span>
-                <h2 className="text-base font-bold text-text-primary">인증 방식</h2>
+                <h2 className="text-base font-bold text-text-primary">인증 및 검증 방식</h2>
             </div>
-            <p className="text-xs text-text-secondary mb-4 leading-relaxed">
-                실물 촬영 시 Exif 메타데이터로 촬영 시각이 자동 검증됩니다.
-            </p>
+            <div className="text-xs text-text-secondary mb-4 leading-relaxed space-y-1.5 bg-neutral-50 dark:bg-black/10 rounded-xl p-3 border border-text-secondary/5">
+                <p>
+                    <strong className="text-text-primary">🛡️ 1차 자동 검증 시스템</strong>
+                </p>
+                <p>
+                    • <strong className="text-text-primary">Exif 검증:</strong> 사진 파일에 자동으로 기록되는 촬영 시각 및 촬영 기기 정보(Exif 메타데이터)를 분석하여 위조 여부를 판단합니다. 캡처본이나 다운로드된 사진은 통과할 수 없습니다.
+                </p>
+                <p>
+                    • <strong className="text-text-primary">중복 해시 검증:</strong> 사진의 고유 디지털 지문(해시값)을 비교해 이전에 업로드되었거나 다른 사람이 사용한 사진을 다시 사용하는 것을 즉시 차단합니다.
+                </p>
+            </div>
             <div className="flex gap-2">
                 {AUTH_TYPES.map((t) => (
                     <div

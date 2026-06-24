@@ -96,7 +96,7 @@
 /* 도넛 차트 최초 진입 스핀 팝업 애니메이션 */
 @keyframes chart-pop {
   0% {
-    transform: rotate(-360deg) scale(0.3);
+    transform: rotate(-45deg) scale(0.85);
     opacity: 0;
   }
   100% {
@@ -106,7 +106,22 @@
 }
 
 @utility animate-chart-pop {
-  animation: chart-pop 0.48s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  animation: chart-pop 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+
+
+/* 대각 유광 광채 sweep 애니메이션 */
+@keyframes shine {
+  0% {
+    transform: rotate(35deg) translateX(-150px);
+  }
+  30% {
+    transform: rotate(35deg) translateX(450px);
+  }
+  100% {
+    transform: rotate(35deg) translateX(450px);
+  }
 }
 
 /* 모션 최소화 선호 시 애니메이션 비활성화 */
