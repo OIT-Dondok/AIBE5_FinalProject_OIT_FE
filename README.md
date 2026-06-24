@@ -5,7 +5,7 @@
 
 
 <p align="center">
-  <img src="https://github.com/lei-3m/AIBE5/blob/main/img/dondok/%EC%95%B1.png?raw=true" width="180"/>
+  <img src="https://github.com/lei-3m/AIBE5/blob/main/img/dondok/%EC%95%B1.png?raw=true" width="180" alt="Dondok 앱 화면 프리뷰"/>
 <br/>
   <strong>Dondok</strong>
 <br/>
@@ -110,7 +110,7 @@ sequenceDiagram
 
 ## 폴더 구조
 
-```
+```text
 src/
 ├── api/                    # API 호출 관련 모듈 및 정의
 ├── app/                    # Next.js App Router 기반 페이지 구성
@@ -246,5 +246,5 @@ NEXT_PUBLIC_VAPID_KEY=...
 
 <br/>
 <p align="left">
-  <img src="https://github.com/lei-3m/AIBE5/blob/main/img/dondok/%EB%8F%88%EB%8F%85%20%EB%A1%9C%EA%B3%A0%20v2.2_%ED%88%AC%EB%AA%85.png?raw=true" width="180"/>
+  <img src="https://github.com/lei-3m/AIBE5/blob/main/img/dondok/%EB%8F%88%EB%8F%85%20%EB%A1%9C%EA%B3%A0%20v2.2_%ED%88%AC%EB%AA%85.png?raw=true" width="180" alt="Dondok 로고"/>
 </p>
