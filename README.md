@@ -44,11 +44,15 @@ Dondok은 크루원이 함께 보증금을 예치하고, 미션 인증 성실도
 ## 기술적 특징
 
 - **모바일 퍼스트 반응형**: max-w-[430px] 기준 모바일 최적화, PWA 설치 지원
-- **JWT 자동 갱신**: 401 응답 시 Refresh Token으로 자동 재발급 후 원래 요청 재시도
-- **HEIC 이미지 변환**: iOS 촬영 사진을 클라이언트에서 JPEG 변환 후 S3 직접 업로드
-- **FCM 웹 푸시**: 백그라운드 상태에서도 알림 수신, 알림 클릭 시 딥링크 이동
-- **결과 카드 저장**: html-to-image로 정산 결과를 PNG 이미지로 저장·공유
+- **JWT 자동 갱신**: 401 응답 시 Refresh Token으로 자동 재발급 후 원래 요청 재시도 (Axios 인터셉터)
+- **S3 Presigned URL 업로드**: 파일 업로드 시 백엔드 부하를 줄이기 위해 Presigned URL을 획득한 뒤 클라이언트가 S3에 바이너리 직접 업로드
+- **HEIC 이미지 변환**: iOS 기기에서 촬영한 HEIC 포맷 사진을 클라이언트 측에서 JPEG로 사전 변환 후 업로드
+- **FCM 웹 푸시**: 백그라운드 상태에서도 서비스 워커를 통해 알림을 수신하며, 알림 클릭 시 딥링크 이동 지원
+- **결과 카드 저장**: html-to-image로 최종 정산 화면을 캡처하여 디바이스에 PNG 이미지로 저장·공유
 
+### 핵심 시퀀스 흐름
+
+#### 1. JWT 토큰 자동 재발급 및 요청 재시도
 ```mermaid
 sequenceDiagram
     participant C as 클라이언트
@@ -63,6 +67,22 @@ sequenceDiagram
     A->>S: 원래 요청 재시도
     S-->>C: 정상 응답
 ```
+
+#### 2. S3 Presigned URL 직접 이미지 업로드
+```mermaid
+sequenceDiagram
+    participant C as 클라이언트
+    participant BE as 백엔드 서버
+    participant S3 as AWS S3
+
+    C->>BE: Presigned URL 요청 (파일명, 타입 등)
+    BE-->>C: S3 URL + Key(저장 경로) 발급
+    C->>S3: PUT 요청 (바이너리 직접 업로드)
+    S3-->>C: 200 OK (업로드 완료)
+    C->>BE: 업로드 완료 키(Key)와 함께 최종 API 요청
+    BE-->>C: 최종 등록 완료
+```
+
 
 ---
 
@@ -189,6 +209,17 @@ NEXT_PUBLIC_VAPID_KEY=...
 7. main 자동 배포
 
 - 커밋 컨벤션: `feat` / `fix` / `refactor` / `docs` / `test` / `chore`
+
+---
+
+## 개발 및 코딩 컨벤션
+
+프로젝트의 일관성과 품질을 유지하기 위해 다음의 코딩 규칙을 엄격히 준수합니다.
+
+- **Component Layering (서버/클라이언트 컴포넌트)**: React Server Component(RSC) 사용을 우선하여 초기 로딩 성능을 최적화합니다. 상태 관리 및 이벤트 핸들러가 필수적인 경우에만 `'use client'`를 명시합니다.
+- **State Management (Zustand)**: 클라이언트 전역 UI 상태(로그인 유저 정보, 알림 수 등)만 스토어에서 제어하며, 서버로부터 수신한 데이터 캐싱은 스토어에 담지 않고 HTTP 요청 캐싱 또는 서버 컴포넌트 바인딩으로 해결합니다.
+- **Tailwind CSS v4 & 디자인 토큰**: Tailwind CSS v4 사양을 채택하여 인라인 스타일을 전면 지양합니다. 색상, 여백, 라운딩 등의 공통 디자인 시스템 토큰은 `globals.css`의 `@theme {}` 블록에 CSS 변수로 등록하여 활용합니다.
+- **TypeScript Strict Mode**: 타입 안전성을 위해 `any` 타입의 사용을 원칙적으로 금지합니다. 공통 API 응답은 `ApiResponse<T>` 제네릭 포맷으로 추상화하여 사용하며, 고정형 값 집합은 `as const` 조합을 활용하여 타입 추론의 정확성을 높입니다.
 
 ---
 
