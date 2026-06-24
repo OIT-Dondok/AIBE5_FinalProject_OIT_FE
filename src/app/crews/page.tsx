@@ -90,7 +90,8 @@ function TodayVerificationStatus() {
           setActiveCrews(statusItems);
         }
       } catch {
-        // 오늘 인증 현황 로드 실패는 크루 목록 표시를 막지 않으므로 무시한다.
+        // 실패 시 이전 성공 결과가 남아 오래된 현황이 표시되지 않도록 비운다.
+        if (active) setActiveCrews([]);
       } finally {
         if (active) setLoading(false);
       }
