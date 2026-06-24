@@ -423,7 +423,7 @@ describe("point wallet API mapping", () => {
     assert.equal(pickerSourceText.includes("canGoNextYear"), true);
   });
 
-  it("renders wallet summary metrics horizontally above the available balance", () => {
+  it("renders wallet summary metrics vertically above the available balance", () => {
     const sourceText = readTsSourceFile("src/components/domain/point/WalletSummaryCard.tsx").getFullText();
 
     assert.equal(sourceText.includes("wallet.metrics.map"), true);

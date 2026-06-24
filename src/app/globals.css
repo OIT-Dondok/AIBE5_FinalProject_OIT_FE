@@ -114,13 +114,13 @@
 /* 대각 유광 광채 sweep 애니메이션 */
 @keyframes shine {
   0% {
-    transform: rotate(35deg) translate-x(-150px);
+    transform: rotate(35deg) translateX(-150px);
   }
   30% {
-    transform: rotate(35deg) translate-x(450px);
+    transform: rotate(35deg) translateX(450px);
   }
   100% {
-    transform: rotate(35deg) translate-x(450px);
+    transform: rotate(35deg) translateX(450px);
   }
 }
 
