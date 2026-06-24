@@ -83,7 +83,10 @@ export default function HostNoticeNewPage() {
   useEffect(() => {
     if (crewId === null) return;
     // effect 동기 구간에서 setState가 실행되지 않도록 마이크로태스크로 지연 (set-state-in-effect 방지)
+    // 언마운트/crewId 변경 후 콜백이 이전 crew의 draft 모달을 여는 레이스를 막기 위해 active 가드를 둔다.
+    let active = true;
     void Promise.resolve().then(() => {
+      if (!active) return;
       const stored = localStorage.getItem(`temp_notice_draft_${crewId}`);
       if (stored) {
         try {
@@ -101,6 +104,9 @@ export default function HostNoticeNewPage() {
         preventSaveRef.current = false;
       }
     });
+    return () => {
+      active = false;
+    };
   }, [crewId]);
 
   // 실시간 디바운스 임시 저장
