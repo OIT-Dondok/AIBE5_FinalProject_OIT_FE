@@ -5,12 +5,14 @@ import { Toast } from '@/components/common/Toast';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { DodinShortageModal } from '@/components/domain/point/DodinShortageModal';
 import { useDodinShortage } from '@/components/domain/point/useDodinShortage';
-import type { MyParticipation } from '@/types/domain';
+import type { CrewStatus, MyParticipation } from '@/types/domain';
 import { useCrewJoinFlow } from './useCrewJoinFlow';
+import { getCrewJoinButtonState } from './CrewJoinButton.viewModel';
 
 interface CrewJoinButtonProps {
   crewId: number;
   depositAmount: number;
+  crewStatus: CrewStatus;
   myParticipation: MyParticipation | null;
   onSuccess?: () => void;
 }
@@ -24,7 +26,7 @@ function Spinner() {
   );
 }
 
-export default function CrewJoinButton({ crewId, depositAmount, myParticipation, onSuccess }: CrewJoinButtonProps) {
+export default function CrewJoinButton({ crewId, depositAmount, crewStatus, myParticipation, onSuccess }: CrewJoinButtonProps) {
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'warning'>('success');
   const [isToastOpen, setIsToastOpen] = useState(false);
@@ -53,10 +55,11 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
   });
 
   const status = myParticipation?.status ?? null;
+  const buttonState = getCrewJoinButtonState(crewStatus, status);
 
   const renderButton = () => {
     /* ── 신청 전 / 취소 후 재신청 (CANCELLED는 terminal 아님 → reopen 허용) ── */
-    if (status === null || status === 'CANCELLED') {
+    if (buttonState.variant === 'JOIN') {
       return (
         <button
           type="button"
@@ -74,7 +77,7 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
     }
 
     /* ── 신청 완료 (PENDING) ──────────────────────── */
-    if (status === 'PENDING') {
+    if (buttonState.variant === 'PENDING') {
       return (
         <div className="flex flex-col gap-2">
           {/* 상태 표시 */}
@@ -105,7 +108,7 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
     }
 
     /* ── 참여 중 (LOCKED) ────────────────────────── */
-    if (status === 'LOCKED') {
+    if (buttonState.variant === 'PARTICIPATING') {
       return (
         <div className="relative w-full py-4 px-6 rounded-2xl bg-primary-green overflow-hidden shadow-lg shadow-primary-green/30 opacity-90 select-none">
           <div className="absolute inset-[6px] rounded-xl border border-dashed border-white/40 pointer-events-none" />
@@ -120,7 +123,7 @@ export default function CrewJoinButton({ crewId, depositAmount, myParticipation,
       <div className="relative w-full py-4 px-6 rounded-2xl bg-text-secondary/10 overflow-hidden select-none">
         <div className="absolute inset-[6px] rounded-xl border border-dashed border-text-secondary/20 pointer-events-none" />
 
-        <p className="relative text-center text-base font-bold text-text-secondary/50">입장 불가</p>
+        <p className="relative text-center text-base font-bold text-text-secondary/50">{buttonState.label}</p>
       </div>
     );
   };
