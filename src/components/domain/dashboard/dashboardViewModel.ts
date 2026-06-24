@@ -247,8 +247,6 @@ function noticeMessage(notice: ProjectionNotice): string | null {
       return "아직 정산 배치가 실행되지 않아 예상 성과가 집계되기 전이에요.";
     case "NOT_PROVIDED":
       return "현재 크루 상태에서는 예상 대시보드를 제공하지 않아요.";
-    case "SETTLEMENT_RESULT_AVAILABLE":
-      return "최종 정산이 완료됐어요. 정산 상세에서 확정 결과를 확인하세요.";
     case "INSUFFICIENT_PROJECTION_INPUT":
       return "예상 계산에 필요한 정보가 부족해 일부 값을 표시하지 못했어요.";
     case "ESTIMATED_NOT_FINAL":
@@ -288,8 +286,6 @@ export interface CrewDashboardView {
   nextSettlementTime: string | null;
   updatedAtLabel: string; // 데이터 기준 시각 "2026.6.19 17:40" (파싱 불가 시 "")
   notice: string | null;
-  // SETTLEMENT_RESULT_AVAILABLE일 때 정산 상세(/crews/{crewId}/settlement) 유도
-  showSettlementLink: boolean;
 }
 
 export function mapCrewDashboard(res: DashboardResponse): CrewDashboardView {
@@ -343,8 +339,5 @@ export function mapCrewDashboard(res: DashboardResponse): CrewDashboardView {
     nextSettlementTime: formatNextSettlement(res.next_settlement_at),
     updatedAtLabel: formatDateTimeDot(res.updated_at),
     notice: noticeMessage(res.projection_notice),
-    showSettlementLink:
-      res.projection_notice === "SETTLEMENT_RESULT_AVAILABLE" &&
-      res.settlement_id != null,
   };
 }

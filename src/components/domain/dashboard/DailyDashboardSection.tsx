@@ -85,16 +85,7 @@ export function DailyDashboardSection({
         </p>
       )}
 
-      {dashboard.notice && (
-        <NoticeBanner
-          message={dashboard.notice}
-          settlementHref={
-            dashboard.showSettlementLink
-              ? `/crews/${dashboard.crewId}/settlement`
-              : null
-          }
-        />
-      )}
+      {dashboard.notice && <NoticeBanner message={dashboard.notice} />}
 
       <div className="grid grid-cols-2 gap-2.5">
         <MetricCard
@@ -295,29 +286,13 @@ function DepositCompareText({
   );
 }
 
-function NoticeBanner({
-  message,
-  settlementHref,
-}: {
-  message: string;
-  settlementHref: string | null;
-}) {
+function NoticeBanner({ message }: { message: string }) {
   return (
     <DashboardCard className="flex items-start gap-2.5 border-primary-blue/20 bg-primary-blue/5">
       <Info size={16} className="mt-0.5 shrink-0 text-primary-blue" />
-      <div className="min-w-0 flex-1">
-        <p className="text-[12px] font-medium leading-relaxed text-text-secondary">
-          {message}
-        </p>
-        {settlementHref && (
-          <Link
-            href={settlementHref}
-            className="mt-1.5 inline-flex text-[12px] font-black text-primary-blue hover:underline"
-          >
-            정산 상세 보기 →
-          </Link>
-        )}
-      </div>
+      <p className="min-w-0 flex-1 text-[12px] font-medium leading-relaxed text-text-secondary">
+        {message}
+      </p>
     </DashboardCard>
   );
 }
