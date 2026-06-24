@@ -5,9 +5,9 @@
   "display": "standalone",
   "scope": "/",
   "start_url": "/",
-  "name": "돈독 (Dondok)",
-  "short_name": "돈독",
-  "description": "습관 형성 및 정산 플랫폼, 돈독",
+  "name": "Dondok",
+  "short_name": "Dondok",
+  "description": "Build habits, share the win.",
   "icons": [
     {
       "src": "/icon-192x192.png",
