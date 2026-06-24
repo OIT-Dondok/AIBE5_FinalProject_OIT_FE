@@ -724,6 +724,7 @@ export type ReactionCounts = Record<string, number>;
 export interface AvailableCrew {
   crew_id: number;
   crew_name: string;
+  status: CrewStatus; // 필터 칩 비활성(종료) 처리·정렬용
 }
 
 // GET /api/feed feed_items[]
