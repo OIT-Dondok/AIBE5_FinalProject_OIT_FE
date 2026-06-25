@@ -225,7 +225,7 @@ NEXT_PUBLIC_VAPID_KEY=...
 
 ## 팀원
 
-| 훈련생 | 역할 | 담당 업무 |
+| 이름 | 역할 | 담당 업무 |
 |--------|------|-----------|
 | 김세희 | PM · Team Lead | 피드 페이지 UI·피드 API 연동, 이모지 리액션 API 연동, HEIC 이미지 변환, 대시보드 UI·API 연동, 미션 종료·결과·결과 카드 저장 UI |
 | 서일현 | Backend Lead | 대시보드 레이아웃 목업, 프로필 페이지 UI·API 연동, 도딘 충전 UI (Toss Payments 연동), 도딘 지갑 페이지 UI, 정산 상태/예외 화면 |
@@ -240,9 +240,9 @@ NEXT_PUBLIC_VAPID_KEY=...
 
 - [백엔드 레포](https://github.com/OIT-Dondok/AIBE5_FinalProject_OIT_BE)
 - Swagger UI (운영): http://43.203.87.248/swagger-ui/index.html
-- 시스템 아키텍처 — 이미지 추가 예정
-- ERD — 이미지 추가 예정
-- 유즈케이스 다이어그램 — 이미지 추가 예정
+- 시스템 아키텍처 <img width="1798" height="1316" alt="image" src="https://github.com/user-attachments/assets/3cc5e27b-f2e2-4bdd-844a-568c658f3dd2" />
+- ERD <img width="4020" height="2592" alt="Dondok" src="https://github.com/user-attachments/assets/b6e22685-a3a4-4e20-ac87-a4cb87fbb8c6" />
+- 유스케이스 다이어그램 <img width="912" height="807" alt="image" src="https://github.com/user-attachments/assets/66c8744c-7a6b-44bc-91b5-d6b4c54795f7" />
 
 <br/>
 <p align="left">
